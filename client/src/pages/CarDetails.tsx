@@ -87,7 +87,8 @@ export default function CarDetails() {
   const insurancePrice = includeInsurance ? INSURANCE_FEE_PER_DAY * daysCount : 0;
   const babySeatPrice = includeBabySeat ? BABY_SEAT_FEE_PER_DAY * daysCount : 0;
   const totalPrice = calculateRentalSubtotal(dailyPrice, daysCount) + insurancePrice + babySeatPrice;
-  const agencyWhatsAppUrl = buildWhatsAppUrl(car.agency.whatsapp, `مرحباً، أرغب في الاستفسار عن سيارة ${car.name}`);
+  const whatsappBookingMessage = `مرحباً، أرغب في حجز سيارة ${car.name} من ${startDate} إلى ${endDate} (${daysCount} ${daysCount === 1 ? 'يوم' : 'أيام'}) بمبلغ تقديري ${totalPrice} درهم عبر ALTUSplace.`;
+  const agencyWhatsAppUrl = buildWhatsAppUrl(car.agency.whatsapp, whatsappBookingMessage);
 
   const handleShare = (platform: string) => {
     const url = window.location.href;

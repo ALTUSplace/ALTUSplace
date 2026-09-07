@@ -55,7 +55,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col" dir="rtl">
+    <div className="min-h-screen bg-background text-foreground flex flex-col" dir="rtl">
       
       {/* Modern Hero Section with Elegant Navy Background */}
       <section className="relative pt-8 pb-16 md:pt-12 md:pb-24 px-4 overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
@@ -232,9 +232,9 @@ export default function Home() {
       </section>
 
       {/* Car Brands Marquee Section (OneClickDrive Morocco Style) */}
-      <section className="py-7 md:py-10 bg-slate-50 border-y border-slate-200 overflow-hidden">
+      <section className="py-7 md:py-10 bg-card/40 border-y border-border overflow-hidden">
         <div className="container mx-auto max-w-6xl px-4 text-center mb-4 md:mb-6">
-          <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">أشهر ماركات السيارات العالمية المتوفرة في المنصة</p>
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">أشهر ماركات السيارات العالمية المتوفرة في المنصة</p>
         </div>
         <div className="flex overflow-x-auto no-scrollbar gap-3 md:gap-6 px-4 py-2 justify-start md:justify-center items-stretch flex-nowrap md:flex-wrap max-w-6xl mx-auto snap-x">
           {[
@@ -248,11 +248,11 @@ export default function Home() {
             { name: "Volkswagen", icon: "🚘", count: "35+ سيارة" }
           ].map((brand, idx) => (
             <Link key={idx} href={`/search?type=car&brand=${brand.name}`}>
-              <div className="bg-white hover:bg-[#0B0F15] hover:text-white text-[#0B0F15] border border-slate-200 hover:border-[#0B0F15] px-4 md:px-6 py-3 md:py-4 rounded-xl md:rounded-2xl shadow-sm transition-all duration-300 flex items-center gap-2.5 cursor-pointer group min-w-[150px] md:min-w-[160px] shrink-0 snap-start justify-center">
+              <div className="bg-card hover:bg-[#D98236] hover:text-white text-foreground border border-border hover:border-[#D98236] px-4 md:px-6 py-3 md:py-4 rounded-xl md:rounded-2xl shadow-sm transition-all duration-300 flex items-center gap-2.5 cursor-pointer group min-w-[150px] md:min-w-[160px] shrink-0 snap-start justify-center">
                 <span className="text-2xl group-hover:scale-110 transition-transform">{brand.icon}</span>
                 <div className="text-right">
                   <h4 className="font-black text-sm">{brand.name}</h4>
-                  <span className="text-[10px] text-slate-400 group-hover:text-slate-200">{brand.count}</span>
+                  <span className="text-[10px] text-slate-400 group-hover:text-white">{brand.count}</span>
                 </div>
               </div>
             </Link>
@@ -261,7 +261,7 @@ export default function Home() {
       </section>
 
       {/* Real Estate Types Marquee Section */}
-      <section className="py-8 bg-white border-b border-slate-200 overflow-hidden">
+      <section className="py-8 bg-card/40 border-b border-border overflow-hidden">
         <div className="container mx-auto max-w-6xl px-4 text-center mb-4 md:mb-6">
           <p className="text-xs font-bold text-[#0B0F15] uppercase tracking-widest">أنواع العقارات والفلل والشقق المتاحة للإيجار</p>
         </div>
@@ -274,11 +274,11 @@ export default function Home() {
             { name: "إقامات محروسة", icon: "🏘️", count: "30+ عقار" }
           ].map((type, idx) => (
             <Link key={idx} href={`/search?type=property&category=${type.name}`}>
-              <div className="bg-slate-50 hover:bg-[#D98236] hover:text-white text-[#0B0F15] border border-slate-200 hover:border-[#D98236] px-4 md:px-6 py-3 md:py-3.5 rounded-xl md:rounded-2xl shadow-sm transition-all duration-300 flex items-center gap-2.5 cursor-pointer group min-w-[160px] md:min-w-[170px] shrink-0 snap-start justify-center">
+              <div className="bg-muted hover:bg-[#D98236] hover:text-white text-foreground border border-border hover:border-[#D98236] px-4 md:px-6 py-3 md:py-3.5 rounded-xl md:rounded-2xl shadow-sm transition-all duration-300 flex items-center gap-2.5 cursor-pointer group min-w-[160px] md:min-w-[170px] shrink-0 snap-start justify-center">
                 <span className="text-2xl group-hover:scale-110 transition-transform">{type.icon}</span>
                 <div className="text-right">
                   <h4 className="font-black text-sm">{type.name}</h4>
-                  <span className="text-[10px] text-slate-500 group-hover:text-slate-100">{type.count}</span>
+                  <span className="text-[10px] text-muted-foreground group-hover:text-white">{type.count}</span>
                 </div>
               </div>
             </Link>
@@ -293,7 +293,7 @@ export default function Home() {
             تصميم هندسي متطور
           </span>
           <h2 className="text-2xl md:text-3xl font-black text-[#0B0F15]">استكشف الأقسام الرئيسية (Bento Grid)</h2>
-          <p className="text-slate-600 text-sm max-w-xl mx-auto">
+          <p className="text-muted-foreground text-sm max-w-xl mx-auto">
             اختر ما بين أسطول السيارات الفاخرة أو العقارات الحصرية مع ضمانات حماية كاملة.
           </p>
         </div>
@@ -330,13 +330,13 @@ export default function Home() {
           </div>
 
           {/* Card 2: Real Estate Bento Box */}
-          <div className="bg-white border border-slate-200 p-5 md:p-8 rounded-2xl md:rounded-3xl shadow-xl flex flex-col justify-between group">
+          <div className="bg-card border border-border p-5 md:p-8 rounded-2xl md:rounded-3xl shadow-xl flex flex-col justify-between group">
             <div className="space-y-4">
               <div className="w-12 h-12 bg-[#0B0F15] rounded-2xl flex items-center justify-center text-white shadow-lg">
                 <Building2 className="w-6 h-6 text-[#D98236]" />
               </div>
               <h3 className="text-xl font-black text-[#0B0F15]">العقارات والشقق الفاخرة</h3>
-              <p className="text-slate-600 text-xs sm:text-sm leading-relaxed">
+              <p className="text-muted-foreground text-xs sm:text-sm leading-relaxed">
                 شقق مودرن مطلة على الكورنيش وفيلات خاصة بمسبح في أرقى الأحياء السكنية.
               </p>
               <div>
@@ -404,19 +404,19 @@ export default function Home() {
 
               <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-4">
                 <div className="space-y-2">
-                  <div className="flex items-center text-slate-500 text-xs gap-1">
+                  <div className="flex items-center text-muted-foreground text-xs gap-1">
                     <MapPin className="w-3.5 h-3.5 text-[#D98236]" />
                     <span>{item.city}</span>
                   </div>
                   <h3 className="text-base font-black text-[#0B0F15] line-clamp-1">{item.title}</h3>
-                  <div className="text-xs text-slate-600 bg-slate-100 px-3 py-1 rounded-xl inline-block">
+                  <div className="text-xs text-muted-foreground bg-muted px-3 py-1 rounded-xl inline-block">
                     {item.providerName}
                   </div>
                 </div>
 
                 <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
                   <div>
-                    <span className="text-xs text-slate-400 block">السعر اليومي</span>
+                    <span className="text-xs text-muted-foreground block">السعر اليومي</span>
                     <span className="text-lg font-black text-[#D98236]">{item.pricePerUnit} درهم</span>
                   </div>
                   <div className="flex gap-2">
@@ -434,7 +434,7 @@ export default function Home() {
       </section>
 
       {/* WordPress-Style Featured Blog Section */}
-      <section className="py-10 md:py-16 bg-slate-100 mt-6 md:mt-12 border-y border-slate-200">
+      <section className="py-10 md:py-16 bg-muted/40 mt-6 md:mt-12 border-y border-border">
         <div className="container mx-auto max-w-6xl px-4 space-y-8">
           <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-4">
             <div>
@@ -450,42 +450,42 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white rounded-2xl md:rounded-3xl overflow-hidden shadow-sm border border-slate-200 hover:-translate-y-2 hover:shadow-xl hover:border-[#D98236]/40 transition-all duration-300 flex flex-col group">
+            <div className="bg-card rounded-2xl md:rounded-3xl overflow-hidden shadow-sm border border-border hover:-translate-y-2 hover:shadow-xl hover:border-[#D98236]/40 transition-all duration-300 flex flex-col group">
               <div className="h-40 sm:h-48 overflow-hidden">
                 <OptimizedImage src="https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=800" alt="Car rental" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
               </div>
               <div className="p-4 sm:p-6 flex-1 flex flex-col justify-between space-y-3">
                 <span className="text-xs font-bold text-[#D98236]">دليل السفر</span>
                 <h3 className="font-black text-[#0B0F15] text-base group-hover:text-[#D98236] transition-colors">دليلك الشامل لكراء السيارات في الدار البيضاء ومراكش 2026</h3>
-                <p className="text-xs text-slate-600 line-clamp-2">تعرف على أهم النصائح القانونية والتقنية لتأجير السيارات بكل أمان في المدن الكبرى بالمغرب.</p>
+                <p className="text-xs text-muted-foreground line-clamp-2">تعرف على أهم النصائح القانونية والتقنية لتأجير السيارات بكل أمان في المدن الكبرى بالمغرب.</p>
                 <Link href="/blog">
                   <span className="text-xs font-bold text-[#0B0F15] flex items-center gap-1 pt-2 hover:underline">اقرأ المزيد <ArrowRight className="w-3 h-3" /></span>
                 </Link>
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl md:rounded-3xl overflow-hidden shadow-sm border border-slate-200 hover:-translate-y-2 hover:shadow-xl hover:border-[#D98236]/40 transition-all duration-300 flex flex-col group">
+            <div className="bg-card rounded-2xl md:rounded-3xl overflow-hidden shadow-sm border border-border hover:-translate-y-2 hover:shadow-xl hover:border-[#D98236]/40 transition-all duration-300 flex flex-col group">
               <div className="h-40 sm:h-48 overflow-hidden">
                 <OptimizedImage src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=800" alt="Real Estate" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
               </div>
               <div className="p-4 sm:p-6 flex-1 flex flex-col justify-between space-y-3">
                 <span className="text-xs font-bold text-[#D98236]">استثمار عقاري</span>
                 <h3 className="font-black text-[#0B0F15] text-base group-hover:text-[#D98236] transition-colors">أفضل المناطق الاستثمارية العقارية في طنجة وأغادير</h3>
-                <p className="text-xs text-slate-600 line-clamp-2">استعراض لأهم الأحياء المطلة على البحر والتي تشهد إقبالاً كبيراً من السياح والمستثمرين.</p>
+                <p className="text-xs text-muted-foreground line-clamp-2">استعراض لأهم الأحياء المطلة على البحر والتي تشهد إقبالاً كبيراً من السياح والمستثمرين.</p>
                 <Link href="/blog">
                   <span className="text-xs font-bold text-[#0B0F15] flex items-center gap-1 pt-2 hover:underline">اقرأ المزيد <ArrowRight className="w-3 h-3" /></span>
                 </Link>
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl md:rounded-3xl overflow-hidden shadow-sm border border-slate-200 hover:-translate-y-2 hover:shadow-xl hover:border-[#D98236]/40 transition-all duration-300 flex flex-col group">
+            <div className="bg-card rounded-2xl md:rounded-3xl overflow-hidden shadow-sm border border-border hover:-translate-y-2 hover:shadow-xl hover:border-[#D98236]/40 transition-all duration-300 flex flex-col group">
               <div className="h-40 sm:h-48 overflow-hidden">
                 <OptimizedImage src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=800" alt="Driving" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
               </div>
               <div className="p-4 sm:p-6 flex-1 flex flex-col justify-between space-y-3">
                 <span className="text-xs font-bold text-[#D98236]">نصائح قيادة</span>
                 <h3 className="font-black text-[#0B0F15] text-base group-hover:text-[#D98236] transition-colors">كيف تختار السيارة المناسبة لرحلتك العائلية عبر الطرق السيارة؟</h3>
-                <p className="text-xs text-slate-600 line-clamp-2">مقارنة شاملة بين سيارات الـ SUV والاقتصادية والفاخرة لضمان أقصى درجات الراحة والأمان.</p>
+                <p className="text-xs text-muted-foreground line-clamp-2">مقارنة شاملة بين سيارات الـ SUV والاقتصادية والفاخرة لضمان أقصى درجات الراحة والأمان.</p>
                 <Link href="/blog">
                   <span className="text-xs font-bold text-[#0B0F15] flex items-center gap-1 pt-2 hover:underline">اقرأ المزيد <ArrowRight className="w-3 h-3" /></span>
                 </Link>

@@ -18,6 +18,7 @@ export default function NotFound() {
             <img
               src="/images/logo.png"
               alt="ALTUSplace — B2-Rent"
+              loading="lazy"
               className="brand-logo h-16 w-auto object-contain"
             />
           </div>

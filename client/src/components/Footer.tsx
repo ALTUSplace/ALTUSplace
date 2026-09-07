@@ -23,6 +23,7 @@ export default function Footer() {
                 <img
                   src="/images/logo.png"
                   alt="ALTUSplace Logo"
+                  loading="lazy"
                   className="brand-logo h-10 w-auto object-contain"
                 />
               </div>
