@@ -6,6 +6,7 @@ import { useRef, useState, useEffect } from 'react';
 import { playSuccessSound } from '@/lib/sound';
 import { trpc } from '@/lib/trpc';
 import { cancellationRefundPolicy } from '@/lib/legalDisclosure';
+import { buildWhatsAppUrl } from '@/lib/whatsapp';
 import { PaymentStatusBadge, PaymentMethodBadge, TransactionReference } from '@/components/PaymentStatusBadge';
 
 export default function Success() {
@@ -47,7 +48,7 @@ export default function Success() {
     const message = language === 'ar'
       ? `مرحباً، أود التواصل بخصوص الحجز ${bookingRef} — ${premises}.`
       : `Bonjour, je souhaite échanger au sujet de la réservation ${bookingRef} — ${premises}.`;
-    window.open(`https://wa.me/${booking.ownerWhatsApp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(message)}`, '_blank', 'noopener,noreferrer');
+    window.open(buildWhatsAppUrl(booking.ownerWhatsApp, message), '_blank', 'noopener,noreferrer');
   };
 
   const handleEmailContact = () => {

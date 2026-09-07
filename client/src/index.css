@@ -1,5 +1,25 @@
 @import "tailwindcss";
 
+/* ALTUSplace brand alignment: Tailwind amber-* utilities render the Bronze
+   Gold ramp (#D98236) and cyan-* the Electric Cyan accent (#00A3FF) so every
+   page shares the exact brand accents without hardcoded hex values. */
+@theme {
+  --color-amber-50: #faf1e7;
+  --color-amber-100: #f4dfc9;
+  --color-amber-200: #e9c29b;
+  --color-amber-300: #e0a878;
+  --color-amber-400: #dd9553;
+  --color-amber-500: #d98236;
+  --color-amber-600: #b96a28;
+  --color-amber-700: #94521f;
+  --color-amber-800: #6f3d17;
+  --color-amber-900: #4a2810;
+  --color-amber-950: #2a1708;
+  --color-cyan-400: #33b5ff;
+  --color-cyan-500: #00a3ff;
+  --color-cyan-600: #0090e6;
+}
+
 @layer base {
   :root {
     /* ALTUSplace design tokens: identity — Dark Obsidian Luxury Palette */

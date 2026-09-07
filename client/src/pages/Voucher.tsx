@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, MapPin, MessageCircle, Phone, CalendarDays, Copy, Download, ArrowLeft, Ticket } from 'lucide-react';
 import { toast } from 'sonner';
 import { OptimizedImage } from '@/components/OptimizedImage';
+import { buildWhatsAppUrl } from '@/lib/whatsapp';
 
 export default function VoucherPage() {
   const { code = '' } = useParams<{ code: string }>();
@@ -19,7 +20,7 @@ export default function VoucherPage() {
   const start = new Date(data.startDate).toLocaleDateString('fr-MA');
   const end = new Date(data.endDate).toLocaleDateString('fr-MA');
   const phone = data.ownerWhatsApp?.replace(/[^0-9+]/g, '') || '';
-  const whatsappUrl = phone ? `https://wa.me/${phone.replace(/^\+/, '')}?text=${encodeURIComponent(`مرحباً، أتوصل بخصوص الحجز ${data.voucher.code} — ${data.listingTitle}.`)}` : '';
+  const whatsappUrl = buildWhatsAppUrl(data.ownerWhatsApp, `مرحباً، أتوصل بخصوص الحجز ${data.voucher.code} — ${data.listingTitle}.`);
   const copyCode = async () => { await navigator.clipboard?.writeText(data.voucher.code); toast.success('تم نسخ كود الحجز.'); };
   const downloadQr = () => { const link = document.createElement('a'); link.href = data.qrCodeDataUrl; link.download = `${data.voucher.code}-QR.png`; link.click(); };
 

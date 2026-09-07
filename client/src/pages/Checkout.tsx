@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { trpc } from '@/lib/trpc';
 import { LoadingAnimation } from '@/components/LoadingAnimation';
 import { cancellationRefundPolicy } from '@/lib/legalDisclosure';
+import { calculateRentalDays, calculateRentalSubtotal } from '@/lib/pricing';
 import { PaymentCheckoutModal, PaymentSuccessResult } from '@/components/PaymentCheckoutModal';
 import { KycDocumentUpload } from '@/components/KycDocumentUpload';
 
@@ -22,11 +23,11 @@ export default function CheckoutPage() {
   const endDateParam = searchParams.get('endDate') || '';
   const parsedStart = startDateParam ? new Date(`${startDateParam}T12:00:00`) : null;
   const parsedEnd = endDateParam ? new Date(`${endDateParam}T12:00:00`) : null;
-  const hasValidDates = Boolean(parsedStart && parsedEnd && !Number.isNaN(parsedStart.getTime()) && !Number.isNaN(parsedEnd.getTime()) && parsedEnd > parsedStart);
   const requestedDays = Number(searchParams.get('days'));
-  const daysFromDates = hasValidDates ? Math.ceil((parsedEnd!.getTime() - parsedStart!.getTime()) / (1000 * 60 * 60 * 24)) : 0;
+  const daysFromDates = calculateRentalDays(startDateParam, endDateParam);
+  const hasValidDates = daysFromDates > 0;
   const days = daysFromDates || (Number.isFinite(requestedDays) && requestedDays > 0 ? Math.floor(requestedDays) : 0);
-  const subtotal = Number.isFinite(pricePerDay) && pricePerDay > 0 && days > 0 ? pricePerDay * days : 0;
+  const subtotal = calculateRentalSubtotal(pricePerDay, days);
   const requestedContractType = searchParams.get('contractType');
   const contractType = requestedContractType === 'commercial' || requestedContractType === 'professional' ? requestedContractType : null;
   const premises = searchParams.get('premises') || title;

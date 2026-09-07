@@ -7,6 +7,8 @@ import { toast } from 'sonner';
 import { trpc } from '@/lib/trpc';
 import { OptimizedImage } from '@/components/OptimizedImage';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { BABY_SEAT_FEE_PER_DAY, calculateRentalDays, calculateRentalSubtotal, INSURANCE_FEE_PER_DAY } from '@/lib/pricing';
+import { buildWhatsAppUrl } from '@/lib/whatsapp';
 
 export default function CarDetails() {
   const [, params] = useRoute('/car/:id');
@@ -79,21 +81,12 @@ export default function CarDetails() {
     );
   }
 
-  const calcDays = () => {
-    try {
-      const d1 = new Date(startDate);
-      const d2 = new Date(endDate);
-      const diff = Math.ceil((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24));
-      return diff > 0 ? diff : 1;
-    } catch {
-      return 5;
-    }
-  };
-  const daysCount = calcDays();
+  const daysCount = calculateRentalDays(startDate, endDate) || 1;
   const dailyPrice = car.pricePerDay;
-  const insurancePrice = includeInsurance ? 100 * daysCount : 0;
-  const babySeatPrice = includeBabySeat ? 50 * daysCount : 0;
-  const totalPrice = dailyPrice * daysCount + insurancePrice + babySeatPrice;
+  const insurancePrice = includeInsurance ? INSURANCE_FEE_PER_DAY * daysCount : 0;
+  const babySeatPrice = includeBabySeat ? BABY_SEAT_FEE_PER_DAY * daysCount : 0;
+  const totalPrice = calculateRentalSubtotal(dailyPrice, daysCount) + insurancePrice + babySeatPrice;
+  const agencyWhatsAppUrl = buildWhatsAppUrl(car.agency.whatsapp, `مرحباً، أرغب في الاستفسار عن سيارة ${car.name}`);
 
   const handleShare = (platform: string) => {
     const url = window.location.href;
@@ -257,9 +250,9 @@ export default function CarDetails() {
                       <p className="text-xs text-slate-400">{car.agency.address}</p>
                     </div>
                   </div>
-                  {car.agency.whatsapp.replace(/\D/g, '').length >= 8 ? (
+                  {agencyWhatsAppUrl ? (
                     <a
-                      href={`https://wa.me/${car.agency.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(`مرحباً، أرغب في الاستفسار عن سيارة ${car.name}`)}`}
+                      href={agencyWhatsAppUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-3 rounded-2xl text-xs flex items-center justify-center gap-2 shadow-lg"

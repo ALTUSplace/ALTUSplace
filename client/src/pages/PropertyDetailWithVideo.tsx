@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { trpc } from "@/lib/trpc";
+import { calculateRentalDays, calculateRentalSubtotal } from "@/lib/pricing";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
 import { OptimizedImage } from "@/components/OptimizedImage";
@@ -74,18 +75,12 @@ export default function PropertyDetailWithVideo() {
     return date.toISOString().slice(0, 10);
   });
 
-  const daysCount = useMemo(() => {
-    try {
-      const d1 = new Date(startDate);
-      const d2 = new Date(endDate);
-      const diff = Math.ceil((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24));
-      return diff > 0 ? diff : 1;
-    } catch {
-      return 1;
-    }
-  }, [startDate, endDate]);
+  const daysCount = useMemo(
+    () => calculateRentalDays(startDate, endDate) || 1,
+    [startDate, endDate],
+  );
 
-  const totalPrice = listing.pricePerDay * daysCount;
+  const totalPrice = calculateRentalSubtotal(listing.pricePerDay, daysCount) || listing.pricePerDay * daysCount;
 
   const handleProceedToCheckout = () => {
     if (!startDate || !endDate) {
