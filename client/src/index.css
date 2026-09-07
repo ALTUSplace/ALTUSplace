@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* ALTUSplace brand alignment: Tailwind amber-* utilities render the Bronze
+/* B2-Rent brand alignment: Tailwind amber-* utilities render the Bronze
    Gold ramp (#D98236) and cyan-* the Electric Cyan accent (#00A3FF) so every
    page shares the exact brand accents without hardcoded hex values. */
 @theme {
@@ -22,7 +22,7 @@
 
 @layer base {
   :root {
-    /* ALTUSplace design tokens: identity — Dark Obsidian Luxury Palette */
+    /* B2-Rent design tokens: identity — Dark Obsidian Luxury Palette */
     --brand-obsidian: #0B0F15; /* Dark Obsidian base background */
     --brand-obsidian-soft: #131922; /* Raised Dark Obsidian surface */
     --brand-gold: #D98236; /* Bronze Gold primary accent */
@@ -63,7 +63,7 @@
     --duration-standard: 220ms;
     --ease-standard: cubic-bezier(0.23, 1, 0.32, 1);
 
-    /* ALTUSplace design tokens: semantic theme values (Dark Obsidian) */
+    /* B2-Rent design tokens: semantic theme values (Dark Obsidian) */
     --background: 216 31% 6%; /* #0B0F15 */
     --foreground: 214 32% 91%; /* #E2E8F0 */
     --card: 216 28% 10%; /* #131922 */
@@ -85,7 +85,7 @@
     --ring: 202 100% 50%; /* #00A3FF */
     --radius: 1rem;
 
-    /* ALTUSplace design tokens: rhythm and elevation */
+    /* B2-Rent design tokens: rhythm and elevation */
     --space-section: clamp(3rem, 8vw, 6rem);
     --content-max-width: 1180px;
     --radius-sm: 0.625rem;
@@ -98,6 +98,7 @@
     --shadow-card: 0 14px 34px rgba(0, 0, 0, 0.3);
     --shadow-amber: 0 12px 28px rgba(217, 130, 54, 0.28);
     --shadow-emerald: 0 12px 28px rgba(5, 150, 105, 0.15);
+    --shadow-cyan: 0 0 12px rgba(0, 163, 255, 0.35);
     --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   }
 
@@ -201,6 +202,18 @@
 
 .dark .brand-logo {
   mix-blend-mode: normal;
+}
+
+/* B2-Rent Header Styling - Dark Obsidian with Cyan accent border */
+.glass-header {
+  background: #0B0F15 !important;
+  border-bottom: 1px solid rgba(0, 163, 255, 0.2) !important;
+  backdrop-filter: none !important;
+}
+
+.brand-logo {
+  filter: none !important;
+  opacity: 1 !important;
 }
 
 .b2-segmented-control {

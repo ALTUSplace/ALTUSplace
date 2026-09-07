@@ -46,7 +46,7 @@ export default function BookingMessages() {
       <div className="mx-auto max-w-3xl space-y-5">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-xs font-bold uppercase tracking-widest text-amber-600">ALTUSplace Morocco</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-amber-600">B2-Rent Morocco</p>
             <h1 className="mt-1 text-2xl font-black text-[#0B0F15]">مراسلات الحجز #{bookingId}</h1>
             <p className="mt-1 text-sm text-slate-500">تواصل مع الطرف الآخر داخل المنصة واحتفظ بسجل واضح للمحادثة.</p>
           </div>

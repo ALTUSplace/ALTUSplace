@@ -131,7 +131,7 @@ export default function CheckoutPage() {
           <div className="flex items-center justify-between gap-4 px-5 py-4 sm:px-8 sm:py-5">
             <div className="flex items-center gap-3">
               <div className="grid h-11 w-11 place-items-center rounded-2xl bg-white/12 ring-1 ring-white/20"><ShieldCheck className="h-6 w-6 text-amber-300" /></div>
-              <div><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/60">ALTUSplace Secure Checkout</p><p className="text-sm font-bold sm:text-base">بوابة دفع مغربية محاكية</p></div>
+              <div><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/60">B2-Rent Secure Checkout</p><p className="text-sm font-bold sm:text-base">بوابة دفع مغربية محاكية</p></div>
             </div>
             <Button variant="ghost" onClick={() => window.history.back()} className="gap-2 text-white hover:bg-white/10 hover:text-white cursor-pointer"><ArrowRight className="w-4 h-4" /> عودة</Button>
           </div>
@@ -225,7 +225,7 @@ export default function CheckoutPage() {
                 className="mt-1 w-4 h-4 rounded border-border text-amber-500 focus:ring-amber-500 cursor-pointer"
               />
               <label htmlFor="checkout_terms" className="text-xs text-muted-foreground leading-relaxed cursor-pointer">
-                أوافق على <a href="/terms" target="_blank" className="text-amber-500 underline font-bold">شروط الاستخدام وسياسة الضمان المالي (Escrow)</a> وسياسة الإلغاء والاسترداد المبينة أدناه، وإخلاء المسؤولية الذي يقر بأن ALTUSplace منصة إعلانية ووسيط تقني فقط، وأن الشريك مسؤول عن الحالة الميكانيكية للسيارة أو حالة العقار ونظافته. كما أوافق على قواعد عمولة الوساطة بنسبة 10% وأقر بصحة البيانات المدرجة.
+                أوافق على <a href="/terms" target="_blank" className="text-amber-500 underline font-bold">شروط الاستخدام وسياسة الضمان المالي (Escrow)</a> وسياسة الإلغاء والاسترداد المبينة أدناه، وإخلاء المسؤولية الذي يقر بأن B2-Rent منصة إعلانية ووسيط تقني فقط، وأن الشريك مسؤول عن الحالة الميكانيكية للسيارة أو حالة العقار ونظافته. كما أوافق على قواعد عمولة الوساطة بنسبة 10% وأقر بصحة البيانات المدرجة.
               </label>
             </div>
           </div>

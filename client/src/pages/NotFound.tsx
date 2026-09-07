@@ -17,7 +17,7 @@ export default function NotFound() {
           <div className="flex justify-center mb-6">
             <img
               src="/images/logo.png"
-              alt="ALTUSplace — B2-Rent"
+              alt="B2-Rent"
               loading="lazy"
               className="brand-logo h-16 w-auto object-contain"
             />
@@ -50,7 +50,7 @@ export default function NotFound() {
 
           <p className="mt-6 flex items-center justify-center gap-2 text-xs text-[#6B7686]">
             <AlertCircle className="h-3.5 w-3.5" />
-            Error 404 — ALTUSplace · B2-Rent
+            Error 404 — B2-Rent
           </p>
         </CardContent>
       </Card>

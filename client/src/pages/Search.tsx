@@ -600,7 +600,7 @@ export default function Search() {
                   <span className="text-xs text-slate-400">مشاركة:</span>
                   <button
                     onClick={() => {
-                      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`شاهد هذا العرض الرائع: ${quickViewItem.title} - ${quickViewItem.pricePerUnit} ${quickViewItem.unitLabel} في ${quickViewItem.city} عبر منصة ALTUSplace: ${window.location.href}`)}`, '_blank');
+                      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`شاهد هذا العرض الرائع: ${quickViewItem.title} - ${quickViewItem.pricePerUnit} ${quickViewItem.unitLabel} في ${quickViewItem.city} عبر منصة B2-Rent: ${window.location.href}`)}`, '_blank');
                     }}
                     className="bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 p-2 rounded-xl text-xs flex items-center gap-1 transition-colors"
                     title="مشاركة عبر واتساب"

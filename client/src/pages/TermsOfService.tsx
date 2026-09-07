@@ -51,10 +51,10 @@ export default function TermsOfService() {
                 1. مقدمة ونطاق الوساطة (Scope of Brokerage)
               </h2>
               <p>
-                منصة <strong>ALTUSplace</strong> هي منصة إعلانية ووسيط تقني فقط، تربط بين مزودي الخدمات المعتمدين (شركات كراء السيارات وأصحاب العقارات والمنعشين العقاريين) وبين الزبائن والباحثين عن الإيجار في المملكة المغربية. لا تمتلك المنصة السيارة أو العقار ولا تديرهما، ولا تحل محل الشريك في معاينة الأصل أو تسليمه.
+                منصة <strong>B2-Rent</strong> هي منصة إعلانية ووسيط تقني فقط، تربط بين مزودي الخدمات المعتمدين (شركات كراء السيارات وأصحاب العقارات والمنعشين العقاريين) وبين الزبائن والباحثين عن الإيجار في المملكة المغربية. لا تمتلك المنصة السيارة أو العقار ولا تديرهما، ولا تحل محل الشريك في معاينة الأصل أو تسليمه.
               </p>
               <p className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm font-medium text-amber-950">
-                <strong>إخلاء المسؤولية:</strong> يقر الزبون والشريك بأن الشريك يتحمل مسؤولية الحالة الميكانيكية والسلامة والنظافة والوصف الصحيح للسيارة أو العقار، وأن على الزبون معاينة الأصل وإبلاغ الشريك بأي تحفظ عند التسليم. لا تتحمل ALTUSplace المسؤولية عن العيوب أو الحالة الميكانيكية للسيارة أو نظافة العقار أو حالته، وذلك في حدود ما يسمح به القانون المغربي ودون المساس بالحقوق القانونية الآمرة.
+                <strong>إخلاء المسؤولية:</strong> يقر الزبون والشريك بأن الشريك يتحمل مسؤولية الحالة الميكانيكية والسلامة والنظافة والوصف الصحيح للسيارة أو العقار، وأن على الزبون معاينة الأصل وإبلاغ الشريك بأي تحفظ عند التسليم. لا تتحمل B2-Rent المسؤولية عن العيوب أو الحالة الميكانيكية للسيارة أو نظافة العقار أو حالته، وذلك في حدود ما يسمح به القانون المغربي ودون المساس بالحقوق القانونية الآمرة.
               </p>
             </section>
 
@@ -64,7 +64,7 @@ export default function TermsOfService() {
                 2. عمولة المنصة ورسوم الوساطة (Platform Commission)
               </h2>
               <p>
-                تتقاضى منصة ALTUSplace عمولة ثابتة قدرها <strong>10%</strong> من إجمالي قيمة مبلغ الحجز المؤكد مقابل خدمات الوساطة التقنية وتوفير العقود الرقمية ونظام الضمان. يتم اقتطاع هذه العمولة تلقائياً عند إتمام الدفع، وتظهر بوضوح في الفاتورة الرسمية الصادرة عبر النظام بصيغة PDF.
+                تتقاضى منصة B2-Rent عمولة ثابتة قدرها <strong>10%</strong> من إجمالي قيمة مبلغ الحجز المؤكد مقابل خدمات الوساطة التقنية وتوفير العقود الرقمية ونظام الضمان. يتم اقتطاع هذه العمولة تلقائياً عند إتمام الدفع، وتظهر بوضوح في الفاتورة الرسمية الصادرة عبر النظام بصيغة PDF.
               </p>
             </section>
 
@@ -96,10 +96,10 @@ export default function TermsOfService() {
                 1. Introduction et Portée de la Médiation
               </h2>
               <p>
-                La plateforme <strong>ALTUSplace</strong> est uniquement une plateforme publicitaire et un intermédiaire technologique reliant les prestataires agréés (agences de location de voitures et propriétaires immobiliers) et les clients au Maroc. ALTUSplace ne possède ni n'exploite le véhicule ou le bien et ne remplace pas le Partenaire lors de l'inspection ou de la remise.
+                La plateforme <strong>B2-Rent</strong> est uniquement une plateforme publicitaire et un intermédiaire technologique reliant les prestataires agréés (agences de location de voitures et propriétaires immobiliers) et les clients au Maroc. B2-Rent ne possède ni n'exploite le véhicule ou le bien et ne remplace pas le Partenaire lors de l'inspection ou de la remise.
               </p>
               <p className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm font-medium text-amber-950">
-                <strong>Clause de non-responsabilité :</strong> Le Client et le Partenaire reconnaissent que le Partenaire reste responsable de l'état mécanique, de la sécurité, de la propreté et de la conformité de l'annonce du véhicule ou du bien. Le Client doit examiner le bien et signaler toute réserve au Partenaire lors de la remise. ALTUSplace n'est pas responsable des défauts, de l'état mécanique du véhicule ou de la propreté et de l'état du bien, dans les limites permises par le droit marocain et sans préjudice des droits impératifs.
+                <strong>Clause de non-responsabilité :</strong> Le Client et le Partenaire reconnaissent que le Partenaire reste responsable de l'état mécanique, de la sécurité, de la propreté et de la conformité de l'annonce du véhicule ou du bien. Le Client doit examiner le bien et signaler toute réserve au Partenaire lors de la remise. B2-Rent n'est pas responsable des défauts, de l'état mécanique du véhicule ou de la propreté et de l'état du bien, dans les limites permises par le droit marocain et sans préjudice des droits impératifs.
               </p>
             </section>
 

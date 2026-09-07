@@ -98,7 +98,7 @@ export default function PartnerDashboard() {
     doc.setTextColor(212, 175, 55);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(28);
-    doc.text("ALTUSplace Premium Partner Certificate", 148, 40, { align: 'center' });
+    doc.text("B2-Rent Premium Partner Certificate", 148, 40, { align: 'center' });
     doc.setFontSize(16);
     doc.text("This is to certify that", 148, 65, { align: 'center' });
     doc.setFontSize(24);
@@ -106,8 +106,8 @@ export default function PartnerDashboard() {
     doc.setFontSize(14);
     doc.setTextColor(255, 255, 255);
     doc.text("Has achieved Gold Partner Status for exceptional performance, exceeding 50+ bookings monthly.", 148, 110, { align: 'center' });
-    doc.text("Issued by ALTUSplace Morocco Brokerage Platform", 148, 140, { align: 'center' });
-    doc.save("altusplace-gold-partner-certificate.pdf");
+    doc.text("Issued by B2-Rent Morocco Brokerage Platform", 148, 140, { align: 'center' });
+    doc.save("b2rent-gold-partner-certificate.pdf");
     toast.success('تم تنزيل شهادة الشريك الذهبي الرسمية بصيغة PDF بنجاح!');
   };
 

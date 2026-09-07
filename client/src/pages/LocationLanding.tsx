@@ -25,7 +25,7 @@ export default function LocationLanding({ location = "marrakech" }: { location?:
     <div className="min-h-screen bg-slate-50 px-4 py-12" dir={isArabic ? "rtl" : "ltr"}>
       <div className="mx-auto max-w-5xl space-y-8">
         <section className="rounded-3xl bg-[#0B0F15] p-8 text-white shadow-xl md:p-12">
-          <div className="mb-4 flex items-center gap-2 text-amber-300"><MapPin className="h-5 w-5" /><span>ALTUSplace Morocco</span></div>
+          <div className="mb-4 flex items-center gap-2 text-amber-300"><MapPin className="h-5 w-5" /><span>B2-Rent Morocco</span></div>
           <h1 className="max-w-3xl text-3xl font-black leading-tight md:text-5xl">{content.title}</h1>
           <p className="mt-5 max-w-2xl text-base leading-8 text-slate-200">{content.description}</p>
           <Link href={`/search?city=${encodeURIComponent(content.city)}`} className="mt-7 inline-flex items-center gap-2 rounded-xl bg-amber-500 px-5 py-3 font-bold text-slate-950 hover:bg-amber-400"><Car className="h-5 w-5" />{isArabic ? "شاهد السيارات المتاحة" : language === "fr" ? "Voir les voitures disponibles" : "View available cars"}<ArrowRight className="h-4 w-4" /></Link>

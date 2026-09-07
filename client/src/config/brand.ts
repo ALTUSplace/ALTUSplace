@@ -1,9 +1,9 @@
 /**
- * ALTUSplace brand configuration — single source of truth for brand identity,
+ * B2-Rent brand configuration — single source of truth for brand identity,
  * shared storage keys, and the functional support inbox.
  */
 
-export const BRAND_NAME = "ALTUSplace";
+export const BRAND_NAME = "B2-Rent";
 export const BRAND_TAGLINE = "Rent. Drive. Live.";
 
 /** Functional support inbox (operational address — change here when it moves). */

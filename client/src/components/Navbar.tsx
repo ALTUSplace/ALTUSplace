@@ -294,21 +294,23 @@ export default function Navbar() {
   return (
     <>
       <header
-        className="glass-header sticky top-0 z-50 border-b text-foreground shadow-sm"
+        className="sticky top-0 z-50 bg-[#0B0F15] text-foreground shadow-[0_10px_30px_rgba(0,0,0,0.35)]"
           dir={direction}
+          style={{ borderBottom: '1px solid rgba(0, 163, 255, 0.2)' }}
         >
         <div className="container mx-auto flex h-16 sm:h-20 items-center justify-between gap-2 sm:gap-4 px-3 sm:px-4">
           <Link href="/" className="group flex shrink-0 items-center gap-3" aria-label="الرئيسية">
   <div className="flex shrink-0 items-center">
     <img
       src="/images/logo.png"
-      alt="ALTUSplace"
-      className="brand-logo h-10 sm:h-12 w-auto object-contain dark:brightness-0 dark:invert"
+      alt="B2-Rent"
+      className="brand-logo h-12 sm:h-12 w-auto object-contain"
+      style={{ height: '48px', maxWidth: '100%', objectFit: 'contain' }}
     />
   </div>
   <div className="flex flex-col">
     <span className="font-bold text-lg sm:text-xl tracking-tight text-slate-900 dark:text-white">
-      ALTUS<span className="font-normal text-amber-600">place</span>
+      B2-<span className="font-normal text-amber-600">Rent</span>
     </span>
     <span className="text-[9px] sm:text-[10px] tracking-wider text-muted-foreground uppercase -mt-1 font-medium">
       Rent. Drive. Live.
@@ -535,8 +537,8 @@ export default function Navbar() {
           <button type="button" className="absolute inset-0 bg-slate-950/40 backdrop-blur-[2px]" aria-label={t("close")} onClick={() => setMobileMenuOpen(false)} />
           <aside ref={mobileMenuRef} id="mobile-navigation" className={`absolute top-0 flex h-full w-[min(88vw,22rem)] flex-col overflow-y-auto bg-background p-4 shadow-2xl ${direction === "rtl" ? "right-0" : "left-0"}`} dir={direction} aria-label={t("search")} aria-modal="true" role="dialog" tabIndex={-1}>
           <div className="flex items-center justify-between border-b border-border pb-4">
-            <Link href="/" onClick={() => setMobileMenuOpen(false)} className="flex h-10 w-32 items-center justify-start" aria-label="ALTUSplace">
-              <img src="/images/logo.png" alt="ALTUSplace" className="brand-logo max-h-full w-auto object-contain dark:brightness-0 dark:invert" />
+            <Link href="/" onClick={() => setMobileMenuOpen(false)} className="flex h-10 w-32 items-center justify-start" aria-label="B2-Rent">
+              <img src="/images/logo.png" alt="B2-Rent" className="brand-logo max-h-full w-auto object-contain" style={{ height: '48px', maxWidth: '100%', objectFit: 'contain' }} />
             </Link>
             <button type="button" onClick={() => setMobileMenuOpen(false)} className="b2-icon-button border border-border bg-muted" aria-label={t("close")}><X className="h-5 w-5" /></button>
           </div>

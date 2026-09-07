@@ -11,7 +11,7 @@ export default function BlogPage() {
       excerpt: 'تعرف على أهم النصائح القانونية والتقنية لتأجير السيارات بكل أمان في المدن الكبرى بالمغرب، وكيفية تجنب الرسوم الخفية.',
       category: 'دليل السفر',
       date: '21 أغسطس 2026',
-      author: 'فريق التحرير ALTUSplace',
+      author: 'فريق التحرير B2-Rent',
       image: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=800',
       readTime: '5 دقائق قراءة'
     },
@@ -46,7 +46,7 @@ export default function BlogPage() {
           <div className="absolute left-0 bottom-0 w-96 h-96 bg-[#D98236]/10 rounded-full blur-3xl pointer-events-none"></div>
           <div className="relative z-10 max-w-2xl space-y-4">
             <span className="bg-[#D98236] text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-widest inline-block">
-              مدونة ALTUSplace الرسمية
+              مدونة B2-Rent الرسمية
             </span>
             <h1 className="text-3xl md:text-5xl font-black tracking-tight">
               أحدث المقالات، الدلائل السياحية، وأخبار العقارات

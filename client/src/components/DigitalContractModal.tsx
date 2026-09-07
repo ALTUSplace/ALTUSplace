@@ -39,7 +39,7 @@ export const DigitalContractModal: React.FC<ContractProps> = ({
       return;
     }
     setIsSigned(true);
-    toast.success('تم توقيع العقد الرقمي بنجاح وتوثيقه عبر الوسيط المعتمد ALTUSplace');
+    toast.success('تم توقيع العقد الرقمي بنجاح وتوثيقه عبر الوسيط المعتمد B2-Rent');
   };
 
   const handlePrint = () => {
@@ -58,7 +58,7 @@ export const DigitalContractModal: React.FC<ContractProps> = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl font-bold text-amber-400">
             <ShieldCheck className="w-6 h-6 text-amber-500" />
-            عقد وساطة رقمي معتمد - منصة ALTUSplace
+            عقد وساطة رقمي معتمد - منصة B2-Rent
           </DialogTitle>
         </DialogHeader>
 
@@ -72,7 +72,7 @@ export const DigitalContractModal: React.FC<ContractProps> = ({
             </div>
             <div className="text-left">
               <span className="px-3 py-1 bg-amber-500/20 text-amber-400 text-xs font-semibold rounded-full border border-amber-500/30">
-                مصدق من الوسيط ALTUSplace
+                مصدق من الوسيط B2-Rent
               </span>
             </div>
           </div>
@@ -87,7 +87,7 @@ export const DigitalContractModal: React.FC<ContractProps> = ({
             <div>
               <h4 className="font-semibold text-amber-400 text-sm mb-1">الطرف الثاني (المستأجر / الزبون):</h4>
               <p className="text-slate-300 print:text-slate-800 text-sm">{customerName}</p>
-              <p className="text-xs text-slate-400">مسجل بمنصة ALTUSplace</p>
+              <p className="text-xs text-slate-400">مسجل بمنصة B2-Rent</p>
             </div>
           </div>
 
@@ -121,7 +121,7 @@ export const DigitalContractModal: React.FC<ContractProps> = ({
           {/* Terms */}
           <div className="text-xs text-slate-400 space-y-1.5 leading-relaxed bg-slate-950 p-4 rounded-xl border border-slate-800 print:bg-slate-100">
             <p className="font-semibold text-slate-300">الشروط والأحكام القانونية للوساطة:</p>
-            <p>1. تقر منصة ALTUSplace بأنها وسيط إلكتروني بين الطرفين، وتضمن إتمام المعاملة وحجز العربون وفق نظام الضمان (Escrow).</p>
+            <p>1. تقر منصة B2-Rent بأنها وسيط إلكتروني بين الطرفين، وتضمن إتمام المعاملة وحجز العربون وفق نظام الضمان (Escrow).</p>
             <p>2. يتحمل الطرف الأول (المؤجر) كامل المسؤولية عن سلامة وحالة الموضوع المؤجر وجاهزيته للاستخدام.</p>
             <p>3. يلتزم الطرف الثاني (المستأجر) بإعادة الموضوع المؤجر في التاريخ المحدد وبنفس الحالة التي استلمه بها.</p>
           </div>
