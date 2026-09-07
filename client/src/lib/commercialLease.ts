@@ -27,7 +27,7 @@ export function buildCommercialLeaseText(input: CommercialLeaseInput): string[] 
     "عقد كراء محل تجاري أو مهني",
     `مرجع العقد: ${input.reference}`,
     legalNotice,
-    "تنبيه نطاق المسؤولية: يقر الطرفان بأن ALTUSplace منصة إعلانية ووسيط تقني فقط، ولا تملك أو تدير السيارة أو العقار موضوع الحجز. يتحمل الشريك مسؤولية الحالة الميكانيكية للسيارة وسلامتها، أو حالة العقار ونظافته ومطابقته للوصف، كما يتحمل المكتري مسؤولية معاينة الأصل وإبلاغ الشريك بأي ملاحظة عند التسليم، وذلك في حدود ما يسمح به القانون المغربي ودون المساس بالحقوق القانونية الآمرة.",
+    "تنبيه نطاق المسؤولية: يقر الطرفان بأن B2-Rent منصة إعلانية ووسيط تقني فقط، ولا تملك أو تدير السيارة أو العقار موضوع الحجز. يتحمل الشريك مسؤولية الحالة الميكانيكية للسيارة وسلامتها، أو حالة العقار ونظافته ومطابقته للوصف، كما يتحمل المكتري مسؤولية معاينة الأصل وإبلاغ الشريك بأي ملاحظة عند التسليم، وذلك في حدود ما يسمح به القانون المغربي ودون المساس بالحقوق القانونية الآمرة.",
     "1. تعريف الأطراف",
     `المكري: ${input.landlordName || "يستكمل"}`,
     `السجل التجاري (RC): ${input.landlordRc || "يستكمل من طرف المكري"}`,
@@ -51,7 +51,7 @@ export function buildCommercialLeaseText(input: CommercialLeaseInput): string[] 
     "CONTRAT DE BAIL COMMERCIAL / PROFESSIONNEL",
     `Référence du contrat : ${input.reference}`,
     legalNotice,
-    "Clause de responsabilité : Les parties reconnaissent que ALTUSplace est uniquement une plateforme publicitaire et un intermédiaire technologique et qu'elle ne possède ni n'exploite le véhicule ou le bien réservé. Le Partenaire demeure responsable de l'état mécanique et de la sécurité du véhicule, ou de l'état, de la propreté et de la conformité du bien à son annonce. Le Preneur doit examiner le bien et signaler toute réserve au Partenaire lors de la remise, dans les limites permises par le droit marocain et sans préjudice des droits impératifs.",
+    "Clause de responsabilité : Les parties reconnaissent que B2-Rent est uniquement une plateforme publicitaire et un intermédiaire technologique et qu'elle ne possède ni n'exploite le véhicule ou le bien réservé. Le Partenaire demeure responsable de l'état mécanique et de la sécurité du véhicule, ou de l'état, de la propreté et de la conformité du bien à son annonce. Le Preneur doit examiner le bien et signaler toute réserve au Partenaire lors de la remise, dans les limites permises par le droit marocain et sans préjudice des droits impératifs.",
     "1. IDENTIFICATION DES PARTIES",
     `Le Bailleur : ${input.landlordName || "À compléter"}.`,
     `Registre de commerce (RC) du Bailleur : ${input.landlordRc || "À compléter par le Bailleur"}.`,
@@ -107,6 +107,6 @@ export function generateCommercialLeasePdf(input: CommercialLeaseInput): Blob {
 
   doc.setFontSize(8);
   doc.setTextColor(100, 100, 100);
-  doc.text(isArabic ? "ALTUSplace — نموذج تقني للمراجعة القانونية قبل الاستعمال." : "ALTUSplace — Modèle technique à faire valider par un professionnel du droit.", margin, 287);
+  doc.text(isArabic ? "B2-Rent — نموذج تقني للمراجعة القانونية قبل الاستعمال." : "B2-Rent — Modèle technique à faire valider par un professionnel du droit.", margin, 287);
   return doc.output("blob");
 }

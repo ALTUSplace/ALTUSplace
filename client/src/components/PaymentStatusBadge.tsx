@@ -1,5 +1,5 @@
 /**
- * PaymentStatusBadge.tsx - Visual payment status indicator for ALTUSplace
+ * PaymentStatusBadge.tsx - Visual payment status indicator for B2-Rent
  * Displays payment and booking status with appropriate colors and icons
  */
 import { CheckCircle2, Clock, XCircle, AlertCircle, Loader2, Receipt, CreditCard, Building2 } from 'lucide-react';

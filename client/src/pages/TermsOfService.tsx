@@ -109,7 +109,7 @@ export default function TermsOfService() {
                 2. Commission de la Plateforme
               </h2>
               <p>
-                ALTUSplace perçoit une commission fixe de <strong>10%</strong> sur le montant total de chaque réservation confirmée pour couvrir les services technologiques, contrats numériques et la garantie sécurisée.
+                B2-Rent perçoit une commission fixe de <strong>10%</strong> sur le montant total de chaque réservation confirmée pour couvrir les services technologiques, contrats numériques et la garantie sécurisée.
               </p>
             </section>
 

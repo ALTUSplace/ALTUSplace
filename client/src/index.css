@@ -38,8 +38,8 @@
     --brand-amber-soft: rgba(217, 130, 54, 0.14); /* Soft accent wash */
 
     /* Status & neutral tokens */
-    --brand-emerald: #059669; /* Success status */
-    --brand-emerald-light: #10b981; /* Light success highlight */
+    --brand-success: #00A3FF; /* Success status - Electric Cyan */
+    --brand-success-light: #00A3FF; /* Light success highlight - Electric Cyan */
     --brand-slate: #94a3b8; /* Neutral icons on dark surfaces */
     --brand-slate-light: #cbd5e1; /* Light neutral contrast */
     --brand-slate-dark: #475569;
@@ -49,7 +49,6 @@
     --brand-border-light: #1b2430;
     --brand-ink: #E2E8F0;
     --brand-ink-light: #a7b2c1;
-    --brand-success: #059669;
     --brand-danger: #dc2626;
     --brand-warning: #d97706;
     --brand-info: #00A3FF;
@@ -97,7 +96,7 @@
     --shadow-soft: 0 8px 24px rgba(0, 0, 0, 0.25);
     --shadow-card: 0 14px 34px rgba(0, 0, 0, 0.3);
     --shadow-amber: 0 12px 28px rgba(217, 130, 54, 0.28);
-    --shadow-emerald: 0 12px 28px rgba(5, 150, 105, 0.15);
+    --shadow-emerald: 0 12px 28px rgba(0, 163, 255, 0.15);
     --shadow-cyan: 0 0 12px rgba(0, 163, 255, 0.35);
     --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   }
@@ -123,8 +122,8 @@
     --brand-info: #00A3FF;
     --brand-white: #ffffff;
     --brand-slate: #94a3b8;
-    --brand-emerald: #34d399;
-    --brand-emerald-light: #6ee7b7;
+    --brand-success: #34d399;
+    --brand-success-light: #6ee7b7;
   }
 
   * {
@@ -597,7 +596,7 @@ textarea:focus-visible {
   
   /* Premium button styles */
   .btn-primary {
-    @apply bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 hover:shadow-lg hover:scale-105;
+    @apply bg-[#D98236] hover:bg-[#E89247] text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 hover:shadow-lg hover:scale-105;
   }
   
   .btn-secondary {
@@ -605,16 +604,16 @@ textarea:focus-visible {
   }
   
   .btn-outline {
-    @apply border-2 border-cyan-500 text-cyan-500 hover:bg-cyan-50 font-medium py-3 px-6 rounded-xl transition-all duration-200;
+    @apply border-2 border-[#00A3FF] text-[#00A3FF] hover:bg-[#00A3FF]/10 font-medium py-3 px-6 rounded-xl transition-all duration-200;
   }
   
   /* Premium input styles */
   .input-field {
-    @apply w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 focus:outline-none transition-all duration-200;
+    @apply w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-[#00A3FF] focus:ring-2 focus:ring-[#00A3FF]/20 focus:outline-none transition-all duration-200;
   }
   
   .input-field-dark {
-    @apply w-full px-4 py-3 rounded-xl border border-slate-600 bg-slate-700 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-900 focus:outline-none transition-all duration-200;
+    @apply w-full px-4 py-3 rounded-xl border border-slate-600 bg-slate-700 focus:border-[#00A3FF] focus:ring-2 focus:ring-[#00A3FF]/20 focus:outline-none transition-all duration-200;
   }
   
   /* Hero section styles */
@@ -807,4 +806,125 @@ textarea:focus-visible {
 
 .custom-marker-icon:hover {
   z-index: 10000 !important;
+}
+
+/* ============================================
+   B2-Rent BRAND FORCE OVERRIDES
+   These styles use !important to ensure brand
+   consistency across all components
+   ============================================ */
+
+/* Header & Navigation Force Styles */
+header,
+nav,
+.navbar {
+  background: #0B0F15 !important;
+  border-bottom: 1px solid rgba(217, 130, 54, 0.3) !important;
+}
+
+/* Logo Force Styles */
+header img[src*="logo"],
+.navbar img[src*="logo"],
+.brand-logo {
+  height: 48px !important;
+  width: auto !important;
+  object-fit: contain !important;
+  display: block !important;
+  filter: none !important;
+  opacity: 1 !important;
+}
+
+/* Primary Buttons & Active States - Bronze Gold */
+.active-tab,
+.btn-yellow,
+.btn-primary,
+[data-currency].active,
+[data-lang].active,
+.b2-primary-action,
+.b2-segmented-control > button[class*="bg-[#D98236]"],
+.b2-segmented-control > button[class*="bg-amber"] {
+  background-color: #D98236 !important;
+  color: #ffffff !important;
+  border-color: #D98236 !important;
+}
+
+/* Secondary Accents - Electric Cyan */
+.search-btn,
+.btn-cyan,
+.badge-primary,
+.b2-icon-button[class*="text-cyan"],
+button[class*="bg-[#00A3FF]"] {
+  background-color: #00A3FF !important;
+  color: #ffffff !important;
+  border-color: #00A3FF !important;
+}
+
+/* Header Text Colors */
+header span,
+header a,
+.navbar span,
+.navbar a {
+  color: #E2E8F0 !important;
+}
+
+/* Active Navigation Link */
+header a[class*="active"],
+.navbar a[class*="active"],
+.nav-link-active {
+  color: #D98236 !important;
+}
+
+/* Currency & Language Active States */
+[data-currency].active,
+[data-lang].active,
+.currency-active,
+.lang-active {
+  background-color: #D98236 !important;
+  color: #ffffff !important;
+  border: 1px solid #D98236 !important;
+}
+
+/* Search Button Force Style */
+.search-button,
+.btn-search,
+[type="submit"] {
+  background-color: #D98236 !important;
+  color: #ffffff !important;
+}
+
+/* Badge & Tag Force Styles */
+.badge-primary,
+.tag-primary,
+.status-badge {
+  background-color: #00A3FF !important;
+  color: #ffffff !important;
+}
+
+/* Footer Force Styles */
+footer {
+  background: #0B0F15 !important;
+  border-top: 1px solid rgba(217, 130, 54, 0.2) !important;
+}
+
+footer img[src*="logo"] {
+  height: 40px !important;
+  width: auto !important;
+  object-fit: contain !important;
+}
+
+/* Override any remaining yellow/orange/green */
+[class*="bg-yellow"],
+[class*="bg-amber"]:not([class*="bg-amber-50"]):not([class*="bg-amber-100"]),
+[class*="bg-orange"],
+[class*="bg-green"],
+[class*="bg-emerald"] {
+  background-color: #D98236 !important;
+}
+
+[class*="text-yellow"],
+[class*="text-amber"]:not([class*="text-amber-50"]):not([class*="text-amber-100"]),
+[class*="text-orange"],
+[class*="text-green"],
+[class*="text-emerald"] {
+  color: #D98236 !important;
 }

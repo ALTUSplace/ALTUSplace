@@ -7,7 +7,7 @@ export const BRAND_NAME = "B2-Rent";
 export const BRAND_TAGLINE = "Rent. Drive. Live.";
 
 /** Functional support inbox (operational address — change here when it moves). */
-export const SUPPORT_EMAIL = "b2rentt@gmail.com";
+export const SUPPORT_EMAIL = "b2rent@gmail.com";
 
 /** Client-side storage keys, namespaced under the current brand. */
 export const STORAGE_KEYS = {

@@ -4,7 +4,7 @@ import { trpc } from '@/lib/trpc';
 import { Button } from '@/components/ui/button';
 import { OptimizedImage } from '@/components/OptimizedImage';
 import { Search, MapPin, Building2, Car, ShieldCheck, ArrowRight, CheckCircle2, Award, Clock, Bot, Send, Mic, Bookmark, Check, Calendar, DollarSign, Filter, Phone } from 'lucide-react';
-import { PARTNERS, LISTINGS, ListingItem } from '@/data/altusplace';
+import { PARTNERS, LISTINGS, ListingItem } from '@/data/b2rent';
 import { SmartRecommendations } from '@/components/SmartRecommendations';
 import { FAQSection } from '@/components/FAQSection';
 import { toast } from 'sonner';
@@ -37,7 +37,7 @@ export default function Home() {
     pricePerUnit: item.pricePerDay,
     image: item.imageUrl || 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=800',
     city: item.city || 'الدار البيضاء',
-    providerName: 'بيانات الإعلان من ALTUSplace',
+    providerName: 'بيانات الإعلان من B2-Rent',
     specs: {
       transmission: 'أوتوماتيك',
       fuel: 'ديزل / بنزين',
@@ -59,11 +59,11 @@ export default function Home() {
       
       {/* Modern Hero Section with Elegant Navy Background */}
       <section className="relative pt-8 pb-16 md:pt-12 md:pb-24 px-4 overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
-        <div className="absolute inset-0 opacity-5 bg-[radial-gradient(#10b981_1px,transparent_1px)] [background-size:28px_28px] pointer-events-none"></div>
+        <div className="absolute inset-0 opacity-5 bg-[radial-gradient(#00A3FF_1px,transparent_1px)] [background-size:28px_28px] pointer-events-none"></div>
         
         <div className="container mx-auto max-w-6xl text-center space-y-5 md:space-y-8 relative z-10">
-          <div className="inline-flex items-center gap-2 bg-emerald-500/20 border border-emerald-500/40 px-4 py-2 rounded-full text-emerald-400 text-sm font-bold tracking-wide fade-in">
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />
+          <div className="inline-flex items-center gap-2 bg-[#00A3FF]/20 border border-[#00A3FF]/40 px-4 py-2 rounded-full text-[#00A3FF] text-sm font-bold tracking-wide fade-in">
+            <ShieldCheck className="w-4 h-4 text-[#00A3FF]" />
             <span>منصة الوساطة الأولى المعتمدة بين المزودين والزبائن في المغرب</span>
           </div>
 
@@ -72,7 +72,7 @@ export default function Home() {
           </h1>
 
           <p className="text-slate-300 text-xs sm:text-sm md:text-base max-w-2xl mx-auto leading-relaxed">
-            ALTUSplace منصة وسيطة ذكية تربطك بأرقى شركات كراء السيارات والوكالات العقارية المستقلة عبر المدن المغربية، مع عقود رقمية وتوقيع إلكتروني فوري.
+            B2-Rent منصة وسيطة ذكية تربطك بأرقى شركات كراء السيارات والوكالات العقارية المستقلة عبر المدن المغربية، مع عقود رقمية وتوقيع إلكتروني فوري.
           </p>
           
           <div className="flex justify-center gap-4 mt-6">

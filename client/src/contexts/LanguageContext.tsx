@@ -253,7 +253,7 @@ const translations: Record<Language, Record<string, string>> = {
     favorites: "Favorites",
     profile: "Profile",
     help: "Help & support",
-    about: "About ALTUSplace",
+        about: "About B2-Rent",
     blog: "Blog",
     notifications: "Notifications",
     kyc: "Identity verification",

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'wouter';
-import { LISTINGS, ListingItem } from '@/data/altusplace';
+import { LISTINGS, ListingItem } from '@/data/b2rent';
 import { Button } from '@/components/ui/button';
 import { Heart, MapPin, Trash2, SlidersHorizontal } from 'lucide-react';
 import { toast } from 'sonner';

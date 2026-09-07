@@ -24,7 +24,7 @@ describe("platform legal disclosure", () => {
 
   it("uses a versioned consent marker", () => {
     expect(LEGAL_CONSENT_VERSION).toBe("platform-protection-v1");
-    expect(getLegalDisclosurePlainText("ar")).toContain("منصة ALTUSplace هي وسيط تقني وإعلاني");
+    expect(getLegalDisclosurePlainText("ar")).toContain("منصة B2-Rent هي وسيط تقني وإعلاني");
     expect(getLegalDisclosurePlainText("fr")).toContain("plateforme publicitaire et un intermédiaire technologique");
   });
 });
