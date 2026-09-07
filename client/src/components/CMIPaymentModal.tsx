@@ -112,7 +112,7 @@ export function CMIPaymentModal({ isOpen, onClose, onSuccess, amount }: CMIPayme
             </div>
           </div>
 
-          <div className="flex items-center gap-2 text-[11px] text-emerald-400 bg-emerald-500/10 p-3 rounded-xl border border-emerald-500/20">
+          <div className="flex items-center gap-2 text-[11px] text-cyan-400 bg-cyan-500/10 p-3 rounded-xl border border-cyan-500/20">
             <Lock className="w-4 h-4 shrink-0" />
             <span>معاملة مشفرة وآمنة وفق معايير البنك المركزي المغربي ومؤسسة CMI.</span>
           </div>

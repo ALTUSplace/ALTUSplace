@@ -71,7 +71,7 @@ export default function RenterDashboard() {
                       <div className="flex justify-between items-center">
                         <span className="text-sm font-bold text-muted-foreground">حجز #{booking.id}</span>
                         <Badge className={
-                          booking.status === 'Confirmed' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-200' :
+                          booking.status === 'Confirmed' ? 'bg-cyan-500/10 text-cyan-500 border-cyan-200' :
                           booking.status === 'Pending' ? 'bg-amber-500/10 text-amber-600 border-amber-200' :
                           'bg-rose-500/10 text-rose-600 border-rose-200'
                         }>

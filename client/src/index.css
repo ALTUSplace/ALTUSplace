@@ -605,7 +605,7 @@ textarea:focus-visible {
   }
   
   .btn-outline {
-    @apply border-2 border-emerald-600 text-emerald-600 hover:bg-emerald-50 font-medium py-3 px-6 rounded-xl transition-all duration-200;
+    @apply border-2 border-cyan-500 text-cyan-500 hover:bg-cyan-50 font-medium py-3 px-6 rounded-xl transition-all duration-200;
   }
   
   /* Premium input styles */

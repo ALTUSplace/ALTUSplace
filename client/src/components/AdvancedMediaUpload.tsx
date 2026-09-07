@@ -134,7 +134,7 @@ export function AdvancedMediaUpload({ onImagesUploaded }: AdvancedMediaUploadPro
             <p className="text-xs text-slate-400">تُفحص الصور تلقائياً للتأكد من أنها واقعية وأصلية قبل حفظها ونشر العرض.</p>
           </div>
         </div>
-        <div className="hidden sm:flex items-center gap-1.5 text-xs text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-xl border border-emerald-500/20">
+        <div className="hidden sm:flex items-center gap-1.5 text-xs text-cyan-400 bg-cyan-500/10 px-3 py-1.5 rounded-xl border border-cyan-500/20">
           <Shield className="w-3.5 h-3.5" /> فحص أصالة محمي
         </div>
       </div>

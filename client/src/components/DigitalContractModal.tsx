@@ -129,9 +129,9 @@ export const DigitalContractModal: React.FC<ContractProps> = ({
           {/* Signature Section */}
           <div className="border-t border-slate-800 pt-4">
             {isSigned ? (
-              <div className="bg-emerald-500/10 border border-emerald-500/30 p-4 rounded-xl flex items-center justify-between">
+              <div className="bg-cyan-500/10 border border-cyan-500/30 p-4 rounded-xl flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <CheckCircle className="w-6 h-6 text-emerald-400" />
+                  <CheckCircle className="w-6 h-6 text-cyan-400" />
                   <div>
                     <p className="text-sm font-bold text-emerald-400">تم التوقيع الرقمي بنجاح</p>
                     <p className="text-xs text-slate-300">الموقع: {signatureName} | التوقيت: {new Date().toLocaleString('ar-MA')}</p>

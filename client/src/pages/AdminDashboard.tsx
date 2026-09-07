@@ -45,7 +45,7 @@ export default function AdminDashboard() {
   const updateSettings = trpc.admin.updatePlatformSettings.useMutation(notify('تم حفظ إعدادات المنصة'));
   const reviewKyc = trpc.kyc.review.useMutation(notify('تم تحديث طلب التحقق'));
 
-  if (loading || !user) return <div className="grid min-h-screen place-items-center"><Loader2 className="animate-spin text-emerald-600" /></div>;
+  if (loading || !user) return <div className="grid min-h-screen place-items-center"><Loader2 className="animate-spin text-cyan-500" /></div>;
   if (!enabled) return null;
   const stats = overview.data;
   const pendingKyc = kyc.data?.filter(item => item.status === 'Pending').length || 0;

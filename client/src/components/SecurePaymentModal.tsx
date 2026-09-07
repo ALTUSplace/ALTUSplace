@@ -258,7 +258,7 @@ export function SecurePaymentModal({
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-2 text-[11px] text-emerald-400 bg-emerald-500/10 p-3 rounded-xl border border-emerald-500/20">
+              <div className="flex items-center gap-2 text-[11px] text-cyan-400 bg-cyan-500/10 p-3 rounded-xl border border-cyan-500/20">
                 <Lock className="w-4 h-4 shrink-0" />
                 <span>معاملة مشفرة بـ 256-bit SSL وفق معايير البنك المركبي المغربي ومؤسسة CMI</span>
               </div>
@@ -271,8 +271,8 @@ export function SecurePaymentModal({
 
           {step === 'details' && paymentMethod === 'bank_transfer' && (
             <div className="space-y-5">
-              <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-2xl p-5 space-y-4">
-                <div className="flex items-center gap-3"><Building2 className="w-5 h-5 text-emerald-400" /><p className="font-bold text-sm text-emerald-300">معلومات التحويل البنكي</p></div>
+              <div className="bg-cyan-500/5 border border-cyan-500/20 rounded-2xl p-5 space-y-4">
+                <div className="flex items-center gap-3"><Building2 className="w-5 h-5 text-cyan-400" /><p className="font-bold text-sm text-cyan-300">معلومات التحويل البنكي</p></div>
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between py-2 border-b border-slate-800"><span className="text-slate-400">اسم البنك:</span><span className="font-bold text-white">BMCE Bank</span></div>
                   <div className="flex justify-between py-2 border-b border-slate-800"><span className="text-slate-400">IBAN:</span><span className="font-mono text-white text-xs">MA 0023 4456 7890 1234 5678 9012</span></div>

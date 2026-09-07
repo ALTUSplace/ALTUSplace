@@ -337,7 +337,7 @@ export default function PartnerDashboard() {
                       <p className="text-sm text-muted-foreground">{item.city} | {item.pricePerDay} د.م / يوم</p>
                     </CardHeader>
                     <CardContent className="flex justify-between items-center pt-2 border-t border-border">
-                      <span className="text-xs text-emerald-600 font-bold bg-emerald-500/10 px-2 py-1 rounded">متاح للحجز</span>
+                      <span className="text-xs text-cyan-500 font-bold bg-cyan-500/10 px-2 py-1 rounded">متاح للحجز</span>
                       <Button variant="ghost" size="sm" className="text-rose-600 hover:text-rose-700 hover:bg-rose-50" onClick={() => toast.info('تم تحديث حالة التوفر بنجاح')}>
                         تغيير الحالة
                       </Button>
@@ -367,7 +367,7 @@ export default function PartnerDashboard() {
                     <div className="space-y-1">
                       <div className="flex items-center gap-3">
                         <h4 className="font-bold text-lg">طلب حجز #{booking.id}</h4>
-                        <Badge className={booking.status === 'Confirmed' ? 'bg-emerald-500/10 text-emerald-600' : 'bg-amber-500/10 text-amber-600'}>
+                        <Badge className={booking.status === 'Confirmed' ? 'bg-cyan-500/10 text-cyan-500' : 'bg-amber-500/10 text-amber-600'}>
                           {booking.status === 'Confirmed' ? 'مؤكد' : 'قيد الانتظار'}
                         </Badge>
                       </div>
