@@ -1,11 +1,11 @@
 /**
- * ALTUSplace Platform - Automated End-to-End Test Script (CommonJS)
+ * B2-Rent Platform - Automated End-to-End Test Script (CommonJS)
  */
 
 const { chromium } = require('playwright');
 
 async function runBookingTest() {
-  console.log('🚀 بدء تشغيل اختبار تدفق الحجز التلقائي لمنصة ALTUSplace...');
+  console.log('🚀 بدء تشغيل اختبار تدفق الحجز التلقائي لمنصة B2-Rent...');
   
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext();

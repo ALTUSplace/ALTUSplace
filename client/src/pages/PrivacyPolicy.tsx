@@ -31,10 +31,10 @@ export default function PrivacyPolicy() {
         <div className="mb-8 rounded-[1.75rem] bg-[var(--brand-navy)] px-6 py-8 text-white sm:px-10">
           <div className="mb-4 flex items-center gap-3 text-amber-300">
             <ShieldCheck className="h-7 w-7" />
-            <span className="text-sm font-bold">ALTUSplace | الثقة أولاً</span>
+            <span className="text-sm font-bold">B2-Rent | الثقة أولاً</span>
           </div>
           <h1 className="text-3xl font-black sm:text-4xl">سياسة الخصوصية</h1>
-          <p className="mt-3 max-w-2xl text-sm leading-7 text-white/90">توضح هذه الصفحة بشكل مبسط كيف نتعامل مع بيانات مستخدمي منصة ALTUSplace عند تصفح العروض أو إنشاء الحجوزات.</p>
+          <p className="mt-3 max-w-2xl text-sm leading-7 text-white/90">توضح هذه الصفحة بشكل مبسط كيف نتعامل مع بيانات مستخدمي منصة B2-Rent عند تصفح العروض أو إنشاء الحجوزات.</p>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">

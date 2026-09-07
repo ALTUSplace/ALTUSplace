@@ -22,7 +22,7 @@ export default function Footer() {
               <div className="rounded-2xl bg-[#efeade] p-2 shadow-lg ring-1 ring-white/15">
                 <img
                   src="/images/logo.png"
-                  alt="ALTUSplace Logo"
+                  alt="B2-Rent Logo"
                   loading="lazy"
                   className="brand-logo h-10 w-auto object-contain"
                 />
@@ -147,7 +147,7 @@ export default function Footer() {
         </div>
 
         <div className="flex flex-col items-center justify-between gap-4 border-t border-slate-800 pt-8 text-xs text-slate-400 md:flex-row">
-          <p>© 2026 ALTUSplace. {t("allRights")}. منصة تأجير السيارات والعقارات الأولى في المغرب.</p>
+          <p>© 2026 B2-Rent. {t("allRights")}. منصة تأجير السيارات والعقارات الأولى في المغرب.</p>
           <div className="flex items-center gap-6">
             <Link href="/terms" className="py-1 transition-colors hover:text-[#D98236]">
               {t("terms")}

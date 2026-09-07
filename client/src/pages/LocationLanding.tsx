@@ -9,9 +9,9 @@ const locations = {
     en: { title: "Car rental in Marrakech", description: "Find reliable cars for rent in Marrakech, near the medina, Gueliz and the airport.", city: "Marrakech" },
   },
   casablancaAirport: {
-    ar: { title: "كراء السيارات في مطار محمد الخامس", description: "احجز سيارة عند الوصول إلى مطار محمد الخامس واستلمها بسهولة من شركاء ALTUSplace.", city: "الدار البيضاء" },
-    fr: { title: "Location de voitures à l'aéroport Mohammed V", description: "Réservez votre voiture à l'arrivée à l'aéroport Mohammed V auprès des partenaires ALTUSplace.", city: "Casablanca" },
-    en: { title: "Car rental at Mohammed V Airport", description: "Book a car on arrival at Mohammed V Airport with trusted ALTUSplace partners.", city: "Casablanca" },
+    ar: { title: "كراء السيارات في مطار محمد الخامس", description: "احجز سيارة عند الوصول إلى مطار محمد الخامس واستلمها بسهولة من شركاء B2-Rent.", city: "الدار البيضاء" },
+    fr: { title: "Location de voitures à l'aéroport Mohammed V", description: "Réservez votre voiture à l'arrivée à l'aéroport Mohammed V auprès des partenaires B2-Rent.", city: "Casablanca" },
+    en: { title: "Car rental at Mohammed V Airport", description: "Book a car on arrival at Mohammed V Airport with trusted B2-Rent partners.", city: "Casablanca" },
   },
 } as const;
 

@@ -66,17 +66,17 @@ export async function icalExportHandler(req: Request, res: Response) {
     const now = new Date();
     const events = rows.map(booking => [
       "BEGIN:VEVENT",
-      `UID:altusplace-booking-${booking.id}@altusplace.ma`,
+      `UID:b2rent-booking-${booking.id}@b2rent.ma`,
       `DTSTAMP:${toIcalDate(now)}`,
       `DTSTART:${toIcalDate(new Date(booking.startDate))}`,
       `DTEND:${toIcalDate(new Date(booking.endDate))}`,
-      `SUMMARY:${escapeIcal(`ALTUSplace — ${listing.title}`)}`,
+      `SUMMARY:${escapeIcal(`B2-Rent — ${listing.title}`)}`,
       `LOCATION:${escapeIcal(listing.city ?? "Morocco")}`,
       "END:VEVENT",
     ].join("\r\n"));
-    const calendar = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//ALTUSplace Morocco//iCal//EN", "CALSCALE:GREGORIAN", ...events, "END:VCALENDAR", ""].join("\r\n");
+    const calendar = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//B2-Rent Morocco//iCal//EN", "CALSCALE:GREGORIAN", ...events, "END:VCALENDAR", ""].join("\r\n");
     res.setHeader("Content-Type", "text/calendar; charset=utf-8");
-    res.setHeader("Content-Disposition", `inline; filename="altusplace-${listing.id}.ics"`);
+    res.setHeader("Content-Disposition", `inline; filename="b2rent-${listing.id}.ics"`);
     return res.send(calendar);
   } catch (error) {
     console.error("[IcalExport] Handler failed:", error);

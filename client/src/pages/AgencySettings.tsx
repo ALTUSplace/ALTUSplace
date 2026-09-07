@@ -126,7 +126,7 @@ export default function AgencySettings() {
     <form onSubmit={submit} className="space-y-6 rounded-3xl border bg-card p-5 shadow-sm md:p-7">
       <div><h2 className="text-xl font-bold">بيانات الاتصال</h2><p className="mt-1 text-sm text-muted-foreground">يمكنك تعديل هذه البيانات في أي وقت من دون تغيير إعلاناتك.</p></div>
       <div className="grid gap-4 md:grid-cols-2">
-        <Field label="اسم الوكالة" value={form.agencyName} onChange={(value) => updateField("agencyName", value)} placeholder="مثال: ALTUSplace Casablanca" />
+        <Field label="اسم الوكالة" value={form.agencyName} onChange={(value) => updateField("agencyName", value)} placeholder="مثال: B2-Rent Casablanca" />
         <Field label="الهاتف" value={form.agencyPhone} onChange={(value) => updateField("agencyPhone", value)} placeholder="+212 6..." dir="ltr" />
         <Field label="البريد الإلكتروني" value={form.agencyEmail} onChange={(value) => updateField("agencyEmail", value)} placeholder="contact@agency.ma" type="email" dir="ltr" />
         <Field label="واتساب" value={form.whatsappPhone} onChange={(value) => updateField("whatsappPhone", value)} placeholder="+212 6..." dir="ltr" />

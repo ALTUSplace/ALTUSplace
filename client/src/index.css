@@ -192,7 +192,7 @@
   transform: scale(0.96);
 }
 
-/* ALTUSplace brand logo: blend mode removes the light logo plate (cream /
+/* B2-Rent brand logo: blend mode removes the light logo plate (cream /
    white) cleanly over any surface. In dark contexts the mark is inverted to
    a light silhouette, so the blend is disabled there to keep full contrast. */
 .brand-logo {

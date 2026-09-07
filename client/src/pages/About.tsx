@@ -5,10 +5,10 @@ export default function About() {
     <div className="min-h-screen bg-slate-900 text-slate-100 py-16">
       <div className="container mx-auto px-4 max-w-4xl space-y-12">
         <div className="text-center space-y-3">
-          <span className="text-xs font-bold text-amber-400 uppercase tracking-widest">منصة ALTUSplace الرائدة</span>
+          <span className="text-xs font-bold text-amber-400 uppercase tracking-widest">منصة B2-Rent الرائدة</span>
           <h1 className="text-4xl font-extrabold text-white">نعيد تعريف تجربة تأجير السيارات في المغرب</h1>
           <p className="text-slate-400 max-w-2xl mx-auto text-base">
-            تأسست ALTUSplace لتكون الجسر الموثوق بين أفضل وكالات تأجير السيارات والعملاء الباحثين عن الفخامة، الأمان، والشفافية التامة في أغادير، مراكش، الدار البيضاء، وطنجة.
+            تأسست B2-Rent لتكون الجسر الموثوق بين أفضل وكالات تأجير السيارات والعملاء الباحثين عن الفخامة، الأمان، والشفافية التامة في أغادير، مراكش، الدار البيضاء، وطنجة.
           </p>
         </div>
 

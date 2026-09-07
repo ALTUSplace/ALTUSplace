@@ -11,11 +11,11 @@ export const SUPPORT_EMAIL = "b2rentt@gmail.com";
 
 /** Client-side storage keys, namespaced under the current brand. */
 export const STORAGE_KEYS = {
-  language: "altusplace-language",
-  currency: "altusplace_currency",
-  notificationSound: "altusplace-notification-sound",
-  favorites: "altusplace_favorites",
-  recentViewed: "altusplace_recent_viewed",
+  language: "b2rent-language",
+  currency: "b2rent_currency",
+  notificationSound: "b2rent-notification-sound",
+  favorites: "b2rent_favorites",
+  recentViewed: "b2rent_recent_viewed",
 } as const;
 
 export type BrandPreferenceKey = keyof typeof STORAGE_KEYS;
@@ -63,7 +63,7 @@ export function writeBrandPreference(key: BrandPreferenceKey, value: string): vo
 }
 
 /** Client-side event fired after the platform-protection consent is accepted. */
-export const LEGAL_CONSENT_EVENT = "altusplace:legal-consent";
+export const LEGAL_CONSENT_EVENT = "b2rent:legal-consent";
 
 /** Cookie that records the accepted platform-protection consent version. */
 export const LEGAL_CONSENT_COOKIE = "b2_legal_consent";

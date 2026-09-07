@@ -22,7 +22,7 @@ describe("Checkout simulated CMI UI audit", () => {
   });
 
   it("includes responsive trust and order-summary landmarks", () => {
-    expect(checkoutSource).toContain("ALTUSplace Secure Checkout");
+    expect(checkoutSource).toContain("B2-Rent Secure Checkout");
     expect(checkoutSource).toContain("جلسة دفع محمية");
     expect(checkoutSource).toContain("ملخص الفاتورة الشفافة");
     expect(checkoutSource).toContain("md:sticky md:top-6");
