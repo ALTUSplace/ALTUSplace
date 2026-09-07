@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calendar, FileText, Headphones, Car, Building2, CheckCircle2, Clock, XCircle, Download, Send } from 'lucide-react';
 import { toast } from 'sonner';
 import type { InvoicePdfInput } from '@/lib/invoicePdf';
+import { SUPPORT_EMAIL } from '@/config/brand';
 
 export default function RenterDashboard() {
   const { data: user } = trpc.auth.me.useQuery();
@@ -17,7 +18,7 @@ export default function RenterDashboard() {
   const handleSendSupport = (e: React.FormEvent) => {
     e.preventDefault();
     if (!supportMessage.trim()) return;
-    toast.success('تم إرسال رسالتك بنجاح إلى فريق الدعم الفني b2rentt@gmail.com. سنرد عليك خلال دقائق!');
+    toast.success(`تم إرسال رسالتك بنجاح إلى فريق الدعم الفني ${SUPPORT_EMAIL}. سنرد عليك خلال دقائق!`);
     setSupportMessage('');
   };
 
@@ -167,7 +168,7 @@ export default function RenterDashboard() {
               <form onSubmit={handleSendSupport} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium mb-1">البريد الإلكتروني المعتمد</label>
-                  <input type="email" value={user?.email || 'b2rentt@gmail.com'} disabled className="w-full p-3 rounded-xl bg-muted border border-border text-sm" />
+                  <input type="email" value={user?.email || SUPPORT_EMAIL} disabled className="w-full p-3 rounded-xl bg-muted border border-border text-sm" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">نص الاستفسار أو المشكلة</label>

@@ -31,10 +31,10 @@ export default function PrivacyPolicy() {
         <div className="mb-8 rounded-[1.75rem] bg-[var(--brand-navy)] px-6 py-8 text-white sm:px-10">
           <div className="mb-4 flex items-center gap-3 text-amber-300">
             <ShieldCheck className="h-7 w-7" />
-            <span className="text-sm font-bold">B2-Rent | الثقة أولاً</span>
+            <span className="text-sm font-bold">ALTUSplace | الثقة أولاً</span>
           </div>
           <h1 className="text-3xl font-black sm:text-4xl">سياسة الخصوصية</h1>
-          <p className="mt-3 max-w-2xl text-sm leading-7 text-white/90">توضح هذه الصفحة بشكل مبسط كيف نتعامل مع بيانات مستخدمي منصة B2-Rent عند تصفح العروض أو إنشاء الحجوزات.</p>
+          <p className="mt-3 max-w-2xl text-sm leading-7 text-white/90">توضح هذه الصفحة بشكل مبسط كيف نتعامل مع بيانات مستخدمي منصة ALTUSplace عند تصفح العروض أو إنشاء الحجوزات.</p>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
@@ -43,7 +43,7 @@ export default function PrivacyPolicy() {
               <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-300">
                 <CheckCircle2 className="h-5 w-5" />
               </div>
-              <h2 className="text-lg font-black text-[var(--brand-navy)] dark:text-white">{section.title}</h2>
+              <h2 className="text-lg font-black text-foreground">{section.title}</h2>
               <p className="mt-3 text-sm leading-7 text-slate-700 dark:text-slate-200">{section.body}</p>
             </article>
           ))}

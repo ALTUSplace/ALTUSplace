@@ -15,11 +15,11 @@ export function TwoFactorAuthModal({ isOpen, onClose, onSuccess }: TwoFactorAuth
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [recoveryCodes] = useState([
-    'B2R-8841-992X',
-    'B2R-3312-771K',
-    'B2R-5590-442M',
-    'B2R-1123-883P',
-    'B2R-9945-221S',
+    'ALT-8841-992X',
+    'ALT-3312-771K',
+    'ALT-5590-442M',
+    'ALT-1123-883P',
+    'ALT-9945-221S',
   ]);
 
   if (!isOpen) return null;
@@ -48,9 +48,9 @@ export function TwoFactorAuthModal({ isOpen, onClose, onSuccess }: TwoFactorAuth
 
   const handleDownloadCodes = () => {
     const element = document.createElement('a');
-    const file = new Blob([`B2-Rent 2FA Recovery Codes:\n\n` + recoveryCodes.join('\n')], { type: 'text/plain' });
+    const file = new Blob([`ALTUSplace 2FA Recovery Codes:\n\n` + recoveryCodes.join('\n')], { type: 'text/plain' });
     element.href = URL.createObjectURL(file);
-    element.download = 'b2-rent-recovery-codes.txt';
+    element.download = 'altusplace-recovery-codes.txt';
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);

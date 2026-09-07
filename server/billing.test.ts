@@ -47,8 +47,8 @@ describe("invoice references", () => {
     const first = createInvoiceNumber(42, now);
     const second = createInvoiceNumber(42, now);
 
-    expect(first).toMatch(/^B2R-2026-42-[A-Z0-9]{8}$/);
-    expect(second).toMatch(/^B2R-2026-42-[A-Z0-9]{8}$/);
+    expect(first).toMatch(/^ALT-2026-42-[A-Z0-9]{8}$/);
+    expect(second).toMatch(/^ALT-2026-42-[A-Z0-9]{8}$/);
     expect(second).not.toBe(first);
   });
 });

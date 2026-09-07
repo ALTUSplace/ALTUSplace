@@ -1,17 +1,19 @@
+import { LEGAL_CONSENT_EVENT } from "@/config/brand";
+
 export const LEGAL_CONSENT_VERSION = "platform-protection-v1";
 
 export const legalDisclosure = {
   ar: {
-    title: "بنود حماية منصة B2-Rent",
+    title: "بنود حماية منصة ALTUSplace",
     summary: "أوافق على قراءة وقبول بنود حماية المنصة قبل إنشاء الحساب أو إتمام أي عملية.",
     sections: [
       {
         title: "طبيعة الخدمة",
-        body: "منصة B2-Rent هي وسيط تقني وإعلاني يربط بين مقدمي الخدمات، مثل شركات كراء السيارات وأصحاب العقارات، وبين المستأجرين. لا تملك المنصة السيارات أو العقارات ولا تديرها، ولا تحل محل الشريك في المعاينة أو التسليم.",
+        body: "منصة ALTUSplace هي وسيط تقني وإعلاني يربط بين مقدمي الخدمات، مثل شركات كراء السيارات وأصحاب العقارات، وبين المستأجرين. لا تملك المنصة السيارات أو العقارات ولا تديرها، ولا تحل محل الشريك في المعاينة أو التسليم.",
       },
       {
         title: "المسؤولية القانونية",
-        body: "يتحمل الشريك مسؤولية دقة الإعلان والحالة الميكانيكية للسيارة والسلامة والنظافة ومطابقة العقار للصور والوصف. لا تتحمل B2-Rent، في حدود ما يسمح به القانون المغربي ودون المساس بالحقوق الآمرة، مسؤولية العيوب أو الحوادث أو السرقة أو الأضرار التي تقع أثناء الكراء. وتخضع العلاقة النهائية للعقد المكتوب والموقع بين الشريك والزبون عند الاستلام.",
+        body: "يتحمل الشريك مسؤولية دقة الإعلان والحالة الميكانيكية للسيارة والسلامة والنظافة ومطابقة العقار للصور والوصف. لا تتحمل ALTUSplace، في حدود ما يسمح به القانون المغربي ودون المساس بالحقوق الآمرة، مسؤولية العيوب أو الحوادث أو السرقة أو الأضرار التي تقع أثناء الكراء. وتخضع العلاقة النهائية للعقد المكتوب والموقع بين الشريك والزبون عند الاستلام.",
       },
       {
         title: "المبالغ المدفوعة",
@@ -24,16 +26,16 @@ export const legalDisclosure = {
     ],
   },
   fr: {
-    title: "Clauses de protection de la plateforme B2-Rent",
+    title: "Clauses de protection de la plateforme ALTUSplace",
     summary: "J'accepte de lire et d'accepter les clauses de protection de la plateforme avant de créer un compte ou d'effectuer une opération.",
     sections: [
       {
         title: "Nature du service",
-        body: "B2-Rent est une plateforme publicitaire et un intermédiaire technologique reliant les prestataires, notamment les agences de location de voitures et les propriétaires immobiliers, aux locataires. La plateforme ne possède ni n'exploite les véhicules ou les biens et ne remplace pas le Partenaire lors de l'inspection ou de la remise.",
+        body: "ALTUSplace est une plateforme publicitaire et un intermédiaire technologique reliant les prestataires, notamment les agences de location de voitures et les propriétaires immobiliers, aux locataires. La plateforme ne possède ni n'exploite les véhicules ou les biens et ne remplace pas le Partenaire lors de l'inspection ou de la remise.",
       },
       {
         title: "Responsabilité juridique",
-        body: "Le Partenaire est responsable de l'exactitude de l'annonce, de l'état mécanique et de la sécurité du véhicule, ainsi que de la propreté et de la conformité du bien aux photos et à la description. Dans les limites permises par le droit marocain et sans préjudice des droits impératifs, B2-Rent n'est pas responsable des défauts, accidents, vols ou dommages survenus pendant la location. La relation finale est régie par le contrat écrit signé entre le Partenaire et le Client lors de la remise.",
+        body: "Le Partenaire est responsable de l'exactitude de l'annonce, de l'état mécanique et de la sécurité du véhicule, ainsi que de la propreté et de la conformité du bien aux photos et à la description. Dans les limites permises par le droit marocain et sans préjudice des droits impératifs, ALTUSplace n'est pas responsable des défauts, accidents, vols ou dommages survenus pendant la location. La relation finale est régie par le contrat écrit signé entre le Partenaire et le Client lors de la remise.",
       },
       {
         title: "Sommes payées",
@@ -46,16 +48,16 @@ export const legalDisclosure = {
     ],
   },
   en: {
-    title: "B2-Rent platform protection terms",
+    title: "ALTUSplace platform protection terms",
     summary: "I agree to read and accept the platform protection terms before creating an account or completing any transaction.",
     sections: [
       {
         title: "Nature of the service",
-        body: "B2-Rent is an advertising and technology intermediary connecting service providers, including car-rental agencies and property owners, with tenants. The platform does not own or operate the vehicles or properties and does not replace the Partner during inspection or handover.",
+        body: "ALTUSplace is an advertising and technology intermediary connecting service providers, including car-rental agencies and property owners, with tenants. The platform does not own or operate the vehicles or properties and does not replace the Partner during inspection or handover.",
       },
       {
         title: "Legal responsibility",
-        body: "The Partner is responsible for listing accuracy, the vehicle's mechanical condition and safety, and the property's cleanliness and conformity with its photos and description. To the extent permitted by Moroccan law and without limiting mandatory rights, B2-Rent is not responsible for defects, accidents, theft, or damage occurring during the rental. The final relationship is governed by the written contract signed by the Partner and Client at handover.",
+        body: "The Partner is responsible for listing accuracy, the vehicle's mechanical condition and safety, and the property's cleanliness and conformity with its photos and description. To the extent permitted by Moroccan law and without limiting mandatory rights, ALTUSplace is not responsible for defects, accidents, theft, or damage occurring during the rental. The final relationship is governed by the written contract signed by the Partner and Client at handover.",
       },
       {
         title: "Payments",
@@ -110,7 +112,7 @@ export function persistLegalConsent() {
   if (typeof document === "undefined") return;
   const secure = window.location.protocol === "https:" ? "; Secure" : "";
   document.cookie = `b2_legal_consent=${LEGAL_CONSENT_VERSION}; Path=/; Max-Age=31536000; SameSite=Lax${secure}`;
-  window.dispatchEvent(new CustomEvent("b2rent:legal-consent"));
+  window.dispatchEvent(new CustomEvent(LEGAL_CONSENT_EVENT));
 }
 
 export function clearLegalConsent() {

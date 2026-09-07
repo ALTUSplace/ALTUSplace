@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
+import { readBrandPreference, writeBrandPreference } from "@/config/brand";
 import {
   Bell,
   BookOpen,
@@ -16,9 +17,7 @@ import {
   Moon,
   Shield,
   ShieldAlert,
-  ShieldCheck,
   Sun,
-  UserCheck,
   X,
   BookmarkCheck,
   MessageSquare,
@@ -27,7 +26,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/contexts/ThemeContext";
-import { useRole } from "@/contexts/RoleContext";
 import { Language, useLanguage } from "@/contexts/LanguageContext";
 import { useCurrency, Currency } from "@/contexts/CurrencyContext";
 const CMIPaymentModal = lazy(() => import("./CMIPaymentModal").then((module) => ({ default: module.CMIPaymentModal })));
@@ -78,7 +76,7 @@ export default function Navbar() {
   const [notificationPulse, setNotificationPulse] = useState(false);
   const [notificationSoundEnabled, setNotificationSoundEnabled] = useState(() => {
     if (typeof window === "undefined") return true;
-    return window.localStorage.getItem("b2rent-notification-sound") !== "off";
+    return readBrandPreference("notificationSound") !== "off";
   });
   const notificationRef = useRef<HTMLDivElement>(null);
   const previousNotificationIdsRef = useRef<Set<number>>(new Set());
@@ -86,8 +84,7 @@ export default function Navbar() {
   const mobileMenuRef = useRef<HTMLElement>(null);
 
   const { theme, toggleTheme } = useTheme();
-  const { role } = useRole();
-  const { language, direction, setLanguage, t } = useLanguage();
+  const { direction, language, setLanguage, t } = useLanguage();
   const { currency, setCurrency } = useCurrency();
   const { isAuthenticated } = useAuth();
   const notificationQuery = trpc.notifications.list.useQuery({ unreadOnly: false }, {
@@ -239,7 +236,7 @@ export default function Navbar() {
   const toggleNotificationSound = () => {
     setNotificationSoundEnabled((enabled) => {
       const nextEnabled = !enabled;
-      window.localStorage.setItem("b2rent-notification-sound", nextEnabled ? "on" : "off");
+      writeBrandPreference("notificationSound", nextEnabled ? "on" : "off");
       return nextEnabled;
     });
   };
@@ -261,7 +258,11 @@ export default function Navbar() {
   };
 
   const renderNavLinks = (mobile = false) =>
-    navLinks.map((link) => {
+    navLinks
+      // Desktop keeps the five primary destinations; role-gated dashboards and
+      // support remain reachable from the drawer, footer and dashboards.
+      .filter((link) => mobile || !["admin", "dashboard", "help"].includes(link.labelKey ?? ""))
+      .map((link) => {
       const Icon = link.icon;
       const active = isActiveLink(location, link.href);
       return (
@@ -297,55 +298,62 @@ export default function Navbar() {
           dir={direction}
         >
         <div className="container mx-auto flex h-16 sm:h-20 items-center justify-between gap-2 sm:gap-4 px-3 sm:px-4">
-          <Link href="/" className="group flex shrink-0 items-center" aria-label="العودة إلى الصفحة الرئيسية">
-            <span className="flex h-12 w-28 sm:h-14 sm:w-36 items-center justify-center overflow-hidden transition-transform group-hover:scale-[1.03]">
-              <img
-                src="/manus-storage/35942_9a6ce071.png"
-                alt="شعار B2-Rent"
-                className="h-full w-full object-contain"
-              />
-            </span>
-          </Link>
+          <Link href="/" className="group flex shrink-0 items-center gap-3" aria-label="الرئيسية">
+  <div className="flex shrink-0 items-center">
+    <img
+      src="/images/logo.png"
+      alt="ALTUSplace"
+      className="brand-logo h-10 sm:h-12 w-auto object-contain dark:brightness-0 dark:invert"
+    />
+  </div>
+  <div className="flex flex-col">
+    <span className="font-bold text-lg sm:text-xl tracking-tight text-slate-900 dark:text-white">
+      ALTUS<span className="font-normal text-amber-600">place</span>
+    </span>
+    <span className="text-[9px] sm:text-[10px] tracking-wider text-muted-foreground uppercase -mt-1 font-medium">
+      Rent. Drive. Live.
+    </span>
+  </div>
+</Link>
 
           <nav className="hidden min-w-0 flex-1 items-center justify-center gap-1 xl:flex" aria-label="التنقل الرئيسي">
             {renderNavLinks()}
           </nav>
 
           <div className="hidden shrink-0 items-center gap-2 md:flex">
-            <div className="b2-segmented-control" aria-label="اختيار العملة">
-              <Coins className="mx-1 h-4 w-4 text-amber-600 dark:text-amber-300" aria-hidden="true" />
-              {(["MAD", "EUR", "USD"] as Currency[]).map((item) => (
-                <button
-                  key={item}
-                  type="button"
-                  aria-pressed={currency === item}
-                  onClick={() => selectCurrency(item)}
-                  className={currency === item ? "bg-amber-500 text-white" : "text-muted-foreground hover:bg-background hover:text-foreground"}
-                >
-                  {item}
-                </button>
-              ))}
+            <div className="hidden 2xl:block" aria-label="اختيار العملة">
+              <div className="b2-segmented-control">
+                <Coins className="mx-1 h-4 w-4 text-amber-600 dark:text-amber-300" aria-hidden="true" />
+                {(["MAD", "EUR", "USD"] as Currency[]).map((item) => (
+                  <button
+                    key={item}
+                    type="button"
+                    aria-pressed={currency === item}
+                    onClick={() => selectCurrency(item)}
+                    className={currency === item ? "bg-amber-500 text-white" : "text-muted-foreground hover:bg-background hover:text-foreground"}
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            <div className="b2-segmented-control" aria-label="اختيار اللغة">
-              <Globe className="mx-1 h-4 w-4 text-amber-600 dark:text-amber-300" aria-hidden="true" />
-              {(["ar", "fr", "en"] as const).map((item) => (
-                <button
-                  key={item}
-                  type="button"
-                  aria-pressed={language === item}
-                  onClick={() => selectLanguage(item)}
-                  className={language === item ? "bg-amber-500 text-white" : "text-muted-foreground hover:bg-background hover:text-foreground"}
-                >
-                  {item === "ar" ? "عربي" : item === "fr" ? "FR" : "EN"}
-                </button>
-              ))}
+            <div className="hidden 2xl:block" aria-label="اختيار اللغة">
+              <div className="b2-segmented-control">
+                <Globe className="mx-1 h-4 w-4 text-amber-600 dark:text-amber-300" aria-hidden="true" />
+                {(["ar", "fr", "en"] as const).map((item) => (
+                  <button
+                    key={item}
+                    type="button"
+                    aria-pressed={language === item}
+                    onClick={() => selectLanguage(item)}
+                    className={language === item ? "bg-amber-500 text-white" : "text-muted-foreground hover:bg-background hover:text-foreground"}
+                  >
+                    {item === "ar" ? "عربي" : item === "fr" ? "FR" : "EN"}
+                  </button>
+                ))}
+              </div>
             </div>
-
-            <span className="hidden items-center gap-1 rounded-xl border border-amber-500/30 bg-amber-500/10 px-2.5 py-2 text-[11px] font-bold text-amber-700 lg:flex dark:text-amber-300">
-              {role === "super_admin" ? <ShieldCheck className="h-3.5 w-3.5" /> : <UserCheck className="h-3.5 w-3.5" />}
-              {role === "super_admin" ? "مشرف عام" : "مدير وكالة"}
-            </span>
 
             <button
               type="button"
@@ -479,7 +487,7 @@ export default function Navbar() {
             </Link>
           </div>
 
-          <div className="flex items-center gap-1.5 sm:gap-2 md:hidden">
+          <div className="flex items-center gap-1.5 sm:gap-2 2xl:hidden">
             <Link href="/search" className={`b2-icon-button border border-border bg-muted text-foreground ${currentSection === "search" ? "text-amber-700 dark:text-amber-300" : ""}`} aria-label="فتح البحث" title="البحث">
               <Car className="h-4 w-4" />
             </Link>
@@ -508,7 +516,7 @@ export default function Navbar() {
           isOpen={whatsappModalOpen}
           onClose={() => setWhatsappModalOpen(false)}
           bookingDetails={{
-            id: "B2R-9942",
+            id: "ALT-9942",
             carName: "Dacia Duster 2026",
             customerName: "محمد العلوي",
             customerPhone: "",
@@ -523,10 +531,15 @@ export default function Navbar() {
       </Suspense>
 
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-[60] md:hidden" role="presentation">
+        <div className="fixed inset-0 z-[60] 2xl:hidden" role="presentation">
           <button type="button" className="absolute inset-0 bg-slate-950/40 backdrop-blur-[2px]" aria-label={t("close")} onClick={() => setMobileMenuOpen(false)} />
           <aside ref={mobileMenuRef} id="mobile-navigation" className={`absolute top-0 flex h-full w-[min(88vw,22rem)] flex-col overflow-y-auto bg-background p-4 shadow-2xl ${direction === "rtl" ? "right-0" : "left-0"}`} dir={direction} aria-label={t("search")} aria-modal="true" role="dialog" tabIndex={-1}>
-          <div className="flex items-center justify-between border-b border-border pb-4"><Link href="/" onClick={() => setMobileMenuOpen(false)} className="flex h-10 w-28 items-center"><img src="/manus-storage/35942_9a6ce071.png" alt="شعار B2-Rent" className="h-full w-full object-contain" /></Link><button type="button" onClick={() => setMobileMenuOpen(false)} className="b2-icon-button border border-border bg-muted" aria-label={t("close")}><X className="h-5 w-5" /></button></div>
+          <div className="flex items-center justify-between border-b border-border pb-4">
+            <Link href="/" onClick={() => setMobileMenuOpen(false)} className="flex h-10 w-32 items-center justify-start" aria-label="ALTUSplace">
+              <img src="/images/logo.png" alt="ALTUSplace" className="brand-logo max-h-full w-auto object-contain dark:brightness-0 dark:invert" />
+            </Link>
+            <button type="button" onClick={() => setMobileMenuOpen(false)} className="b2-icon-button border border-border bg-muted" aria-label={t("close")}><X className="h-5 w-5" /></button>
+          </div>
           <div className="mx-auto flex w-full flex-1 flex-col gap-2 pt-4">
             <nav className="space-y-1" aria-label="التنقل على الهاتف">
               {renderNavLinks(true)}
@@ -534,29 +547,29 @@ export default function Navbar() {
 
             <div className="mt-3 space-y-4 border-t border-border pt-4">
               <div>
-                <p className="mb-2 flex items-center gap-1.5 text-xs font-bold text-muted-foreground"><Coins className="h-3.5 w-3.5 text-amber-600 dark:text-amber-300" /> العملة</p>
+                <p className="mb-2 flex items-center gap-1.5 text-xs font-bold text-muted-foreground"><Coins className="h-3.5 w-3.5 text-[#D98236] dark:text-[#D98236]" /> العملة</p>
                 <div className="b2-segmented-control w-full">
                   {(["MAD", "EUR", "USD"] as Currency[]).map((item) => (
-                    <button key={item} type="button" aria-pressed={currency === item} onClick={() => selectCurrency(item)} className={currency === item ? "bg-amber-500 text-white" : "text-muted-foreground hover:bg-background hover:text-foreground"}>{item}</button>
+                    <button key={item} type="button" aria-pressed={currency === item} onClick={() => selectCurrency(item)} className={currency === item ? "bg-[#D98236] text-white" : "text-muted-foreground hover:bg-background hover:text-foreground"}>{item}</button>
                   ))}
                 </div>
               </div>
 
               <div>
-                <p className="mb-2 flex items-center gap-1.5 text-xs font-bold text-muted-foreground"><Globe className="h-3.5 w-3.5 text-amber-600 dark:text-amber-300" /> {t("language")}</p>
+                <p className="mb-2 flex items-center gap-1.5 text-xs font-bold text-muted-foreground"><Globe className="h-3.5 w-3.5 text-[#D98236] dark:text-[#D98236]" /> {t("language")}</p>
                 <div className="b2-segmented-control w-full">
                   {(["ar", "fr", "en"] as const).map((item) => (
-                    <button key={item} type="button" aria-pressed={language === item} onClick={() => selectLanguage(item)} className={language === item ? "bg-amber-500 text-white" : "text-muted-foreground hover:bg-background hover:text-foreground"}>{item === "ar" ? "العربية" : item === "fr" ? "Français" : "English"}</button>
+                    <button key={item} type="button" aria-pressed={language === item} onClick={() => selectLanguage(item)} className={language === item ? "bg-[#D98236] text-white" : "text-muted-foreground hover:bg-background hover:text-foreground"}>{item === "ar" ? "العربية" : item === "fr" ? "Français" : "English"}</button>
                   ))}
                 </div>
               </div>
 
               <div className="flex items-center gap-2">
-                <button type="button" onClick={() => { setTwoFaModalOpen(true); setMobileMenuOpen(false); }} className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-muted px-3 py-2 text-xs font-bold text-foreground hover:bg-background"><Shield className="h-3.5 w-3.5 text-amber-600 dark:text-amber-300" /> أمان الحساب</button>
-                <button type="button" onClick={() => { setCmiModalOpen(true); setMobileMenuOpen(false); }} className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-muted px-3 py-2 text-xs font-bold text-foreground hover:bg-background"><CreditCard className="h-3.5 w-3.5 text-amber-600 dark:text-amber-300" /> الدفع CMI</button>
+                <button type="button" onClick={() => { setTwoFaModalOpen(true); setMobileMenuOpen(false); }} className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-muted px-3 py-2 text-xs font-bold text-foreground hover:bg-background"><Shield className="h-3.5 w-3.5 text-[#D98236] dark:text-[#D98236]" /> أمان الحساب</button>
+                <button type="button" onClick={() => { setCmiModalOpen(true); setMobileMenuOpen(false); }} className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-muted px-3 py-2 text-xs font-bold text-foreground hover:bg-background"><CreditCard className="h-3.5 w-3.5 text-[#D98236] dark:text-[#D98236]" /> الدفع CMI</button>
               </div>
 
-              <Link href="/add-car" onClick={() => setMobileMenuOpen(false)} className="flex min-h-11 items-center justify-center rounded-xl bg-amber-500 px-4 py-3 text-sm font-extrabold text-white hover:bg-amber-600">
+              <Link href="/add-car" onClick={() => setMobileMenuOpen(false)} className="flex min-h-11 items-center justify-center rounded-xl bg-[#D98236] px-4 py-3 text-sm font-extrabold text-white hover:bg-[#B96A28]">
                 {t("addCar")}
               </Link>
             </div>

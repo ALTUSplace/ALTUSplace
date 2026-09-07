@@ -1,11 +1,12 @@
 import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, Home, Download, Edit3, Eraser, Check, Stamp, FileCheck, X, Receipt } from 'lucide-react';
+import { CheckCircle2, Home, Download, Edit3, Eraser, Check, Stamp, FileCheck, X, Receipt, CreditCard, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRef, useState, useEffect } from 'react';
 import { playSuccessSound } from '@/lib/sound';
 import { trpc } from '@/lib/trpc';
 import { cancellationRefundPolicy } from '@/lib/legalDisclosure';
+import { PaymentStatusBadge, PaymentMethodBadge, TransactionReference } from '@/components/PaymentStatusBadge';
 
 export default function Success() {
   const [, setLocation] = useLocation();
@@ -19,7 +20,7 @@ export default function Success() {
     { enabled: bookingId > 0, retry: false, refetchInterval: bookingId > 0 ? 15000 : false },
   );
   const booking = bookingQuery.data;
-  const bookingRef = booking ? `B2R-${booking.id}` : (bookingId > 0 ? `B2R-${bookingId}` : 'B2R-PENDING');
+  const bookingRef = booking ? `ALT-${booking.id}` : (bookingId > 0 ? `ALT-${bookingId}` : 'ALT-PENDING');
   const name = 'المستأجر';
   const phone = booking?.ownerWhatsApp || 'غير متوفر';
   const bookingStatus = booking?.status ?? 'Pending';
@@ -58,8 +59,8 @@ export default function Success() {
       toast.error('يرجى توقيع العقد أولاً قبل فتح رسالة البريد الإلكتروني.');
       return;
     }
-    const subject = `B2-Rent — عقد الحجز ${bookingRef}`;
-    const body = `مرحباً، أرفق لكم عقد الحجز ${bookingRef} الذي تم تنزيله من منصة B2-Rent.`;
+    const subject = `ALTUSplace — عقد الحجز ${bookingRef}`;
+    const body = `مرحباً، أرفق لكم عقد الحجز ${bookingRef} الذي تم تنزيله من منصة ALTUSplace.`;
     window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     toast.success('تم فتح تطبيق البريد لإرفاق ملف العقد وإرساله.');
   };
@@ -206,7 +207,7 @@ export default function Success() {
       
       doc.setFont("helvetica", "bold");
       doc.setFontSize(22);
-      doc.text("B2-RENT - Digital Rental Contract", 105, 20, { align: "center" });
+      doc.text("ALTUSPLACE - Digital Rental Contract", 105, 20, { align: "center" });
       
       doc.setFontSize(12);
       doc.setFont("helvetica", "normal");
@@ -272,7 +273,7 @@ export default function Success() {
         doc.setFont("helvetica", "bold");
         doc.setFontSize(8);
         doc.setTextColor(180, 83, 9);
-        doc.text("B2-RENT OFFICIAL", 47, 188, { align: "center" });
+        doc.text("ALTUSPLACE OFFICIAL", 47, 188, { align: "center" });
         doc.text("VERIFIED AGENCY", 47, 195, { align: "center" });
         doc.text("MOROCCO", 47, 201, { align: "center" });
         doc.setTextColor(0, 0, 0);
@@ -286,7 +287,7 @@ export default function Success() {
         doc.text("(Electronically Agreed)", 140, 190);
       }
 
-        doc.save(`B2-Rent-Contract-${bookingRef}.pdf`);
+        doc.save(`ALTUSplace-Contract-${bookingRef}.pdf`);
         toast.success('تم تحميل عقد الإيجار الرقمي بنجاح!');
         setShowDownloadModal(true); // إظهار نافذة التأكيد المرئية المنبثقة
       } catch (error) {
@@ -322,7 +323,27 @@ export default function Success() {
             </p>
           </div>
 
-          {isPending && <div className="bg-amber-500/10 border border-amber-500/30 p-4 rounded-2xl text-right text-xs text-amber-100">الحالة الحالية: <strong className="text-amber-300">قيد موافقة المالك</strong>. لا يتم إنشاء عقد الكراء أو اعتباره نهائياً قبل اعتماد الطلب.</div>}
+          {/* Booking & Payment Status Badges */}
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <PaymentStatusBadge 
+              status={searchParams.get('paymentStatus') as any || (isPending ? 'Pending' : 'Succeeded')} 
+              type="payment"
+              size="md"
+            />
+            <PaymentStatusBadge status={bookingStatus} type="booking" size="md" />
+            {searchParams.get('invoiceStatus') && (
+              <PaymentStatusBadge status={searchParams.get('invoiceStatus') as any} type="invoice" size="md" />
+            )}
+          </div>
+
+          {isPending && (
+            <div className="bg-amber-500/10 border border-amber-500/30 p-4 rounded-2xl text-right text-xs text-amber-100">
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-amber-400" />
+                <span>الحالة الحالية: <strong className="text-amber-300">قيد موافقة المالك</strong>. لا يتم إنشاء عقد الكراء أو اعتباره نهائياً قبل اعتماد الطلب.</span>
+              </div>
+            </div>
+          )}
 
           <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl text-right space-y-3 text-xs">
             <div className="flex justify-between border-b border-slate-800 pb-2">
@@ -342,7 +363,13 @@ export default function Success() {
           <div className="bg-slate-900 border border-amber-500/30 p-5 rounded-2xl text-right space-y-3">
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2"><Receipt className="w-5 h-5 text-amber-400" /><span className="font-bold text-white">الفاتورة الإلكترونية</span></div>
-              {invoice && <span className={`text-[10px] px-2 py-1 rounded-full ${invoice.status === 'Issued' ? 'bg-emerald-500/10 text-emerald-300' : 'bg-amber-500/10 text-amber-300'}`}>{invoice.status === 'Issued' ? 'صادرة' : 'قيد المراجعة'}</span>}
+              {invoice && (
+                <PaymentStatusBadge 
+                  status={invoice.paymentStatus as any} 
+                  type="payment" 
+                  size="sm" 
+                />
+              )}
             </div>
             {invoiceQuery.isLoading ? <p className="text-xs text-slate-400">جاري التحقق من الفاتورة المحفوظة...</p> : invoice ? (
               <>
@@ -450,7 +477,7 @@ export default function Success() {
                   <span className="text-[11px] text-emerald-300">جاهز للتحميل — المرجع: {commercialContractReference}</span>
                   <a
                     href={commercialContractUrl}
-                    download={`B2-Rent-${contractType}-lease-${commercialContractReference}.pdf`}
+                    download={`ALTUSplace-${contractType}-lease-${commercialContractReference}.pdf`}
                     className="inline-flex items-center justify-center gap-2 rounded-xl bg-amber-400 px-4 py-2.5 text-xs font-bold text-slate-950 transition hover:bg-amber-300"
                   >
                     <Download className="h-4 w-4" /> تحميل عقد الكراء PDF

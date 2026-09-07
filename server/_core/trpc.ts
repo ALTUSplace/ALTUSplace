@@ -13,9 +13,12 @@ export const publicProcedure = t.procedure;
 const requireUser = t.middleware(async opts => {
   const { ctx, next } = opts;
 
-  if (!ctx.user) {
+    if (!ctx.user) {
     throw new TRPCError({ code: "UNAUTHORIZED", message: UNAUTHED_ERR_MSG });
   }
+    if (ctx.user.accountStatus && ctx.user.accountStatus !== "active") {
+      throw new TRPCError({ code: "FORBIDDEN", message: "هذا الحساب غير نشط." });
+    }
 
   return next({
     ctx: {

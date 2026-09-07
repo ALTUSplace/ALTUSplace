@@ -2,85 +2,108 @@
 
 @layer base {
   :root {
-    /* B2-Rent design tokens: identity */
-    --brand-navy: #0b3c5d;
-    --brand-navy-deep: #082c45;
-    --brand-amber: #e57c23;
-    --brand-amber-dark: #c96416;
-    --brand-amber-soft: #fff3e8;
-    --brand-ink: #102a43;
-    --brand-surface: #ffffff;
-    --brand-surface-muted: #f6f8fb;
-    --brand-border: #e3eaf1;
-    --brand-success: #087f5b;
-    --brand-danger: #c92a2a;
-    --brand-warning: #b45309;
-    --brand-info: #1d6fa5;
+    /* ALTUSplace design tokens: identity — Dark Obsidian Luxury Palette */
+    --brand-obsidian: #0B0F15; /* Dark Obsidian base background */
+    --brand-obsidian-soft: #131922; /* Raised Dark Obsidian surface */
+    --brand-gold: #D98236; /* Bronze Gold primary accent */
+    --brand-cyan: #00A3FF; /* Electric Cyan secondary accent */
+    --brand-silver: #E2E8F0; /* Silver Metallic text & details */
+
+    /* Legacy identity aliases re-pointed to the obsidian palette so existing
+       consumers (Footer, PrivacyPolicy, AgencySettings) stay coherent. */
+    --brand-navy: #0B0F15; /* Deep base surface (Dark Obsidian) */
+    --brand-navy-deep: #131922; /* Deep chrome surface (obsidian-soft) */
+    --brand-amber: #D98236; /* Primary action accent = Bronze Gold */
+    --brand-amber-dark: #B96A28; /* Pressed / hover Bronze Gold */
+    --brand-amber-soft: rgba(217, 130, 54, 0.14); /* Soft accent wash */
+
+    /* Status & neutral tokens */
+    --brand-emerald: #059669; /* Success status */
+    --brand-emerald-light: #10b981; /* Light success highlight */
+    --brand-slate: #94a3b8; /* Neutral icons on dark surfaces */
+    --brand-slate-light: #cbd5e1; /* Light neutral contrast */
+    --brand-slate-dark: #475569;
+    --brand-surface: #131922;
+    --brand-surface-muted: #0B0F15;
+    --brand-border: #263140;
+    --brand-border-light: #1b2430;
+    --brand-ink: #E2E8F0;
+    --brand-ink-light: #a7b2c1;
+    --brand-success: #059669;
+    --brand-danger: #dc2626;
+    --brand-warning: #d97706;
+    --brand-info: #00A3FF;
     --brand-white: #ffffff;
-    --brand-slate: #52606d;
 
     /* Component tokens */
     --header-height: 5rem;
     --tap-target: 2.75rem;
-    --shadow-header: 0 10px 30px rgba(8, 44, 69, 0.08);
+    --shadow-header: 0 10px 30px rgba(0, 0, 0, 0.35);
     --duration-fast: 160ms;
     --duration-standard: 220ms;
     --ease-standard: cubic-bezier(0.23, 1, 0.32, 1);
 
-    /* B2-Rent design tokens: semantic theme values */
-    --background: 210 33% 98%;
-    --foreground: 209 61% 16%;
-    --card: 0 0% 100%;
-    --card-foreground: 209 61% 16%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 209 61% 16%;
-    --primary: 27 78% 52%;
+    /* ALTUSplace design tokens: semantic theme values (Dark Obsidian) */
+    --background: 216 31% 6%; /* #0B0F15 */
+    --foreground: 214 32% 91%; /* #E2E8F0 */
+    --card: 216 28% 10%; /* #131922 */
+    --card-foreground: 214 32% 91%;
+    --popover: 216 26% 12%;
+    --popover-foreground: 214 32% 91%;
+    --primary: 28 68% 53%; /* #D98236 */
     --primary-foreground: 0 0% 100%;
-    --secondary: 204 77% 20%;
-    --secondary-foreground: 0 0% 100%;
-    --muted: 210 30% 96%;
-    --muted-foreground: 210 16% 43%;
-    --accent: 27 78% 52%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 72% 51%;
+    --secondary: 216 24% 15%;
+    --secondary-foreground: 214 32% 91%;
+    --muted: 216 24% 14%;
+    --muted-foreground: 215 19% 66%;
+    --accent: 216 30% 16%;
+    --accent-foreground: 214 32% 91%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
-    --border: 211 30% 91%;
-    --input: 211 30% 87%;
-    --ring: 27 78% 52%;
+    --border: 216 22% 19%;
+    --input: 216 22% 17%;
+    --ring: 202 100% 50%; /* #00A3FF */
     --radius: 1rem;
 
-    /* B2-Rent design tokens: rhythm and elevation */
+    /* ALTUSplace design tokens: rhythm and elevation */
     --space-section: clamp(3rem, 8vw, 6rem);
     --content-max-width: 1180px;
     --radius-sm: 0.625rem;
     --radius-md: 0.875rem;
     --radius-lg: 1.25rem;
     --radius-xl: 1.75rem;
-    --shadow-soft: 0 8px 24px rgba(8, 44, 69, 0.06);
-    --shadow-card: 0 14px 34px rgba(8, 44, 69, 0.09);
-    --shadow-amber: 0 12px 28px rgba(229, 124, 35, 0.22);
+    --radius-2xl: 2rem;
+    --radius-3xl: 2.5rem;
+    --shadow-soft: 0 8px 24px rgba(0, 0, 0, 0.25);
+    --shadow-card: 0 14px 34px rgba(0, 0, 0, 0.3);
+    --shadow-amber: 0 12px 28px rgba(217, 130, 54, 0.28);
+    --shadow-emerald: 0 12px 28px rgba(5, 150, 105, 0.15);
     --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   }
 
   .dark {
-    --background: 210 53% 8%;
-    --foreground: 210 30% 96%;
-    --card: 209 43% 12%;
-    --card-foreground: 210 30% 96%;
-    --popover: 209 43% 12%;
-    --popover-foreground: 210 30% 96%;
-    --muted: 209 35% 18%;
-    --muted-foreground: 210 18% 70%;
-    --border: 209 28% 24%;
-    --input: 209 28% 28%;
-    --brand-surface: #102f47;
-    --brand-surface-muted: #0c2437;
-    --brand-border: #23465e;
-    --brand-ink: #edf5fa;
-    --brand-warning: #f59e0b;
-    --brand-info: #64b5e8;
+    /* Deep obsidian variant of the Dark Obsidian Luxury Palette */
+    --background: 216 34% 4%;
+    --foreground: 214 32% 91%;
+    --card: 216 28% 8%;
+    --card-foreground: 214 32% 91%;
+    --popover: 216 26% 9%;
+    --popover-foreground: 214 32% 91%;
+    --muted: 216 22% 12%;
+    --muted-foreground: 215 18% 68%;
+    --border: 216 22% 15%;
+    --input: 216 22% 13%;
+    --brand-surface: #10161f;
+    --brand-surface-muted: #0B0F15;
+    --brand-border: #222d3b;
+    --brand-ink: #E2E8F0;
+    --brand-ink-light: #cbd5e1;
+    --brand-warning: #fbbf24;
+    --brand-info: #00A3FF;
     --brand-white: #ffffff;
-    --brand-slate: #b8c7d3;
+    --brand-slate: #94a3b8;
+    --brand-emerald: #34d399;
+    --brand-emerald-light: #6ee7b7;
   }
 
   * {
@@ -118,7 +141,7 @@
   }
 
   ::selection {
-    background: rgba(229, 124, 35, 0.22);
+    background: rgba(0, 163, 255, 0.28);
     color: var(--brand-navy-deep);
   }
 }
@@ -131,7 +154,7 @@
 
 .b2-focus-surface:focus-within {
   border-color: var(--brand-amber);
-  box-shadow: 0 0 0 4px rgba(229, 124, 35, 0.12);
+  box-shadow: 0 0 0 4px rgba(0, 163, 255, 0.14);
 }
 
 .b2-icon-button {
@@ -146,6 +169,18 @@
 
 .b2-icon-button:active {
   transform: scale(0.96);
+}
+
+/* ALTUSplace brand logo: blend mode removes the light logo plate (cream /
+   white) cleanly over any surface. In dark contexts the mark is inverted to
+   a light silhouette, so the blend is disabled there to keep full contrast. */
+.brand-logo {
+  mix-blend-mode: multiply;
+  -webkit-mix-blend-mode: multiply;
+}
+
+.dark .brand-logo {
+  mix-blend-mode: normal;
 }
 
 .b2-segmented-control {
@@ -205,7 +240,7 @@
 }
 
 .b2-card:hover {
-  border-color: rgba(229, 124, 35, 0.35);
+  border-color: rgba(0, 163, 255, 0.35);
   box-shadow: var(--shadow-card);
   transform: translateY(-3px);
 }
@@ -219,7 +254,7 @@
 
 .b2-primary-action:hover {
   background: var(--brand-amber-dark);
-  box-shadow: 0 14px 32px rgba(201, 100, 22, 0.28);
+  box-shadow: 0 14px 32px rgba(185, 106, 40, 0.3);
   transform: translateY(-2px);
 }
 
@@ -238,7 +273,7 @@ a:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  outline: 3px solid rgba(229, 124, 35, 0.45);
+  outline: 3px solid rgba(0, 163, 255, 0.55);
   outline-offset: 2px;
 }
 
@@ -259,7 +294,7 @@ textarea:focus-visible {
   transform: translateY(0);
 }
 
-/* Existing B2-Rent utility classes kept for page compatibility */
+/* Existing shared utility classes kept for page compatibility */
 .luxury-card {
   background: var(--brand-surface);
   border: 1px solid var(--brand-border);
@@ -271,18 +306,18 @@ textarea:focus-visible {
 .luxury-card:hover {
   transform: translateY(-4px);
   box-shadow: var(--shadow-card);
-  border-color: rgba(229, 124, 35, 0.4);
+  border-color: rgba(0, 163, 255, 0.4);
 }
 
 .gold-gradient-text {
-  background: linear-gradient(135deg, #f59e0b 0%, var(--brand-amber) 52%, #b45309 100%);
+  background: linear-gradient(135deg, #E89A55 0%, var(--brand-amber) 52%, #B96A28 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .gold-button {
-  background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
+  background: linear-gradient(135deg, #E89A55 0%, #D98236 100%);
   color: var(--brand-navy-deep);
   font-weight: 800;
   box-shadow: var(--shadow-amber);
@@ -290,9 +325,9 @@ textarea:focus-visible {
 }
 
 .gold-button:hover {
-  background: linear-gradient(135deg, #f59e0b 0%, #b45309 100%);
+  background: linear-gradient(135deg, #D98236 0%, #B96A28 100%);
   transform: translateY(-2px);
-  box-shadow: 0 14px 30px rgba(217, 119, 6, 0.32);
+  box-shadow: 0 14px 30px rgba(217, 130, 54, 0.32);
 }
 
 .gold-button:active {
@@ -313,7 +348,7 @@ textarea:focus-visible {
   padding: 0.5rem 0.75rem calc(0.5rem + env(safe-area-inset-bottom));
   background: color-mix(in srgb, var(--brand-surface) 95%, transparent);
   border-top: 1px solid var(--brand-border);
-  box-shadow: 0 -10px 28px rgba(8, 44, 69, 0.1);
+  box-shadow: 0 -10px 28px rgba(0, 0, 0, 0.35);
   backdrop-filter: blur(18px);
 }
 
@@ -354,7 +389,7 @@ textarea:focus-visible {
 .mobile-bottom-nav__item.is-active .mobile-bottom-nav__icon {
   background: var(--brand-amber);
   color: var(--brand-white);
-  box-shadow: 0 6px 16px rgba(229, 124, 35, 0.24);
+  box-shadow: 0 6px 16px rgba(217, 130, 54, 0.24);
 }
 
 .mobile-bottom-nav__icon {
@@ -370,12 +405,12 @@ textarea:focus-visible {
 
 .dark .mobile-bottom-nav__item:hover,
 .dark .mobile-bottom-nav__item.is-active {
-  background: rgba(229, 124, 35, 0.14);
-  color: #ffd4ad;
+  background: rgba(0, 163, 255, 0.16);
+  color: #8FD0FF;
 }
 
 .skeleton-shimmer {
-  background: linear-gradient(90deg, rgba(226, 232, 240, 0.72) 25%, rgba(248, 250, 252, 0.96) 50%, rgba(226, 232, 240, 0.72) 75%);
+  background: linear-gradient(90deg, rgba(38, 48, 61, 0.72) 25%, rgba(30, 39, 51, 0.96) 50%, rgba(226, 232, 240, 0.72) 75%);
   background-size: 200% 100%;
   animation: b2-shimmer 1.4s linear infinite;
 }
@@ -424,12 +459,12 @@ textarea:focus-visible {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #b8c7d3;
+  background: #3A4656;
   border-radius: 999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #8ea5b5;
+  background: #4C5C70;
 }
 
 @media (max-width: 640px) {
@@ -478,7 +513,7 @@ textarea:focus-visible {
   }
 
   .glass-header {
-    box-shadow: 0 6px 18px rgba(8, 44, 69, 0.08);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
   }
 
   .mobile-bottom-nav {
@@ -505,4 +540,238 @@ textarea:focus-visible {
   .b2-main-content {
     padding-bottom: calc(4.25rem + env(safe-area-inset-bottom));
   }
+}
+
+/* Modern utility classes for luxury design */
+@layer utilities {
+  /* Floating card effect */
+  .floating-card {
+    @apply bg-white rounded-2xl shadow-lg border border-slate-100 hover:shadow-xl transition-all duration-300 hover:-translate-y-1;
+  }
+  
+  .floating-card-dark {
+    @apply bg-slate-800 rounded-2xl shadow-lg border border-slate-700 hover:shadow-xl transition-all duration-300 hover:-translate-y-1;
+  }
+  
+  /* Glass morphism effect */
+  .glass {
+    @apply bg-white/80 backdrop-blur-md border border-white/20;
+  }
+  
+  .glass-dark {
+    @apply bg-slate-800/80 backdrop-blur-md border border-slate-700/20;
+  }
+  
+  /* Premium button styles */
+  .btn-primary {
+    @apply bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 hover:shadow-lg hover:scale-105;
+  }
+  
+  .btn-secondary {
+    @apply bg-slate-100 hover:bg-slate-200 text-slate-800 font-medium py-3 px-6 rounded-xl transition-all duration-200 hover:shadow-md;
+  }
+  
+  .btn-outline {
+    @apply border-2 border-emerald-600 text-emerald-600 hover:bg-emerald-50 font-medium py-3 px-6 rounded-xl transition-all duration-200;
+  }
+  
+  /* Premium input styles */
+  .input-field {
+    @apply w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 focus:outline-none transition-all duration-200;
+  }
+  
+  .input-field-dark {
+    @apply w-full px-4 py-3 rounded-xl border border-slate-600 bg-slate-700 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-900 focus:outline-none transition-all duration-200;
+  }
+  
+  /* Hero section styles */
+  .hero-gradient {
+    @apply bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900;
+  }
+  
+  .hero-gradient-dark {
+    @apply bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900;
+  }
+  
+  /* Premium card hover effects */
+  .premium-card {
+    @apply relative overflow-hidden rounded-2xl bg-white shadow-md border border-slate-100 transition-all duration-300 hover:shadow-xl hover:border-emerald-200;
+  }
+  
+  .premium-card-dark {
+    @apply relative overflow-hidden rounded-2xl bg-slate-800 shadow-md border border-slate-700 transition-all duration-300 hover:shadow-xl hover:border-emerald-600;
+  }
+  
+  .premium-card-image {
+    @apply absolute inset-0 z-0 transition-transform duration-500;
+  }
+
+  .premium-card:hover .premium-card-image {
+    transform: scale(1.05);
+  }
+  
+  .premium-card-content {
+    @apply relative z-10 p-6;
+  }
+  
+  /* Smooth animations */
+  .fade-in {
+    animation: fadeIn 0.6s ease-out;
+  }
+  
+  .slide-up {
+    animation: slideUp 0.6s ease-out;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  @keyframes slideUp {
+    from { 
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to { 
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+/* Enhanced spacing and typography */
+@layer components {
+  /* Premium typography */
+  .heading-hero {
+    @apply text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight leading-tight;
+  }
+  
+  .heading-section {
+    @apply text-3xl sm:text-4xl font-bold tracking-tight leading-tight;
+  }
+  
+  .heading-card {
+    @apply text-xl font-bold leading-tight;
+  }
+  
+  .text-body {
+    @apply text-base leading-relaxed;
+  }
+  
+  .text-muted {
+    @apply text-slate-500;
+  }
+  
+  /* Enhanced spacing */
+  .section-padding {
+    @apply py-12 md:py-16 lg:py-20;
+  }
+  
+  .container-padding {
+    @apply px-4 sm:px-6 lg:px-8;
+  }
+  
+  /* Premium spacing utilities */
+  .space-y-6 > * + * {
+    @apply mt-6;
+  }
+  
+  .space-y-8 > * + * {
+    @apply mt-8;
+  }
+  
+  .space-y-12 > * + * {
+    @apply mt-12;
+  }
+  
+  /* Premium border radius utilities */
+  .rounded-3xl {
+    border-radius: 1.5rem;
+  }
+  
+  .rounded-full-xl {
+    border-radius: 9999px;
+  }
+}
+.leaflet-container {
+  font-family: 'Cairo', system-ui, -apple-system, sans-serif;
+  border-radius: inherit;
+}
+
+.leaflet-popup-content-wrapper {
+  border-radius: 1rem;
+  padding: 0;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+}
+
+.leaflet-popup-content {
+  margin: 0;
+  min-width: 200px;
+}
+
+.leaflet-popup-tip {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.leaflet-control-zoom {
+  border: none !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  border-radius: 0.75rem !important;
+  overflow: hidden;
+}
+
+.leaflet-control-zoom a {
+  background: hsl(var(--background)) !important;
+  color: hsl(var(--foreground)) !important;
+  border-color: hsl(var(--border)) !important;
+  width: 2.25rem !important;
+  height: 2.25rem !important;
+  line-height: 2.25rem !important;
+  font-size: 1rem !important;
+}
+
+.leaflet-control-zoom a:hover {
+  background: hsl(var(--muted)) !important;
+}
+
+.leaflet-control-attribution {
+  background: hsl(var(--background) / 0.8) !important;
+  color: hsl(var(--muted-foreground)) !important;
+  border-radius: 0.5rem 0 0 0 !important;
+  padding: 0.25rem 0.5rem !important;
+  font-size: 10px !important;
+}
+
+.leaflet-control-attribution a {
+  color: hsl(var(--primary)) !important;
+}
+
+/* Dark mode Leaflet controls */
+.dark .leaflet-control-zoom a {
+  background: hsl(var(--card)) !important;
+  color: hsl(var(--card-foreground)) !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+.dark .leaflet-control-zoom a:hover {
+  background: hsl(var(--muted)) !important;
+}
+
+.dark .leaflet-popup-content-wrapper {
+  background: hsl(var(--card));
+  color: hsl(var(--card-foreground));
+}
+
+.dark .leaflet-popup-tip {
+  background: hsl(var(--card));
+}
+
+/* Custom marker animations */
+.custom-marker-icon {
+  transition: transform 0.2s ease;
+}
+
+.custom-marker-icon:hover {
+  z-index: 10000 !important;
 }

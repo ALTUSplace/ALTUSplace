@@ -7,6 +7,8 @@ import { toast } from 'sonner';
 import { trpc } from '@/lib/trpc';
 import { LoadingAnimation } from '@/components/LoadingAnimation';
 import { cancellationRefundPolicy } from '@/lib/legalDisclosure';
+import { PaymentCheckoutModal, PaymentSuccessResult } from '@/components/PaymentCheckoutModal';
+import { KycDocumentUpload } from '@/components/KycDocumentUpload';
 
 export default function CheckoutPage() {
   const [, setLocation] = useLocation();
@@ -36,9 +38,11 @@ export default function CheckoutPage() {
     return Number.isNaN(date.getTime()) ? 'غير محدد' : new Intl.DateTimeFormat('ar-MA', { day: '2-digit', month: 'short', year: 'numeric' }).format(date);
   };
 
+  const rentalCategory = searchParams.get('category') as 'car' | 'real_estate' | null;
   const [paymentMethod, setPaymentMethod] = useState<'cmi_card' | 'bank_transfer'>('cmi_card');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   const createPaymentMutation = trpc.payments.create.useMutation();
   const createBookingMutation = trpc.bookings.create.useMutation({
@@ -91,14 +95,20 @@ export default function CheckoutPage() {
       toast.error('يرجى الموافقة على الشروط والأحكام وسياسة الضمان (Escrow) للمتابعة');
       return;
     }
+    // Show secure payment modal
+    setShowPaymentModal(true);
+  };
+
+  const handlePaymentSuccess = (result: PaymentSuccessResult) => {
+    setShowPaymentModal(false);
     setIsSubmitting(true);
-    setTimeout(() => {
-      createBookingMutation.mutate({
-        listingId,
-        startDate: parsedStart!.toISOString(),
-        endDate: parsedEnd!.toISOString(),
-      });
-    }, 1200);
+    // Store payment result for later use
+    // Create booking after successful payment
+    createBookingMutation.mutate({
+      listingId,
+      startDate: parsedStart!.toISOString(),
+      endDate: parsedEnd!.toISOString(),
+    });
   };
 
   if (isSubmitting) {
@@ -113,13 +123,14 @@ export default function CheckoutPage() {
   }
 
   return (
+    <>
       <div className="min-h-screen bg-[#f4f7fb] text-slate-900 py-5 sm:py-10 px-3 sm:px-6 lg:px-8" dir="rtl">
       <div className="max-w-5xl mx-auto space-y-5 sm:space-y-7">
-        <div className="overflow-hidden rounded-3xl bg-[#0B3C5D] text-white shadow-2xl">
+        <div className="overflow-hidden rounded-3xl bg-[#0B0F15] text-white shadow-2xl">
           <div className="flex items-center justify-between gap-4 px-5 py-4 sm:px-8 sm:py-5">
             <div className="flex items-center gap-3">
               <div className="grid h-11 w-11 place-items-center rounded-2xl bg-white/12 ring-1 ring-white/20"><ShieldCheck className="h-6 w-6 text-amber-300" /></div>
-              <div><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/60">B2-Rent Secure Checkout</p><p className="text-sm font-bold sm:text-base">بوابة دفع مغربية محاكية</p></div>
+              <div><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/60">ALTUSplace Secure Checkout</p><p className="text-sm font-bold sm:text-base">بوابة دفع مغربية محاكية</p></div>
             </div>
             <Button variant="ghost" onClick={() => window.history.back()} className="gap-2 text-white hover:bg-white/10 hover:text-white cursor-pointer"><ArrowRight className="w-4 h-4" /> عودة</Button>
           </div>
@@ -139,19 +150,19 @@ export default function CheckoutPage() {
             <CardContent className="p-8 text-center">
               <p className="font-bold">لا يمكن فتح الدفع لأن بيانات الحجز ناقصة أو غير صحيحة.</p>
               <p className="mt-2 text-sm">عد إلى تفاصيل الإعلان واختر تاريخ البداية والنهاية قبل المتابعة.</p>
-              <Button type="button" onClick={() => window.history.back()} className="mt-4 bg-[#0B3C5D] text-white">العودة إلى تفاصيل الإعلان</Button>
+              <Button type="button" onClick={() => window.history.back()} className="mt-4 bg-[#0B0F15] text-white">العودة إلى تفاصيل الإعلان</Button>
             </CardContent>
           </Card>
         ) : <form onSubmit={handleCheckout} className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Payment Methods Section */}
           <div className="md:col-span-2 space-y-5">
             <div className="flex items-center justify-between rounded-2xl border border-[#d9e5ee] bg-white px-4 py-3 shadow-sm">
-              <div className="flex items-center gap-3"><div className="grid h-9 w-9 place-items-center rounded-xl bg-emerald-50 text-emerald-700"><BadgeCheck className="h-5 w-5" /></div><div><p className="text-xs font-bold text-[#0B3C5D]">جلسة دفع محمية</p><p className="text-[11px] text-slate-500">تشفير تجريبي • لا نخزن بيانات البطاقة</p></div></div>
+              <div className="flex items-center gap-3"><div className="grid h-9 w-9 place-items-center rounded-xl bg-emerald-50 text-emerald-700"><BadgeCheck className="h-5 w-5" /></div><div><p className="text-xs font-bold text-[#0B0F15]">جلسة دفع محمية</p><p className="text-[11px] text-slate-500">تشفير تجريبي • لا نخزن بيانات البطاقة</p></div></div>
               <div className="hidden items-center gap-2 text-[11px] font-bold text-slate-500 sm:flex"><Landmark className="h-4 w-4" /> MAD / الدرهم المغربي</div>
             </div>
             <Card className="border-[#d9e5ee] bg-white shadow-lg shadow-slate-200/60">
               <CardHeader className="border-b border-slate-100 pb-4">
-                <CardTitle className="flex items-center gap-2 text-xl font-black text-[#0B3C5D]"><CreditCard className="h-5 w-5 text-amber-500" /> اختر طريقة الدفع</CardTitle>
+                <CardTitle className="flex items-center gap-2 text-xl font-black text-[#0B0F15]"><CreditCard className="h-5 w-5 text-amber-500" /> اختر طريقة الدفع</CardTitle>
                 <p className="text-xs leading-5 text-slate-500">اختر الطريقة المناسبة لإكمال تسجيل الحجز.</p>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -195,7 +206,7 @@ export default function CheckoutPage() {
 
                 {paymentMethod === 'cmi_card' && (
                     <div className="mt-4 space-y-3 rounded-2xl border border-amber-200 bg-amber-50/70 p-4 text-sm">
-                    <div className="flex items-center gap-2 font-black text-[#0B3C5D]"><CheckCircle2 className="h-4 w-4 text-emerald-600" /> بيئة CMI محاكية مفعّلة</div>
+                    <div className="flex items-center gap-2 font-black text-[#0B0F15]"><CheckCircle2 className="h-4 w-4 text-emerald-600" /> بيئة CMI محاكية مفعّلة</div>
                     <p className="text-xs leading-relaxed text-slate-600">لا تدخل رقم بطاقة أو رمز CVV حقيقياً. هذه الواجهة تحاكي تجربة الدفع فقط ولا تتصل بمؤسسة CMI؛ سيُحفظ مرجع العملية وحالتها دون بيانات البطاقة.</p>
                     <div className="flex flex-wrap gap-2 text-[10px] font-bold text-slate-500"><span className="rounded-full bg-white px-2.5 py-1 ring-1 ring-amber-200">Visa</span><span className="rounded-full bg-white px-2.5 py-1 ring-1 ring-amber-200">Mastercard</span><span className="rounded-full bg-white px-2.5 py-1 ring-1 ring-amber-200">CMI Sandbox</span></div>
                   </div>
@@ -213,16 +224,19 @@ export default function CheckoutPage() {
                 className="mt-1 w-4 h-4 rounded border-border text-amber-500 focus:ring-amber-500 cursor-pointer"
               />
               <label htmlFor="checkout_terms" className="text-xs text-muted-foreground leading-relaxed cursor-pointer">
-                أوافق على <a href="/terms" target="_blank" className="text-amber-500 underline font-bold">شروط الاستخدام وسياسة الضمان المالي (Escrow)</a> وسياسة الإلغاء والاسترداد المبينة أدناه، وإخلاء المسؤولية الذي يقر بأن B2-Rent منصة إعلانية ووسيط تقني فقط، وأن الشريك مسؤول عن الحالة الميكانيكية للسيارة أو حالة العقار ونظافته. كما أوافق على قواعد عمولة الوساطة بنسبة 10% وأقر بصحة البيانات المدرجة.
+                أوافق على <a href="/terms" target="_blank" className="text-amber-500 underline font-bold">شروط الاستخدام وسياسة الضمان المالي (Escrow)</a> وسياسة الإلغاء والاسترداد المبينة أدناه، وإخلاء المسؤولية الذي يقر بأن ALTUSplace منصة إعلانية ووسيط تقني فقط، وأن الشريك مسؤول عن الحالة الميكانيكية للسيارة أو حالة العقار ونظافته. كما أوافق على قواعد عمولة الوساطة بنسبة 10% وأقر بصحة البيانات المدرجة.
               </label>
             </div>
           </div>
+
+          {/* KYC Identity Verification */}
+          <KycDocumentUpload compact rentalCategory={rentalCategory ?? "real_estate"} />
 
           {/* Invoice Summary & Commission Details */}
           <div className="space-y-5 md:sticky md:top-6 md:self-start">
             <Card className="h-fit border-[#d9e5ee] bg-white shadow-lg shadow-slate-200/60">
               <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-lg font-black text-[#0B3C5D]"><FileText className="h-5 w-5 text-amber-500" /> ملخص الفاتورة الشفافة</CardTitle>
+                  <CardTitle className="flex items-center gap-2 text-lg font-black text-[#0B0F15]"><FileText className="h-5 w-5 text-amber-500" /> ملخص الفاتورة الشفافة</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="p-3 bg-muted/40 rounded-xl">
@@ -262,7 +276,7 @@ export default function CheckoutPage() {
                 </div>
 
                 <div className="rounded-2xl border border-orange-200 bg-orange-50 p-4 text-right" aria-label="سياسة الإلغاء والاسترداد">
-                  <p className="font-black text-[#0B3C5D]">{cancellationRefundPolicy.ar.title}</p>
+                  <p className="font-black text-[#0B0F15]">{cancellationRefundPolicy.ar.title}</p>
                   <p className="mt-1 text-xs leading-5 text-slate-600">{cancellationRefundPolicy.ar.summary}</p>
                   <ul className="mt-2 list-disc space-y-1 pr-4 text-[11px] leading-5 text-slate-600">
                     {cancellationRefundPolicy.ar.points.slice(0, 2).map((point) => <li key={point}>{point}</li>)}
@@ -283,5 +297,22 @@ export default function CheckoutPage() {
         </form>}
       </div>
     </div>
+
+    {/* Secure Payment Modal */}
+    <PaymentCheckoutModal
+      isOpen={showPaymentModal}
+      onClose={() => setShowPaymentModal(false)}
+      onSuccess={handlePaymentSuccess}
+      amount={subtotal}
+      currency="درهم"
+      description={`حجز: ${title} - ${days} أيام`}
+      bookingDetails={{
+        title,
+        startDate: formatDate(startDateParam),
+        endDate: formatDate(endDateParam),
+        days,
+      }}
+    />
+    </>
   );
 }

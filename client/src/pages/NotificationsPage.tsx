@@ -76,13 +76,13 @@ export default function NotificationsPage() {
   return (
     <main className="min-h-screen bg-background px-4 py-8 text-foreground sm:py-12" dir={direction}>
       <div className="mx-auto max-w-5xl space-y-6">
-        <section className="relative overflow-hidden rounded-3xl bg-[#0B3C5D] p-6 text-white shadow-xl sm:p-8">
+        <section className="relative overflow-hidden rounded-3xl bg-[#0B0F15] p-6 text-white shadow-xl sm:p-8">
           <div className="absolute -left-16 -top-20 h-48 w-48 rounded-full bg-amber-500/20 blur-3xl" aria-hidden="true" />
           <div className="relative flex flex-col justify-between gap-6 md:flex-row md:items-center">
             <div>
               <div className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-amber-300">
                 <Bell className="h-4 w-4" />
-                {language === "ar" ? "تنبيهات B2-Rent" : "Alertes B2-Rent"}
+                {language === "ar" ? "تنبيهات ALTUSplace" : "Alertes ALTUSplace"}
               </div>
               <h1 className="text-2xl font-black sm:text-3xl">
                 {language === "ar" ? "إشعاراتك في مكان واحد" : "Toutes vos notifications au même endroit"}

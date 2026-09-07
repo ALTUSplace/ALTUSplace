@@ -37,7 +37,7 @@ export function calculateInvoiceTotals(
 export function createInvoiceNumber(bookingId: number, now = new Date()) {
   const year = now.getUTCFullYear();
   const suffix = randomUUID().replace(/-/g, "").slice(0, 8).toUpperCase();
-  return `B2R-${year}-${bookingId}-${suffix}`;
+  return `ALT-${year}-${bookingId}-${suffix}`;
 }
 
 export function getSimulatedPaymentStatus(method: "cmi_card" | "bank_transfer") {

@@ -11,7 +11,7 @@ export default function BlogPage() {
       excerpt: 'تعرف على أهم النصائح القانونية والتقنية لتأجير السيارات بكل أمان في المدن الكبرى بالمغرب، وكيفية تجنب الرسوم الخفية.',
       category: 'دليل السفر',
       date: '21 أغسطس 2026',
-      author: 'فريق التحرير B2-Rent',
+      author: 'فريق التحرير ALTUSplace',
       image: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=800',
       readTime: '5 دقائق قراءة'
     },
@@ -42,11 +42,11 @@ export default function BlogPage() {
       <div className="container mx-auto max-w-6xl space-y-12">
         
         {/* WordPress-style Header Banner */}
-        <div className="bg-gradient-to-r from-[#0B3C5D] to-slate-900 text-white rounded-3xl p-8 md:p-12 shadow-2xl relative overflow-hidden">
-          <div className="absolute left-0 bottom-0 w-96 h-96 bg-[#E57C23]/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="bg-gradient-to-r from-[#0B0F15] to-slate-900 text-white rounded-3xl p-8 md:p-12 shadow-2xl relative overflow-hidden">
+          <div className="absolute left-0 bottom-0 w-96 h-96 bg-[#D98236]/10 rounded-full blur-3xl pointer-events-none"></div>
           <div className="relative z-10 max-w-2xl space-y-4">
-            <span className="bg-[#E57C23] text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-widest inline-block">
-              مدونة B2-Rent الرسمية
+            <span className="bg-[#D98236] text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-widest inline-block">
+              مدونة ALTUSplace الرسمية
             </span>
             <h1 className="text-3xl md:text-5xl font-black tracking-tight">
               أحدث المقالات، الدلائل السياحية، وأخبار العقارات
@@ -64,11 +64,11 @@ export default function BlogPage() {
             <input 
               type="text" 
               placeholder="ابحث في المقالات والأخبار..." 
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 pr-10 pl-4 text-xs focus:outline-none focus:border-[#0B3C5D]"
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 pr-10 pl-4 text-xs focus:outline-none focus:border-[#0B0F15]"
             />
           </div>
           <div className="flex gap-2 w-full md:w-auto overflow-x-auto">
-            <Button variant="outline" className="text-xs font-bold rounded-xl border-[#0B3C5D] text-[#0B3C5D]">الكل</Button>
+            <Button variant="outline" className="text-xs font-bold rounded-xl border-[#0B0F15] text-[#0B0F15]">الكل</Button>
             <Button variant="ghost" className="text-xs font-bold rounded-xl text-slate-600">دليل السفر</Button>
             <Button variant="ghost" className="text-xs font-bold rounded-xl text-slate-600">استثمار عقاري</Button>
             <Button variant="ghost" className="text-xs font-bold rounded-xl text-slate-600">نصائح قيادة</Button>
@@ -85,7 +85,7 @@ export default function BlogPage() {
                   alt={article.title} 
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
-                <span className="absolute top-4 right-4 bg-[#E57C23] text-white text-xs font-bold px-3 py-1 rounded-full shadow">
+                <span className="absolute top-4 right-4 bg-[#D98236] text-white text-xs font-bold px-3 py-1 rounded-full shadow">
                   {article.category}
                 </span>
               </div>
@@ -95,7 +95,7 @@ export default function BlogPage() {
                     <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> {article.date}</span>
                     <span className="flex items-center gap-1"><User className="w-3.5 h-3.5" /> {article.author}</span>
                   </div>
-                  <h3 className="text-lg font-black text-[#0B3C5D] leading-snug group-hover:text-[#E57C23] transition-colors">
+                  <h3 className="text-lg font-black text-[#0B0F15] leading-snug group-hover:text-[#D98236] transition-colors">
                     {article.title}
                   </h3>
                   <p className="text-slate-600 text-xs leading-relaxed line-clamp-3">
@@ -104,7 +104,7 @@ export default function BlogPage() {
                 </div>
                 <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
                   <span className="text-xs font-semibold text-slate-400">{article.readTime}</span>
-                  <Button variant="link" className="text-[#0B3C5D] font-bold p-0 h-auto flex items-center gap-1 text-xs hover:text-[#E57C23]">
+                  <Button variant="link" className="text-[#0B0F15] font-bold p-0 h-auto flex items-center gap-1 text-xs hover:text-[#D98236]">
                     <span>قراءة المقال</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </Button>

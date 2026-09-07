@@ -3,7 +3,7 @@ import { buildCommercialLeaseText, generateCommercialLeasePdf } from "./commerci
 
 describe("commercial lease PDF generator", () => {
   const input = {
-    reference: "B2R-LEASE-42",
+    reference: "ALT-LEASE-42",
     landlordName: "شركة الأطلس العقارية",
     tenantName: "مريم بنعلي",
     premises: "مكتب 4، شارع محمد الخامس",

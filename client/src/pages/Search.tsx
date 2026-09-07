@@ -1,12 +1,13 @@
 import { useState, useMemo } from 'react';
 import { useLocation } from 'wouter';
-import { ListingItem } from '@/data/b2rent';
+import { ListingItem } from '@/data/altusplace';
 import { trpc } from '@/lib/trpc';
 import { Button } from '@/components/ui/button';
 import { OptimizedImage } from '@/components/OptimizedImage';
-import { Filter, Star, ShieldCheck, Users, Car as CarIcon, ArrowUpDown, Award, MapPin, Scale, X, Eye, Home, Map } from 'lucide-react';
+import { Filter, Star, ShieldCheck, Users, Car as CarIcon, ArrowUpDown, Award, MapPin, Scale, X, Eye, Home, Map, LayoutGrid } from 'lucide-react';
 import { toast } from 'sonner';
 import { MapSearchView } from '@/components/MapSearchView';
+import { InteractiveMap } from '@/components/InteractiveMap';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 const CITIES = [
@@ -136,6 +137,7 @@ export default function Search() {
 
   // عرض الخريطة التفاعلية
   const [showMap, setShowMap] = useState(false);
+  const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
 
   // ميزة المقارنة (Side-by-Side Comparison)
   const [compareList, setCompareList] = useState<ListingItem[]>([]);
@@ -368,7 +370,33 @@ export default function Search() {
               <div className="text-sm text-slate-300">
                 {t('offersFoundPrefix')} <span className="text-amber-400 font-bold">{filteredListings.length}</span> {t('availableOffers')}
               </div>
-              <div className="flex items-center gap-2 w-full sm:w-auto">
+              <div className="flex items-center gap-3 w-full sm:w-auto">
+                {/* View Toggle Buttons */}
+                <div className="flex items-center bg-slate-900 border border-slate-700 rounded-xl p-1">
+                  <button
+                    onClick={() => setViewMode('grid')}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                      viewMode === 'grid'
+                        ? 'bg-amber-500 text-slate-950 shadow-lg'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <LayoutGrid className="w-3.5 h-3.5" />
+                    شبكة
+                  </button>
+                  <button
+                    onClick={() => setViewMode('map')}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                      viewMode === 'map'
+                        ? 'bg-amber-500 text-slate-950 shadow-lg'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <Map className="w-3.5 h-3.5" />
+                    خريطة
+                  </button>
+                </div>
+                <div className="hidden sm:block w-px h-6 bg-slate-700" />
                 <ArrowUpDown className="w-4 h-4 text-amber-400" />
                 <span className="text-xs text-slate-400">{t('sortBy')}:</span>
                 <select
@@ -400,8 +428,10 @@ export default function Search() {
               </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {filteredListings.map((item) => {
+            {/* Grid View */}
+            {viewMode === 'grid' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {filteredListings.map((item) => {
                 const isCompared = compareList.some(c => c.id === item.id);
                 return (
                   <div
@@ -479,7 +509,38 @@ export default function Search() {
                   </div>
                 );
               })}
-            </div>
+              </div>
+            )}
+
+            {/* Map View */}
+            {viewMode === 'map' && (
+              <InteractiveMap
+                listings={filteredListings.map((item, index) => ({
+                  id: item.id,
+                  title: item.title,
+                  type: item.type,
+                  category: item.category,
+                  city: item.city,
+                  pricePerUnit: item.pricePerUnit,
+                  unitLabel: item.unitLabel,
+                  image: item.image,
+                  lat: item.city === 'الدار البيضاء' ? 33.5731 + (index * 0.01 - 0.03)
+                    : item.city === 'مراكش' ? 31.6295 + (index * 0.01 - 0.03)
+                    : item.city === 'أغادير' ? 30.4278 + (index * 0.01 - 0.03)
+                    : item.city === 'طنجة' ? 35.7595 + (index * 0.01 - 0.03)
+                    : item.city === 'الرباط' ? 34.0209 + (index * 0.01 - 0.03)
+                    : 33.5731 + (index * 0.01 - 0.03),
+                  lng: item.city === 'الدار البيضاء' ? -7.5898 + (index * 0.01 - 0.03)
+                    : item.city === 'مراكش' ? -7.9811 + (index * 0.01 - 0.03)
+                    : item.city === 'أغادير' ? -9.5981 + (index * 0.01 - 0.03)
+                    : item.city === 'طنجة' ? -5.8340 + (index * 0.01 - 0.03)
+                    : item.city === 'الرباط' ? -6.8416 + (index * 0.01 - 0.03)
+                    : -7.5898 + (index * 0.01 - 0.03),
+                }))}
+                onSelectListing={(listing) => setLocation(listingRoute(listing as unknown as ListingItem))}
+                height="550px"
+              />
+            )}
           </div>
         </div>
       </div>
@@ -539,7 +600,7 @@ export default function Search() {
                   <span className="text-xs text-slate-400">مشاركة:</span>
                   <button
                     onClick={() => {
-                      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`شاهد هذا العرض الرائع: ${quickViewItem.title} - ${quickViewItem.pricePerUnit} ${quickViewItem.unitLabel} في ${quickViewItem.city} عبر منصة B2-Rent: ${window.location.href}`)}`, '_blank');
+                      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`شاهد هذا العرض الرائع: ${quickViewItem.title} - ${quickViewItem.pricePerUnit} ${quickViewItem.unitLabel} في ${quickViewItem.city} عبر منصة ALTUSplace: ${window.location.href}`)}`, '_blank');
                     }}
                     className="bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 p-2 rounded-xl text-xs flex items-center gap-1 transition-colors"
                     title="مشاركة عبر واتساب"

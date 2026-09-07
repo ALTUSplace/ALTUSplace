@@ -1,5 +1,5 @@
 /**
- * B2-Rent Platform - Automated End-to-End Test Script
+ * ALTUSplace Platform - Automated End-to-End Test Script
  * Tests:
  * 1. Homepage load & vehicle selection
  * 2. Booking form interaction & date selection
@@ -11,7 +11,7 @@
 const { chromium } = require('playwright');
 
 async function runBookingTest() {
-  console.log('🚀 بدء تشغيل اختبار تدفق الحجز التلقائي لمنصة B2-Rent...');
+  console.log('🚀 بدء تشغيل اختبار تدفق الحجز التلقائي لمنصة ALTUSplace...');
   
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext();

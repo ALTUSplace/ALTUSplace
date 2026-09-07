@@ -1,9 +1,10 @@
 import { useEffect } from "react";
 import { hasLegalConsent } from "@/lib/legalDisclosure";
+import { LEGAL_CONSENT_EVENT } from "@/config/brand";
 
 const GA4_ID = import.meta.env.VITE_GA4_MEASUREMENT_ID as string | undefined;
 const META_PIXEL_ID = import.meta.env.VITE_META_PIXEL_ID as string | undefined;
-const CONSENT_EVENT = "b2rent:legal-consent";
+const CONSENT_EVENT = LEGAL_CONSENT_EVENT;
 
 type MetaPixelFunction = ((...args: unknown[]) => void) & {
   queue: unknown[][];
@@ -22,7 +23,7 @@ function loadScript(src: string, id: string) {
 
 function enableAnalytics() {
   if (GA4_ID) {
-    loadScript(`https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(GA4_ID)}`, "b2rent-ga4-script");
+    loadScript(`https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(GA4_ID)}`, "altusplace-ga4-script");
     window.dataLayer = window.dataLayer ?? [];
     const gtag = window.gtag ?? ((...args: unknown[]) => { window.dataLayer?.push(args); });
     window.gtag = gtag;
@@ -38,7 +39,7 @@ function enableAnalytics() {
     window.fbq = fbqImpl;
     fbqImpl("init", META_PIXEL_ID);
     fbqImpl("track", "PageView");
-    loadScript("https://connect.facebook.net/en_US/fbevents.js", "b2rent-meta-pixel-script");
+    loadScript("https://connect.facebook.net/en_US/fbevents.js", "altusplace-meta-pixel-script");
   }
 }
 

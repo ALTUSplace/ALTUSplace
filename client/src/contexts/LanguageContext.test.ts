@@ -24,4 +24,11 @@ describe("LanguageContext i18n helpers", () => {
     expect(getTranslation("en", "heroTitle")).toBe("Your trusted gateway to car and property rentals in Morocco");
     expect(getTranslation("en", "missing.key")).toBe("missing.key");
   });
+
+  it("provides localized values for every shared footer label", () => {
+    for (const language of SUPPORTED_LANGUAGES) {
+      expect(getTranslation(language, "termsOfService")).not.toBe("termsOfService");
+      expect(getTranslation(language, "readTermsAndAgree")).not.toBe("readTermsAndAgree");
+    }
+  });
 });

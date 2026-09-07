@@ -1,4 +1,5 @@
 import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from "react";
+import { readBrandPreference, writeBrandPreference } from "@/config/brand";
 
 export type Language = "ar" | "fr" | "en";
 
@@ -48,22 +49,34 @@ const translations: Record<Language, Record<string, string>> = {
     invoice: "الفاتورة",
     vat: "TVA",
     kycTitle: "تحقق من هويتك بأمان",
-    kycSubtitle: "ارفع بطاقة التعريف الوطنية أو السجل التجاري ليتمكن فريقنا من مراجعة حسابك.",
+    kycSubtitle: "ارفع بطاقة التعريف الوطنية أو رخصة القيادة أو السجل التجاري ليتمكن فريقنا من مراجعة حسابك.",
     cni: "بطاقة التعريف الوطنية",
+    drivingLicense: "رخصة القيادة",
     commercialRegister: "السجل التجاري",
     submitDocument: "إرسال الوثيقة للمراجعة",
     pendingReview: "قيد المراجعة",
     approved: "تم التحقق",
     rejected: "مرفوضة",
+    verified: "تم التحقق",
+    unverified: "غير موثق",
     selectFile: "اختر ملفاً",
     noFile: "لم يتم اختيار ملف",
     maxFile: "PDF أو JPG أو PNG، بحد أقصى 8 ميغابايت",
+    identityVerification: "التحقق من الهوية",
+    uploadDocument: "رفع وثيقة",
+    drivingLicenseRecommended: "يُنصح برخصة القيادة لحجوزات السيارات.",
+    nationalIdRecommended: "يُنصح ببطاقة التعريف الوطنية لحجوزات العقارات.",
+    filesEncrypted: "يتم تشفير ملفاتك وحصر الوصول إليها للإدارة فقط",
     save: "حفظ",
     cancel: "إلغاء",
     close: "إغلاق",
     back: "رجوع",
     loading: "جاري التحميل...",
     allRights: "جميع الحقوق محفوظة",
+    terms: "الشروط",
+    privacy: "الخصوصية",
+    termsOfService: "شروط الاستخدام",
+    readTermsAndAgree: "قراءة الشروط والموافقة عليها",
     officeSpaces: "مساحات الأعمال",
     officeType: "نوع المساحة",
     privateOffice: "مكتب مستقل",
@@ -136,29 +149,43 @@ const translations: Record<Language, Record<string, string>> = {
     chooseLanguage: "Choisir la langue",
     arabic: "العربية",
     french: "Français",
+    english: "English",
     switchArabic: "التبديل إلى العربية",
     switchFrench: "Passer au français",
+    switchEnglish: "Switch to English",
     cmiPayment: "Paiement CMI",
     bankTransfer: "Virement bancaire",
     invoice: "Facture",
     vat: "TVA",
     kycTitle: "Vérifiez votre identité en toute sécurité",
-    kycSubtitle: "Téléversez votre CNI ou registre de commerce pour permettre à notre équipe de vérifier votre compte.",
+    kycSubtitle: "Téléversez votre CNI, permis de conduire ou registre de commerce pour permettre à notre équipe de vérifier votre compte.",
     cni: "Carte nationale d'identité",
+    drivingLicense: "Permis de conduire",
     commercialRegister: "Registre de commerce",
     submitDocument: "Envoyer le document pour vérification",
     pendingReview: "En cours de vérification",
     approved: "Identité vérifiée",
     rejected: "Document refusé",
+    verified: "Vérifié",
+    unverified: "Non vérifié",
     selectFile: "Choisir un fichier",
     noFile: "Aucun fichier sélectionné",
     maxFile: "PDF, JPG ou PNG, 8 Mo maximum",
+    identityVerification: "Vérification d'identité",
+    uploadDocument: "Télécharger",
+    drivingLicenseRecommended: "Le permis de conduite est recommandé pour les locations de voitures.",
+    nationalIdRecommended: "La carte nationale d'identité est recommandée pour les locations immobilières.",
+    filesEncrypted: "Vos fichiers sont cryptés et l'accès est restreint à l'administration uniquement.",
     save: "Enregistrer",
     cancel: "Annuler",
     close: "Fermer",
     back: "Retour",
     loading: "Chargement...",
     allRights: "Tous droits réservés",
+    terms: "Conditions",
+    privacy: "Confidentialité",
+    termsOfService: "Conditions d'utilisation",
+    readTermsAndAgree: "Lire et accepter les conditions",
     officeSpaces: "Espaces professionnels",
     officeType: "Type d'espace",
     privateOffice: "Bureau indépendant",
@@ -212,7 +239,7 @@ const translations: Record<Language, Record<string, string>> = {
     favorites: "Favorites",
     profile: "Profile",
     help: "Help & support",
-    about: "About B2-Rent",
+    about: "About ALTUSplace",
     blog: "Blog",
     notifications: "Notifications",
     kyc: "Identity verification",
@@ -247,6 +274,8 @@ const translations: Record<Language, Record<string, string>> = {
     pendingReview: "Under review",
     approved: "Verified",
     rejected: "Rejected",
+    verified: "Verified",
+    identityVerification: "Identity verification",
     selectFile: "Choose a file",
     noFile: "No file selected",
     maxFile: "PDF, JPG, or PNG, up to 8 MB",
@@ -256,6 +285,10 @@ const translations: Record<Language, Record<string, string>> = {
     back: "Back",
     loading: "Loading...",
     allRights: "All rights reserved",
+    terms: "Terms",
+    privacy: "Privacy",
+    termsOfService: "Terms of service",
+    readTermsAndAgree: "Read and accept the terms",
     officeSpaces: "Business spaces",
     officeType: "Space type",
     privateOffice: "Private office",
@@ -318,13 +351,13 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<Language>(() => {
     if (typeof window === "undefined") return "ar";
-    const saved = window.localStorage.getItem("b2rent-language");
+    const saved = readBrandPreference("language");
     return saved === "fr" || saved === "en" ? saved : "ar";
   });
 
   const setLanguage = (nextLanguage: Language) => {
     setLanguageState(nextLanguage);
-    window.localStorage.setItem("b2rent-language", nextLanguage);
+    writeBrandPreference("language", nextLanguage);
   };
 
   const direction = getDirectionForLanguage(language);

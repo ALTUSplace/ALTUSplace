@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { HelpCircle, ChevronDown, Mail, Send, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { SUPPORT_EMAIL } from '@/config/brand';
 
 export default function Help() {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
@@ -22,7 +23,7 @@ export default function Help() {
     },
     {
       q: 'كيف يمكنني التواصل مع فريق الدعم الفني مباشرة؟',
-      a: 'يمكنك إرسال استفسارك عبر البريد الإلكتروني الرسمي b2rentt@gmail.com أو استخدام نموذج الدعم أدناه وسيتم الرد عليك في أسرع وقت.',
+      a: `يمكنك إرسال استفسارك عبر البريد الإلكتروني الرسمي ${SUPPORT_EMAIL} أو استخدام نموذج الدعم أدناه وسيتم الرد عليك في أسرع وقت.`,
     },
   ];
 
@@ -73,7 +74,7 @@ export default function Help() {
             </div>
             <div>
               <h3 className="text-lg font-bold text-white">إرسال استفسار للدعم الفني</h3>
-              <p className="text-xs text-slate-400">سيتم إرسال رسالتك مباشرة إلى البريد المعتمد: b2rentt@gmail.com</p>
+              <p className="text-xs text-slate-400">{`سيتم إرسال رسالتك مباشرة إلى البريد المعتمد: ${SUPPORT_EMAIL}`}</p>
             </div>
           </div>
 
@@ -161,7 +162,7 @@ export default function Help() {
           </div>
           <div>
             <div className="text-xs text-slate-400 text-center">البريد الإلكتروني الرسمي المعتمد للدعم الفني</div>
-            <a href="mailto:b2rentt@gmail.com" className="text-lg font-bold text-white hover:text-amber-400">b2rentt@gmail.com</a>
+            <a href={`mailto:${SUPPORT_EMAIL}`} className="text-lg font-bold text-white hover:text-amber-400">{SUPPORT_EMAIL}</a>
           </div>
         </div>
 

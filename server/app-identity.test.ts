@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-describe("B2-Rent app identity", () => {
+describe("ALTUSplace app identity", () => {
   it("serves the configured application logo", async () => {
     const logoUrl = process.env.VITE_APP_LOGO;
     expect(logoUrl).toMatch(/^https:\/\//);

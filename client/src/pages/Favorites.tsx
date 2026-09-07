@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'wouter';
-import { LISTINGS, ListingItem } from '@/data/b2rent';
+import { LISTINGS, ListingItem } from '@/data/altusplace';
 import { Button } from '@/components/ui/button';
 import { Heart, MapPin, Trash2, SlidersHorizontal } from 'lucide-react';
 import { toast } from 'sonner';
 import { OptimizedImage } from '@/components/OptimizedImage';
+import { readBrandPreference, writeBrandPreference } from '@/config/brand';
 
 export default function Favorites() {
   const [favorites, setFavorites] = useState<string[]>([]);
@@ -13,7 +14,7 @@ export default function Favorites() {
 
   useEffect(() => {
     // جلب المفضلة من LocalStorage أو استخدام عينة افتراضية
-    const stored = localStorage.getItem('b2_favorites');
+    const stored = readBrandPreference("favorites");
     if (stored) {
       try {
         setFavorites(JSON.parse(stored));
@@ -28,7 +29,7 @@ export default function Favorites() {
   const handleRemoveFavorite = (id: string) => {
     const updated = favorites.filter(favId => favId !== id);
     setFavorites(updated);
-    localStorage.setItem('b2_favorites', JSON.stringify(updated));
+    writeBrandPreference("favorites", JSON.stringify(updated));
     toast.success('تمت إزالة العنصر من المفضلة');
   };
 

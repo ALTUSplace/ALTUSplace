@@ -20,6 +20,7 @@ import { escapeIcal, parseIcalEvents, validateIcalImportUrl } from "../shared/ic
 import { syncListingIcal } from "./ical";
 import { CANCELLATION_POLICY_VERSION, CANCELLATION_POLICY_TEXT, CANCELLATION_POLICY_FINGERPRINT } from "../shared/cancellationPolicySnapshot";
 import { createImageVerificationProof, ORIGINAL_IMAGE_REJECTION_MESSAGE, verifyImageVerificationProof, verifyOriginalListingImage } from "./imageVerification";
+import { isRangeAvailable, overlaps, parseBlockedRanges, parseDateRange } from "./availability";
 
 async function writeAuditLog(input: {
   actorId: number;
@@ -62,6 +63,7 @@ export const appRouter = router({
         agencyWebsite: user.agencyWebsite,
         loginMethod: user.loginMethod,
         role: user.role,
+        accountStatus: user.accountStatus,
       };
     }),
     updateProfile: protectedProcedure
@@ -254,7 +256,7 @@ export const appRouter = router({
         return [listing.id, listing.title, listing.category, listing.status, analytics.views, analytics.whatsappClicks, analytics.contactClicks, analytics.whatsappClicks + analytics.contactClicks, listing.createdAt?.toISOString?.() ?? ""].map(csvField).join(",");
       });
       const date = new Date().toISOString().slice(0, 10);
-      return { filename: `b2-rent-agency-analytics-${date}.csv`, csv: `\uFEFF${header.map(csvField).join(",")}\n${rows.join("\n")}` };
+      return { filename: `altusplace-agency-analytics-${date}.csv`, csv: `\uFEFF${header.map(csvField).join(",")}\n${rows.join("\n")}` };
     }),
   }),
 
@@ -448,7 +450,7 @@ export const appRouter = router({
     submit: protectedProcedure
       .input(z.object({
         applicantRole: z.enum(["renter", "owner", "company"]),
-        documentType: z.enum(["cni", "commercial_register"]),
+        documentType: z.enum(["cni", "driving_license", "commercial_register"]),
         fileName: z.string().trim().min(1).max(255),
         mimeType: z.enum(["application/pdf", "image/jpeg", "image/png"]),
         contentBase64: z.string().min(1).max(12_000_000),
@@ -464,6 +466,7 @@ export const appRouter = router({
         const safeName = input.fileName.replace(/[^a-zA-Z0-9._-]/g, "-").slice(-180) || "identity-document";
         const stored = await storagePut(`users/${ctx.user!.id}/kyc/${Date.now()}-${safeName}`, bytes, input.mimeType);
         const [created] = await db.insert(kycSubmissions).values({ userId: ctx.user!.id, applicantRole: input.applicantRole, documentType: input.documentType, documentKey: stored.key, originalFileName: input.fileName, mimeType: input.mimeType, status: "Pending" }).$returningId();
+        await db.update(users).set({ kycVerificationStatus: "pending" }).where(eq(users.id, ctx.user!.id));
         return { id: created.id, status: "Pending" as const };
       }),
     adminList: adminProcedure.query(async () => {
@@ -476,8 +479,21 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         const db = await getDb();
         if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "قاعدة البيانات غير متاحة." });
+        const [submission] = await db.select({ userId: kycSubmissions.userId }).from(kycSubmissions).where(eq(kycSubmissions.id, input.id)).limit(1);
         await db.update(kycSubmissions).set({ status: input.status, rejectionReason: input.status === "Rejected" ? (input.rejectionReason || "لم يتم تقديم سبب.") : null, reviewedAt: new Date() }).where(eq(kycSubmissions.id, input.id));
+        if (submission) {
+          const userStatus = input.status === "Approved" ? "verified" : "rejected";
+          await db.update(users).set({ kycVerificationStatus: userStatus, ...(input.status === "Approved" ? { kycVerifiedAt: new Date() } : {}) }).where(eq(users.id, submission.userId));
+        }
         return { success: true } as const;
+      }),
+    getByUserId: protectedProcedure
+      .input(z.object({ userId: z.number().int().positive() }))
+      .query(async ({ input }) => {
+        const db = await getDb();
+        if (!db) return null;
+        const [userRow] = await db.select({ kycVerificationStatus: users.kycVerificationStatus, kycVerifiedAt: users.kycVerifiedAt }).from(users).where(eq(users.id, input.userId)).limit(1);
+        return userRow ?? null;
       }),
   }),
   admin: router({
@@ -507,27 +523,43 @@ export const appRouter = router({
       }),
     overview: adminProcedure.query(async () => {
       const db = await getDb();
-      if (!db) return { users: 0, owners: 0, renters: 0, listings: 0, pendingListings: 0, bookings: 0, grossRevenue: 0, platformFees: 0 };
-      const [userRows, ownerRows, renterRows, listingRows, pendingRows, bookingRows, revenueRows] = await Promise.all([
+      if (!db) return { users: 0, owners: 0, renters: 0, activeAgencies: 0, listings: 0, pendingListings: 0, bookings: 0, grossRevenue: 0, platformFees: 0, userGrowth: 0, monthlyRevenue: [] };
+      const [userRows, ownerRows, renterRows, activeAgencyRows, listingRows, pendingRows, bookingRows, revenueRows, recentUsers] = await Promise.all([
         db.select({ value: count() }).from(users),
         db.select({ value: count() }).from(users).where(eq(users.role, 'owner')),
         db.select({ value: count() }).from(users).where(eq(users.role, 'renter')),
+        db.select({ value: count() }).from(users).where(and(eq(users.role, 'owner'), eq(users.accountStatus, 'active'))),
         db.select({ value: count() }).from(listings),
         db.select({ value: count() }).from(listings).where(eq(listings.status, 'Published')),
         db.select({ value: count() }).from(bookings),
         db.select({ gross: bookings.totalPrice, fees: bookings.commissionFee }).from(bookings).where(eq(bookings.status, 'Confirmed')),
+        db.select({ createdAt: users.createdAt }).from(users).orderBy(desc(users.createdAt)).limit(100),
       ]);
       return {
-        users: Number(userRows[0]?.value ?? 0), owners: Number(ownerRows[0]?.value ?? 0), renters: Number(renterRows[0]?.value ?? 0),
+        users: Number(userRows[0]?.value ?? 0), owners: Number(ownerRows[0]?.value ?? 0), renters: Number(renterRows[0]?.value ?? 0), activeAgencies: Number(activeAgencyRows[0]?.value ?? 0),
         listings: Number(listingRows[0]?.value ?? 0), pendingListings: Number(pendingRows[0]?.value ?? 0), bookings: Number(bookingRows[0]?.value ?? 0),
         grossRevenue: revenueRows.reduce((sum, row) => sum + row.gross, 0), platformFees: revenueRows.reduce((sum, row) => sum + row.fees, 0),
+        userGrowth: recentUsers.filter(user => user.createdAt && user.createdAt >= new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)).length,
+        monthlyRevenue: [],
       };
     }),
     users: adminProcedure.query(async () => {
       const db = await getDb();
       if (!db) return [];
-      return db.select({ id: users.id, name: users.name, email: users.email, role: users.role, createdAt: users.createdAt }).from(users).orderBy(desc(users.createdAt)).limit(200);
+      return db.select({ id: users.id, name: users.name, email: users.email, role: users.role, accountStatus: users.accountStatus, kycVerificationStatus: users.kycVerificationStatus, agencyName: users.agencyName, commercialRegister: users.commercialRegister, createdAt: users.createdAt }).from(users).orderBy(desc(users.createdAt)).limit(200);
     }),
+    updateUserStatus: adminProcedure
+      .input(z.object({ userId: z.number().int().positive(), status: z.enum(['active', 'suspended', 'banned']) }))
+      .mutation(async ({ ctx, input }) => {
+        const db = await getDb();
+        if (!db) throw new Error('Database unavailable');
+        if (input.userId === ctx.user.id && input.status !== 'active') throw new TRPCError({ code: 'BAD_REQUEST', message: 'لا يمكنك تعطيل حسابك الإداري.' });
+        const [before] = await db.select({ accountStatus: users.accountStatus }).from(users).where(eq(users.id, input.userId)).limit(1);
+        if (!before) throw new TRPCError({ code: 'NOT_FOUND', message: 'المستخدم غير موجود.' });
+        await db.update(users).set({ accountStatus: input.status }).where(eq(users.id, input.userId));
+        await writeAuditLog({ actorId: ctx.user.id, action: `user.${input.status}`, entityType: 'user', entityId: input.userId, beforeData: before, afterData: { accountStatus: input.status } });
+        return { success: true as const };
+      }),
     updateUserRole: adminProcedure
       .input(z.object({ userId: z.number().int().positive(), role: z.enum(['renter', 'owner', 'admin', 'user']) }))
       .mutation(async ({ input }) => {
@@ -555,14 +587,47 @@ export const appRouter = router({
     listings: adminProcedure.query(async () => {
       const db = await getDb();
       if (!db) return [];
-      return db.select({ id: listings.id, title: listings.title, category: listings.category, status: listings.status, pricePerDay: listings.pricePerDay, ownerId: listings.ownerId, ownerName: users.name, createdAt: listings.createdAt })
+      return db.select({ id: listings.id, title: listings.title, category: listings.category, status: listings.status, isFeatured: listings.isFeatured, pricePerDay: listings.pricePerDay, ownerId: listings.ownerId, ownerName: users.name, createdAt: listings.createdAt })
         .from(listings).leftJoin(users, eq(listings.ownerId, users.id)).orderBy(desc(listings.createdAt)).limit(200);
     }),
+    moderateListing: adminProcedure
+      .input(z.object({ listingId: z.number().int().positive(), status: z.enum(['Published', 'Approved', 'Rejected']), isFeatured: z.boolean().optional() }))
+      .mutation(async ({ ctx, input }) => {
+        const db = await getDb();
+        if (!db) throw new Error('Database unavailable');
+        const [before] = await db.select({ status: listings.status, isFeatured: listings.isFeatured }).from(listings).where(eq(listings.id, input.listingId)).limit(1);
+        if (!before) throw new TRPCError({ code: 'NOT_FOUND', message: 'الإعلان غير موجود.' });
+        await db.update(listings).set({ status: input.status, ...(input.isFeatured === undefined ? {} : { isFeatured: input.isFeatured }) }).where(eq(listings.id, input.listingId));
+        await writeAuditLog({ actorId: ctx.user.id, action: 'listing.moderated', entityType: 'listing', entityId: input.listingId, beforeData: before, afterData: { status: input.status, isFeatured: input.isFeatured ?? before.isFeatured } });
+        return { success: true as const };
+      }),
+    updateListing: adminProcedure
+      .input(z.object({ listingId: z.number().int().positive(), title: z.string().trim().min(2).max(255), pricePerDay: z.number().int().positive() }))
+      .mutation(async ({ ctx, input }) => {
+        const db = await getDb();
+        if (!db) throw new Error('Database unavailable');
+        const [before] = await db.select({ title: listings.title, pricePerDay: listings.pricePerDay }).from(listings).where(eq(listings.id, input.listingId)).limit(1);
+        if (!before) throw new TRPCError({ code: 'NOT_FOUND', message: 'الإعلان غير موجود.' });
+        await db.update(listings).set({ title: input.title, pricePerDay: input.pricePerDay }).where(eq(listings.id, input.listingId));
+        await writeAuditLog({ actorId: ctx.user.id, action: 'listing.updated', entityType: 'listing', entityId: input.listingId, beforeData: before, afterData: input });
+        return { success: true as const };
+      }),
+    deleteListing: adminProcedure
+      .input(z.object({ listingId: z.number().int().positive() }))
+      .mutation(async ({ ctx, input }) => {
+        const db = await getDb();
+        if (!db) throw new Error('Database unavailable');
+        const [before] = await db.select().from(listings).where(eq(listings.id, input.listingId)).limit(1);
+        if (!before) throw new TRPCError({ code: 'NOT_FOUND', message: 'الإعلان غير موجود.' });
+        await db.delete(listings).where(eq(listings.id, input.listingId));
+        await writeAuditLog({ actorId: ctx.user.id, action: 'listing.deleted', entityType: 'listing', entityId: input.listingId, beforeData: before });
+        return { success: true as const };
+      }),
     commissionSettings: adminProcedure.query(async () => {
       const db = await getDb();
-      if (!db) return { commissionRateBasisPoints: 1000, vatRateBasisPoints: 2000 };
+      if (!db) return { commissionRateBasisPoints: 1000, vatRateBasisPoints: 2000, platformName: 'ALTUSplace', contactEmail: '', contactPhone: '', maintenanceMode: false };
       const rows = await db.select().from(platformSettings).limit(1);
-      return rows[0] ?? { commissionRateBasisPoints: 1000, vatRateBasisPoints: 2000 };
+      return rows[0] ?? { commissionRateBasisPoints: 1000, vatRateBasisPoints: 2000, platformName: 'ALTUSplace', contactEmail: '', contactPhone: '', maintenanceMode: false };
     }),
     updateCommission: adminProcedure
       .input(z.object({ commissionRateBasisPoints: z.number().int().min(0).max(3000) }))
@@ -576,6 +641,17 @@ export const appRouter = router({
           await db.insert(platformSettings).values({ commissionRateBasisPoints: input.commissionRateBasisPoints, updatedBy: ctx.user.id });
         }
         return { success: true, commissionRateBasisPoints: input.commissionRateBasisPoints };
+      }),
+    updatePlatformSettings: adminProcedure
+      .input(z.object({ platformName: z.string().trim().min(2).max(180), contactEmail: z.string().trim().email().or(z.literal('')), contactPhone: z.string().trim().max(40), maintenanceMode: z.boolean() }))
+      .mutation(async ({ ctx, input }) => {
+        const db = await getDb();
+        if (!db) throw new Error('Database unavailable');
+        const existing = await db.select().from(platformSettings).limit(1);
+        if (existing[0]) await db.update(platformSettings).set({ ...input, updatedBy: ctx.user.id }).where(eq(platformSettings.id, existing[0].id));
+        else await db.insert(platformSettings).values({ ...input, updatedBy: ctx.user.id });
+        await writeAuditLog({ actorId: ctx.user.id, action: 'platform.settings.updated', entityType: 'platform_settings', beforeData: existing[0], afterData: input });
+        return { success: true as const };
       }),
     payouts: adminProcedure.query(async () => {
       const db = await getDb();
@@ -742,14 +818,25 @@ export const appRouter = router({
       .query(async ({ input }) => {
         const db = await getDb();
         if (!db) return [];
-        const allListings = await db.select({ listing: listings, ownerName: users.name }).from(listings).leftJoin(users, eq(listings.ownerId, users.id)).where(inArray(listings.status, ['Published', 'Available'])).orderBy(desc(listings.createdAt));
+        const allListings = await db.select({ listing: listings, ownerName: users.name }).from(listings).leftJoin(users, eq(listings.ownerId, users.id)).where(inArray(listings.status, ['Published', 'Available', 'Approved'])).orderBy(desc(listings.createdAt));
+        const requestedRange = input?.startDate && input?.endDate ? parseDateRange(input.startDate, input.endDate) : null;
+        const confirmedRanges = requestedRange
+          ? await db.select({ listingId: bookings.listingId, start: bookings.startDate, end: bookings.endDate }).from(bookings).where(eq(bookings.status, "Confirmed"))
+          : [];
 
         // Dynamic Pricing Engine calculation
-        return allListings.map(({ listing: item, ownerName }) => {
+        return allListings.filter(({ listing: item }) => {
+          if (!requestedRange) return true;
+          const blockedRanges = [
+            ...parseBlockedRanges(item.availability),
+            ...parseBlockedRanges(item.icalImportedRanges),
+            ...confirmedRanges.filter((range) => range.listingId === item.id).map((range) => ({ start: new Date(range.start), end: new Date(range.end) })),
+          ];
+          return isRangeAvailable(requestedRange, blockedRanges);
+        }).map(({ listing: item, ownerName }) => {
           let adjustedPrice = item.pricePerDay;
-          if (input?.startDate && input?.endDate) {
-            const start = new Date(input.startDate);
-            const end = new Date(input.endDate);
+          if (requestedRange) {
+            const { start, end } = requestedRange;
             const days = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
 
             // Weekend surge (Friday/Saturday)
@@ -778,7 +865,7 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         const db = await getDb();
         if (!db) return { recorded: false as const };
-        const listing = await db.select({ id: listings.id }).from(listings).where(and(eq(listings.id, input.listingId), inArray(listings.status, ["Published", "Available"]))).limit(1);
+        const listing = await db.select({ id: listings.id }).from(listings).where(and(eq(listings.id, input.listingId), inArray(listings.status, ["Published", "Available", "Approved"]))).limit(1);
         if (!listing[0]) return { recorded: false as const };
         if (input.eventType === "view" && input.visitorKey) {
           const previous = await db.select({ id: listingAnalyticsEvents.id }).from(listingAnalyticsEvents).where(and(eq(listingAnalyticsEvents.listingId, input.listingId), eq(listingAnalyticsEvents.eventType, "view"), eq(listingAnalyticsEvents.visitorKey, input.visitorKey))).limit(1);
@@ -792,8 +879,17 @@ export const appRouter = router({
       .input(z.object({ id: z.number() }))
       .query(async ({ input }) => {
         const db = await getDb();
-        if (!db) return null;
-        const result = await db.select().from(listings).where(and(eq(listings.id, input.id), inArray(listings.status, ['Published', 'Available']))).limit(1);
+        if (!db) {
+          console.error('Database unavailable in getById query for listing ID:', input.id);
+          return null;
+        }
+        const result = await db.select().from(listings).where(and(eq(listings.id, input.id), inArray(listings.status, ['Published', 'Available', 'Approved']))).limit(1);
+        if (!result[0]) {
+          console.error(`Listing not found or not accessible. ID: ${input.id}, Status check: ['Published', 'Available', 'Approved']`);
+          // Debug: Check what the actual status is
+          const fullListing = await db.select({ id: listings.id, status: listings.status }).from(listings).where(eq(listings.id, input.id)).limit(1);
+          console.error(`Full listing debug - ID: ${input.id}, Actual status: ${fullListing[0]?.status || 'Not found'}`);
+        }
         return result[0] || null;
       }),
 
@@ -1073,13 +1169,26 @@ export const appRouter = router({
         const db = await getDb();
         if (!db) throw new Error("Database unavailable");
 
-        const start = new Date(input.startDate);
-        const end = new Date(input.endDate);
-        if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || start >= end) {
+        const requestedRange = parseDateRange(input.startDate, input.endDate);
+        if (!requestedRange) {
           throw new Error("تواريخ الحجز غير صالحة.");
         }
-        const listing = await db.select().from(listings).where(eq(listings.id, input.listingId)).limit(1);
+        const { start, end } = requestedRange;
+        const listing = await db.select().from(listings).where(and(eq(listings.id, input.listingId), inArray(listings.status, ["Published", "Available", "Approved"]))).limit(1);
         if (!listing[0]) throw new Error("الإعلان غير موجود.");
+        const blockedRanges = [
+          ...parseBlockedRanges(listing[0].availability),
+          ...parseBlockedRanges(listing[0].icalImportedRanges),
+        ];
+        const confirmedRanges = await db.select({ start: bookings.startDate, end: bookings.endDate }).from(bookings).where(and(
+          eq(bookings.listingId, input.listingId),
+          eq(bookings.status, "Confirmed"),
+          lt(bookings.startDate, end),
+          gt(bookings.endDate, start),
+        ));
+        if (!isRangeAvailable(requestedRange, blockedRanges) || confirmedRanges.length > 0) {
+          throw new Error("الإعلان غير متاح خلال الفترة المحددة.");
+        }
         const owner = await db.select({ id: users.id, name: users.name, email: users.email })
           .from(users).where(eq(users.id, listing[0].ownerId)).limit(1);
 
@@ -1209,6 +1318,12 @@ export const appRouter = router({
             if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || start >= end) throw new Error("تواريخ الحجز غير صالحة.");
             // MySQL row lock serializes confirmations for the same listing.
             await tx.execute(sql`SELECT listing_id FROM listings WHERE listing_id = ${booking.listingId} FOR UPDATE`);
+            const currentListing = await tx.select({ status: listings.status, availability: listings.availability, icalImportedRanges: listings.icalImportedRanges }).from(listings).where(eq(listings.id, booking.listingId)).limit(1);
+            if (!currentListing[0] || !["Published", "Available", "Approved"].includes(currentListing[0].status)) {
+              throw new Error("لا يمكن قبول الحجز لأن الإعلان لم يعد متاحاً.");
+            }
+            const blockedRanges = [...parseBlockedRanges(currentListing[0].availability), ...parseBlockedRanges(currentListing[0].icalImportedRanges)];
+            if (!isRangeAvailable({ start, end }, blockedRanges)) throw new Error("لا يمكن قبول الحجز لأن الفترة محجوبة.");
             const overlapping = await tx.select({ id: bookings.id }).from(bookings).where(and(
               eq(bookings.listingId, booking.listingId),
               eq(bookings.status, "Confirmed"),
@@ -1377,7 +1492,7 @@ export const appRouter = router({
               href: `/voucher/${voucher.code}`,
               entityType: "voucher",
               entityId: voucher.id,
-              email: ctx.user!.email ? { to: ctx.user!.email, subject: "B2-Rent — تذكرة الوصول الذكي", ...buildEmailContent("تذكرة الوصول الذكي جاهزة / Voucher prêt", renterMessage, voucherUrl) } : undefined,
+              email: ctx.user!.email ? { to: ctx.user!.email, subject: "ALTUSplace — تذكرة الوصول الذكي", ...buildEmailContent("تذكرة الوصول الذكي جاهزة / Voucher prêt", renterMessage, voucherUrl) } : undefined,
             });
             if (detail.ownerId !== booking.renterId) {
               await safeNotifyUser({
@@ -1388,7 +1503,7 @@ export const appRouter = router({
                 href: "/host",
                 entityType: "booking",
                 entityId: booking.id,
-                email: detail.ownerEmail ? { to: detail.ownerEmail, subject: "B2-Rent — دفع حجز جديد", ...buildEmailContent("دفع جديد وتجهيز الخدمة / Paiement reçu", ownerMessage, `${requestOrigin}/host`) } : undefined,
+                email: detail.ownerEmail ? { to: detail.ownerEmail, subject: "ALTUSplace — دفع حجز جديد", ...buildEmailContent("دفع جديد وتجهيز الخدمة / Paiement reçu", ownerMessage, `${requestOrigin}/host`) } : undefined,
               });
             }
           }
@@ -1547,7 +1662,7 @@ export const appRouter = router({
         const canonicalStartDate = new Date(booking[0].startDate);
         const canonicalEndDate = new Date(booking[0].endDate);
         const canonicalMonthlyRent = booking[0].totalPrice;
-        const reference = `B2R-LEASE-${input.bookingId}-${Date.now().toString(36).toUpperCase()}`;
+        const reference = `ALT-LEASE-${input.bookingId}-${Date.now().toString(36).toUpperCase()}`;
         const legalNotice = input.language === "ar"
           ? "تنبيه قانوني: هذا نموذج تقني عام، ويجب مراجعته واعتماده من طرف محامٍ أو موثق مغربي قبل التوقيع أو الاستعمال الفعلي."
           : "Avertissement légal : ce modèle technique doit être validé par un avocat ou un notaire au Maroc avant toute signature ou utilisation réelle.";

@@ -52,6 +52,7 @@ function AccessGuard({ area, children }: { area: 'admin' | 'host'; children: Rea
   const { user, loading } = useAuth();
   if (loading) return <div className="min-h-[50vh] flex items-center justify-center">جاري التحقق من الصلاحيات...</div>;
   if (!user) return <div className="min-h-[50vh] flex flex-col items-center justify-center gap-4 p-6 text-center"><h1 className="text-2xl font-bold">يلزم تسجيل الدخول</h1><p className="text-muted-foreground">سجّل الدخول للوصول إلى هذه اللوحة.</p><Button onClick={() => startLogin()}>تسجيل الدخول</Button></div>;
+  if (user.accountStatus && user.accountStatus !== 'active') return <div className="min-h-[50vh] flex flex-col items-center justify-center gap-3 p-6 text-center"><h1 className="text-2xl font-bold">الحساب غير نشط</h1><p className="text-muted-foreground">تم تعليق أو حظر هذا الحساب. تواصل مع الدعم للمراجعة.</p></div>;
   const allowed = area === 'admin' ? user.role === 'admin' : user.role === 'owner' || user.role === 'admin';
   if (!allowed) return <div className="min-h-[50vh] flex flex-col items-center justify-center gap-3 p-6 text-center"><h1 className="text-2xl font-bold">403 — الوصول غير مسموح</h1><p className="text-muted-foreground">ليس لديك الصلاحية لفتح هذه اللوحة.</p></div>;
   return <>{children}</>;

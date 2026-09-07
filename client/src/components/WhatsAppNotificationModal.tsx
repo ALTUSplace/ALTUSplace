@@ -20,7 +20,7 @@ export function WhatsAppNotificationModal({ isOpen, onClose, bookingDetails }: W
   const [recipient, setRecipient] = useState<'customer' | 'agency'>('agency');
   const [message, setMessage] = useState(
     bookingDetails
-      ? `مرحباً، تم تأكيد حجزك رقم ${bookingDetails.id} لـ ${bookingDetails.carName} بمبلغ ${bookingDetails.totalPrice} درهم عبر منصة B2-Rent. شكراً لثقتكم بكراؤنا وممتلكاتنا.`
+      ? `مرحباً، تم تأكيد حجزك رقم ${bookingDetails.id} لـ ${bookingDetails.carName} بمبلغ ${bookingDetails.totalPrice} درهم عبر منصة ALTUSplace. شكراً لثقتكم بكراؤنا وممتلكاتنا.`
       : 'مرحباً، لدي استفسار بخصوص الحجز والتوثيق الرقمي.'
   );
   const [sent, setSent] = useState(false);

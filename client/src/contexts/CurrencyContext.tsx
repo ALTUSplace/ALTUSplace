@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState } from 'react';
+import { readBrandPreference, writeBrandPreference } from '@/config/brand';
 
 export type Currency = 'MAD' | 'EUR' | 'USD';
 
@@ -27,12 +28,13 @@ const SYMBOLS = {
 
 export function CurrencyProvider({ children }: { children: React.ReactNode }) {
   const [currency, setCurrencyState] = useState<Currency>(() => {
-    return (localStorage.getItem('b2rent_currency') as Currency) || 'MAD';
+    const saved = readBrandPreference("currency");
+    return saved === 'EUR' || saved === 'USD' ? saved : 'MAD';
   });
 
   const setCurrency = (c: Currency) => {
     setCurrencyState(c);
-    localStorage.setItem('b2rent_currency', c);
+    writeBrandPreference("currency", c);
   };
 
   const convertPrice = (amountInMAD: number) => {

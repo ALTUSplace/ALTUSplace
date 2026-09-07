@@ -6,10 +6,12 @@ import { Star, ShieldCheck, Users, Car as CarIcon, Fuel, MapPin, Phone, CheckCir
 import { toast } from 'sonner';
 import { trpc } from '@/lib/trpc';
 import { OptimizedImage } from '@/components/OptimizedImage';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function CarDetails() {
   const [, params] = useRoute('/car/:id');
   const [, setLocation] = useLocation();
+  const { t } = useLanguage();
 
   const carId = params?.id || '';
   const numericListingId = Number(carId);
@@ -21,7 +23,7 @@ export default function CarDetails() {
   const car = listing ? {
     id: String(listing.id),
     name: listing.title,
-    brand: listing.title.split(' ')[0] || 'B2-Rent',
+    brand: listing.title.split(' ')[0] || 'ALTUSplace',
     cityName: listing.city,
     pricePerDay: listing.pricePerDay,
     image: listing.imageUrl || '',
@@ -29,7 +31,7 @@ export default function CarDetails() {
     fuel: listing.fuelType || 'غير محدد',
     seats: 5,
     features: listing.amenities ? listing.amenities.split(',').map((item) => item.trim()).filter(Boolean) : [],
-    agency: { name: 'المؤجر على B2-Rent', address: listing.city, whatsapp: '' },
+    agency: { name: 'المؤجر على ALTUSplace', address: listing.city, whatsapp: '' },
   } : null;
 
   const [startDate, setStartDate] = useState(() => {
@@ -60,8 +62,21 @@ export default function CarDetails() {
   if (listingQuery.isLoading) {
     return <div className="min-h-screen flex items-center justify-center bg-slate-950 text-slate-200">جاري تحميل تفاصيل الإعلان...</div>;
   }
+  
+  // Log error details for debugging
+  if (listingQuery.isError) {
+    console.error('Error fetching car listing:', listingQuery.error);
+    console.error('Listing ID being fetched:', numericListingId);
+  }
+  
   if (!car || listingQuery.isError) {
-    return <div className="min-h-screen flex flex-col gap-4 items-center justify-center bg-slate-950 text-slate-200"><p>هذا الإعلان غير متاح أو لم يعد منشوراً.</p><Button onClick={() => setLocation('/search')}>العودة إلى نتائج البحث</Button></div>;
+    return (
+      <div className="min-h-screen flex flex-col gap-4 items-center justify-center bg-slate-950 text-slate-200">
+        <p>{t("listingsLoadError")}</p>
+        <p className="text-sm text-slate-400">ID الإعلان: {numericListingId}</p>
+        <Button onClick={() => setLocation('/search')}>{t("back")}</Button>
+      </div>
+    );
   }
 
   const calcDays = () => {
@@ -82,7 +97,7 @@ export default function CarDetails() {
 
   const handleShare = (platform: string) => {
     const url = window.location.href;
-    const text = `استأجر ${car.name} في ${car.cityName} عبر منصة B2-Rent الرائدة!`;
+    const text = `استأجر ${car.name} في ${car.cityName} عبر منصة ALTUSplace الرائدة!`;
     if (platform === 'whatsapp') {
       window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text + ' ' + url)}`, '_blank');
     } else if (platform === 'facebook') {
@@ -279,7 +294,7 @@ export default function CarDetails() {
                     ) : reviews.map((rev) => (
                       <div key={rev.id} className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-2">
                         <div className="flex items-center justify-between">
-                          <span className="font-bold text-white text-sm">{rev.userName || 'مستخدم B2-Rent'}</span>
+                          <span className="font-bold text-white text-sm">{rev.userName || 'مستخدم ALTUSplace'}</span>
                           <span className="text-xs text-slate-500">{new Date(rev.createdAt).toLocaleDateString('ar-MA')}</span>
                         </div>
                         <div className="flex items-center gap-1 text-amber-400">

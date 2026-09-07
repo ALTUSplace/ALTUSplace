@@ -1,6 +1,6 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Link, useLocation, useParams } from "wouter";
-import { ArrowRight, Bath, Bed, Building2, CheckCircle2, Heart, MapPin, Share2, Video } from "lucide-react";
+import { ArrowRight, Bath, Bed, Building2, CheckCircle2, Heart, MapPin, Share2, Video, Calendar, Lock, ShieldCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -34,12 +34,20 @@ export default function PropertyDetailWithVideo() {
   if (listingQuery.isLoading) {
     return <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-600">{t("loading")}</div>;
   }
+  
+  // Log error details for debugging
+  if (listingQuery.isError) {
+    console.error('Error fetching property listing:', listingQuery.error);
+    console.error('Listing ID being fetched:', listingId);
+  }
+  
   if (listingQuery.isError || !listing) {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center gap-4 px-4 text-center" dir={direction}>
-        <h1 className="text-2xl font-bold text-slate-900">{language === "fr" ? "Annonce introuvable" : "الإعلان غير موجود"}</h1>
-        <p className="text-slate-600">{language === "fr" ? "Cette annonce n’est plus disponible ou n’existe pas." : "هذا الإعلان غير متاح أو غير موجود."}</p>
-        <Button onClick={() => setLocation("/search")}>{language === "fr" ? "Retour à la recherche" : "العودة إلى البحث"}</Button>
+        <h1 className="text-2xl font-bold text-slate-900">{t("listingsLoadError")}</h1>
+        <p className="text-slate-600">{t("listingsLoadError")}</p>
+        <p className="text-sm text-slate-400">ID الإعلان: {listingId}</p>
+        <Button onClick={() => setLocation("/search")}>{t("back")}</Button>
       </div>
     );
   }
@@ -52,6 +60,50 @@ export default function PropertyDetailWithVideo() {
     image: imageUrl ? [imageUrl] : [],
     address: { "@type": "PostalAddress", addressLocality: listing.city, addressCountry: "MA" },
     offers: { "@type": "Offer", priceCurrency: "MAD", price: listing.pricePerDay, availability: "https://schema.org/InStock" },
+  };
+
+  // Booking state
+  const [startDate, setStartDate] = useState(() => {
+    const date = new Date();
+    date.setDate(date.getDate() + 1);
+    return date.toISOString().slice(0, 10);
+  });
+  const [endDate, setEndDate] = useState(() => {
+    const date = new Date();
+    date.setDate(date.getDate() + 6);
+    return date.toISOString().slice(0, 10);
+  });
+
+  const daysCount = useMemo(() => {
+    try {
+      const d1 = new Date(startDate);
+      const d2 = new Date(endDate);
+      const diff = Math.ceil((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24));
+      return diff > 0 ? diff : 1;
+    } catch {
+      return 1;
+    }
+  }, [startDate, endDate]);
+
+  const totalPrice = listing.pricePerDay * daysCount;
+
+  const handleProceedToCheckout = () => {
+    if (!startDate || !endDate) {
+      toast.error(language === "fr" ? "Veuillez sélectionner les dates" : "يرجى تحديد تاريخ البداية والنهاية");
+      return;
+    }
+    if (new Date(endDate) <= new Date(startDate)) {
+      toast.error(language === "fr" ? "La date de fin doit être après la date de début" : "تاريخ النهاية يجب أن يكون بعد تاريخ البداية");
+      return;
+    }
+    const checkoutParams = new URLSearchParams({
+      listingId: String(listing.id),
+      title: listing.title,
+      pricePerDay: String(listing.pricePerDay),
+      startDate,
+      endDate,
+    });
+    setLocation(`/checkout?${checkoutParams.toString()}`);
   };
 
   return (
@@ -78,7 +130,56 @@ export default function PropertyDetailWithVideo() {
           <div className="md:col-span-2 min-h-[280px] sm:min-h-[420px] rounded-2xl overflow-hidden bg-slate-200">
             {imageUrl ? <OptimizedImage src={imageUrl} alt={title} width={1400} height={820} widthHint={1400} sizes="100vw" className="w-full h-full min-h-[280px] sm:min-h-[420px] object-cover" /> : <div className="h-full min-h-[280px] sm:min-h-[420px] flex items-center justify-center text-slate-500">{language === "fr" ? "Aucune image fournie" : "لا توجد صورة مضافة"}</div>}
           </div>
-          <Card><CardContent className="p-5 space-y-4"><div><p className="text-xs text-slate-500">{t("price")}</p><p className="text-3xl font-bold text-slate-900">{listing.pricePerDay.toLocaleString()} <span className="text-sm font-normal">MAD / {language === "fr" ? "jour" : "يوم"}</span></p></div><Button asChild className="w-full bg-amber-500 hover:bg-amber-600"><Link href={`/booking?listingId=${listing.id}`}>{t("bookNow")}</Link></Button><p className="text-xs text-slate-500">{language === "fr" ? "Le prix final est calculé côté serveur lors de la réservation." : "يُحتسب السعر النهائي على الخادم أثناء الحجز."}</p></CardContent></Card>
+          <Card className="border-amber-200 shadow-lg shadow-amber-100/50">
+            <CardContent className="p-5 space-y-4">
+              <div>
+                <p className="text-xs text-slate-500">{t("price")}</p>
+                <p className="text-3xl font-bold text-slate-900">{listing.pricePerDay.toLocaleString()} <span className="text-sm font-normal">MAD / {language === "fr" ? "jour" : "يوم"}</span></p>
+              </div>
+              
+              {/* Date Selection */}
+              <div className="space-y-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
+                <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
+                  <Calendar className="w-4 h-4 text-amber-600" />
+                  {language === "fr" ? "Sélectionner les dates" : "اختر تواريخ الحجز"}
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-slate-500 font-semibold">{language === "fr" ? "Début" : "البداية"}</label>
+                    <input
+                      type="date"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      className="w-full bg-white border border-slate-300 rounded-lg px-2 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-amber-500"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-slate-500 font-semibold">{language === "fr" ? "Fin" : "النهاية"}</label>
+                    <input
+                      type="date"
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                      className="w-full bg-white border border-slate-300 rounded-lg px-2 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-amber-500"
+                    />
+                  </div>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-slate-500">{daysCount} {language === "fr" ? "jours" : "أيام"}</span>
+                  <span className="font-bold text-amber-600">{totalPrice.toLocaleString()} MAD</span>
+                </div>
+              </div>
+
+              <Button onClick={handleProceedToCheckout} className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold py-3.5 rounded-xl shadow-lg shadow-amber-200/50 flex items-center justify-center gap-2 transition-all hover:shadow-amber-300/50 hover:scale-[1.02] active:scale-[0.98]">
+                <ShieldCheck className="w-4 h-4" />
+                {t("bookNow")}
+              </Button>
+              <div className="flex items-center justify-center gap-1.5 text-[10px] text-slate-500">
+                <Lock className="w-3 h-3 text-emerald-600" />
+                {language === "fr" ? "Paiement sécurisé via CMI (simulation)" : "دفع آمن عبر CMI (محاكاة)"}
+              </div>
+              <p className="text-xs text-slate-500 text-center">{language === "fr" ? "Le prix final est calculé côté serveur lors de la réservation." : "يُحتسب السعر النهائي على الخادم أثناء الحجز."}</p>
+            </CardContent>
+          </Card>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
