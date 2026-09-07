@@ -7,26 +7,26 @@ export default function TermsOfService() {
   const [lang, setLang] = useState<'ar' | 'fr'>('ar');
 
   return (
-    <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-background py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto space-y-8">
         
         {/* Header & Lang Toggle */}
-        <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="bg-card p-6 sm:p-8 rounded-2xl shadow-sm border border-border flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 text-amber-600 font-semibold mb-1">
               <Scale className="w-5 h-5" />
               <span>{lang === 'ar' ? 'النظام القانوني وحقوق الوساطة' : 'Cadre Juridique et Médiation'}</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
               {lang === 'ar' ? 'شروط الاستخدام وسياسة الضمان (Escrow)' : "Conditions d'Utilisation & Politique d'Escrow"}
             </h1>
           </div>
 
-          <div className="flex items-center gap-2 bg-slate-100 p-1.5 rounded-xl self-start">
+          <div className="flex items-center gap-2 bg-muted p-1.5 rounded-xl self-start">
             <Button 
               size="sm" 
               variant={lang === 'ar' ? 'default' : 'ghost'} 
-              className={lang === 'ar' ? 'bg-[#0B0F15] text-white' : 'text-slate-700'}
+              className={lang === 'ar' ? 'bg-[#0B0F15] text-white' : 'text-muted-foreground'}
               onClick={() => setLang('ar')}
             >
               العربية
@@ -34,7 +34,7 @@ export default function TermsOfService() {
             <Button 
               size="sm" 
               variant={lang === 'fr' ? 'default' : 'ghost'} 
-              className={lang === 'fr' ? 'bg-[#0B0F15] text-white' : 'text-slate-700'}
+              className={lang === 'fr' ? 'bg-[#0B0F15] text-white' : 'text-muted-foreground'}
               onClick={() => setLang('fr')}
             >
               Français
@@ -44,9 +44,9 @@ export default function TermsOfService() {
 
         {/* Content Section */}
         {lang === 'ar' ? (
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 sm:p-8 space-y-6 text-slate-700 leading-relaxed">
+          <div className="bg-card rounded-2xl shadow-sm border border-border p-6 sm:p-8 space-y-6 text-foreground leading-relaxed">
             <section className="space-y-3">
-              <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2 border-b pb-2">
+              <h2 className="text-xl font-bold text-foreground flex items-center gap-2 border-b pb-2">
                 <ShieldCheck className="w-5 h-5 text-emerald-600" />
                 1. مقدمة ونطاق الوساطة (Scope of Brokerage)
               </h2>
@@ -59,7 +59,7 @@ export default function TermsOfService() {
             </section>
 
             <section className="space-y-3">
-              <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2 border-b pb-2">
+              <h2 className="text-xl font-bold text-foreground flex items-center gap-2 border-b pb-2">
                 <FileText className="w-5 h-5 text-blue-600" />
                 2. عمولة المنصة ورسوم الوساطة (Platform Commission)
               </h2>
@@ -69,7 +69,7 @@ export default function TermsOfService() {
             </section>
 
             <section className="space-y-3">
-              <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2 border-b pb-2">
+              <h2 className="text-xl font-bold text-foreground flex items-center gap-2 border-b pb-2">
                 <Lock className="w-5 h-5 text-amber-600" />
                 3. نظام الضمان المالي والحجز (Escrow & Payment Security)
               </h2>
@@ -79,7 +79,7 @@ export default function TermsOfService() {
             </section>
 
             <section className="space-y-3">
-              <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2 border-b pb-2">
+              <h2 className="text-xl font-bold text-foreground flex items-center gap-2 border-b pb-2">
                 <Scale className="w-5 h-5 text-red-600" />
                 4. مسؤولية الأطراف ومحاربة الاحتيال (Anti-Fraud Policy)
               </h2>
@@ -89,9 +89,9 @@ export default function TermsOfService() {
             </section>
           </div>
         ) : (
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 sm:p-8 space-y-6 text-slate-700 leading-relaxed">
+          <div className="bg-card rounded-2xl shadow-sm border border-border p-6 sm:p-8 space-y-6 text-foreground leading-relaxed">
             <section className="space-y-3">
-              <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2 border-b pb-2">
+              <h2 className="text-xl font-bold text-foreground flex items-center gap-2 border-b pb-2">
                 <ShieldCheck className="w-5 h-5 text-emerald-600" />
                 1. Introduction et Portée de la Médiation
               </h2>
@@ -104,7 +104,7 @@ export default function TermsOfService() {
             </section>
 
             <section className="space-y-3">
-              <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2 border-b pb-2">
+              <h2 className="text-xl font-bold text-foreground flex items-center gap-2 border-b pb-2">
                 <FileText className="w-5 h-5 text-blue-600" />
                 2. Commission de la Plateforme
               </h2>
@@ -114,7 +114,7 @@ export default function TermsOfService() {
             </section>
 
             <section className="space-y-3">
-              <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2 border-b pb-2">
+              <h2 className="text-xl font-bold text-foreground flex items-center gap-2 border-b pb-2">
                 <Lock className="w-5 h-5 text-amber-600" />
                 3. Système de Séquestre (Escrow)
               </h2>
@@ -124,7 +124,7 @@ export default function TermsOfService() {
             </section>
 
             <section className="space-y-3">
-              <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2 border-b pb-2">
+              <h2 className="text-xl font-bold text-foreground flex items-center gap-2 border-b pb-2">
                 <Scale className="w-5 h-5 text-red-600" />
                 4. Responsabilité et Lutte Anti-Fraude
               </h2>

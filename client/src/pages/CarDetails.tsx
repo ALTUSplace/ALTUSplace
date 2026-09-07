@@ -9,6 +9,7 @@ import { OptimizedImage } from '@/components/OptimizedImage';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { BABY_SEAT_FEE_PER_DAY, calculateRentalDays, calculateRentalSubtotal, INSURANCE_FEE_PER_DAY } from '@/lib/pricing';
 import { buildWhatsAppUrl } from '@/lib/whatsapp';
+import { RENTAL_TERMS } from '@/lib/rentalTerms';
 
 export default function CarDetails() {
   const [, params] = useRoute('/car/:id');
@@ -406,6 +407,25 @@ export default function CarDetails() {
                   <span>المبلغ الإجمالي</span>
                   <span className="text-amber-400">{totalPrice} درهم</span>
                 </div>
+              </div>
+
+              <div className="space-y-2 pt-4 border-t border-slate-800" aria-label={t("rentalConditions")}>
+                <p className="text-xs font-extrabold text-[var(--brand-amber)]">{t("rentalConditions")}</p>
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div className="rounded-xl bg-slate-900/80 border border-slate-800 p-2">
+                    <p className="text-sm font-black text-white">{RENTAL_TERMS.minDriverAge}+</p>
+                    <p className="text-[10px] text-slate-400 leading-tight">{t("minDriverAge")}</p>
+                  </div>
+                  <div className="rounded-xl bg-slate-900/80 border border-slate-800 p-2">
+                    <p className="text-sm font-black text-white">{RENTAL_TERMS.securityDepositMad} {t("madUnit")}</p>
+                    <p className="text-[10px] text-slate-400 leading-tight">{t("securityDeposit")}</p>
+                  </div>
+                  <div className="rounded-xl bg-slate-900/80 border border-slate-800 p-2">
+                    <p className="text-sm font-black text-white">{RENTAL_TERMS.dailyMileageKm}</p>
+                    <p className="text-[10px] text-slate-400 leading-tight">{t("kmPerDay")}</p>
+                  </div>
+                </div>
+                <p className="text-[10px] text-slate-500 leading-relaxed">{t("rentalTermsNote")}</p>
               </div>
 
               <Button

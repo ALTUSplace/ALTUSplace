@@ -6,11 +6,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { trpc } from '@/lib/trpc';
 import { toast } from 'sonner';
 import { OptimizedImage } from '@/components/OptimizedImage';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { RENTAL_TERMS } from '@/lib/rentalTerms';
 
 export default function BookingPage() {
   const [, setLocation] = useLocation();
   const search = useSearch();
   const params = useMemo(() => new URLSearchParams(search), [search]);
+  const { t } = useLanguage();
   const listingId = Number(params.get('listingId') || params.get('carId'));
   const startDate = params.get('startDate') || '';
   const endDate = params.get('endDate') || '';
@@ -70,6 +73,12 @@ export default function BookingPage() {
               <div className="p-3 bg-muted rounded-lg flex gap-2 items-center"><CalendarDays className="w-4 h-4" /> الإرجاع: {endDate || 'غير محدد'}</div>
             </div>
             <p className="text-xs text-muted-foreground">سيُحسب السعر النهائي والعمولة والضريبة داخل الخادم بعد تسجيل الدخول. هذه الصفحة لا تستقبل مبلغاً موثوقاً من الرابط.</p>
+            <div className="rounded-lg border border-border bg-muted/40 p-3 text-xs space-y-1" aria-label={t("rentalConditions")}>
+              <p className="font-bold text-foreground">{t("rentalConditions")}</p>
+              <p className="text-muted-foreground leading-relaxed">
+                {t("minDriverAge")}: {RENTAL_TERMS.minDriverAge}+ · {t("securityDeposit")}: {RENTAL_TERMS.securityDepositMad} {t("madUnit")} · {t("dailyMileageLimit")}: {RENTAL_TERMS.dailyMileageKm} {t("kmPerDay")}
+              </p>
+            </div>
             <Button onClick={continueToCheckout} disabled={!validDates || isContinuing} className="w-full">{isContinuing ? 'جاري المتابعة...' : 'المتابعة إلى الدفع الآمن'}</Button>
           </CardContent>
         </Card>

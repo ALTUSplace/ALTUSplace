@@ -1,3 +1,16 @@
 User-agent: *
 Allow: /
+Disallow: /admin
+Disallow: /host
+Disallow: /dashboard
+Disallow: /partner
+Disallow: /kyc
+Disallow: /profile
+Disallow: /checkout
+Disallow: /success
+Disallow: /voucher
+Disallow: /messages
+Disallow: /my-bookings
+Disallow: /notifications
+
 Sitemap: https://b2rentmorocc-muehrc85.manus.space/sitemap.xml
