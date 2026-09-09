@@ -12,6 +12,19 @@ interface LanguageContextType {
 
 const translations: Record<Language, Record<string, string>> = {
   ar: {
+    heroTitlePrefix: "ابحث عن",
+  heroTitleCars: "أفضل السيارات",
+  heroTitleAnd: "و",
+  heroTitleProperties: "العقارات",
+  heroTitleSuffix: "بكل سهولة",
+  heroDescription: "منصة موثوقة لحجز السيارات والعقارات في المغرب",
+  heroReviewButton: "تقييمات العملاء",
+  searchTabProperties: "العقارات",
+  searchCar: "السيارات",
+  searchDropoffDate: "تاريخ الرجوع",
+  searchPickupDate: "تاريخ الانطلاق",
+  cityCasablanca: "الدار البيضاء",
+  searchSubmitAdvanced: "بحث متقدم",
     home: "الرئيسية",
     cars: "تأجير السيارات",
     properties: "العقارات",
