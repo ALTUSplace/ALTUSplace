@@ -276,7 +276,7 @@ export default function Home() {
                 <span className="text-2xl group-hover:scale-110 transition-transform">{brand.icon}</span>
                 <div className="text-right">
                   <h4 className="font-black text-sm">{brand.name}</h4>
-                  <span className="text-[10px] text-slate-400 group-hover:text-white">{t('brandCarCount', { count: brand.count })}</span>
+                  <span className="text-[10px] text-slate-400 group-hover:text-white">{t('brandCarCount')}</span>
                 </div>
               </div>
             </Link>
@@ -302,7 +302,7 @@ export default function Home() {
                 <span className="text-2xl group-hover:scale-110 transition-transform">{type.icon}</span>
                 <div className="text-right">
                   <h4 className="font-black text-sm">{t(type.nameKey)}</h4>
-                  <span className="text-[10px] text-muted-foreground group-hover:text-white">{t('brandPropertyCount', { count: type.count })}</span>
+                  <span className="text-[10px] text-muted-foreground group-hover:text-white">{t('brandPropertyCount')}</span>
                 </div>
               </div>
             </Link>
@@ -400,7 +400,7 @@ export default function Home() {
           </div>
           <Link href="/search">
             <Button variant="outline" className="w-full md:w-auto border-[#0B0F19] text-[#0B0F19] hover:bg-[#0B0F19] hover:text-white font-bold rounded-xl text-xs">
-              {t('viewAllListings', { count: activeListings.length })}
+              {t('viewAllListings')}
             </Button>
           </Link>
         </div>

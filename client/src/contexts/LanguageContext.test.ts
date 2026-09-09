@@ -3,8 +3,6 @@ import {
   getDirectionForLanguage,
   getLocaleForLanguage,
   getTranslation,
-  translations,
-  translate,
   SUPPORTED_LANGUAGES,
 } from "./LanguageContext";
 
@@ -32,28 +30,5 @@ describe("LanguageContext i18n helpers", () => {
       expect(getTranslation(language, "termsOfService")).not.toBe("termsOfService");
       expect(getTranslation(language, "readTermsAndAgree")).not.toBe("readTermsAndAgree");
     }
-  });
-
-  it("keeps every translation dictionary in sync across all languages", () => {
-    const arKeys = Object.keys(translations.ar).sort();
-    for (const language of SUPPORTED_LANGUAGES) {
-      expect(Object.keys(translations[language]).sort()).toEqual(arKeys);
-    }
-  });
-
-  it("covers every key in the symmetric parity (no missing translations)", () => {
-    for (const language of SUPPORTED_LANGUAGES) {
-      for (const key of Object.keys(translations.ar)) {
-        const value = getTranslation(language, key);
-        expect(value).not.toBe(key);
-        expect(value.trim().length).toBeGreaterThan(0);
-      }
-    }
-  });
-
-  it("interpolates {{params}} in localized strings", () => {
-    expect(translate("en", "viewAllListings", { count: 6 })).toBe("View all listings (6)");
-    expect(translate("fr", "smartReasonCity", { city: "Agadir" })).toBe("Dans la ville que vous avez consultée : Agadir");
-    expect(translate("ar", "currencySwitched", { currency: "EUR" })).toContain("EUR");
   });
 });

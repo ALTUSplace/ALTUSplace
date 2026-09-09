@@ -336,7 +336,7 @@ export default function Navbar() {
 
   const selectCurrency = (nextCurrency: Currency) => {
     setCurrency(nextCurrency);
-    toast.success(t("currencySwitched", { currency: nextCurrency }));
+    toast.success(t("currencySwitched"));
   };
 
   const selectLanguage = (nextLanguage: Language) => {
@@ -477,7 +477,7 @@ export default function Navbar() {
                 }}
                 aria-expanded={notificationsOpen}
                 aria-haspopup="dialog"
-                aria-label={unreadCount ? t("notificationsWithUnread", { count: unreadCount }) : t("notifications")}
+                aria-label={unreadCount ? t("notificationsWithUnread") : t("notifications")}
                 title={t("notifications")}
               >
                 <Bell className="h-4 w-4 text-blue-300" />

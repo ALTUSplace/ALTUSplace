@@ -24,8 +24,11 @@ export default function PropertyDetailWithVideo() {
   const params = useParams<{ id?: string }>();
   const [, setLocation] = useLocation();
   const { language, direction, t } = useLanguage();
-  const listingId = Number(params.id);
-  const listingQuery = trpc.listings.getById.useQuery({ id: listingId }, { enabled: Number.isInteger(listingId) && listingId > 0 });
+
+  // Safely parse listing ID — reject missing, non-numeric, or non-positive values
+  const parsedId = Number(params.id);
+  const listingId = Number.isInteger(parsedId) && parsedId > 0 ? parsedId : null;
+  const listingQuery = trpc.listings.getById.useQuery({ id: listingId! }, { enabled: listingId !== null });
   const listing = listingQuery.data;
   const amenities = useMemo(() => parseAmenities(listing?.amenities), [listing?.amenities]);
   const imageUrl = listing?.imageUrl || "";
@@ -42,12 +45,22 @@ export default function PropertyDetailWithVideo() {
     console.error('Listing ID being fetched:', listingId);
   }
   
+  // Missing or invalid listing ID — show friendly message before query
+  if (listingId === null) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center gap-4 px-4 text-center" dir={direction}>
+        <h1 className="text-2xl font-bold text-slate-900">معرّف الإعلان غير صالح</h1>
+        <p className="text-slate-600">لم يتم العثور على معرّف الإعلان في الرابط. يرجى اختيار إعلان من صفحة البحث.</p>
+        <Button onClick={() => setLocation("/search")}>{t("back")}</Button>
+      </div>
+    );
+  }
+
   if (listingQuery.isError || !listing) {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center gap-4 px-4 text-center" dir={direction}>
         <h1 className="text-2xl font-bold text-slate-900">{t("listingsLoadError")}</h1>
-        <p className="text-slate-600">{t("listingsLoadError")}</p>
-        <p className="text-sm text-slate-400">ID الإعلان: {listingId}</p>
+        <p className="text-slate-600">الإعلان المطلوب غير متاح حالياً أو تم إزالته.</p>
         <Button onClick={() => setLocation("/search")}>{t("back")}</Button>
       </div>
     );

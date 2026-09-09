@@ -53,7 +53,7 @@ export function SmartRecommendations() {
         const reason = favorite
           ? t("smartReasonFavorite")
           : sameCity
-            ? t("smartReasonCity", { city: item.city })
+            ? t("smartReasonCity")
             : t("smartReasonNewListing");
         return { item, score, reason };
       })

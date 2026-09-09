@@ -14,12 +14,18 @@ export default function BookingPage() {
   const search = useSearch();
   const params = useMemo(() => new URLSearchParams(search), [search]);
   const { t } = useLanguage();
-  const listingId = Number(params.get('listingId') || params.get('carId'));
+
+  // Safely parse listing ID — reject missing, non-numeric, or non-positive values
+  const rawListingId = params.get('listingId') || params.get('carId') || '';
+  const parsedListingId = Number(rawListingId);
+  const listingId = Number.isInteger(parsedListingId) && parsedListingId > 0 ? parsedListingId : null;
+  const hasMissingId = !rawListingId.trim();
+
   const startDate = params.get('startDate') || '';
   const endDate = params.get('endDate') || '';
   const listingQuery = trpc.listings.getById.useQuery(
-    { id: listingId },
-    { enabled: Number.isInteger(listingId) && listingId > 0 },
+    { id: listingId! },
+    { enabled: listingId !== null },
   );
   const [isContinuing, setIsContinuing] = useState(false);
   const validDates = Boolean(startDate && endDate && new Date(endDate) > new Date(startDate));
@@ -44,13 +50,32 @@ export default function BookingPage() {
     return <div className="min-h-screen flex items-center justify-center bg-background text-foreground"><Loader2 className="animate-spin mr-2" /> جاري التحقق من الإعلان...</div>;
   }
 
+  // Missing or invalid listing ID — show friendly message before any query
+  if (hasMissingId || listingId === null) {
+    return (
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center px-4" dir="rtl">
+        <Card className="max-w-lg w-full">
+          <CardHeader><CardTitle>رابط الحجز غير مكتمل</CardTitle></CardHeader>
+          <CardContent className="space-y-4 text-muted-foreground">
+            <p>لم يتم العثور على معرّف الإعلان في رابط الحجز. يرجى اختيار إعلان من صفحة البحث لبدء الحجز.</p>
+            <Button onClick={() => setLocation('/search')} className="gap-2"><ArrowRight className="w-4 h-4" /> العودة إلى البحث</Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (listingQuery.isLoading) {
+    return <div className="min-h-screen flex items-center justify-center bg-background text-foreground"><Loader2 className="animate-spin mr-2" /> جاري التحقق من الإعلان...</div>;
+  }
+
   if (!listingQuery.data || listingQuery.isError) {
     return (
       <div className="min-h-screen bg-background text-foreground flex items-center justify-center px-4" dir="rtl">
         <Card className="max-w-lg w-full">
           <CardHeader><CardTitle>تعذر فتح الحجز</CardTitle></CardHeader>
           <CardContent className="space-y-4 text-muted-foreground">
-            <p>رابط الحجز غير صالح أو أن الإعلان لم يعد متاحاً. لا نستخدم بيانات محلية أو مبالغ من الرابط.</p>
+            <p>الإعلان المطلوب غير متاح حالياً أو تم إزالته. يمكنك استكشاف عروض أخرى من صفحة البحث.</p>
             <Button onClick={() => setLocation('/search')} className="gap-2"><ArrowRight className="w-4 h-4" /> العودة إلى البحث</Button>
           </CardContent>
         </Card>

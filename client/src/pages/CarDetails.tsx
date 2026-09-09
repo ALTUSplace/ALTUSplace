@@ -17,10 +17,11 @@ export default function CarDetails() {
   const { t } = useLanguage();
 
   const carId = params?.id || '';
-  const numericListingId = Number(carId);
+  const parsedListingId = Number(carId);
+  const numericListingId = Number.isInteger(parsedListingId) && parsedListingId > 0 ? parsedListingId : null;
   const listingQuery = trpc.listings.getById.useQuery(
-    { id: numericListingId },
-    { enabled: Number.isInteger(numericListingId) && numericListingId > 0 },
+    { id: numericListingId! },
+    { enabled: numericListingId !== null },
   );
   const listing = listingQuery.data;
   const car = listing ? {
@@ -53,11 +54,11 @@ export default function CarDetails() {
   const [copiedLink, setCopiedLink] = useState(false);
 
   const { data: bookedDatesData, isLoading: bookedDatesLoading, isError: bookedDatesError } = trpc.listings.getBookedDates.useQuery(
-    { listingId: numericListingId },
+    { listingId: numericListingId! },
     { enabled: Boolean(car) },
   );
   const reviewsQuery = trpc.reviews.listByListing.useQuery(
-    { listingId: numericListingId },
+    { listingId: numericListingId! },
     { enabled: Boolean(car) },
   );
   const reviews = reviewsQuery.data ?? [];
@@ -72,11 +73,22 @@ export default function CarDetails() {
     console.error('Listing ID being fetched:', numericListingId);
   }
   
+  // Missing or invalid listing ID — show friendly message before query
+  if (numericListingId === null) {
+    return (
+      <div className="min-h-screen flex flex-col gap-4 items-center justify-center bg-slate-950 text-slate-200">
+        <p>معرّف الإعلان غير صالح أو مفقود من الرابط.</p>
+        <p className="text-sm text-slate-400">يرجى اختيار إعلان من صفحة البحث.</p>
+        <Button onClick={() => setLocation('/search')}>{t("back")}</Button>
+      </div>
+    );
+  }
+
   if (!car || listingQuery.isError) {
     return (
       <div className="min-h-screen flex flex-col gap-4 items-center justify-center bg-slate-950 text-slate-200">
         <p>{t("listingsLoadError")}</p>
-        <p className="text-sm text-slate-400">ID الإعلان: {numericListingId}</p>
+        <p className="text-sm text-slate-400">الإعلان المطلوب غير متاح حالياً.</p>
         <Button onClick={() => setLocation('/search')}>{t("back")}</Button>
       </div>
     );
