@@ -15,31 +15,31 @@ export default function Footer() {
             </h3>
             <ul className="space-y-3 text-sm">
               <li>
-                <Link to="/search?city=%D8%A3%D9%83%D8%A7%D8%AF%D9%8A%D8%B1" className="flex items-center gap-2 hover:text-white">
+                <Link to="/search?city=Agadir" className="flex items-center gap-2 hover:text-white">
                   <MapPin className="h-4 w-4 text-blue-600" />
                   <span>{t("cityAgadir")}</span>
                 </Link>
               </li>
               <li>
-                <Link to="/search?city=%D9%85%D8%B1%D8%A7%D9%83%D8%B4" className="flex items-center gap-2 hover:text-white">
+                <Link to="/search?city=Marrakech" className="flex items-center gap-2 hover:text-white">
                   <MapPin className="h-4 w-4 text-blue-600" />
                   <span>{t("cityMarrakech")}</span>
                 </Link>
               </li>
               <li>
-                <Link to="/search?city=%D8%A7%D9%84%D8%AF%D8%A7%D8%B1%D8%A%20%D8%A7%D9%84%D8%A8%D9%8A%D8%B6%D8%A7%D8%A1" className="flex items-center gap-2 hover:text-white">
+                <Link to="/search?city=Casablanca" className="flex items-center gap-2 hover:text-white">
                   <MapPin className="h-4 w-4 text-blue-600" />
                   <span>{t("cityCasablancaFooter")}</span>
                 </Link>
               </li>
               <li>
-                <Link to="/search?city=%D8%B7%D9%86%D8%AC%D8%A9" className="flex items-center gap-2 hover:text-white">
+                <Link to="/search?city=Tangier" className="flex items-center gap-2 hover:text-white">
                   <MapPin className="h-4 w-4 text-blue-600" />
                   <span>{t("cityTangier")}</span>
                 </Link>
               </li>
               <li>
-                <Link to="/search?city=%D8%A7%D9%84%D8%B1%D8%A8%D8%A7%D8%B7" className="flex items-center gap-2 hover:text-white">
+                <Link to="/search?city=Rabat" className="flex items-center gap-2 hover:text-white">
                   <MapPin className="h-4 w-4 text-blue-600" />
                   <span>{t("cityRabat")}</span>
                 </Link>
