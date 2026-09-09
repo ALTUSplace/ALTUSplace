@@ -12,7 +12,7 @@ export default function Footer() {
       dir={direction}
     >
       {/* Ambient amber glow */}
-      <div className="pointer-events-none absolute bottom-0 right-0 h-96 w-96 rounded-full bg-[#D98236]/10 blur-3xl" />
+      <div className="pointer-events-none absolute bottom-0 right-0 h-96 w-96 rounded-full bg-[#2563EB]/10 blur-3xl" />
 
       <div className="container mx-auto relative z-10 px-4">
         <div className="mb-12 grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-4">
@@ -29,7 +29,7 @@ export default function Footer() {
               </div>
               <div className="flex flex-col">
                 <span className="font-bold text-xl text-white">
-                  ALTUS<span className="font-normal text-[#D98236]">place</span>
+                  ALTUS<span className="font-normal text-[#2563EB]">place</span>
                 </span>
                 <span className="-mt-1 text-[10px] font-medium uppercase tracking-wider text-slate-400">
                   {t("searchNow")}
@@ -42,15 +42,15 @@ export default function Footer() {
             </p>
 
             <div className="flex items-center gap-3 pt-2">
-              <div className="flex items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-800 px-3.5 py-2 text-xs font-bold text-[#D98236] shadow-md">
-                <ShieldCheck className="h-4 w-4 text-[#D98236]" />
+              <div className="flex items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-800 px-3.5 py-2 text-xs font-bold text-[#2563EB] shadow-md">
+                <ShieldCheck className="h-4 w-4 text-[#2563EB]" />
                 <span>{t("verified")}</span>
               </div>
             </div>
           </div>
 
           <div>
-            <h3 className="mb-4 border-l-2 border-[#D98236] pl-3 text-base font-bold text-white">
+            <h3 className="mb-4 border-l-2 border-[#2563EB] pl-3 text-base font-bold text-white">
               {t("search")}
             </h3>
             <ul className="space-y-3 text-sm">
@@ -66,9 +66,9 @@ export default function Footer() {
                   <Link
                     href={link.href}
                     onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                    className="group flex items-center gap-2.5 rounded-lg px-2 py-2 text-slate-300 transition-all duration-300 hover:bg-slate-800/60 hover:text-[#D98236] cursor-pointer"
+                    className="group flex items-center gap-2.5 rounded-lg px-2 py-2 text-slate-300 transition-all duration-300 hover:bg-slate-800/60 hover:text-[#2563EB] cursor-pointer"
                   >
-                    <ChevronLeft className="h-4 w-4 text-[#D98236] opacity-70 transition-opacity group-hover:opacity-100" />
+                    <ChevronLeft className="h-4 w-4 text-[#2563EB] opacity-70 transition-opacity group-hover:opacity-100" />
                     <span className="font-medium">{link.label}</span>
                   </Link>
                 </li>
@@ -78,7 +78,7 @@ export default function Footer() {
 
           {/* Main cities */}
           <div>
-            <h3 className="mb-4 border-l-2 border-[#D98236] pl-3 text-base font-bold text-white">
+            <h3 className="mb-4 border-l-2 border-[#2563EB] pl-3 text-base font-bold text-white">
               المدن الرئيسية
             </h3>
             <ul className="space-y-3 text-sm">
@@ -93,9 +93,9 @@ export default function Footer() {
                   <Link
                     href={`/search?city=${encodeURIComponent(item.city)}`}
                     onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                    className="group flex items-center gap-2.5 rounded-lg px-2 py-2 text-slate-300 transition-all duration-300 hover:bg-slate-800/60 hover:text-[#D98236] cursor-pointer"
+                    className="group flex items-center gap-2.5 rounded-lg px-2 py-2 text-slate-300 transition-all duration-300 hover:bg-slate-800/60 hover:text-[#2563EB] cursor-pointer"
                   >
-                    <MapPin className="h-4 w-4 shrink-0 text-[#D98236]" />
+                    <MapPin className="h-4 w-4 shrink-0 text-[#2563EB]" />
                     <span className="font-medium">{item.label}</span>
                   </Link>
                 </li>
@@ -105,12 +105,12 @@ export default function Footer() {
 
           {/* Contact */}
           <div>
-            <h3 className="mb-4 border-l-2 border-[#D98236] pl-3 text-base font-bold text-white">
+            <h3 className="mb-4 border-l-2 border-[#2563EB] pl-3 text-base font-bold text-white">
               {t("help")}
             </h3>
             <ul className="space-y-4 text-sm">
               <li className="flex items-center gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-700 bg-slate-800 text-[#D98236] shadow">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-700 bg-slate-800 text-[#2563EB] shadow">
                   <Mail className="h-4 w-4" />
                 </div>
                 <a
@@ -121,7 +121,7 @@ export default function Footer() {
                 </a>
               </li>
               <li className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-700 bg-slate-800 text-[#D98236] shadow">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-700 bg-slate-800 text-[#2563EB] shadow">
                   <MapPin className="h-4 w-4" />
                 </div>
                 <span className="pt-2 text-xs leading-relaxed text-slate-300">
@@ -133,15 +133,15 @@ export default function Footer() {
         </div>
 
         <div
-          className="mb-8 rounded-2xl border border-[#D98236]/30 bg-slate-800/70 p-5 text-xs leading-6 text-slate-300"
+          className="mb-8 rounded-2xl border border-[#2563EB]/30 bg-slate-800/70 p-5 text-xs leading-6 text-slate-300"
           role="note"
           aria-label={t("footerNoticeLabel")}
         >
-          <h3 className="mb-2 font-black text-[#D98236]">{t("termsOfService")}</h3>
+          <h3 className="mb-2 font-black text-[#2563EB]">{t("termsOfService")}</h3>
           <p>
             {t("footerNoticeText")}
           </p>
-          <Link href="/register" className="mt-2 inline-flex font-bold text-[#D98236] hover:text-white">
+          <Link href="/register" className="mt-2 inline-flex font-bold text-[#2563EB] hover:text-white">
             {t("readTermsAndAgree")}
           </Link>
         </div>
@@ -149,13 +149,13 @@ export default function Footer() {
         <div className="flex flex-col items-center justify-between gap-4 border-t border-slate-800 pt-8 text-xs text-slate-400 md:flex-row">
           <p>© 2026 ALTUSplace. {t("allRights")}. {t("footerTagline")}</p>
           <div className="flex items-center gap-6">
-            <Link href="/terms" className="py-1 transition-colors hover:text-[#D98236]">
+            <Link href="/terms" className="py-1 transition-colors hover:text-[#2563EB]">
               {t("terms")}
             </Link>
-            <Link href="/privacy" className="py-1 transition-colors hover:text-[#D98236]">
+            <Link href="/privacy" className="py-1 transition-colors hover:text-[#2563EB]">
               {t("privacy")}
             </Link>
-            <Link href="/support-tickets" className="py-1 transition-colors hover:text-[#D98236]">
+            <Link href="/support-tickets" className="py-1 transition-colors hover:text-[#2563EB]">
               {t("help")}
             </Link>
           </div>

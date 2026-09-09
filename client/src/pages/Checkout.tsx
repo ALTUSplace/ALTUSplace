@@ -127,7 +127,7 @@ export default function CheckoutPage() {
     <>
       <div className="min-h-screen bg-[#f4f7fb] text-slate-900 py-5 sm:py-10 px-3 sm:px-6 lg:px-8" dir="rtl">
       <div className="max-w-5xl mx-auto space-y-5 sm:space-y-7">
-        <div className="overflow-hidden rounded-3xl bg-[#0B0F15] text-white shadow-2xl">
+        <div className="overflow-hidden rounded-3xl bg-[#0B0F19] text-white shadow-2xl">
           <div className="flex items-center justify-between gap-4 px-5 py-4 sm:px-8 sm:py-5">
             <div className="flex items-center gap-3">
               <div className="grid h-11 w-11 place-items-center rounded-2xl bg-white/12 ring-1 ring-white/20"><ShieldCheck className="h-6 w-6 text-amber-300" /></div>
@@ -151,19 +151,19 @@ export default function CheckoutPage() {
             <CardContent className="p-8 text-center">
               <p className="font-bold">لا يمكن فتح الدفع لأن بيانات الحجز ناقصة أو غير صحيحة.</p>
               <p className="mt-2 text-sm">عد إلى تفاصيل الإعلان واختر تاريخ البداية والنهاية قبل المتابعة.</p>
-              <Button type="button" onClick={() => window.history.back()} className="mt-4 bg-[#0B0F15] text-white">العودة إلى تفاصيل الإعلان</Button>
+              <Button type="button" onClick={() => window.history.back()} className="mt-4 bg-[#0B0F19] text-white">العودة إلى تفاصيل الإعلان</Button>
             </CardContent>
           </Card>
         ) : <form onSubmit={handleCheckout} className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Payment Methods Section */}
           <div className="md:col-span-2 space-y-5">
             <div className="flex items-center justify-between rounded-2xl border border-[#d9e5ee] bg-white px-4 py-3 shadow-sm">
-              <div className="flex items-center gap-3"><div className="grid h-9 w-9 place-items-center rounded-xl bg-emerald-50 text-emerald-700"><BadgeCheck className="h-5 w-5" /></div><div><p className="text-xs font-bold text-[#0B0F15]">جلسة دفع محمية</p><p className="text-[11px] text-slate-500">تشفير تجريبي • لا نخزن بيانات البطاقة</p></div></div>
+              <div className="flex items-center gap-3"><div className="grid h-9 w-9 place-items-center rounded-xl bg-emerald-50 text-emerald-700"><BadgeCheck className="h-5 w-5" /></div><div><p className="text-xs font-bold text-[#0B0F19]">جلسة دفع محمية</p><p className="text-[11px] text-slate-500">تشفير تجريبي • لا نخزن بيانات البطاقة</p></div></div>
               <div className="hidden items-center gap-2 text-[11px] font-bold text-slate-500 sm:flex"><Landmark className="h-4 w-4" /> MAD / الدرهم المغربي</div>
             </div>
             <Card className="border-[#d9e5ee] bg-white shadow-lg shadow-slate-200/60">
               <CardHeader className="border-b border-slate-100 pb-4">
-                <CardTitle className="flex items-center gap-2 text-xl font-black text-[#0B0F15]"><CreditCard className="h-5 w-5 text-amber-500" /> اختر طريقة الدفع</CardTitle>
+                <CardTitle className="flex items-center gap-2 text-xl font-black text-[#0B0F19]"><CreditCard className="h-5 w-5 text-amber-500" /> اختر طريقة الدفع</CardTitle>
                 <p className="text-xs leading-5 text-slate-500">اختر الطريقة المناسبة لإكمال تسجيل الحجز.</p>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -207,7 +207,7 @@ export default function CheckoutPage() {
 
                 {paymentMethod === 'cmi_card' && (
                     <div className="mt-4 space-y-3 rounded-2xl border border-amber-200 bg-amber-50/70 p-4 text-sm">
-                    <div className="flex items-center gap-2 font-black text-[#0B0F15]"><CheckCircle2 className="h-4 w-4 text-emerald-600" /> بيئة CMI محاكية مفعّلة</div>
+                    <div className="flex items-center gap-2 font-black text-[#0B0F19]"><CheckCircle2 className="h-4 w-4 text-emerald-600" /> بيئة CMI محاكية مفعّلة</div>
                     <p className="text-xs leading-relaxed text-slate-600">لا تدخل رقم بطاقة أو رمز CVV حقيقياً. هذه الواجهة تحاكي تجربة الدفع فقط ولا تتصل بمؤسسة CMI؛ سيُحفظ مرجع العملية وحالتها دون بيانات البطاقة.</p>
                     <div className="flex flex-wrap gap-2 text-[10px] font-bold text-slate-500"><span className="rounded-full bg-white px-2.5 py-1 ring-1 ring-amber-200">Visa</span><span className="rounded-full bg-white px-2.5 py-1 ring-1 ring-amber-200">Mastercard</span><span className="rounded-full bg-white px-2.5 py-1 ring-1 ring-amber-200">CMI Sandbox</span></div>
                   </div>
@@ -237,7 +237,7 @@ export default function CheckoutPage() {
           <div className="space-y-5 md:sticky md:top-6 md:self-start">
             <Card className="h-fit border-[#d9e5ee] bg-white shadow-lg shadow-slate-200/60">
               <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-lg font-black text-[#0B0F15]"><FileText className="h-5 w-5 text-amber-500" /> ملخص الفاتورة الشفافة</CardTitle>
+                  <CardTitle className="flex items-center gap-2 text-lg font-black text-[#0B0F19]"><FileText className="h-5 w-5 text-amber-500" /> ملخص الفاتورة الشفافة</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="p-3 bg-muted/40 rounded-xl">
@@ -277,7 +277,7 @@ export default function CheckoutPage() {
                 </div>
 
                 <div className="rounded-2xl border border-orange-200 bg-orange-50 p-4 text-right" aria-label="سياسة الإلغاء والاسترداد">
-                  <p className="font-black text-[#0B0F15]">{cancellationRefundPolicy.ar.title}</p>
+                  <p className="font-black text-[#0B0F19]">{cancellationRefundPolicy.ar.title}</p>
                   <p className="mt-1 text-xs leading-5 text-slate-600">{cancellationRefundPolicy.ar.summary}</p>
                   <ul className="mt-2 list-disc space-y-1 pr-4 text-[11px] leading-5 text-slate-600">
                     {cancellationRefundPolicy.ar.points.slice(0, 2).map((point) => <li key={point}>{point}</li>)}

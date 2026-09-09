@@ -24,7 +24,7 @@ export default function LocationLanding({ location = "marrakech" }: { location?:
   return (
     <div className="min-h-screen bg-slate-50 px-4 py-12" dir={isArabic ? "rtl" : "ltr"}>
       <div className="mx-auto max-w-5xl space-y-8">
-        <section className="rounded-3xl bg-[#0B0F15] p-8 text-white shadow-xl md:p-12">
+        <section className="rounded-3xl bg-[#0B0F19] p-8 text-white shadow-xl md:p-12">
           <div className="mb-4 flex items-center gap-2 text-amber-300"><MapPin className="h-5 w-5" /><span>ALTUSplace Morocco</span></div>
           <h1 className="max-w-3xl text-3xl font-black leading-tight md:text-5xl">{content.title}</h1>
           <p className="mt-5 max-w-2xl text-base leading-8 text-slate-200">{content.description}</p>
@@ -35,7 +35,7 @@ export default function LocationLanding({ location = "marrakech" }: { location?:
           <div className="rounded-2xl bg-white p-6 shadow-sm"><MapPin className="mb-3 h-6 w-6 text-amber-600" /><h2 className="font-bold">{isArabic ? "مواقع مرنة" : language === "fr" ? "Points flexibles" : "Flexible locations"}</h2><p className="mt-2 text-sm leading-6 text-muted-foreground">{isArabic ? "اختر المدينة أو المطار المناسب لرحلتك." : language === "fr" ? "Choisissez la ville ou l'aéroport adapté à votre voyage." : "Choose the city or airport that fits your trip."}</p></div>
           <div className="rounded-2xl bg-white p-6 shadow-sm"><Car className="mb-3 h-6 w-6 text-blue-700" /><h2 className="font-bold">{isArabic ? "بحث سريع" : language === "fr" ? "Recherche rapide" : "Fast search"}</h2><p className="mt-2 text-sm leading-6 text-muted-foreground">{isArabic ? "قارن السيارات والأسعار قبل التواصل مع الشريك." : language === "fr" ? "Comparez les véhicules et les prix avant de contacter le partenaire." : "Compare cars and prices before contacting the partner."}</p></div>
         </section>
-        <nav className="flex flex-wrap gap-3 text-sm"><Link href="/locations/marrakech-car-rental" className="text-[#0B0F15] underline">Marrakech</Link><Link href="/locations/mohammed-v-airport-car-rental" className="text-[#0B0F15] underline">Mohammed V Airport</Link><Link href="/search" className="text-[#0B0F15] underline">{isArabic ? "كل العروض" : language === "fr" ? "Toutes les offres" : "All listings"}</Link></nav>
+        <nav className="flex flex-wrap gap-3 text-sm"><Link href="/locations/marrakech-car-rental" className="text-[#0B0F19] underline">Marrakech</Link><Link href="/locations/mohammed-v-airport-car-rental" className="text-[#0B0F19] underline">Mohammed V Airport</Link><Link href="/search" className="text-[#0B0F19] underline">{isArabic ? "كل العروض" : language === "fr" ? "Toutes les offres" : "All listings"}</Link></nav>
       </div>
     </div>
   );

@@ -132,7 +132,7 @@ export default function DisputeResolution() {
           </div>
           <Dialog open={isOpenModal} onOpenChange={setIsOpenModal}>
             <DialogTrigger asChild>
-              <Button className="bg-[#0B0F15] hover:bg-[#0B0F15]/90 text-white gap-2 font-medium shadow-md"><PlusCircle className="w-4 h-4" /> فتح نزاع جديد وإرفاق أدلة</Button>
+              <Button className="bg-[#0B0F19] hover:bg-[#0B0F19]/90 text-white gap-2 font-medium shadow-md"><PlusCircle className="w-4 h-4" /> فتح نزاع جديد وإرفاق أدلة</Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
               <DialogHeader><DialogTitle className="text-slate-900 text-xl font-bold">تقديم طلب نزاع أو شكوى رسمية</DialogTitle></DialogHeader>
@@ -167,7 +167,7 @@ export default function DisputeResolution() {
                   </div>
                   {selectedFiles.length > 0 && <div className="space-y-2 mt-2"><p className="text-xs font-semibold text-slate-600">الملفات المرفقة ({selectedFiles.length}):</p><div className="space-y-1.5 max-h-32 overflow-y-auto pr-1">{selectedFiles.map((file, index) => <div key={`${file.name}-${index}`} className="flex items-center justify-between bg-slate-100 px-3 py-1.5 rounded-lg text-xs text-slate-700"><span className="truncate max-w-[260px] flex items-center gap-1.5 font-medium"><Paperclip className="w-3.5 h-3.5 text-slate-500" />{file.name}</span><button type="button" onClick={() => removeFile(index)} className="text-red-500 hover:text-red-700 p-1" aria-label={`حذف ${file.name}`}><X className="w-3.5 h-3.5" /></button></div>)}</div></div>}
                 </div>
-                <DialogFooter className="pt-2"><Button type="submit" disabled={createDispute.isPending} className="w-full bg-[#0B0F15] hover:bg-[#0B0F15]/90 disabled:opacity-60 text-white font-medium">{createDispute.isPending ? 'جاري إرسال الطلب والأدلة...' : 'إرسال الشكوى والأدلة وتفعيل لجنة الوساطة'}</Button></DialogFooter>
+                <DialogFooter className="pt-2"><Button type="submit" disabled={createDispute.isPending} className="w-full bg-[#0B0F19] hover:bg-[#0B0F19]/90 disabled:opacity-60 text-white font-medium">{createDispute.isPending ? 'جاري إرسال الطلب والأدلة...' : 'إرسال الشكوى والأدلة وتفعيل لجنة الوساطة'}</Button></DialogFooter>
               </form>
             </DialogContent>
           </Dialog>

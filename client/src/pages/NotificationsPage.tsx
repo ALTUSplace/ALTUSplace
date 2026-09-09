@@ -76,7 +76,7 @@ export default function NotificationsPage() {
   return (
     <main className="min-h-screen bg-background px-4 py-8 text-foreground sm:py-12" dir={direction}>
       <div className="mx-auto max-w-5xl space-y-6">
-        <section className="relative overflow-hidden rounded-3xl bg-[#0B0F15] p-6 text-white shadow-xl sm:p-8">
+        <section className="relative overflow-hidden rounded-3xl bg-[#0B0F19] p-6 text-white shadow-xl sm:p-8">
           <div className="absolute -left-16 -top-20 h-48 w-48 rounded-full bg-amber-500/20 blur-3xl" aria-hidden="true" />
           <div className="relative flex flex-col justify-between gap-6 md:flex-row md:items-center">
             <div>

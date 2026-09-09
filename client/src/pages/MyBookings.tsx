@@ -112,7 +112,7 @@ export default function MyBookings() {
                         <Receipt className="w-4 h-4" /> الفاتورة PDF
                       </Button>
                     )}
-                    <Link href={`/messages/${booking.id}`} className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-[#0B0F15] hover:bg-[#0B0F15]/90 text-white px-4 py-2.5 rounded-xl text-xs font-semibold">
+                    <Link href={`/messages/${booking.id}`} className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-[#0B0F19] hover:bg-[#0B0F19]/90 text-white px-4 py-2.5 rounded-xl text-xs font-semibold">
                       <MessageCircle className="w-4 h-4" /> مراسلة الطرف الآخر
                     </Link>
                     <a href="/support-tickets" className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-white px-4 py-2.5 rounded-xl text-xs font-semibold">

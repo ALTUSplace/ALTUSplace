@@ -37,7 +37,7 @@ const createTypeIcon = (type: 'car' | 'property' | 'office', price: number) => {
   const colors = {
     car: { bg: '#1d6fa5', border: '#155a87' },
     property: { bg: '#087f5b', border: '#066648' },
-    office: { bg: '#D98236', border: '#B96A28' },
+    office: { bg: '#2563EB', border: '#1D4ED8' },
   };
   const color = colors[type];
 

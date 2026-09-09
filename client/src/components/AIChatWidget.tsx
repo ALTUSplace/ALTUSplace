@@ -63,7 +63,7 @@ export default function AIChatWidget() {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="bg-[#0B0F15] hover:bg-[#0B0F15]/90 text-white p-4 rounded-full shadow-2xl flex items-center gap-3 transition-transform hover:scale-105 group border-2 border-amber-500"
+          className="bg-[#0B0F19] hover:bg-[#0B0F19]/90 text-white p-4 rounded-full shadow-2xl flex items-center gap-3 transition-transform hover:scale-105 group border-2 border-amber-500"
           title="مساعد الذكاء الاصطناعي"
         >
           <Bot className="w-6 h-6 text-amber-400 animate-bounce" />
@@ -76,7 +76,7 @@ export default function AIChatWidget() {
         <div className="bg-white w-[350px] sm:w-[380px] h-[500px] rounded-2xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
           
           {/* Chat Header */}
-          <div className="bg-[#0B0F15] text-white p-4 flex items-center justify-between border-b border-amber-500/30">
+          <div className="bg-[#0B0F19] text-white p-4 flex items-center justify-between border-b border-amber-500/30">
             <div className="flex items-center gap-2.5">
               <div className="w-9 h-9 rounded-full bg-amber-500/20 flex items-center justify-center border border-amber-400">
                 <Bot className="w-5 h-5 text-amber-400" />
@@ -102,7 +102,7 @@ export default function AIChatWidget() {
               <div key={idx} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div className={`max-w-[85%] p-3 rounded-2xl text-xs sm:text-sm whitespace-pre-line leading-relaxed ${
                   msg.sender === 'user' ? 
-                  'bg-[#0B0F15] text-white rounded-bl-none shadow-sm' : 
+                  'bg-[#0B0F19] text-white rounded-bl-none shadow-sm' : 
                   'bg-white text-slate-800 rounded-br-none shadow-sm border border-slate-100 font-medium'
                 }`}>
                   {msg.text}
@@ -132,7 +132,7 @@ export default function AIChatWidget() {
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}
               className="text-xs sm:text-sm"
             />
-            <Button size="icon" onClick={() => handleSend()} className="bg-[#0B0F15] hover:bg-[#0B0F15]/90 text-white shrink-0">
+            <Button size="icon" onClick={() => handleSend()} className="bg-[#0B0F19] hover:bg-[#0B0F19]/90 text-white shrink-0">
               <Send className="w-4 h-4" />
             </Button>
           </div>

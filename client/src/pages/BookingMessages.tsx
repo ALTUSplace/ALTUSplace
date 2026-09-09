@@ -47,19 +47,19 @@ export default function BookingMessages() {
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className="text-xs font-bold uppercase tracking-widest text-amber-600">ALTUSplace Morocco</p>
-            <h1 className="mt-1 text-2xl font-black text-[#0B0F15]">مراسلات الحجز #{bookingId}</h1>
+            <h1 className="mt-1 text-2xl font-black text-[#0B0F19]">مراسلات الحجز #{bookingId}</h1>
             <p className="mt-1 text-sm text-slate-500">تواصل مع الطرف الآخر داخل المنصة واحتفظ بسجل واضح للمحادثة.</p>
           </div>
           <Link href="/my-bookings"><Button variant="outline"><ArrowRight className="ml-2 h-4 w-4" /> حجوزاتي</Button></Link>
         </div>
 
         <Card className="border-0 shadow-sm">
-          <CardHeader><CardTitle className="flex items-center gap-2 text-[#0B0F15]"><MessageCircle className="h-5 w-5 text-amber-600" /> المحادثة</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="flex items-center gap-2 text-[#0B0F19]"><MessageCircle className="h-5 w-5 text-amber-600" /> المحادثة</CardTitle></CardHeader>
           <CardContent className="space-y-4">
             <div className="max-h-[55vh] min-h-[220px] space-y-3 overflow-y-auto rounded-xl bg-slate-100 p-3">
               {messages.isLoading ? <div className="grid min-h-[200px] place-items-center"><Loader2 className="h-6 w-6 animate-spin text-amber-600" /></div> : messages.isError ? <p className="p-6 text-center text-sm text-red-600">تعذر تحميل الرسائل أو لا تملك صلاحية الوصول لهذا الحجز.</p> : messages.data?.length ? messages.data.map((message) => {
                 const mine = message.senderId === user?.id;
-                return <div key={message.id} className={`flex ${mine ? "justify-start" : "justify-end"}`}><div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm ${mine ? "bg-[#0B0F15] text-white" : "bg-white text-slate-800 shadow-sm"}`}><p className="mb-1 text-[11px] font-bold opacity-70">{mine ? "أنت" : message.senderName || "الطرف الآخر"}</p><p className="whitespace-pre-wrap break-words">{message.body}</p><p className="mt-2 text-[10px] opacity-60">{new Date(message.createdAt).toLocaleString("fr-MA")}</p></div></div>;
+                return <div key={message.id} className={`flex ${mine ? "justify-start" : "justify-end"}`}><div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm ${mine ? "bg-[#0B0F19] text-white" : "bg-white text-slate-800 shadow-sm"}`}><p className="mb-1 text-[11px] font-bold opacity-70">{mine ? "أنت" : message.senderName || "الطرف الآخر"}</p><p className="whitespace-pre-wrap break-words">{message.body}</p><p className="mt-2 text-[10px] opacity-60">{new Date(message.createdAt).toLocaleString("fr-MA")}</p></div></div>;
               }) : <div className="grid min-h-[200px] place-items-center text-center text-sm text-slate-500">لا توجد رسائل بعد. ابدأ التواصل حول تفاصيل الحجز.</div>}
             </div>
             <form className="space-y-3" onSubmit={(event) => { event.preventDefault(); if (body.trim()) send.mutate({ bookingId, body: body.trim() }); }}>

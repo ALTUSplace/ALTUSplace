@@ -54,13 +54,13 @@ export default function Register() {
             </label>
           </div>
 
-          <Button onClick={continueToAuth} disabled={!accepted} className="mt-5 w-full gap-2 bg-[#0B0F15] text-white hover:bg-[#092f49] sm:w-auto">
+          <Button onClick={continueToAuth} disabled={!accepted} className="mt-5 w-full gap-2 bg-[#0B0F19] text-white hover:bg-[#092f49] sm:w-auto">
             <CheckCircle2 className="h-4 w-4" />
             {t("bookNow")}
           </Button>
         </div>
 
-        <Link href="/" className="inline-flex items-center gap-2 text-sm font-bold text-[#0B0F15] hover:text-amber-700">
+        <Link href="/" className="inline-flex items-center gap-2 text-sm font-bold text-[#0B0F19] hover:text-amber-700">
           <ArrowLeft className="h-4 w-4" />
           {t("back")}
         </Link>

@@ -26,7 +26,7 @@ export default function TermsOfService() {
             <Button 
               size="sm" 
               variant={lang === 'ar' ? 'default' : 'ghost'} 
-              className={lang === 'ar' ? 'bg-[#0B0F15] text-white' : 'text-muted-foreground'}
+              className={lang === 'ar' ? 'bg-[#0B0F19] text-white' : 'text-muted-foreground'}
               onClick={() => setLang('ar')}
             >
               العربية
@@ -34,7 +34,7 @@ export default function TermsOfService() {
             <Button 
               size="sm" 
               variant={lang === 'fr' ? 'default' : 'ghost'} 
-              className={lang === 'fr' ? 'bg-[#0B0F15] text-white' : 'text-muted-foreground'}
+              className={lang === 'fr' ? 'bg-[#0B0F19] text-white' : 'text-muted-foreground'}
               onClick={() => setLang('fr')}
             >
               Français

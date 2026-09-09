@@ -8,6 +8,8 @@ import {
   BookOpen,
   Building2,
   Car,
+  Check,
+  ChevronDown,
   Coins,
   CreditCard,
   Globe,
@@ -63,6 +65,97 @@ function isActiveLink(currentLocation: string, href: string) {
   const targetParams = new URLSearchParams(targetQuery);
   return Array.from(targetParams.entries()).every(
     ([key, value]) => currentParams.get(key) === value,
+  );
+}
+
+type SelectorOption = {
+  value: string;
+  label: string;
+  current?: boolean;
+};
+
+/**
+ * Compact, modern dropdown selector (language / currency) for the glass header.
+ * Renders a small pill button that expands into a clean floating menu.
+ */
+function NavSelector({
+  icon: Icon,
+  title,
+  value,
+  options,
+  onSelect,
+}: {
+  icon: typeof Globe;
+  title: string;
+  value: string;
+  options: SelectorOption[];
+  onSelect: (value: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const selectorRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handlePointerDown = (event: MouseEvent) => {
+      if (selectorRef.current && !selectorRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open]);
+
+  return (
+    <div className="relative" ref={selectorRef}>
+      <button
+        type="button"
+        onClick={() => setOpen((current) => !current)}
+        aria-expanded={open}
+        aria-haspopup="listbox"
+        title={title}
+        className="inline-flex min-h-10 items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 text-xs font-bold text-slate-200 transition-colors hover:bg-white/10 hover:text-white"
+      >
+        <Icon className="h-4 w-4 text-blue-300" aria-hidden="true" />
+        <span>{value}</span>
+        <ChevronDown className={`h-3.5 w-3.5 text-slate-400 transition-transform duration-200 ${open ? "rotate-180" : ""}`} aria-hidden="true" />
+      </button>
+
+      {open && (
+        <div
+          role="listbox"
+          aria-label={title}
+          className="absolute left-0 top-full z-50 mt-2 w-40 overflow-hidden rounded-xl border border-slate-200 bg-white p-1 shadow-2xl shadow-slate-950/20"
+        >
+          {options.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              role="option"
+              aria-selected={option.current}
+              onClick={() => {
+                onSelect(option.value);
+                setOpen(false);
+              }}
+              className={`flex min-h-9 w-full items-center justify-between rounded-lg px-3 text-xs font-bold transition-colors ${
+                option.current
+                  ? "bg-blue-50 text-blue-700"
+                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+              }`}
+            >
+              <span>{option.label}</span>
+              {option.current && <Check className="h-3.5 w-3.5" aria-hidden="true" />}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -274,13 +367,13 @@ export default function Navbar() {
             mobile
               ? `flex min-h-11 items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold transition-colors ${
                   active
-                    ? "bg-amber-500 text-white shadow-sm"
+                    ? "bg-blue-600 text-white shadow-sm shadow-blue-500/25"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 }`
               : `flex items-center gap-1.5 rounded-xl border px-2.5 py-2 text-xs font-bold transition-colors ${
                   active
-                    ? "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300"
-                    : "border-transparent text-muted-foreground hover:bg-muted hover:text-foreground"
+                    ? "border-blue-500/30 bg-blue-500/15 text-blue-300"
+                    : "border-transparent text-slate-300 hover:bg-white/10 hover:text-white"
                 }`
           }
           aria-current={active ? "page" : undefined}
@@ -294,10 +387,9 @@ export default function Navbar() {
   return (
     <>
       <header
-        className="sticky top-0 z-50 bg-[#0B0F15] text-foreground shadow-[0_10px_30px_rgba(0,0,0,0.35)]"
-          dir={direction}
-          style={{ borderBottom: '1px solid rgba(0, 163, 255, 0.2)' }}
-        >
+        className="sticky top-0 z-50 border-b border-white/10 bg-slate-900/80 text-white shadow-lg shadow-slate-950/20 backdrop-blur-md supports-[backdrop-filter]:bg-slate-900/70"
+        dir={direction}
+      >
         <div className="container mx-auto flex h-16 sm:h-20 items-center justify-between gap-2 sm:gap-4 px-3 sm:px-4">
           <Link href="/" className="group flex shrink-0 items-center gap-3" aria-label={t("home")}>
   <div className="brand-logo-container flex shrink-0 items-center">
@@ -309,10 +401,10 @@ export default function Navbar() {
     />
   </div>
   <div className="flex flex-col">
-    <span className="font-bold text-lg sm:text-xl tracking-tight text-slate-900 dark:text-white">
-      ALTUS<span className="font-normal text-amber-600">place</span>
+    <span className="font-bold text-lg sm:text-xl tracking-tight text-white">
+      ALTUS<span className="font-normal text-blue-400">place</span>
     </span>
-    <span className="text-[9px] sm:text-[10px] tracking-wider text-muted-foreground uppercase -mt-1 font-medium">
+    <span className="text-[9px] sm:text-[10px] tracking-wider text-slate-400 uppercase -mt-1 font-medium">
       Rent. Drive. Live.
     </span>
   </div>
@@ -323,61 +415,51 @@ export default function Navbar() {
           </nav>
 
           <div className="hidden shrink-0 items-center gap-2 md:flex">
-            <div className="hidden 2xl:block" aria-label={t("chooseCurrency")}>
-              <div className="b2-segmented-control">
-                <Coins className="mx-1 h-4 w-4 text-amber-600 dark:text-amber-300" aria-hidden="true" />
-                {(["MAD", "EUR", "USD"] as Currency[]).map((item) => (
-                  <button
-                    key={item}
-                    type="button"
-                    aria-pressed={currency === item}
-                    onClick={() => selectCurrency(item)}
-                    className={currency === item ? "bg-amber-500 text-white" : "text-muted-foreground hover:bg-background hover:text-foreground"}
-                  >
-                    {item}
-                  </button>
-                ))}
-              </div>
-            </div>
+            <NavSelector
+              icon={Coins}
+              title={t("chooseCurrency")}
+              value={currency}
+              options={(["MAD", "EUR", "USD"] as Currency[]).map((item) => ({
+                value: item,
+                label: item,
+                current: currency === item,
+              }))}
+              onSelect={(value) => selectCurrency(value as Currency)}
+            />
 
-            <div className="hidden 2xl:block" aria-label={t("chooseLanguage")}>
-              <div className="b2-segmented-control">
-                <Globe className="mx-1 h-4 w-4 text-amber-600 dark:text-amber-300" aria-hidden="true" />
-                {(["ar", "fr", "en"] as const).map((item) => (
-                  <button
-                    key={item}
-                    type="button"
-                    aria-pressed={language === item}
-                    onClick={() => selectLanguage(item)}
-                    className={language === item ? "bg-amber-500 text-white" : "text-muted-foreground hover:bg-background hover:text-foreground"}
-                  >
-                    {item === "ar" ? "عربي" : item === "fr" ? "FR" : "EN"}
-                  </button>
-                ))}
-              </div>
-            </div>
+            <NavSelector
+              icon={Globe}
+              title={t("chooseLanguage")}
+              value={language === "ar" ? "عربي" : language === "fr" ? "FR" : "EN"}
+              options={[
+                { value: "ar", label: "عربي", current: language === "ar" },
+                { value: "fr", label: "FR", current: language === "fr" },
+                { value: "en", label: "EN", current: language === "en" },
+              ]}
+              onSelect={(value) => selectLanguage(value as Language)}
+            />
 
             <button
               type="button"
-              className="b2-icon-button border border-border bg-muted text-foreground hover:bg-background"
+              className="b2-icon-button border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10 hover:text-white"
               onClick={() => setTwoFaModalOpen(true)}
               title={t("securityTwoFactor")}
               aria-label={t("securityTwoFactor")}
             >
-              <Shield className="h-4 w-4 text-amber-600 dark:text-amber-300" />
+              <Shield className="h-4 w-4 text-blue-300" />
             </button>
             <button
               type="button"
-              className="b2-icon-button border border-border bg-muted text-foreground hover:bg-background"
+              className="b2-icon-button border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10 hover:text-white"
               onClick={() => setCmiModalOpen(true)}
               title={t("cmiPayment")}
               aria-label={t("cmiPortal")}
             >
-              <CreditCard className="h-4 w-4 text-amber-600 dark:text-amber-300" />
+              <CreditCard className="h-4 w-4 text-blue-300" />
             </button>
             <button
               type="button"
-              className="b2-icon-button border border-emerald-500/30 bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20 dark:text-emerald-300"
+              className="b2-icon-button border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20"
               onClick={() => setWhatsappModalOpen(true)}
               title={t("whatsappNotify")}
               aria-label={t("whatsappNotify")}
@@ -388,7 +470,7 @@ export default function Navbar() {
             <div className="relative" ref={notificationRef}>
               <button
                 type="button"
-                className={`b2-icon-button relative border border-border bg-muted text-foreground hover:bg-background ${notificationPulse ? "ring-2 ring-rose-400/70 ring-offset-2 ring-offset-background motion-safe:animate-pulse" : ""}`}
+                className={`b2-icon-button relative border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10 hover:text-white ${notificationPulse ? "ring-2 ring-rose-400/70 ring-offset-2 ring-offset-slate-900 motion-safe:animate-pulse" : ""}`}
                 onClick={() => {
                   setNotificationsOpen((open) => !open);
                   setNotificationPulse(false);
@@ -398,7 +480,7 @@ export default function Navbar() {
                 aria-label={unreadCount ? t("notificationsWithUnread", { count: unreadCount }) : t("notifications")}
                 title={t("notifications")}
               >
-                <Bell className="h-4 w-4 text-amber-600 dark:text-amber-300" />
+                <Bell className="h-4 w-4 text-blue-300" />
                 {unreadCount > 0 && (
                   <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-black text-white">
                     {unreadCount}
@@ -472,7 +554,7 @@ export default function Navbar() {
             {toggleTheme && (
               <button
                 type="button"
-                className="b2-icon-button border border-border bg-muted text-foreground hover:bg-background"
+                className="b2-icon-button border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10 hover:text-white"
                 onClick={() => {
                   toggleTheme();
                   toast.success(theme === "dark" ? t("themeToLightToast") : t("themeToDarkToast"));
@@ -480,23 +562,23 @@ export default function Navbar() {
                 aria-label={t("toggleThemeLabel")}
                 title={t("toggleThemeLabel")}
               >
-                {theme === "dark" ? <Sun className="h-4 w-4 text-amber-600 dark:text-amber-300" /> : <Moon className="h-4 w-4 text-amber-600 dark:text-amber-300" />}
+                {theme === "dark" ? <Sun className="h-4 w-4 text-blue-300" /> : <Moon className="h-4 w-4 text-blue-300" />}
               </button>
             )}
 
-            <Link href="/add-car" className="inline-flex min-h-11 items-center rounded-xl bg-amber-500 px-4 py-2 text-xs font-extrabold text-white shadow-sm transition-colors hover:bg-amber-600">
+            <Link href="/add-car" className="inline-flex min-h-11 items-center rounded-xl bg-blue-600 px-4 py-2 text-xs font-extrabold text-white shadow-lg shadow-blue-500/25 transition-all hover:-translate-y-0.5 hover:bg-blue-500 hover:shadow-xl hover:shadow-blue-500/40">
               {t("addCar")}
             </Link>
           </div>
 
           <div className="flex items-center gap-1.5 sm:gap-2 2xl:hidden">
-            <Link href="/search" className={`b2-icon-button border border-border bg-muted text-foreground ${currentSection === "search" ? "text-amber-700 dark:text-amber-300" : ""}`} aria-label={t("openSearchLabel")} title={t("searchTitleLabel")}>
+            <Link href="/search" className={`b2-icon-button border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10 hover:text-white ${currentSection === "search" ? "text-blue-300" : ""}`} aria-label={t("openSearchLabel")} title={t("searchTitleLabel")}>
               <Car className="h-4 w-4" />
             </Link>
             <button
               type="button"
               onClick={() => setMobileMenuOpen((open) => !open)}
-              className="b2-icon-button border border-amber-500/30 bg-amber-500/10 text-amber-700 hover:bg-amber-500/20 dark:text-amber-300"
+              className="b2-icon-button border border-white/10 bg-white/5 text-white hover:bg-white/10"
               aria-expanded={mobileMenuOpen}
               aria-controls="mobile-navigation"
               aria-label={mobileMenuOpen ? t("closeMenuLabel") : t("openMenuLabel")}
@@ -549,29 +631,29 @@ export default function Navbar() {
 
             <div className="mt-3 space-y-4 border-t border-border pt-4">
               <div>
-                <p className="mb-2 flex items-center gap-1.5 text-xs font-bold text-muted-foreground"><Coins className="h-3.5 w-3.5 text-[#D98236] dark:text-[#D98236]" /> {t("currency")}</p>
+                <p className="mb-2 flex items-center gap-1.5 text-xs font-bold text-muted-foreground"><Coins className="h-3.5 w-3.5 text-[#2563EB] dark:text-[#2563EB]" /> {t("currency")}</p>
                 <div className="b2-segmented-control w-full">
                   {(["MAD", "EUR", "USD"] as Currency[]).map((item) => (
-                    <button key={item} type="button" aria-pressed={currency === item} onClick={() => selectCurrency(item)} className={currency === item ? "bg-[#D98236] text-white" : "text-muted-foreground hover:bg-background hover:text-foreground"}>{item}</button>
+                    <button key={item} type="button" aria-pressed={currency === item} onClick={() => selectCurrency(item)} className={currency === item ? "bg-[#2563EB] text-white" : "text-muted-foreground hover:bg-background hover:text-foreground"}>{item}</button>
                   ))}
                 </div>
               </div>
 
               <div>
-                <p className="mb-2 flex items-center gap-1.5 text-xs font-bold text-muted-foreground"><Globe className="h-3.5 w-3.5 text-[#D98236] dark:text-[#D98236]" /> {t("language")}</p>
+                <p className="mb-2 flex items-center gap-1.5 text-xs font-bold text-muted-foreground"><Globe className="h-3.5 w-3.5 text-[#2563EB] dark:text-[#2563EB]" /> {t("language")}</p>
                 <div className="b2-segmented-control w-full">
                   {(["ar", "fr", "en"] as const).map((item) => (
-                    <button key={item} type="button" aria-pressed={language === item} onClick={() => selectLanguage(item)} className={language === item ? "bg-[#D98236] text-white" : "text-muted-foreground hover:bg-background hover:text-foreground"}>{item === "ar" ? t("arabic") : item === "fr" ? t("french") : t("english")}</button>
+                    <button key={item} type="button" aria-pressed={language === item} onClick={() => selectLanguage(item)} className={language === item ? "bg-[#2563EB] text-white" : "text-muted-foreground hover:bg-background hover:text-foreground"}>{item === "ar" ? t("arabic") : item === "fr" ? t("french") : t("english")}</button>
                   ))}
                 </div>
               </div>
 
               <div className="flex items-center gap-2">
-                <button type="button" onClick={() => { setTwoFaModalOpen(true); setMobileMenuOpen(false); }} className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-muted px-3 py-2 text-xs font-bold text-foreground hover:bg-background"><Shield className="h-3.5 w-3.5 text-[#D98236] dark:text-[#D98236]" /> {t("accountSecurity")}</button>
-                <button type="button" onClick={() => { setCmiModalOpen(true); setMobileMenuOpen(false); }} className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-muted px-3 py-2 text-xs font-bold text-foreground hover:bg-background"><CreditCard className="h-3.5 w-3.5 text-[#D98236] dark:text-[#D98236]" /> {t("cmiPaymentMobile")}</button>
+                <button type="button" onClick={() => { setTwoFaModalOpen(true); setMobileMenuOpen(false); }} className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-muted px-3 py-2 text-xs font-bold text-foreground hover:bg-background"><Shield className="h-3.5 w-3.5 text-[#2563EB] dark:text-[#2563EB]" /> {t("accountSecurity")}</button>
+                <button type="button" onClick={() => { setCmiModalOpen(true); setMobileMenuOpen(false); }} className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-muted px-3 py-2 text-xs font-bold text-foreground hover:bg-background"><CreditCard className="h-3.5 w-3.5 text-[#2563EB] dark:text-[#2563EB]" /> {t("cmiPaymentMobile")}</button>
               </div>
 
-              <Link href="/add-car" onClick={() => setMobileMenuOpen(false)} className="flex min-h-11 items-center justify-center rounded-xl bg-[#D98236] px-4 py-3 text-sm font-extrabold text-white hover:bg-[#B96A28]">
+              <Link href="/add-car" onClick={() => setMobileMenuOpen(false)} className="flex min-h-11 items-center justify-center rounded-xl bg-[#2563EB] px-4 py-3 text-sm font-extrabold text-white hover:bg-[#1D4ED8]">
                 {t("addCar")}
               </Link>
             </div>

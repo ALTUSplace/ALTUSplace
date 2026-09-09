@@ -11,8 +11,8 @@ export default function NotFound() {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-[#0B0F15] text-[#E2E8F0] px-4">
-      <Card className="w-full max-w-lg mx-4 shadow-2xl border border-border bg-[#131922]/90 backdrop-blur-sm">
+    <div className="min-h-screen w-full flex items-center justify-center bg-[#0B0F19] text-[#E2E8F0] px-4">
+      <Card className="w-full max-w-lg mx-4 shadow-2xl border border-border bg-[#0F172A]/90 backdrop-blur-sm">
         <CardContent className="pt-8 pb-8 text-center">
           <div className="flex justify-center mb-6">
             <img
@@ -23,7 +23,7 @@ export default function NotFound() {
             />
           </div>
 
-          <h1 className="text-5xl font-black text-[#D98236] mb-2">404</h1>
+          <h1 className="text-5xl font-black text-[#2563EB] mb-2">404</h1>
 
           <h2 className="text-xl font-semibold text-[#E2E8F0] mb-4">
             الصفحة غير موجودة · Page introuvable
@@ -41,7 +41,7 @@ export default function NotFound() {
           >
             <Button
               onClick={handleGoHome}
-              className="bg-[#D98236] hover:bg-[#B96A28] text-white px-6 py-2.5 rounded-xl transition-all duration-200 shadow-lg shadow-[#D98236]/25 cursor-pointer"
+              className="bg-[#2563EB] hover:bg-[#1D4ED8] text-white px-6 py-2.5 rounded-xl transition-all duration-200 shadow-lg shadow-[#2563EB]/25 cursor-pointer"
             >
               <Home className="w-4 h-4 mr-2" />
               العودة إلى الرئيسية · Accueil

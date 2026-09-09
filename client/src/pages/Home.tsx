@@ -56,163 +56,185 @@ export default function Home() {
     }
   };
 
+  // ── Floating glass search widget style tokens (international marketplace UI) ──
+  const searchLabelClass = 'text-xs font-semibold text-slate-300';
+  const searchFieldClass =
+    'w-full min-h-12 rounded-xl border border-white/10 bg-[#0F172A]/70 py-3 pr-11 pl-4 text-sm text-white outline-none transition-all duration-200 [color-scheme:dark] focus:border-blue-500/60 focus:bg-[#0F172A] focus:ring-2 focus:ring-blue-500';
+  const searchIconClass =
+    'pointer-events-none absolute right-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400 transition-colors group-focus-within:text-blue-400';
+  const highlightTextClass =
+    'bg-gradient-to-r from-blue-400 via-sky-300 to-blue-500 bg-clip-text text-transparent';
+
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col" dir={direction}>
       
-      {/* Modern Hero Section with Elegant Navy Background */}
-      <section className="relative pt-8 pb-16 md:pt-12 md:pb-24 px-4 overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
-        <div className="absolute inset-0 opacity-5 bg-[radial-gradient(#00A3FF_1px,transparent_1px)] [background-size:28px_28px] pointer-events-none"></div>
+      {/* ── Hero: Deep Slate Navy with Electric Blue aurora ── */}
+      <section className="relative pt-10 pb-16 md:pt-16 md:pb-24 px-4 overflow-hidden bg-[#0B0F19] text-white">
+        {/* Aurora glows + dot grid */}
+        <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+          <div className="absolute -top-32 left-1/4 h-72 w-72 rounded-full bg-blue-600/25 blur-3xl" />
+          <div className="absolute top-10 right-1/4 h-64 w-64 rounded-full bg-indigo-500/20 blur-3xl" />
+          <div className="absolute bottom-0 left-0 h-56 w-56 rounded-full bg-amber-500/10 blur-3xl" />
+          <div className="absolute inset-0 opacity-[0.07] bg-[radial-gradient(#3B82F6_1px,transparent_1px)] [background-size:28px_28px]"></div>
+          <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-blue-500/40 to-transparent"></div>
+        </div>
         
         <div className="container mx-auto max-w-6xl text-center space-y-5 md:space-y-8 relative z-10">
-          <div className="inline-flex items-center gap-2 bg-[#00A3FF]/20 border border-[#00A3FF]/40 px-4 py-2 rounded-full text-[#00A3FF] text-sm font-bold tracking-wide fade-in">
-            <ShieldCheck className="w-4 h-4 text-[#00A3FF]" />
+          <div className="inline-flex items-center gap-2 border border-blue-400/20 bg-blue-500/10 px-4 py-2 rounded-full text-blue-300 text-sm font-bold tracking-wide fade-in">
+            <ShieldCheck className="w-4 h-4 text-amber-400" />
             <span>{t('heroBadge')}</span>
           </div>
 
           <h1 className="text-3xl sm:text-4xl md:text-6xl font-black tracking-tight leading-[1.25] md:leading-tight">
-            {t('heroTitlePrefix')} <span className="text-[#D98236]">{t('heroTitleCars')}</span> {t('heroTitleAnd')} <span className="text-[#D98236]">{t('heroTitleProperties')}</span> {t('heroTitleSuffix')}
+            {t('heroTitlePrefix')} <span className={highlightTextClass}>{t('heroTitleCars')}</span> {t('heroTitleAnd')} <span className={highlightTextClass}>{t('heroTitleProperties')}</span> <span className="text-amber-400">{t('heroTitleSuffix')}</span>
           </h1>
 
           <p className="text-slate-300 text-xs sm:text-sm md:text-base max-w-2xl mx-auto leading-relaxed">
             {t('heroDescription')}
           </p>
           
-          <div className="flex justify-center gap-4 mt-6">
+          <div className="flex justify-center gap-4 mt-2">
             <Button 
               onClick={() => window.open('/slides_project/cover_slide.html', '_blank')}
-              className="bg-white/10 hover:bg-white/20 text-white border border-white/30 px-6 py-2 rounded-xl text-sm font-bold flex items-center gap-2"
+              className="bg-white/5 hover:bg-white/10 text-white border border-white/10 px-6 py-2 rounded-xl text-sm font-bold flex items-center gap-2 backdrop-blur transition-colors"
             >
               <Award className="w-4 h-4" />
               <span>{t('heroReviewButton')}</span>
             </Button>
           </div>
 
-          {/* Tabbed Search Bar (Cars vs Properties) */}
-          <div className="max-w-4xl mx-auto bg-white/10 backdrop-blur-2xl border border-white/20 p-3 md:p-6 rounded-2xl md:rounded-3xl shadow-2xl text-right">
-            {/* Tabs Header */}
-            <div className="flex gap-2 mb-4 md:mb-6 border-b border-white/10 pb-3 md:pb-4">
-              <button
-                type="button"
-                onClick={() => setActiveTab('cars')}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 px-2 sm:px-4 rounded-xl md:rounded-2xl font-bold text-xs sm:text-sm transition-all ${
-                  activeTab === 'cars'
-                    ? 'bg-[#D98236] text-white shadow-lg shadow-[#D98236]/30'
-                    : 'bg-white/5 text-slate-300 hover:bg-white/10'
-                }`}
-              >
-                <Car className="w-5 h-5" />
-                <span>{t('searchTabCars')}</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab('properties')}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 px-2 sm:px-4 rounded-xl md:rounded-2xl font-bold text-xs sm:text-sm transition-all ${
-                  activeTab === 'properties'
-                    ? 'bg-[#D98236] text-white shadow-lg shadow-[#D98236]/30'
-                    : 'bg-white/5 text-slate-300 hover:bg-white/10'
-                }`}
-              >
-                <Building2 className="w-5 h-5" />
-                <span>{t('searchTabProperties')}</span>
-              </button>
+          {/* ── Floating glassmorphism search card ── */}
+          <div className="max-w-4xl mx-auto bg-white/[0.06] backdrop-blur-xl border border-white/10 p-3 md:p-6 rounded-2xl shadow-2xl shadow-blue-500/10 text-right">
+            {/* Segmented control tabs (Cars vs Properties) */}
+            <div className="mb-4 md:mb-6 rounded-xl border border-white/10 bg-[#0F172A]/60 p-1" role="tablist" aria-label={t('searchTabCars')}>
+              <div className="grid grid-cols-2 gap-1">
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={activeTab === 'cars'}
+                  onClick={() => setActiveTab('cars')}
+                  className={`flex items-center justify-center gap-1.5 py-2.5 px-2 sm:px-4 rounded-lg font-bold text-xs sm:text-sm transition-all duration-200 ${
+                    activeTab === 'cars'
+                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/25'
+                      : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                  }`}
+                >
+                  <Car className="w-5 h-5" />
+                  <span>{t('searchTabCars')}</span>
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={activeTab === 'properties'}
+                  onClick={() => setActiveTab('properties')}
+                  className={`flex items-center justify-center gap-1.5 py-2.5 px-2 sm:px-4 rounded-lg font-bold text-xs sm:text-sm transition-all duration-200 ${
+                    activeTab === 'properties'
+                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/25'
+                      : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                  }`}
+                >
+                  <Building2 className="w-5 h-5" />
+                  <span>{t('searchTabProperties')}</span>
+                </button>
+              </div>
             </div>
 
             {/* Search Form */}
             <form onSubmit={handleSearchSubmit} className="space-y-3 md:space-y-4">
               {activeTab === 'cars' ? (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
-                  <div className="space-y-1">
-                    <label className="text-xs font-semibold text-slate-300">{t('searchCityOrAgency')}</label>
-                    <div className="relative">
-                      <MapPin className="absolute right-3.5 top-3.5 w-5 h-5 text-slate-400" />
+                  <div className="space-y-1.5">
+                    <label className={searchLabelClass}>{t('searchCityOrAgency')}</label>
+                    <div className="group relative">
+                      <MapPin className={searchIconClass} />
                       <select
                         value={carCity}
                         onChange={(e) => setCarCity(e.target.value)}
-                        className="w-full bg-slate-900/90 text-white border border-white/20 rounded-xl py-3 pr-11 pl-4 text-sm focus:outline-none focus:border-[#D98236] min-h-12"
+                        className={searchFieldClass}
                       >
-                        <option value="الدار البيضاء">{t('cityCasablanca')}</option>
-                        <option value="مراكش">{t('cityMarrakech')}</option>
-                        <option value="أغادير">{t('cityAgadir')}</option>
-                        <option value="طنجة">{t('cityTangier')}</option>
-                        <option value="الرباط">{t('cityRabat')}</option>
+                        <option value="الدار البيضاء" className="bg-[#0F172A] text-white">{t('cityCasablanca')}</option>
+                        <option value="مراكش" className="bg-[#0F172A] text-white">{t('cityMarrakech')}</option>
+                        <option value="أغادير" className="bg-[#0F172A] text-white">{t('cityAgadir')}</option>
+                        <option value="طنجة" className="bg-[#0F172A] text-white">{t('cityTangier')}</option>
+                        <option value="الرباط" className="bg-[#0F172A] text-white">{t('cityRabat')}</option>
                       </select>
                     </div>
                   </div>
 
-                  <div className="space-y-1">
-                    <label className="text-xs font-semibold text-slate-300">{t('searchPickupDate')}</label>
-                    <div className="relative">
-                      <Calendar className="absolute right-3.5 top-3.5 w-5 h-5 text-slate-400" />
+                  <div className="space-y-1.5">
+                    <label className={searchLabelClass}>{t('searchPickupDate')}</label>
+                    <div className="group relative">
+                      <Calendar className={searchIconClass} />
                       <input
                         type="date"
                         value={pickupDate}
                         onChange={(e) => setPickupDate(e.target.value)}
-                        className="w-full bg-slate-900/90 text-white border border-white/20 rounded-xl py-3 pr-11 pl-4 text-sm focus:outline-none focus:border-[#D98236] min-h-12"
+                        className={searchFieldClass}
                       />
                     </div>
                   </div>
 
-                  <div className="space-y-1">
-                    <label className="text-xs font-semibold text-slate-300">{t('searchDropoffDate')}</label>
-                    <div className="relative">
-                      <Calendar className="absolute right-3.5 top-3.5 w-5 h-5 text-slate-400" />
+                  <div className="space-y-1.5">
+                    <label className={searchLabelClass}>{t('searchDropoffDate')}</label>
+                    <div className="group relative">
+                      <Calendar className={searchIconClass} />
                       <input
                         type="date"
                         value={dropoffDate}
                         onChange={(e) => setDropoffDate(e.target.value)}
-                        className="w-full bg-slate-900/90 text-white border border-white/20 rounded-xl py-3 pr-11 pl-4 text-sm focus:outline-none focus:border-[#D98236] min-h-12"
+                        className={searchFieldClass}
                       />
                     </div>
                   </div>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
-                  <div className="space-y-1">
-                    <label className="text-xs font-semibold text-slate-300">{t('searchPropertyLocation')}</label>
-                    <div className="relative">
-                      <MapPin className="absolute right-3.5 top-3.5 w-5 h-5 text-slate-400" />
+                  <div className="space-y-1.5">
+                    <label className={searchLabelClass}>{t('searchPropertyLocation')}</label>
+                    <div className="group relative">
+                      <MapPin className={searchIconClass} />
                       <select
                         value={propLocation}
                         onChange={(e) => setPropLocation(e.target.value)}
-                        className="w-full bg-slate-900/90 text-white border border-white/20 rounded-xl py-3 pr-11 pl-4 text-sm focus:outline-none focus:border-[#D98236] min-h-12"
+                        className={searchFieldClass}
                       >
-                        <option value="مراكش">{t('marrakechDistricts')}</option>
-                        <option value="الدار البيضاء">{t('casablancaDistricts')}</option>
-                        <option value="طنجة">{t('tangierDistricts')}</option>
-                        <option value="الرباط">{t('rabatDistricts')}</option>
+                        <option value="مراكش" className="bg-[#0F172A] text-white">{t('marrakechDistricts')}</option>
+                        <option value="الدار البيضاء" className="bg-[#0F172A] text-white">{t('casablancaDistricts')}</option>
+                        <option value="طنجة" className="bg-[#0F172A] text-white">{t('tangierDistricts')}</option>
+                        <option value="الرباط" className="bg-[#0F172A] text-white">{t('rabatDistricts')}</option>
                       </select>
                     </div>
                   </div>
 
-                  <div className="space-y-1">
-                    <label className="text-xs font-semibold text-slate-300">{t('searchPropertyType')}</label>
-                    <div className="relative">
-                      <Building2 className="absolute right-3.5 top-3.5 w-5 h-5 text-slate-400" />
+                  <div className="space-y-1.5">
+                    <label className={searchLabelClass}>{t('searchPropertyType')}</label>
+                    <div className="group relative">
+                      <Building2 className={searchIconClass} />
                       <select
                         value={propType}
                         onChange={(e) => setPropType(e.target.value)}
-                        className="w-full bg-slate-900/90 text-white border border-white/20 rounded-xl py-3 pr-11 pl-4 text-sm focus:outline-none focus:border-[#D98236] min-h-12"
+                        className={searchFieldClass}
                       >
-                        <option value="apartment">{t('propTypeApartment')}</option>
-                        <option value="villa">{t('propTypeVilla')}</option>
-                        <option value="studio">{t('propTypeStudio')}</option>
+                        <option value="apartment" className="bg-[#0F172A] text-white">{t('propTypeApartment')}</option>
+                        <option value="villa" className="bg-[#0F172A] text-white">{t('propTypeVilla')}</option>
+                        <option value="studio" className="bg-[#0F172A] text-white">{t('propTypeStudio')}</option>
                       </select>
                     </div>
                   </div>
 
-                  <div className="space-y-1">
-                    <label className="text-xs font-semibold text-slate-300">{t('searchMaxPrice')}</label>
-                    <div className="relative">
-                      <DollarSign className="absolute right-3.5 top-3.5 w-5 h-5 text-slate-400" />
+                  <div className="space-y-1.5">
+                    <label className={searchLabelClass}>{t('searchMaxPrice')}</label>
+                    <div className="group relative">
+                      <DollarSign className={searchIconClass} />
                       <select
                         value={maxPrice}
                         onChange={(e) => setMaxPrice(e.target.value)}
-                        className="w-full bg-slate-900/90 text-white border border-white/20 rounded-xl py-3 pr-11 pl-4 text-sm focus:outline-none focus:border-[#D98236] min-h-12"
+                        className={searchFieldClass}
                       >
-                        <option value="1000">{t('maxPriceUnder1000')}</option>
-                        <option value="2500">{t('maxPriceUnder2500')}</option>
-                        <option value="5000">{t('maxPriceUnder5000')}</option>
-                        <option value="10000">{t('maxPriceOver5000')}</option>
+                        <option value="1000" className="bg-[#0F172A] text-white">{t('maxPriceUnder1000')}</option>
+                        <option value="2500" className="bg-[#0F172A] text-white">{t('maxPriceUnder2500')}</option>
+                        <option value="5000" className="bg-[#0F172A] text-white">{t('maxPriceUnder5000')}</option>
+                        <option value="10000" className="bg-[#0F172A] text-white">{t('maxPriceOver5000')}</option>
                       </select>
                     </div>
                   </div>
@@ -222,7 +244,7 @@ export default function Home() {
               <div className="pt-1 md:pt-2">
                 <Button
                   type="submit"
-                  className="w-full bg-[#D98236] hover:bg-[#B96A28] text-white font-black py-3.5 md:py-4 rounded-xl md:rounded-2xl text-sm md:text-base shadow-xl shadow-[#D98236]/40 flex items-center justify-center gap-2.5 cursor-pointer transition-all"
+                  className="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-3.5 md:py-4 rounded-xl md:rounded-2xl text-sm md:text-base shadow-lg shadow-blue-500/30 hover:shadow-2xl hover:shadow-blue-500/50 hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2.5 cursor-pointer transition-all duration-300"
                 >
                   <Search className="w-5 h-5" />
                   <span>{t('searchSubmitAdvanced')}</span>
@@ -250,7 +272,7 @@ export default function Home() {
             { name: "Volkswagen", icon: "🚘", count: 35 }
           ].map((brand, idx) => (
             <Link key={idx} href={`/search?type=car&brand=${brand.name}`}>
-              <div className="bg-card hover:bg-[#D98236] hover:text-white text-foreground border border-border hover:border-[#D98236] px-4 md:px-6 py-3 md:py-4 rounded-xl md:rounded-2xl shadow-sm transition-all duration-300 flex items-center gap-2.5 cursor-pointer group min-w-[150px] md:min-w-[160px] shrink-0 snap-start justify-center">
+              <div className="bg-card hover:bg-[#2563EB] hover:text-white text-foreground border border-border hover:border-[#2563EB] px-4 md:px-6 py-3 md:py-4 rounded-xl md:rounded-2xl shadow-sm transition-all duration-300 flex items-center gap-2.5 cursor-pointer group min-w-[150px] md:min-w-[160px] shrink-0 snap-start justify-center">
                 <span className="text-2xl group-hover:scale-110 transition-transform">{brand.icon}</span>
                 <div className="text-right">
                   <h4 className="font-black text-sm">{brand.name}</h4>
@@ -265,7 +287,7 @@ export default function Home() {
       {/* Real Estate Types Marquee Section */}
       <section className="py-8 bg-card/40 border-b border-border overflow-hidden">
         <div className="container mx-auto max-w-6xl px-4 text-center mb-4 md:mb-6">
-          <p className="text-xs font-bold text-[#0B0F15] uppercase tracking-widest">{t('propertyTypesTitle')}</p>
+          <p className="text-xs font-bold text-[#0B0F19] uppercase tracking-widest">{t('propertyTypesTitle')}</p>
         </div>
         <div className="flex overflow-x-auto no-scrollbar gap-3 md:gap-6 px-4 py-2 justify-start md:justify-center items-stretch flex-nowrap md:flex-wrap max-w-6xl mx-auto snap-x">
           {[
@@ -276,7 +298,7 @@ export default function Home() {
             { nameKey: "propSecureResidences", icon: "🏘️", count: 30 }
           ].map((type, idx) => (
             <Link key={idx} href={`/search?type=property&category=${type.nameKey}`}>
-              <div className="bg-muted hover:bg-[#D98236] hover:text-white text-foreground border border-border hover:border-[#D98236] px-4 md:px-6 py-3 md:py-3.5 rounded-xl md:rounded-2xl shadow-sm transition-all duration-300 flex items-center gap-2.5 cursor-pointer group min-w-[160px] md:min-w-[170px] shrink-0 snap-start justify-center">
+              <div className="bg-muted hover:bg-[#2563EB] hover:text-white text-foreground border border-border hover:border-[#2563EB] px-4 md:px-6 py-3 md:py-3.5 rounded-xl md:rounded-2xl shadow-sm transition-all duration-300 flex items-center gap-2.5 cursor-pointer group min-w-[160px] md:min-w-[170px] shrink-0 snap-start justify-center">
                 <span className="text-2xl group-hover:scale-110 transition-transform">{type.icon}</span>
                 <div className="text-right">
                   <h4 className="font-black text-sm">{t(type.nameKey)}</h4>
@@ -291,10 +313,10 @@ export default function Home() {
       {/* Bento Grid Section (Separating Cars and Properties cleanly) */}
       <section className="py-10 md:py-16 px-4 container mx-auto max-w-6xl">
         <div className="text-center space-y-3 mb-8 md:mb-12">
-          <span className="text-[#D98236] font-bold text-xs uppercase tracking-widest bg-[#D98236]/10 px-3 py-1 rounded-full border border-[#D98236]/30">
+          <span className="text-[#2563EB] font-bold text-xs uppercase tracking-widest bg-[#2563EB]/10 px-3 py-1 rounded-full border border-[#2563EB]/30">
             {t('bentoBadge')}
           </span>
-          <h2 className="text-2xl md:text-3xl font-black text-[#0B0F15]">{t('bentoTitle')}</h2>
+          <h2 className="text-2xl md:text-3xl font-black text-[#0B0F19]">{t('bentoTitle')}</h2>
           <p className="text-muted-foreground text-sm max-w-xl mx-auto">
             {t('bentoSubtitle')}
           </p>
@@ -303,10 +325,10 @@ export default function Home() {
         {/* Bento Grid layout */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Card 1: Cars Bento Box (Large 2 cols on md) */}
-          <div className="md:col-span-2 bg-gradient-to-br from-[#0B0F15] to-slate-900 text-white p-5 md:p-8 rounded-2xl md:rounded-3xl shadow-xl relative overflow-hidden flex flex-col justify-between group">
-            <div className="absolute -left-10 -bottom-10 w-64 h-64 bg-[#D98236]/20 rounded-full blur-3xl pointer-events-none"></div>
+          <div className="md:col-span-2 bg-gradient-to-br from-[#0B0F19] to-slate-900 text-white p-5 md:p-8 rounded-2xl md:rounded-3xl shadow-xl relative overflow-hidden flex flex-col justify-between group">
+            <div className="absolute -left-10 -bottom-10 w-64 h-64 bg-[#2563EB]/20 rounded-full blur-3xl pointer-events-none"></div>
             <div className="relative z-10 space-y-4 max-w-md">
-              <div className="w-12 h-12 bg-[#D98236] rounded-2xl flex items-center justify-center text-white shadow-lg">
+              <div className="w-12 h-12 bg-[#2563EB] rounded-2xl flex items-center justify-center text-white shadow-lg">
                 <Car className="w-6 h-6" />
               </div>
               <h3 className="text-2xl font-black">{t('bentoFleetTitle')}</h3>
@@ -315,7 +337,7 @@ export default function Home() {
               </p>
               <div>
                 <Link href="/search?type=car">
-                  <Button className="bg-[#D98236] hover:bg-[#B96A28] text-white font-bold px-6 py-3 rounded-xl text-xs flex items-center gap-2 shadow-lg shadow-[#D98236]/40 cursor-pointer">
+                  <Button className="bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-bold px-6 py-3 rounded-xl text-xs flex items-center gap-2 shadow-lg shadow-[#2563EB]/40 cursor-pointer">
                     <span>{t('browseCarsAvailable')}</span>
                     <ArrowRight className="w-4 h-4" />
                   </Button>
@@ -334,16 +356,16 @@ export default function Home() {
           {/* Card 2: Real Estate Bento Box */}
           <div className="bg-card border border-border p-5 md:p-8 rounded-2xl md:rounded-3xl shadow-xl flex flex-col justify-between group">
             <div className="space-y-4">
-              <div className="w-12 h-12 bg-[#0B0F15] rounded-2xl flex items-center justify-center text-white shadow-lg">
-                <Building2 className="w-6 h-6 text-[#D98236]" />
+              <div className="w-12 h-12 bg-[#0B0F19] rounded-2xl flex items-center justify-center text-white shadow-lg">
+                <Building2 className="w-6 h-6 text-[#2563EB]" />
               </div>
-              <h3 className="text-xl font-black text-[#0B0F15]">{t('bentoRealEstateTitle')}</h3>
+              <h3 className="text-xl font-black text-[#0B0F19]">{t('bentoRealEstateTitle')}</h3>
               <p className="text-muted-foreground text-xs sm:text-sm leading-relaxed">
                 {t('bentoRealEstateDescription')}
               </p>
               <div>
                 <Link href="/search?type=property">
-                  <Button className="bg-[#0B0F15] hover:bg-[#062940] text-white font-bold px-6 py-3 rounded-xl text-xs flex items-center gap-2 shadow-md cursor-pointer">
+                  <Button className="bg-[#0B0F19] hover:bg-[#062940] text-white font-bold px-6 py-3 rounded-xl text-xs flex items-center gap-2 shadow-md cursor-pointer">
                     <span>{t('browsePropertiesAvailable')}</span>
                     <ArrowRight className="w-4 h-4" />
                   </Button>
@@ -371,13 +393,13 @@ export default function Home() {
       <section className="py-10 md:py-16 px-4 container mx-auto max-w-6xl">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-7 md:mb-10 gap-4">
           <div>
-            <span className="text-[#D98236] font-bold text-xs uppercase tracking-widest bg-[#D98236]/10 px-3 py-1 rounded-full border border-[#D98236]/30">
+            <span className="text-[#2563EB] font-bold text-xs uppercase tracking-widest bg-[#2563EB]/10 px-3 py-1 rounded-full border border-[#2563EB]/30">
               {t('featuredListingsBadge')}
             </span>
-            <h2 className="text-2xl md:text-3xl font-black text-[#0B0F15] mt-2">{t('featuredListingsTitle')}</h2>
+            <h2 className="text-2xl md:text-3xl font-black text-[#0B0F19] mt-2">{t('featuredListingsTitle')}</h2>
           </div>
           <Link href="/search">
-            <Button variant="outline" className="w-full md:w-auto border-[#0B0F15] text-[#0B0F15] hover:bg-[#0B0F15] hover:text-white font-bold rounded-xl text-xs">
+            <Button variant="outline" className="w-full md:w-auto border-[#0B0F19] text-[#0B0F19] hover:bg-[#0B0F19] hover:text-white font-bold rounded-xl text-xs">
               {t('viewAllListings', { count: activeListings.length })}
             </Button>
           </Link>
@@ -399,7 +421,7 @@ export default function Home() {
                   srcSet={`${item.image} 800w`}
                   className="b2-responsive-media group-hover:scale-105 transition-transform duration-500"
                 />
-                <div className="absolute top-3 right-3 bg-[#0B0F15]/90 backdrop-blur-md text-white text-xs font-bold px-3 py-1 rounded-full shadow">
+                <div className="absolute top-3 right-3 bg-[#0B0F19]/90 backdrop-blur-md text-white text-xs font-bold px-3 py-1 rounded-full shadow">
                   {item.category}
                 </div>
               </div>
@@ -407,10 +429,10 @@ export default function Home() {
               <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-4">
                 <div className="space-y-2">
                   <div className="flex items-center text-muted-foreground text-xs gap-1">
-                    <MapPin className="w-3.5 h-3.5 text-[#D98236]" />
+                    <MapPin className="w-3.5 h-3.5 text-[#2563EB]" />
                     <span>{item.city}</span>
                   </div>
-                  <h3 className="text-base font-black text-[#0B0F15] line-clamp-1">{item.title}</h3>
+                  <h3 className="text-base font-black text-[#0B0F19] line-clamp-1">{item.title}</h3>
                   <div className="text-xs text-muted-foreground bg-muted px-3 py-1 rounded-xl inline-block">
                     {item.providerName}
                   </div>
@@ -419,11 +441,11 @@ export default function Home() {
                 <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
                   <div>
                     <span className="text-xs text-muted-foreground block">{t('dailyPrice')}</span>
-                    <span className="text-lg font-black text-[#D98236]">{item.pricePerUnit} {t('madUnit')}</span>
+                    <span className="text-lg font-black text-[#2563EB]">{item.pricePerUnit} {t('madUnit')}</span>
                   </div>
                   <div className="flex gap-2">
                     <Link href={getListingPath(item)}>
-                      <Button className="b2-card-action bg-[#0B0F15] hover:bg-[#062940] text-white font-bold px-4 py-2.5 rounded-xl text-xs shadow-md cursor-pointer">
+                      <Button className="b2-card-action bg-[#0B0F19] hover:bg-[#062940] text-white font-bold px-4 py-2.5 rounded-xl text-xs shadow-md cursor-pointer">
                         {t('bookNow')}
                       </Button>
                     </Link>
@@ -440,11 +462,11 @@ export default function Home() {
         <div className="container mx-auto max-w-6xl px-4 space-y-8">
           <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-4">
             <div>
-              <span className="text-[#D98236] font-bold text-xs uppercase tracking-widest bg-[#D98236]/10 px-3 py-1 rounded-full">{t('blogBadge')}</span>
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-[#0B0F15] mt-2">{t('blogTitle')}</h2>
+              <span className="text-[#2563EB] font-bold text-xs uppercase tracking-widest bg-[#2563EB]/10 px-3 py-1 rounded-full">{t('blogBadge')}</span>
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-[#0B0F19] mt-2">{t('blogTitle')}</h2>
             </div>
             <Link href="/blog">
-              <Button variant="outline" className="border-[#0B0F15] text-[#0B0F15] hover:bg-[#0B0F15] hover:text-white rounded-xl text-xs font-bold gap-2">
+              <Button variant="outline" className="border-[#0B0F19] text-[#0B0F19] hover:bg-[#0B0F19] hover:text-white rounded-xl text-xs font-bold gap-2">
                 <span>{t('browseAllArticles')}</span>
                 <ArrowRight className="w-4 h-4" />
               </Button>
@@ -452,44 +474,44 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-card rounded-2xl md:rounded-3xl overflow-hidden shadow-sm border border-border hover:-translate-y-2 hover:shadow-xl hover:border-[#D98236]/40 transition-all duration-300 flex flex-col group">
+            <div className="bg-card rounded-2xl md:rounded-3xl overflow-hidden shadow-sm border border-border hover:-translate-y-2 hover:shadow-xl hover:border-[#2563EB]/40 transition-all duration-300 flex flex-col group">
               <div className="h-40 sm:h-48 overflow-hidden">
                 <OptimizedImage src="https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=800" alt="Car rental" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
               </div>
               <div className="p-4 sm:p-6 flex-1 flex flex-col justify-between space-y-3">
-                <span className="text-xs font-bold text-[#D98236]">{t('blogTravelGuideTag')}</span>
-                <h3 className="font-black text-[#0B0F15] text-base group-hover:text-[#D98236] transition-colors">{t('blogCard1Title')}</h3>
+                <span className="text-xs font-bold text-[#2563EB]">{t('blogTravelGuideTag')}</span>
+                <h3 className="font-black text-[#0B0F19] text-base group-hover:text-[#2563EB] transition-colors">{t('blogCard1Title')}</h3>
                 <p className="text-xs text-muted-foreground line-clamp-2">{t('blogCard1Description')}</p>
                 <Link href="/blog">
-                  <span className="text-xs font-bold text-[#0B0F15] flex items-center gap-1 pt-2 hover:underline">{t('readMore')} <ArrowRight className="w-3 h-3" /></span>
+                  <span className="text-xs font-bold text-[#0B0F19] flex items-center gap-1 pt-2 hover:underline">{t('readMore')} <ArrowRight className="w-3 h-3" /></span>
                 </Link>
               </div>
             </div>
 
-            <div className="bg-card rounded-2xl md:rounded-3xl overflow-hidden shadow-sm border border-border hover:-translate-y-2 hover:shadow-xl hover:border-[#D98236]/40 transition-all duration-300 flex flex-col group">
+            <div className="bg-card rounded-2xl md:rounded-3xl overflow-hidden shadow-sm border border-border hover:-translate-y-2 hover:shadow-xl hover:border-[#2563EB]/40 transition-all duration-300 flex flex-col group">
               <div className="h-40 sm:h-48 overflow-hidden">
                 <OptimizedImage src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=800" alt="Real Estate" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
               </div>
               <div className="p-4 sm:p-6 flex-1 flex flex-col justify-between space-y-3">
-                <span className="text-xs font-bold text-[#D98236]">{t('blogPropInvestmentTag')}</span>
-                <h3 className="font-black text-[#0B0F15] text-base group-hover:text-[#D98236] transition-colors">{t('blogCard2Title')}</h3>
+                <span className="text-xs font-bold text-[#2563EB]">{t('blogPropInvestmentTag')}</span>
+                <h3 className="font-black text-[#0B0F19] text-base group-hover:text-[#2563EB] transition-colors">{t('blogCard2Title')}</h3>
                 <p className="text-xs text-muted-foreground line-clamp-2">{t('blogCard2Description')}</p>
                 <Link href="/blog">
-                  <span className="text-xs font-bold text-[#0B0F15] flex items-center gap-1 pt-2 hover:underline">{t('readMore')} <ArrowRight className="w-3 h-3" /></span>
+                  <span className="text-xs font-bold text-[#0B0F19] flex items-center gap-1 pt-2 hover:underline">{t('readMore')} <ArrowRight className="w-3 h-3" /></span>
                 </Link>
               </div>
             </div>
 
-            <div className="bg-card rounded-2xl md:rounded-3xl overflow-hidden shadow-sm border border-border hover:-translate-y-2 hover:shadow-xl hover:border-[#D98236]/40 transition-all duration-300 flex flex-col group">
+            <div className="bg-card rounded-2xl md:rounded-3xl overflow-hidden shadow-sm border border-border hover:-translate-y-2 hover:shadow-xl hover:border-[#2563EB]/40 transition-all duration-300 flex flex-col group">
               <div className="h-40 sm:h-48 overflow-hidden">
                 <OptimizedImage src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=800" alt="Driving" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
               </div>
               <div className="p-4 sm:p-6 flex-1 flex flex-col justify-between space-y-3">
-                <span className="text-xs font-bold text-[#D98236]">{t('blogDrivingTipsTag')}</span>
-                <h3 className="font-black text-[#0B0F15] text-base group-hover:text-[#D98236] transition-colors">{t('blogCard3Title')}</h3>
+                <span className="text-xs font-bold text-[#2563EB]">{t('blogDrivingTipsTag')}</span>
+                <h3 className="font-black text-[#0B0F19] text-base group-hover:text-[#2563EB] transition-colors">{t('blogCard3Title')}</h3>
                 <p className="text-xs text-muted-foreground line-clamp-2">{t('blogCard3Description')}</p>
                 <Link href="/blog">
-                  <span className="text-xs font-bold text-[#0B0F15] flex items-center gap-1 pt-2 hover:underline">{t('readMore')} <ArrowRight className="w-3 h-3" /></span>
+                  <span className="text-xs font-bold text-[#0B0F19] flex items-center gap-1 pt-2 hover:underline">{t('readMore')} <ArrowRight className="w-3 h-3" /></span>
                 </Link>
               </div>
             </div>
@@ -501,24 +523,24 @@ export default function Home() {
       <FAQSection />
 
       {/* Trust & Features Banner */}
-      <section className="py-10 md:py-16 bg-[#0B0F15] text-white mt-0">
+      <section className="py-10 md:py-16 bg-[#0B0F19] text-white mt-0">
         <div className="container mx-auto max-w-6xl px-4 grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 text-center">
           <div className="space-y-3">
-            <div className="w-14 h-14 bg-[#D98236] text-white rounded-2xl flex items-center justify-center mx-auto shadow-lg">
+            <div className="w-14 h-14 bg-[#2563EB] text-white rounded-2xl flex items-center justify-center mx-auto shadow-lg">
               <ShieldCheck className="w-7 h-7" />
             </div>
             <h4 className="font-bold text-base md:text-lg">{t('trustTitle1')}</h4>
             <p className="text-xs text-slate-300">{t('trustDesc1')}</p>
           </div>
           <div className="space-y-3">
-            <div className="w-14 h-14 bg-[#D98236] text-white rounded-2xl flex items-center justify-center mx-auto shadow-lg">
+            <div className="w-14 h-14 bg-[#2563EB] text-white rounded-2xl flex items-center justify-center mx-auto shadow-lg">
               <Award className="w-7 h-7" />
             </div>
             <h4 className="font-bold text-base md:text-lg">{t('trustTitle2')}</h4>
             <p className="text-xs text-slate-300">{t('trustDesc2')}</p>
           </div>
           <div className="space-y-3">
-            <div className="w-14 h-14 bg-[#D98236] text-white rounded-2xl flex items-center justify-center mx-auto shadow-lg">
+            <div className="w-14 h-14 bg-[#2563EB] text-white rounded-2xl flex items-center justify-center mx-auto shadow-lg">
               <Clock className="w-7 h-7" />
             </div>
             <h4 className="font-bold text-base md:text-lg">{t('trustTitle3')}</h4>
