@@ -14,6 +14,11 @@ export default defineConfig({
   },
   test: {
     environment: "node",
+    // Deterministic signing secret for server-side HMAC tests (image
+    // verification proofs). Production supplies its own JWT_SECRET via env.
+    env: {
+      JWT_SECRET: "test-only-signing-secret",
+    },
     include: ["server/**/*.test.ts", "server/**/*.spec.ts", "client/**/*.test.ts", "client/**/*.spec.ts"],
   },
 });

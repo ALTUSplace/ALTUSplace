@@ -13,4 +13,4 @@ Disallow: /messages
 Disallow: /my-bookings
 Disallow: /notifications
 
-Sitemap: https://makanibooking.vercel.app/sitemap.xml
+Sitemap: https://altusplace.vercel.app/sitemap.xml

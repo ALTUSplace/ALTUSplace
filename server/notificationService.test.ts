@@ -7,11 +7,11 @@ describe("notificationService", () => {
   });
 
   it("escapes user-controlled content in the bilingual email template", () => {
-    const content = buildEmailContent("<حجز>", "رسالة & تفاصيل\nLigne française", "https://makanibooking.vercel.app/my-bookings");
+    const content = buildEmailContent("<حجز>", "رسالة & تفاصيل\nLigne française", "https://altusplace.vercel.app/my-bookings");
 
     expect(content.html).toContain("&lt;حجز&gt;");
     expect(content.html).toContain("رسالة &amp; تفاصيل");
-    expect(content.html).toContain("https://makanibooking.vercel.app/my-bookings");
+    expect(content.html).toContain("https://altusplace.vercel.app/my-bookings");
     expect(content.text).toContain("Ligne française");
   });
 

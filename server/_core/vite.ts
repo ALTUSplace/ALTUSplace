@@ -14,7 +14,7 @@ function escapeHtml(value: unknown) {
 }
 
 async function injectSocialMetadata(template: string, url: string) {
-  const origin = process.env.VITE_APP_URL || "https://makanibooking.vercel.app";
+  const origin = process.env.VITE_APP_URL || "https://altusplace.vercel.app";
   let title = "ALTUSplace Morocco | كراء السيارات والعقارات في المغرب";
   let description = "اكتشف عروض كراء السيارات والعقارات من شركاء محليين موثوقين في المغرب.";
   let image = `${origin}/favicon.ico`;
