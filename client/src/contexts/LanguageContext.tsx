@@ -12,6 +12,9 @@ interface LanguageContextType {
 
 const translations: Record<Language, Record<string, string>> = {
   ar: {
+    heroBadge: "منصة معتمدة",
+  searchCityOdgency: "المدينة أو الوكالة",
+  searchCarTab: "السيارات",
     heroTitlePrefix: "ابحث عن",
   heroTitleCars: "أفضل السيارات",
   heroTitleAnd: "و",
