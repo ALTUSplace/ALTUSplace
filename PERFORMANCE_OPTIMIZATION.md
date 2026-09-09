@@ -1,4 +1,4 @@
-# تحسين أداء حزم JavaScript في B2-Rent
+# تحسين أداء حزم JavaScript في ALTUSplace
 
 ## ما تم تنفيذه
 

@@ -102,7 +102,7 @@ export default function Navbar() {
     onSuccess: async () => {
       await notificationQuery.refetch();
       await unreadQuery.refetch();
-      toast.success(language === "ar" ? "تم تحديد جميع الإشعارات كمقروءة" : "Toutes les notifications sont marquées comme lues");
+      toast.success(t("markAllReadSuccess"));
     },
   });
   const notifications = notificationQuery.data ?? [];
@@ -243,17 +243,17 @@ export default function Navbar() {
 
   const selectCurrency = (nextCurrency: Currency) => {
     setCurrency(nextCurrency);
-    toast.success(`تم تبديل العملة بنجاح إلى ${nextCurrency}`);
+    toast.success(t("currencySwitched", { currency: nextCurrency }));
   };
 
   const selectLanguage = (nextLanguage: Language) => {
     setLanguage(nextLanguage);
     toast.success(
       nextLanguage === "ar"
-        ? "تم التبديل إلى اللغة العربية"
+        ? t("switchedToArabic")
         : nextLanguage === "fr"
-          ? "Passé au français avec succès"
-          : "Switched to English successfully",
+          ? t("switchedToFrench")
+          : t("switchedToEnglish"),
     );
   };
 
@@ -299,18 +299,18 @@ export default function Navbar() {
           style={{ borderBottom: '1px solid rgba(0, 163, 255, 0.2)' }}
         >
         <div className="container mx-auto flex h-16 sm:h-20 items-center justify-between gap-2 sm:gap-4 px-3 sm:px-4">
-          <Link href="/" className="group flex shrink-0 items-center gap-3" aria-label="الرئيسية">
-  <div className="flex shrink-0 items-center">
+          <Link href="/" className="group flex shrink-0 items-center gap-3" aria-label={t("home")}>
+  <div className="brand-logo-container flex shrink-0 items-center">
     <img
-      src="/images/logo.png"
-      alt="B2-Rent"
+      src="/assets/images/logo.png"
+      alt="ALTUSplace"
       className="brand-logo h-12 sm:h-12 w-auto object-contain"
       style={{ height: '48px', maxWidth: '100%', objectFit: 'contain' }}
     />
   </div>
   <div className="flex flex-col">
     <span className="font-bold text-lg sm:text-xl tracking-tight text-slate-900 dark:text-white">
-      B2-<span className="font-normal text-amber-600">Rent</span>
+      ALTUS<span className="font-normal text-amber-600">place</span>
     </span>
     <span className="text-[9px] sm:text-[10px] tracking-wider text-muted-foreground uppercase -mt-1 font-medium">
       Rent. Drive. Live.
@@ -318,12 +318,12 @@ export default function Navbar() {
   </div>
 </Link>
 
-          <nav className="hidden min-w-0 flex-1 items-center justify-center gap-1 xl:flex" aria-label="التنقل الرئيسي">
+          <nav className="hidden min-w-0 flex-1 items-center justify-center gap-1 xl:flex" aria-label={t("mainNavLabel")}>
             {renderNavLinks()}
           </nav>
 
           <div className="hidden shrink-0 items-center gap-2 md:flex">
-            <div className="hidden 2xl:block" aria-label="اختيار العملة">
+            <div className="hidden 2xl:block" aria-label={t("chooseCurrency")}>
               <div className="b2-segmented-control">
                 <Coins className="mx-1 h-4 w-4 text-amber-600 dark:text-amber-300" aria-hidden="true" />
                 {(["MAD", "EUR", "USD"] as Currency[]).map((item) => (
@@ -340,7 +340,7 @@ export default function Navbar() {
               </div>
             </div>
 
-            <div className="hidden 2xl:block" aria-label="اختيار اللغة">
+            <div className="hidden 2xl:block" aria-label={t("chooseLanguage")}>
               <div className="b2-segmented-control">
                 <Globe className="mx-1 h-4 w-4 text-amber-600 dark:text-amber-300" aria-hidden="true" />
                 {(["ar", "fr", "en"] as const).map((item) => (
@@ -361,8 +361,8 @@ export default function Navbar() {
               type="button"
               className="b2-icon-button border border-border bg-muted text-foreground hover:bg-background"
               onClick={() => setTwoFaModalOpen(true)}
-              title="إدارة الأمان والمصادقة الثنائية"
-              aria-label="إدارة الأمان والمصادقة الثنائية"
+              title={t("securityTwoFactor")}
+              aria-label={t("securityTwoFactor")}
             >
               <Shield className="h-4 w-4 text-amber-600 dark:text-amber-300" />
             </button>
@@ -370,8 +370,8 @@ export default function Navbar() {
               type="button"
               className="b2-icon-button border border-border bg-muted text-foreground hover:bg-background"
               onClick={() => setCmiModalOpen(true)}
-              title="بوابة الدفع CMI"
-              aria-label="فتح بوابة الدفع CMI"
+              title={t("cmiPayment")}
+              aria-label={t("cmiPortal")}
             >
               <CreditCard className="h-4 w-4 text-amber-600 dark:text-amber-300" />
             </button>
@@ -379,8 +379,8 @@ export default function Navbar() {
               type="button"
               className="b2-icon-button border border-emerald-500/30 bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20 dark:text-emerald-300"
               onClick={() => setWhatsappModalOpen(true)}
-              title="إشعار WhatsApp / SMS"
-              aria-label="فتح إشعار واتساب"
+              title={t("whatsappNotify")}
+              aria-label={t("whatsappNotify")}
             >
               <MessageSquare className="h-4 w-4" />
             </button>
@@ -395,8 +395,8 @@ export default function Navbar() {
                 }}
                 aria-expanded={notificationsOpen}
                 aria-haspopup="dialog"
-                aria-label={`الإشعارات${unreadCount ? `، ${unreadCount} غير مقروءة` : ""}`}
-                title="الإشعارات"
+                aria-label={unreadCount ? t("notificationsWithUnread", { count: unreadCount }) : t("notifications")}
+                title={t("notifications")}
               >
                 <Bell className="h-4 w-4 text-amber-600 dark:text-amber-300" />
                 {unreadCount > 0 && (
@@ -407,11 +407,11 @@ export default function Navbar() {
               </button>
 
               {notificationsOpen && (
-                <div className="absolute left-0 mt-3 w-[min(20rem,calc(100vw-2rem))] rounded-2xl border border-border bg-popover p-4 text-right text-popover-foreground shadow-xl" role="dialog" aria-label="قائمة الإشعارات">
+                <div className="absolute left-0 mt-3 w-[min(20rem,calc(100vw-2rem))] rounded-2xl border border-border bg-popover p-4 text-right text-popover-foreground shadow-xl" role="dialog" aria-label={t("notificationsPanelLabel")}>
                   <div className="flex items-center justify-between border-b border-border pb-3">
                     <h2 className="flex items-center gap-1.5 text-xs font-bold">
                       <Bell className="h-4 w-4 text-amber-600 dark:text-amber-300" />
-                      الإشعارات والتحديثات
+                      {t("notificationsTitle")}
                     </h2>
                     <div className="flex items-center gap-2">
                       <button
@@ -419,10 +419,10 @@ export default function Navbar() {
                         onClick={toggleNotificationSound}
                         className="inline-flex items-center gap-1 text-[10px] font-bold text-muted-foreground hover:text-foreground"
                         aria-pressed={notificationSoundEnabled}
-                        title={notificationSoundEnabled ? "إيقاف صوت الإشعارات" : "تفعيل صوت الإشعارات"}
+                        title={notificationSoundEnabled ? t("soundOffLabel") : t("soundOnLabel")}
                       >
                         {notificationSoundEnabled ? <Volume2 className="h-3.5 w-3.5" /> : <VolumeX className="h-3.5 w-3.5" />}
-                        <span className="hidden sm:inline">{notificationSoundEnabled ? "الصوت مفعّل" : "الصوت متوقف"}</span>
+                        <span className="hidden sm:inline">{notificationSoundEnabled ? t("soundEnabledLabel") : t("soundDisabledLabel")}</span>
                       </button>
                       {unreadCount > 0 && (
                       <button
@@ -432,16 +432,16 @@ export default function Navbar() {
                         aria-busy={markAllMutation.isPending}
                         className="text-[10px] font-bold text-amber-700 hover:underline disabled:cursor-not-allowed disabled:opacity-50 dark:text-amber-300"
                       >
-                        {markAllMutation.isPending ? "جارٍ التحديث…" : "تحديد الكل كمقروء"}
+                        {markAllMutation.isPending ? t("markingAllRead") : t("markAllRead")}
                       </button>
                       )}
                     </div>
                   </div>
                   <div className="max-h-64 space-y-2.5 overflow-y-auto py-3">
                     {!isAuthenticated ? (
-                      <p className="py-5 text-center text-xs text-muted-foreground">سجّل الدخول لمتابعة إشعارات حجوزاتك.</p>
+                      <p className="py-5 text-center text-xs text-muted-foreground">{t("loginToFollowNotifications")}</p>
                     ) : notifications.length === 0 ? (
-                      <p className="py-5 text-center text-xs text-muted-foreground">لا توجد إشعارات جديدة.</p>
+                      <p className="py-5 text-center text-xs text-muted-foreground">{t("noNotifications")}</p>
                     ) : notifications.map((item) => {
                       const unread = item.readAt === null;
                       return (
@@ -463,7 +463,7 @@ export default function Navbar() {
                     })}
                   </div>
                   <Link href="/notifications" className="block border-t border-border pt-3 text-center text-xs font-bold text-amber-700 hover:underline dark:text-amber-300">
-                    عرض كل الإشعارات
+                    {t("viewAllNotifications")}
                   </Link>
                 </div>
               )}
@@ -475,10 +475,10 @@ export default function Navbar() {
                 className="b2-icon-button border border-border bg-muted text-foreground hover:bg-background"
                 onClick={() => {
                   toggleTheme();
-                  toast.success(theme === "dark" ? "تم تفعيل الوضع النهاري" : "تم تفعيل الوضع الليلي");
+                  toast.success(theme === "dark" ? t("themeToLightToast") : t("themeToDarkToast"));
                 }}
-                aria-label="تبديل الوضع الليلي"
-                title="تبديل الوضع الليلي"
+                aria-label={t("toggleThemeLabel")}
+                title={t("toggleThemeLabel")}
               >
                 {theme === "dark" ? <Sun className="h-4 w-4 text-amber-600 dark:text-amber-300" /> : <Moon className="h-4 w-4 text-amber-600 dark:text-amber-300" />}
               </button>
@@ -490,7 +490,7 @@ export default function Navbar() {
           </div>
 
           <div className="flex items-center gap-1.5 sm:gap-2 2xl:hidden">
-            <Link href="/search" className={`b2-icon-button border border-border bg-muted text-foreground ${currentSection === "search" ? "text-amber-700 dark:text-amber-300" : ""}`} aria-label="فتح البحث" title="البحث">
+            <Link href="/search" className={`b2-icon-button border border-border bg-muted text-foreground ${currentSection === "search" ? "text-amber-700 dark:text-amber-300" : ""}`} aria-label={t("openSearchLabel")} title={t("searchTitleLabel")}>
               <Car className="h-4 w-4" />
             </Link>
             <button
@@ -499,7 +499,7 @@ export default function Navbar() {
               className="b2-icon-button border border-amber-500/30 bg-amber-500/10 text-amber-700 hover:bg-amber-500/20 dark:text-amber-300"
               aria-expanded={mobileMenuOpen}
               aria-controls="mobile-navigation"
-              aria-label={mobileMenuOpen ? "إغلاق القائمة" : "فتح القائمة"}
+              aria-label={mobileMenuOpen ? t("closeMenuLabel") : t("openMenuLabel")}
             >
               {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
@@ -537,19 +537,19 @@ export default function Navbar() {
           <button type="button" className="absolute inset-0 bg-slate-950/40 backdrop-blur-[2px]" aria-label={t("close")} onClick={() => setMobileMenuOpen(false)} />
           <aside ref={mobileMenuRef} id="mobile-navigation" className={`absolute top-0 flex h-full w-[min(88vw,22rem)] flex-col overflow-y-auto bg-background p-4 shadow-2xl ${direction === "rtl" ? "right-0" : "left-0"}`} dir={direction} aria-label={t("search")} aria-modal="true" role="dialog" tabIndex={-1}>
           <div className="flex items-center justify-between border-b border-border pb-4">
-            <Link href="/" onClick={() => setMobileMenuOpen(false)} className="flex h-10 w-32 items-center justify-start" aria-label="B2-Rent">
-              <img src="/images/logo.png" alt="B2-Rent" className="brand-logo max-h-full w-auto object-contain" style={{ height: '48px', maxWidth: '100%', objectFit: 'contain' }} />
+            <Link href="/" onClick={() => setMobileMenuOpen(false)} className="flex h-10 w-32 items-center justify-start" aria-label="ALTUSplace">
+              <img src="/assets/images/logo.png" alt="ALTUSplace" className="brand-logo max-h-full w-auto object-contain" style={{ height: '48px', maxWidth: '100%', objectFit: 'contain' }} />
             </Link>
             <button type="button" onClick={() => setMobileMenuOpen(false)} className="b2-icon-button border border-border bg-muted" aria-label={t("close")}><X className="h-5 w-5" /></button>
           </div>
           <div className="mx-auto flex w-full flex-1 flex-col gap-2 pt-4">
-            <nav className="space-y-1" aria-label="التنقل على الهاتف">
+            <nav className="space-y-1" aria-label={t("mobileNavLabel")}>
               {renderNavLinks(true)}
             </nav>
 
             <div className="mt-3 space-y-4 border-t border-border pt-4">
               <div>
-                <p className="mb-2 flex items-center gap-1.5 text-xs font-bold text-muted-foreground"><Coins className="h-3.5 w-3.5 text-[#D98236] dark:text-[#D98236]" /> العملة</p>
+                <p className="mb-2 flex items-center gap-1.5 text-xs font-bold text-muted-foreground"><Coins className="h-3.5 w-3.5 text-[#D98236] dark:text-[#D98236]" /> {t("currency")}</p>
                 <div className="b2-segmented-control w-full">
                   {(["MAD", "EUR", "USD"] as Currency[]).map((item) => (
                     <button key={item} type="button" aria-pressed={currency === item} onClick={() => selectCurrency(item)} className={currency === item ? "bg-[#D98236] text-white" : "text-muted-foreground hover:bg-background hover:text-foreground"}>{item}</button>
@@ -561,14 +561,14 @@ export default function Navbar() {
                 <p className="mb-2 flex items-center gap-1.5 text-xs font-bold text-muted-foreground"><Globe className="h-3.5 w-3.5 text-[#D98236] dark:text-[#D98236]" /> {t("language")}</p>
                 <div className="b2-segmented-control w-full">
                   {(["ar", "fr", "en"] as const).map((item) => (
-                    <button key={item} type="button" aria-pressed={language === item} onClick={() => selectLanguage(item)} className={language === item ? "bg-[#D98236] text-white" : "text-muted-foreground hover:bg-background hover:text-foreground"}>{item === "ar" ? "العربية" : item === "fr" ? "Français" : "English"}</button>
+                    <button key={item} type="button" aria-pressed={language === item} onClick={() => selectLanguage(item)} className={language === item ? "bg-[#D98236] text-white" : "text-muted-foreground hover:bg-background hover:text-foreground"}>{item === "ar" ? t("arabic") : item === "fr" ? t("french") : t("english")}</button>
                   ))}
                 </div>
               </div>
 
               <div className="flex items-center gap-2">
-                <button type="button" onClick={() => { setTwoFaModalOpen(true); setMobileMenuOpen(false); }} className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-muted px-3 py-2 text-xs font-bold text-foreground hover:bg-background"><Shield className="h-3.5 w-3.5 text-[#D98236] dark:text-[#D98236]" /> أمان الحساب</button>
-                <button type="button" onClick={() => { setCmiModalOpen(true); setMobileMenuOpen(false); }} className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-muted px-3 py-2 text-xs font-bold text-foreground hover:bg-background"><CreditCard className="h-3.5 w-3.5 text-[#D98236] dark:text-[#D98236]" /> الدفع CMI</button>
+                <button type="button" onClick={() => { setTwoFaModalOpen(true); setMobileMenuOpen(false); }} className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-muted px-3 py-2 text-xs font-bold text-foreground hover:bg-background"><Shield className="h-3.5 w-3.5 text-[#D98236] dark:text-[#D98236]" /> {t("accountSecurity")}</button>
+                <button type="button" onClick={() => { setCmiModalOpen(true); setMobileMenuOpen(false); }} className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-muted px-3 py-2 text-xs font-bold text-foreground hover:bg-background"><CreditCard className="h-3.5 w-3.5 text-[#D98236] dark:text-[#D98236]" /> {t("cmiPaymentMobile")}</button>
               </div>
 
               <Link href="/add-car" onClick={() => setMobileMenuOpen(false)} className="flex min-h-11 items-center justify-center rounded-xl bg-[#D98236] px-4 py-3 text-sm font-extrabold text-white hover:bg-[#B96A28]">

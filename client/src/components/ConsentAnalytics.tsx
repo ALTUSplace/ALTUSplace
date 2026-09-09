@@ -23,7 +23,7 @@ function loadScript(src: string, id: string) {
 
 function enableAnalytics() {
   if (GA4_ID) {
-    loadScript(`https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(GA4_ID)}`, "b2rent-ga4-script");
+    loadScript(`https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(GA4_ID)}`, "ALTUSplace-ga4-script");
     window.dataLayer = window.dataLayer ?? [];
     const gtag = window.gtag ?? ((...args: unknown[]) => { window.dataLayer?.push(args); });
     window.gtag = gtag;
@@ -39,7 +39,7 @@ function enableAnalytics() {
     window.fbq = fbqImpl;
     fbqImpl("init", META_PIXEL_ID);
     fbqImpl("track", "PageView");
-    loadScript("https://connect.facebook.net/en_US/fbevents.js", "b2rent-meta-pixel-script");
+    loadScript("https://connect.facebook.net/en_US/fbevents.js", "ALTUSplace-meta-pixel-script");
   }
 }
 

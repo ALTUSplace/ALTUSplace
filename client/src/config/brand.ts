@@ -1,32 +1,32 @@
 /**
- * B2-Rent brand configuration — single source of truth for brand identity,
+ * ALTUSplace brand configuration — single source of truth for brand identity,
  * shared storage keys, and the functional support inbox.
  */
 
-export const BRAND_NAME = "B2-Rent";
+export const BRAND_NAME = "ALTUSplace";
 export const BRAND_TAGLINE = "Rent. Drive. Live.";
 
 /** Functional support inbox (operational address — change here when it moves). */
-export const SUPPORT_EMAIL = "b2rent@gmail.com";
+export const SUPPORT_EMAIL = "ALTUSplace@gmail.com";
 
 /** Client-side storage keys, namespaced under the current brand. */
 export const STORAGE_KEYS = {
-  language: "b2rent-language",
-  currency: "b2rent_currency",
-  notificationSound: "b2rent-notification-sound",
-  favorites: "b2rent_favorites",
-  recentViewed: "b2rent_recent_viewed",
+  language: "ALTUSplace-language",
+  currency: "ALTUSplace_currency",
+  notificationSound: "ALTUSplace-notification-sound",
+  favorites: "ALTUSplace_favorites",
+  recentViewed: "ALTUSplace_recent_viewed",
 } as const;
 
 export type BrandPreferenceKey = keyof typeof STORAGE_KEYS;
 
 /** Pre-rebrand keys migrated transparently on first read so no preference is lost. */
 const LEGACY_STORAGE_KEYS: Record<BrandPreferenceKey, readonly string[]> = {
-  language: ["b2rent-language"],
-  currency: ["b2rent_currency"],
-  notificationSound: ["b2rent-notification-sound"],
-  favorites: ["b2_favorites", "b2rent_favorites"],
-  recentViewed: ["b2rent_recent_viewed"],
+  language: ["ALTUSplace-language"],
+  currency: ["ALTUSplace_currency"],
+  notificationSound: ["ALTUSplace-notification-sound"],
+  favorites: ["b2_favorites", "ALTUSplace_favorites"],
+  recentViewed: ["ALTUSplace_recent_viewed"],
 };
 
 /**
@@ -63,7 +63,7 @@ export function writeBrandPreference(key: BrandPreferenceKey, value: string): vo
 }
 
 /** Client-side event fired after the platform-protection consent is accepted. */
-export const LEGAL_CONSENT_EVENT = "b2rent:legal-consent";
+export const LEGAL_CONSENT_EVENT = "ALTUSplace:legal-consent";
 
 /** Cookie that records the accepted platform-protection consent version. */
 export const LEGAL_CONSENT_COOKIE = "b2_legal_consent";

@@ -7,6 +7,7 @@ import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { readBrandPreference } from "@/config/brand";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type LocalSignals = {
   favorites: string[];
@@ -33,6 +34,7 @@ const readSignals = (): LocalSignals => {
 
 export function SmartRecommendations() {
   const [, setLocation] = useLocation();
+  const { t } = useLanguage();
   const { data: listings, isLoading } = trpc.listings.list.useQuery({});
   const [signals, setSignals] = useState<LocalSignals>({ favorites: [], recentCities: [] });
 
@@ -49,15 +51,15 @@ export function SmartRecommendations() {
         const sameCity = signals.recentCities.includes(item.city);
         const score = (favorite ? 2 : 0) + (sameCity ? 1 : 0);
         const reason = favorite
-          ? "مشابه لما حفظته في المفضلة"
+          ? t("smartReasonFavorite")
           : sameCity
-            ? `في المدينة التي تصفحتها: ${item.city}`
-            : "من الإعلانات المنشورة المتاحة";
+            ? t("smartReasonCity", { city: item.city })
+            : t("smartReasonNewListing");
         return { item, score, reason };
       })
       .sort((a, b) => b.score - a.score)
       .slice(0, 3);
-  }, [listings, signals]);
+  }, [listings, signals, t]);
 
   if (isLoading || recommendations.length === 0) return null;
 
@@ -68,14 +70,14 @@ export function SmartRecommendations() {
           <div>
             <div className="mb-2 flex items-center gap-2 text-[#D98236]">
               <Sparkles className="h-5 w-5" />
-              <span className="text-sm font-semibold uppercase tracking-wide">اقتراحات مخصصة</span>
+              <span className="text-sm font-semibold uppercase tracking-wide">{t("smartBadge")}</span>
             </div>
             <h2 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">
-              عروض منشورة قد تناسب اهتمامك
+              {t("smartTitle")}
             </h2>
           </div>
           <Badge variant="outline" className="border-[#D98236]/30 bg-[#D98236]/10 px-4 py-1.5 text-xs font-medium text-[#D98236] dark:text-[#D98236]">
-            <Zap className="ml-1.5 inline h-3.5 w-3.5" /> مبنية على سجل التصفح المحلي
+            <Zap className="ml-1.5 inline h-3.5 w-3.5" /> {t("smartSourceBadge")}
           </Badge>
         </div>
 
@@ -84,14 +86,22 @@ export function SmartRecommendations() {
             const isCar = item.category.toLowerCase().includes("car") || item.category.includes("سيارة");
             const isOffice = Boolean(item.officeType) || item.category.toLowerCase().includes("office") || item.category.includes("مكتب");
             const route = isCar ? `/car/${item.id}` : `/property/${item.id}`;
-            const unit = isOffice ? (item.rentalPeriod === "monthly" ? "درهم / شهر" : item.rentalPeriod === "yearly" ? "درهم / سنة" : "درهم / يوم") : isCar ? "درهم / يوم" : "درهم / ليلة";
+            const unit = isOffice
+              ? item.rentalPeriod === "monthly"
+                ? t("madPerMonth")
+                : item.rentalPeriod === "yearly"
+                  ? t("madPerYear")
+                  : t("madPerDay")
+              : isCar
+                ? t("madPerDay")
+                : t("madPerNight");
             return (
               <Card key={item.id} className="group overflow-hidden border border-border/60 bg-card transition-all duration-300 hover:border-[#D98236]/50 hover:shadow-xl">
                 <div className="relative h-48 overflow-hidden bg-muted">
                   {item.imageUrl ? (
                     <OptimizedImage src={item.imageUrl} alt={item.title} width={640} height={360} widthHint={640} sizes="(max-width: 768px) 100vw, 33vw" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
                   ) : (
-                    <div className="flex h-full items-center justify-center text-sm text-muted-foreground">لا توجد صورة</div>
+                    <div className="flex h-full items-center justify-center text-sm text-muted-foreground">{t("noImage")}</div>
                   )}
                   <div className="absolute bottom-3 left-3 flex items-center gap-1 rounded-md bg-black/60 px-2.5 py-1 text-xs text-white backdrop-blur-md">
                     <MapPin className="h-3 w-3 text-[#D98236]" /> {item.city}
@@ -101,15 +111,15 @@ export function SmartRecommendations() {
                   <div className="mb-3 inline-block rounded-sm bg-muted/60 px-2 py-1 text-xs text-muted-foreground">{reason}</div>
                   <div className="mb-2 flex items-center justify-between gap-3">
                     <h3 className="line-clamp-1 text-lg font-bold text-foreground group-hover:text-[#D98236]">{item.title}</h3>
-                    <span className="shrink-0 text-xs text-muted-foreground">لا توجد تقييمات موثقة</span>
+                    <span className="shrink-0 text-xs text-muted-foreground">{t("noVerifiedReviews")}</span>
                   </div>
                   <div className="mt-4 flex items-center justify-between border-t border-border/40 pt-4">
                     <div>
-                      <span className="block text-xs text-muted-foreground">السعر المنشور</span>
+                      <span className="block text-xs text-muted-foreground">{t("publishedPrice")}</span>
                       <span className="text-base font-extrabold text-foreground">{item.dynamicPricePerDay ?? item.pricePerDay} {unit}</span>
                     </div>
                     <Button size="sm" onClick={() => setLocation(route)} className="cursor-pointer gap-1 bg-[#D98236] font-semibold text-white hover:bg-[#B96A28]">
-                      عرض التفاصيل <ArrowRight className="h-3.5 w-3.5 rotate-180" />
+                      {t("viewDetails")} <ArrowRight className="h-3.5 w-3.5 rotate-180" />
                     </Button>
                   </div>
                 </CardContent>

@@ -1,5 +1,5 @@
 /**
- * InteractiveMap.tsx - Leaflet-based interactive map for B2-Rent
+ * InteractiveMap.tsx - Leaflet-based interactive map for ALTUSplace
  * Displays rental properties and cars on a map centered on Morocco
  */
 import { useEffect, useRef, useState } from 'react';

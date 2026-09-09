@@ -26,7 +26,7 @@ export default function CarDetails() {
   const car = listing ? {
     id: String(listing.id),
     name: listing.title,
-    brand: listing.title.split(' ')[0] || 'B2-Rent',
+    brand: listing.title.split(' ')[0] || 'ALTUSplace',
     cityName: listing.city,
     pricePerDay: listing.pricePerDay,
     image: listing.imageUrl || '',
@@ -34,7 +34,7 @@ export default function CarDetails() {
     fuel: listing.fuelType || 'غير محدد',
     seats: 5,
     features: listing.amenities ? listing.amenities.split(',').map((item) => item.trim()).filter(Boolean) : [],
-    agency: { name: 'المؤجر على B2-Rent', address: listing.city, whatsapp: '' },
+    agency: { name: 'المؤجر على ALTUSplace', address: listing.city, whatsapp: '' },
   } : null;
 
   const [startDate, setStartDate] = useState(() => {
@@ -87,12 +87,12 @@ export default function CarDetails() {
   const insurancePrice = includeInsurance ? INSURANCE_FEE_PER_DAY * daysCount : 0;
   const babySeatPrice = includeBabySeat ? BABY_SEAT_FEE_PER_DAY * daysCount : 0;
   const totalPrice = calculateRentalSubtotal(dailyPrice, daysCount) + insurancePrice + babySeatPrice;
-  const whatsappBookingMessage = `مرحباً، أرغب في حجز سيارة ${car.name} من ${startDate} إلى ${endDate} (${daysCount} ${daysCount === 1 ? 'يوم' : 'أيام'}) بمبلغ تقديري ${totalPrice} درهم عبر B2-Rent.`;
+  const whatsappBookingMessage = `مرحباً، أرغب في حجز سيارة ${car.name} من ${startDate} إلى ${endDate} (${daysCount} ${daysCount === 1 ? 'يوم' : 'أيام'}) بمبلغ تقديري ${totalPrice} درهم عبر ALTUSplace.`;
   const agencyWhatsAppUrl = buildWhatsAppUrl(car.agency.whatsapp, whatsappBookingMessage);
 
   const handleShare = (platform: string) => {
     const url = window.location.href;
-    const text = `استأجر ${car.name} في ${car.cityName} عبر منصة B2-Rent الرائدة!`;
+    const text = `استأجر ${car.name} في ${car.cityName} عبر منصة ALTUSplace الرائدة!`;
     if (platform === 'whatsapp') {
       window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text + ' ' + url)}`, '_blank');
     } else if (platform === 'facebook') {
@@ -289,7 +289,7 @@ export default function CarDetails() {
                     ) : reviews.map((rev) => (
                       <div key={rev.id} className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-2">
                         <div className="flex items-center justify-between">
-                          <span className="font-bold text-white text-sm">{rev.userName || 'مستخدم B2-Rent'}</span>
+                          <span className="font-bold text-white text-sm">{rev.userName || 'مستخدم ALTUSplace'}</span>
                           <span className="text-xs text-slate-500">{new Date(rev.createdAt).toLocaleDateString('ar-MA')}</span>
                         </div>
                         <div className="flex items-center gap-1 text-amber-400">

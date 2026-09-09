@@ -9,6 +9,6 @@ describe('Arabic PDF shaping', () => {
   });
 
   it('keeps French, numbers and punctuation intact', () => {
-    expect(shapeArabic('B2-Rent 2026 / MAD')).toBe('B2-Rent 2026 / MAD');
+    expect(shapeArabic('ALTUSplace 2026 / MAD')).toBe('ALTUSplace 2026 / MAD');
   });
 });

@@ -1,5 +1,5 @@
 /**
- * PaymentCheckoutModal.tsx - Premium secure payment checkout for B2-Rent
+ * PaymentCheckoutModal.tsx - Premium secure payment checkout for ALTUSplace
  * Provides a professional, multi-step checkout experience with CMI/Stripe simulation
  * Features: Card type detection, Luhn validation, progress animation, security badges
  */

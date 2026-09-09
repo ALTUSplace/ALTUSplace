@@ -4,7 +4,7 @@ import { Redirect, Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { RoleProvider } from "./contexts/RoleContext";
-import { LanguageProvider } from "./contexts/LanguageContext";
+import { LanguageProvider, useLanguage } from "./contexts/LanguageContext";
 import { CurrencyProvider } from "./contexts/CurrencyContext";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -48,13 +48,25 @@ const BookingMessagesPage = lazy(() => import("./pages/BookingMessages"));
 const RegisterPage = lazy(() => import("./pages/Register"));
 const LocationLandingPage = lazy(() => import("./pages/LocationLanding"));
 
+function PageLoader() {
+  const { t } = useLanguage();
+  return (
+    <div className="min-h-screen grid place-items-center bg-background text-foreground">
+      <div className="animate-spin text-amber-500 font-bold text-lg" role="status" aria-live="polite">
+        {t("loadingPage")}
+      </div>
+    </div>
+  );
+}
+
 function AccessGuard({ area, children }: { area: 'admin' | 'host'; children: React.ReactNode }) {
   const { user, loading } = useAuth();
-  if (loading) return <div className="min-h-[50vh] flex items-center justify-center">جاري التحقق من الصلاحيات...</div>;
-  if (!user) return <div className="min-h-[50vh] flex flex-col items-center justify-center gap-4 p-6 text-center"><h1 className="text-2xl font-bold">يلزم تسجيل الدخول</h1><p className="text-muted-foreground">سجّل الدخول للوصول إلى هذه اللوحة.</p><Button onClick={() => startLogin()}>تسجيل الدخول</Button></div>;
-  if (user.accountStatus && user.accountStatus !== 'active') return <div className="min-h-[50vh] flex flex-col items-center justify-center gap-3 p-6 text-center"><h1 className="text-2xl font-bold">الحساب غير نشط</h1><p className="text-muted-foreground">تم تعليق أو حظر هذا الحساب. تواصل مع الدعم للمراجعة.</p></div>;
+  const { t } = useLanguage();
+  if (loading) return <div className="min-h-[50vh] flex items-center justify-center">{t("accessChecking")}</div>;
+  if (!user) return <div className="min-h-[50vh] flex flex-col items-center justify-center gap-4 p-6 text-center"><h1 className="text-2xl font-bold">{t("loginRequired")}</h1><p className="text-muted-foreground">{t("loginRequiredDesc")}</p><Button onClick={() => startLogin()}>{t("loginAction")}</Button></div>;
+  if (user.accountStatus && user.accountStatus !== 'active') return <div className="min-h-[50vh] flex flex-col items-center justify-center gap-3 p-6 text-center"><h1 className="text-2xl font-bold">{t("accountInactive")}</h1><p className="text-muted-foreground">{t("accountInactiveDesc")}</p></div>;
   const allowed = area === 'admin' ? user.role === 'admin' : user.role === 'owner' || user.role === 'admin';
-  if (!allowed) return <div className="min-h-[50vh] flex flex-col items-center justify-center gap-3 p-6 text-center"><h1 className="text-2xl font-bold">403 — الوصول غير مسموح</h1><p className="text-muted-foreground">ليس لديك الصلاحية لفتح هذه اللوحة.</p></div>;
+  if (!allowed) return <div className="min-h-[50vh] flex flex-col items-center justify-center gap-3 p-6 text-center"><h1 className="text-2xl font-bold">{t("forbiddenTitle")}</h1><p className="text-muted-foreground">{t("forbiddenDesc")}</p></div>;
   return <>{children}</>;
 }
 
@@ -62,59 +74,59 @@ function Router() {
   return (
     <Switch>
       <Route path={"/"}>
-        <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-background text-foreground"><div className="animate-spin text-amber-500 font-bold text-lg">جاري التحميل...</div></div>}>
+        <Suspense fallback={<PageLoader />}>
           <HomePage />
         </Suspense>
       </Route>
       <Route path={"/search"}>
         {() => (
-          <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-background text-foreground"><div className="animate-spin text-amber-500 font-bold text-lg">جاري تحميل نتائج البحث...</div></div>}>
+          <Suspense fallback={<PageLoader />}>
             <SearchPage />
           </Suspense>
         )}
       </Route>
       <Route path="/property/:id" component={PropertyDetailPage} />
-      <Route path="/locations/marrakech-car-rental">{() => <Suspense fallback={<div className="min-h-[50vh] grid place-items-center">جاري تحميل الصفحة...</div>}><LocationLandingPage location="marrakech" /></Suspense>}</Route>
-      <Route path="/locations/mohammed-v-airport-car-rental">{() => <Suspense fallback={<div className="min-h-[50vh] grid place-items-center">جاري تحميل الصفحة...</div>}><LocationLandingPage location="casablancaAirport" /></Suspense>}</Route>
+      <Route path="/locations/marrakech-car-rental">{() => <Suspense fallback={<PageLoader />}><LocationLandingPage location="marrakech" /></Suspense>}</Route>
+      <Route path="/locations/mohammed-v-airport-car-rental">{() => <Suspense fallback={<PageLoader />}><LocationLandingPage location="casablancaAirport" /></Suspense>}</Route>
       <Route path="/car/:id">
         {params => (
-          <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-background text-foreground"><div className="animate-spin text-amber-500 font-bold text-lg">جاري تحميل التفاصيل...</div></div>}>
+          <Suspense fallback={<PageLoader />}>
             <CarDetailsPage />
           </Suspense>
         )}
       </Route>
       <Route path={"/booking"}>
         {() => (
-          <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-background text-foreground"><div className="animate-spin text-amber-500 font-bold text-lg">جاري تحميل صفحة الحجز...</div></div>}>
+          <Suspense fallback={<PageLoader />}>
             <BookingPage />
           </Suspense>
         )}
       </Route>
       <Route path={"/success"}>
         {() => (
-          <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-background text-foreground"><div className="animate-spin text-amber-500 font-bold text-lg">جاري معالجة التأكيد...</div></div>}>
+          <Suspense fallback={<PageLoader />}>
             <SuccessPage />
           </Suspense>
         )}
       </Route>
       <Route path="/dashboard">{() => <AccessGuard area="host"><HostDashboard /></AccessGuard>}</Route>
-      <Route path="/admin">{() => <AccessGuard area="admin"><Suspense fallback={<div className="min-h-[50vh] flex items-center justify-center">جاري تحميل لوحة الإدارة...</div>}><AdminDashboardPage /></Suspense></AccessGuard>}</Route>
+      <Route path="/admin">{() => <AccessGuard area="admin"><Suspense fallback={<PageLoader />}><AdminDashboardPage /></Suspense></AccessGuard>}</Route>
       <Route path="/dispute-resolution" component={DisputeResolutionPage} />
       <Route path="/terms" component={TermsPage} />
-      <Route path="/register">{() => <Suspense fallback={<div className="min-h-[50vh] grid place-items-center">جاري تحميل التسجيل...</div>}><RegisterPage /></Suspense>}</Route>
+      <Route path="/register">{() => <Suspense fallback={<PageLoader />}><RegisterPage /></Suspense>}</Route>
       <Route path="/privacy" component={PrivacyPage} />
       <Route path="/host">{() => <AccessGuard area="host"><HostDashboard /></AccessGuard>}</Route>
       <Route path="/host-dashboard">{() => <AccessGuard area="host"><HostDashboard /></AccessGuard>}</Route>
-      <Route path="/host/settings">{() => <AccessGuard area="host"><Suspense fallback={<div className="min-h-[50vh] grid place-items-center">جاري تحميل إعدادات الوكالة...</div>}><AgencySettingsPage /></Suspense></AccessGuard>}</Route>
+      <Route path="/host/settings">{() => <AccessGuard area="host"><Suspense fallback={<PageLoader />}><AgencySettingsPage /></Suspense></AccessGuard>}</Route>
       <Route path="/partner">{() => <AccessGuard area="host"><HostDashboard /></AccessGuard>}</Route>
       <Route path="/partner-dashboard">{() => <AccessGuard area="host"><HostDashboard /></AccessGuard>}</Route>
       <Route path="/add-car">{() => <AccessGuard area="host"><AddCarPage /></AccessGuard>}</Route>
       <Route path={"/my-bookings"} component={MyBookingsPage} />
       <Route path={"/profile"} component={ProfilePage} />
       <Route path={"/checkout"} component={CheckoutPage} />
-      <Route path={"/kyc"}>{() => <Suspense fallback={<div className="min-h-screen grid place-items-center">جاري تحميل التحقق...</div>}><KycVerificationPage /></Suspense>}</Route>
-      <Route path="/voucher/:code">{() => <Suspense fallback={<div className="min-h-screen grid place-items-center">جاري تحميل التذكرة...</div>}><VoucherPage /></Suspense>}</Route>
-      <Route path="/messages/:bookingId">{() => <Suspense fallback={<div className="min-h-screen grid place-items-center">جاري تحميل المراسلات...</div>}><BookingMessagesPage /></Suspense>}</Route>
+      <Route path={"/kyc"}>{() => <Suspense fallback={<PageLoader />}><KycVerificationPage /></Suspense>}</Route>
+      <Route path="/voucher/:code">{() => <Suspense fallback={<PageLoader />}><VoucherPage /></Suspense>}</Route>
+      <Route path="/messages/:bookingId">{() => <Suspense fallback={<PageLoader />}><BookingMessagesPage /></Suspense>}</Route>
       <Route path={"/help"}>{() => <Redirect to="/support-tickets" replace />}</Route>
       <Route path={"/support-tickets"} component={SupportTicketsPage} />
       <Route path={"/notifications"} component={NotificationsPage} />
@@ -144,7 +156,7 @@ export default function App() {
                   <BreadcrumbNav />
                   <main className="b2-main-content flex-1 pb-16 md:pb-0">
                     <PageTransition>
-                      <Suspense fallback={<div className="min-h-[50vh] flex items-center justify-center bg-background text-foreground"><div className="text-amber-500 font-bold">جاري تحميل الصفحة...</div></div>}>
+                      <Suspense fallback={<PageLoader />}>
                         <Router />
                       </Suspense>
                     </PageTransition>

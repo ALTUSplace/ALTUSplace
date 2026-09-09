@@ -256,7 +256,7 @@ export const appRouter = router({
         return [listing.id, listing.title, listing.category, listing.status, analytics.views, analytics.whatsappClicks, analytics.contactClicks, analytics.whatsappClicks + analytics.contactClicks, listing.createdAt?.toISOString?.() ?? ""].map(csvField).join(",");
       });
       const date = new Date().toISOString().slice(0, 10);
-      return { filename: `b2rent-agency-analytics-${date}.csv`, csv: `\uFEFF${header.map(csvField).join(",")}\n${rows.join("\n")}` };
+      return { filename: `ALTUSplace-agency-analytics-${date}.csv`, csv: `\uFEFF${header.map(csvField).join(",")}\n${rows.join("\n")}` };
     }),
   }),
 
@@ -625,9 +625,9 @@ export const appRouter = router({
       }),
     commissionSettings: adminProcedure.query(async () => {
       const db = await getDb();
-      if (!db) return { commissionRateBasisPoints: 1000, vatRateBasisPoints: 2000, platformName: 'B2-Rent', contactEmail: '', contactPhone: '', maintenanceMode: false };
+      if (!db) return { commissionRateBasisPoints: 1000, vatRateBasisPoints: 2000, platformName: 'ALTUSplace', contactEmail: '', contactPhone: '', maintenanceMode: false };
       const rows = await db.select().from(platformSettings).limit(1);
-      return rows[0] ?? { commissionRateBasisPoints: 1000, vatRateBasisPoints: 2000, platformName: 'B2-Rent', contactEmail: '', contactPhone: '', maintenanceMode: false };
+      return rows[0] ?? { commissionRateBasisPoints: 1000, vatRateBasisPoints: 2000, platformName: 'ALTUSplace', contactEmail: '', contactPhone: '', maintenanceMode: false };
     }),
     updateCommission: adminProcedure
       .input(z.object({ commissionRateBasisPoints: z.number().int().min(0).max(3000) }))
@@ -1489,7 +1489,7 @@ export const appRouter = router({
               href: `/voucher/${voucher.code}`,
               entityType: "voucher",
               entityId: voucher.id,
-              email: ctx.user!.email ? { to: ctx.user!.email, subject: "B2-Rent — تذكرة الوصول الذكي", ...buildEmailContent("تذكرة الوصول الذكي جاهزة / Voucher prêt", renterMessage, voucherUrl) } : undefined,
+              email: ctx.user!.email ? { to: ctx.user!.email, subject: "ALTUSplace — تذكرة الوصول الذكي", ...buildEmailContent("تذكرة الوصول الذكي جاهزة / Voucher prêt", renterMessage, voucherUrl) } : undefined,
             });
             if (detail.ownerId !== booking.renterId) {
               await safeNotifyUser({
@@ -1500,7 +1500,7 @@ export const appRouter = router({
                 href: "/host",
                 entityType: "booking",
                 entityId: booking.id,
-                email: detail.ownerEmail ? { to: detail.ownerEmail, subject: "B2-Rent — دفع حجز جديد", ...buildEmailContent("دفع جديد وتجهيز الخدمة / Paiement reçu", ownerMessage, `${requestOrigin}/host`) } : undefined,
+                email: detail.ownerEmail ? { to: detail.ownerEmail, subject: "ALTUSplace — دفع حجز جديد", ...buildEmailContent("دفع جديد وتجهيز الخدمة / Paiement reçu", ownerMessage, `${requestOrigin}/host`) } : undefined,
               });
             }
           }

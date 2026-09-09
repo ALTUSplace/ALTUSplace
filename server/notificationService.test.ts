@@ -7,11 +7,11 @@ describe("notificationService", () => {
   });
 
   it("escapes user-controlled content in the bilingual email template", () => {
-    const content = buildEmailContent("<حجز>", "رسالة & تفاصيل\nLigne française", "https://b2rentmorocc-muehrc85.manus.space/my-bookings");
+    const content = buildEmailContent("<حجز>", "رسالة & تفاصيل\nLigne française", "https://makanibooking.vercel.app/my-bookings");
 
     expect(content.html).toContain("&lt;حجز&gt;");
     expect(content.html).toContain("رسالة &amp; تفاصيل");
-    expect(content.html).toContain("https://b2rentmorocc-muehrc85.manus.space/my-bookings");
+    expect(content.html).toContain("https://makanibooking.vercel.app/my-bookings");
     expect(content.text).toContain("Ligne française");
   });
 
@@ -27,8 +27,8 @@ describe("notificationService", () => {
 
     expect(approved.text).toContain("Annonce publiée");
     expect(rejected.text).toContain("Image refusée");
-    expect(approved.html).toContain("B2-Rent Morocco");
-    expect(rejected.html).toContain("B2-Rent Morocco");
+    expect(approved.html).toContain("ALTUSplace Morocco");
+    expect(rejected.html).toContain("ALTUSplace Morocco");
   });
 
   it("does not attempt external delivery until the provider is configured", async () => {

@@ -19,12 +19,12 @@ export default function Footer() {
           {/* Brand column */}
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <div className="rounded-2xl bg-[#efeade] p-2 shadow-lg ring-1 ring-white/15">
+              <div className="brand-logo-container rounded-2xl bg-[#efeade] p-2 shadow-lg ring-1 ring-white/15">
                 <img
-                  src="/images/logo.png"
-                  alt="B2-Rent Logo"
+                  src="/assets/images/logo.png"
+                  alt="ALTUSplace Logo"
                   loading="lazy"
-                  className="brand-logo h-10 w-auto object-contain"
+                  className="brand-logo h-12 w-auto object-contain"
                 />
               </div>
               <div className="flex flex-col">
@@ -125,7 +125,7 @@ export default function Footer() {
                   <MapPin className="h-4 w-4" />
                 </div>
                 <span className="pt-2 text-xs leading-relaxed text-slate-300">
-                  المغرب - الدار البيضاء، مراكش، أغادير، طنجة، الرباط
+                  {t("footerAddress")}
                 </span>
               </li>
             </ul>
@@ -135,11 +135,11 @@ export default function Footer() {
         <div
           className="mb-8 rounded-2xl border border-[#D98236]/30 bg-slate-800/70 p-5 text-xs leading-6 text-slate-300"
           role="note"
-          aria-label="بنود حماية المنصة"
+          aria-label={t("footerNoticeLabel")}
         >
           <h3 className="mb-2 font-black text-[#D98236]">{t("termsOfService")}</h3>
           <p>
-            المنصة وسيط تقني وإعلاني فقط ولا تملك أو تدير السيارات أو العقارات. يتحمل الشريك مسؤولية الحالة الميكانيكية والسلامة والنظافة ومطابقة الأصل للوصف، وتخضع العلاقة النهائية للعقد المكتوب عند الاستلام. تظهر شروط الرسوم والإلغاء قبل الدفع، وتُراجع حالات إخلال الشريك عبر مركز النزاعات وفق القانون المغربي.
+            {t("footerNoticeText")}
           </p>
           <Link href="/register" className="mt-2 inline-flex font-bold text-[#D98236] hover:text-white">
             {t("readTermsAndAgree")}
@@ -147,7 +147,7 @@ export default function Footer() {
         </div>
 
         <div className="flex flex-col items-center justify-between gap-4 border-t border-slate-800 pt-8 text-xs text-slate-400 md:flex-row">
-          <p>© 2026 B2-Rent. {t("allRights")}. منصة تأجير السيارات والعقارات الأولى في المغرب.</p>
+          <p>© 2026 ALTUSplace. {t("allRights")}. {t("footerTagline")}</p>
           <div className="flex items-center gap-6">
             <Link href="/terms" className="py-1 transition-colors hover:text-[#D98236]">
               {t("terms")}

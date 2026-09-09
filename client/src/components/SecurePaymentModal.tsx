@@ -1,5 +1,5 @@
 /**
- * SecurePaymentModal.tsx - Enhanced secure payment modal for B2-Rent
+ * SecurePaymentModal.tsx - Enhanced secure payment modal for ALTUSplace
  * Provides a professional checkout experience with CMI card payment simulation
  */
 import { useState, useRef } from 'react';

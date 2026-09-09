@@ -1,5 +1,5 @@
 /**
- * B2-Rent Platform - Centralized Health Monitor & Diagnostics
+ * ALTUSplace Platform - Centralized Health Monitor & Diagnostics
  * Simulates high-availability health checks, connection pool status, and session sync.
  */
 
@@ -30,7 +30,7 @@ export function checkSystemHealth() {
     },
     storage: {
       status: 'operational',
-      s3Bucket: 'b2-rent-production-storage',
+      s3Bucket: 'altusplace-production-storage',
     }
   };
 
@@ -39,6 +39,6 @@ export function checkSystemHealth() {
 
 // Log health check periodically if executed as script
 if (process.argv[1] === import.meta.filename) {
-  console.log('🩺 Running B2-Rent System Health Diagnostics...');
+  console.log('🩺 Running ALTUSplace System Health Diagnostics...');
   console.log(JSON.stringify(checkSystemHealth(), null, 2));
 }

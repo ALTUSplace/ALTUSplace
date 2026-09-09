@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 export default function AIChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
-    { sender: 'ai', text: 'سلام! مرحباً بك في B2-Rent 🇲🇦. واش كتقلّب على كراء سيارة أوّلا عقار؟' }
+    { sender: 'ai', text: 'سلام! مرحباً بك في ALTUSplace 🇲🇦. واش كتقلّب على كراء سيارة أوّلا عقار؟' }
   ]);
   const [inputVal, setInputVal] = useState('');
   const [step, setStep] = useState<'category' | 'city' | 'budget' | 'done'>('category');
@@ -67,7 +67,7 @@ export default function AIChatWidget() {
           title="مساعد الذكاء الاصطناعي"
         >
           <Bot className="w-6 h-6 text-amber-400 animate-bounce" />
-          <span className="hidden sm:inline font-bold text-sm tracking-wide">مساعد B2-Rent الذكي</span>
+          <span className="hidden sm:inline font-bold text-sm tracking-wide">مساعد ALTUSplace الذكي</span>
           <span className="absolute -top-1 -right-1 bg-amber-500 text-slate-950 text-[10px] font-black px-1.5 py-0.5 rounded-full">AI</span>
         </button>
       )}

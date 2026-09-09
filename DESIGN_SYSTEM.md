@@ -1,4 +1,4 @@
-# نظام تصميم B2-Rent Morocco
+# نظام تصميم ALTUSplace Morocco
 
 ## الهوية البصرية
 

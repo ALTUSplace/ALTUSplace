@@ -14,8 +14,8 @@ function escapeHtml(value: unknown) {
 }
 
 async function injectSocialMetadata(template: string, url: string) {
-  const origin = process.env.VITE_APP_URL || "https://b2rentmorocc-muehrc85.manus.space";
-  let title = "B2-Rent Morocco | كراء السيارات والعقارات في المغرب";
+  const origin = process.env.VITE_APP_URL || "https://makanibooking.vercel.app";
+  let title = "ALTUSplace Morocco | كراء السيارات والعقارات في المغرب";
   let description = "اكتشف عروض كراء السيارات والعقارات من شركاء محليين موثوقين في المغرب.";
   let image = `${origin}/favicon.ico`;
   const match = url.match(/^\/(?:car|property)\/(\d+)/);
@@ -24,7 +24,7 @@ async function injectSocialMetadata(template: string, url: string) {
       const db = await getDb();
       const listing = db ? (await db.select({ title: listings.title, description: listings.description, pricePerDay: listings.pricePerDay, imageUrl: listings.imageUrl }).from(listings).where(and(eq(listings.id, Number(match[1])), inArray(listings.status, ["Published", "Available"]))).limit(1))[0] : undefined;
       if (listing) {
-        title = `${listing.title} | B2-Rent Morocco`;
+        title = `${listing.title} | ALTUSplace Morocco`;
         description = listing.description || `عرض متاح للكراء ابتداءً من ${Number(listing.pricePerDay).toLocaleString("fr-MA")} MAD.`;
         image = listing.imageUrl || image;
       }

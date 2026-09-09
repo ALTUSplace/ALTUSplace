@@ -151,7 +151,7 @@ export function buildEmailContent(title: string, message: string, actionUrl?: st
     : "";
 
   return {
-    html: `<div dir="auto" style="font-family:Arial,sans-serif;line-height:1.7;color:#0B3C5D"><h2>${safeTitle}</h2><p>${safeMessage}</p>${action}<hr /><small>B2-Rent Morocco</small></div>`,
-    text: `${title}\n\n${message}${safeActionUrl ? `\n\n${safeActionUrl}` : ""}\n\nB2-Rent Morocco`,
+    html: `<div dir="auto" style="font-family:Arial,sans-serif;line-height:1.7;color:#0B3C5D"><h2>${safeTitle}</h2><p>${safeMessage}</p>${action}<hr /><small>ALTUSplace Morocco</small></div>`,
+    text: `${title}\n\n${message}${safeActionUrl ? `\n\n${safeActionUrl}` : ""}\n\nALTUSplace Morocco`,
   };
 }

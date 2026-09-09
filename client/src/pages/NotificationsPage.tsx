@@ -82,7 +82,7 @@ export default function NotificationsPage() {
             <div>
               <div className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-amber-300">
                 <Bell className="h-4 w-4" />
-                {language === "ar" ? "تنبيهات B2-Rent" : "Alertes B2-Rent"}
+                {language === "ar" ? "تنبيهات ALTUSplace" : "Alertes ALTUSplace"}
               </div>
               <h1 className="text-2xl font-black sm:text-3xl">
                 {language === "ar" ? "إشعاراتك في مكان واحد" : "Toutes vos notifications au même endroit"}

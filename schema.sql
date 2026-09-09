@@ -1,5 +1,5 @@
 -- ========================================================
--- B2-Rent Marketplace Relational Database Schema (MySQL / InnoDB)
+-- ALTUSplace Marketplace Relational Database Schema (MySQL / InnoDB)
 -- ========================================================
 
 -- Disable foreign key checks during schema creation

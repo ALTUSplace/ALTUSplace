@@ -1,5 +1,5 @@
 # Slide 1: Title
-## B2-Rent: Brand Identity & Logo Strategy
+## ALTUSplace: Brand Identity & Logo Strategy
 ### A Luxury Moroccan Marketplace for Car Rentals & Real Estate
 - Presenter: Senior Design & Full-Stack Engineering Team
 - Date: August 2026
@@ -11,7 +11,7 @@
 - **The Solution**: An integrated, multi-vendor ecosystem uniting elite car agencies and premium property owners under one cohesive brand.
 
 # Slide 3: Brand Core Values
-## What B2-Rent Stands For
+## What ALTUSplace Stands For
 - **Uncompromised Trust**: Secure escrow, verified vendor badges, and encrypted digital contracts.
 - **Exclusivity & Prestige**: Curated listings tailored to VIP travelers, diplomats, and luxury enthusiasts in Casablanca, Marrakech, and Rabat.
 - **Seamless Efficiency**: AI-powered natural language search, instant multi-currency conversion, and rapid booking confirmation.
@@ -42,6 +42,6 @@
 
 # Slide 8: Conclusion & Roadmap
 ## Shaping the Future of Moroccan Hospitality
-- **Immediate Milestones**: Live deployment on custom domain (`b2rent.ma`), activation of CMI/Stripe live gateways, and WhatsApp Cloud API integration.
+- **Immediate Milestones**: Live deployment on custom domain (`ALTUSplace.ma`), activation of CMI/Stripe live gateways, and WhatsApp Cloud API integration.
 - **Long-Term Growth**: Expansion across major North African tourist hubs and AI-driven concierge services.
 - **Thank You**: Open for questions and strategic collaboration.

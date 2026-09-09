@@ -1,49 +1,51 @@
 import React, { useState } from 'react';
 import { ChevronDown, HelpCircle, ShieldCheck, Car, Building2 } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export function FAQSection() {
+  const { t, direction } = useLanguage();
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   const faqs = [
     {
-      category: "التأجير والحجوزات",
+      categoryKey: "faqCategoryBooking",
       icon: Car,
-      question: "كيف يمكنني حجز سيارة أو عقار عبر منصة B2-Rent؟",
-      answer: "يمكنك بكل سهولة تصفح السيارات أو العقارات المتاحة، اختيار تواريخ الاستلام والتسليم، ثم الضغط على 'احجز الآن'. سيتم توجيهك لملء تفاصيل الحجز وإتمام الدفع الآمن لعربون الضمان عبر بواباتنا المعتمدة."
+      questionKey: "faqQuestion1",
+      answerKey: "faqAnswer1"
     },
     {
-      category: "الأمان والضمان",
+      categoryKey: "faqCategorySecurity",
       icon: ShieldCheck,
-      question: "هل المعاملات المالية وعربون الحجز آمنان؟",
-      answer: "نعم تماماً. تعتمد منصة B2-Rent نظام ضمان مالي (Escrow) حيث تبقى أموال العربون في حساب الوسيط المعتمد حتى يتم تأكيد استلام السيارة أو العقار بحالة ممتازة من طرف الشريك."
+      questionKey: "faqQuestion2",
+      answerKey: "faqAnswer2"
     },
     {
-      category: "الشركاء والوكالات",
+      categoryKey: "faqCategoryPartners",
       icon: Building2,
-      question: "كيف يمكنني تسجيل شركتي أو عقاري كشريك في المنصة؟",
-      answer: "يمكنك الانتقال إلى صفحة 'لوحة الوكلاء' واختيار التسجيل كشركة كراء سيارات أو منعش عقاري، رفع وثائق التحقق (السجل التجاري أو البطاقة الوطنية)، وبعد مراجعة الإدارة سيتم تفعيل حسابك فوراً."
+      questionKey: "faqQuestion3",
+      answerKey: "faqAnswer3"
     },
     {
-      category: "سياسة الإلغاء",
+      categoryKey: "faqCategoryCancellation",
       icon: HelpCircle,
-      question: "ما هي سياسة إلغاء الحجوزات واسترداد العربون؟",
-      answer: "يمكنك إلغاء الحجز مجاناً قبل موعد الاستلام بـ 48 ساعة واسترداد كامل العربون المدفوع. للإلغاء المتأخر، يتم تطبيق شروط الوكالة المتعاقد معها والموضحة في العقد الرقمي."
+      questionKey: "faqQuestion4",
+      answerKey: "faqAnswer4"
     }
   ];
 
   return (
-    <section className="py-10 md:py-16 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-200 dark:border-slate-800">
+    <section dir={direction} className="py-10 md:py-16 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-200 dark:border-slate-800">
       <div className="container mx-auto px-4 max-w-5xl">
         <div className="text-center mb-8 md:mb-12">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#D98236]/10 text-[#D98236] dark:text-[#D98236] text-sm font-medium mb-3">
             <HelpCircle className="w-4 h-4" />
-            <span>الأسئلة المتكررة</span>
+            <span>{t('faqBadge')}</span>
           </div>
           <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
-            كل ما ترغب في معرفته حول خدمات B2-Rent
+            {t('faqTitle')}
           </h2>
           <p className="mt-3 text-sm sm:text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed">
-            إجابات شاملة وواضحة عن عمليات الحجز والدفع وحقوق الشركاء والزبناء في المغرب.
+            {t('faqSubtitle')}
           </p>
         </div>
 
@@ -67,10 +69,10 @@ export function FAQSection() {
                     </div>
                     <div>
                       <span className="text-xs font-semibold text-[#D98236] dark:text-[#D98236] block mb-1">
-                        {faq.category}
+                        {t(faq.categoryKey)}
                       </span>
                       <h3 className="text-sm sm:text-lg font-bold leading-snug text-slate-900 dark:text-white">
-                        {faq.question}
+                        {t(faq.questionKey)}
                       </h3>
                     </div>
                   </div>
@@ -80,7 +82,7 @@ export function FAQSection() {
                 </button>
                 {isOpen && (
                   <div className="px-4 md:px-6 pb-4 md:pb-6 pt-3 text-sm md:text-base text-slate-600 dark:text-slate-300 leading-relaxed border-t border-slate-100 dark:border-slate-700/50">
-                    {faq.answer}
+                    {t(faq.answerKey)}
                   </div>
                 )}
               </div>

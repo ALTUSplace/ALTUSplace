@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link, useLocation } from 'wouter';
 import { trpc } from '@/lib/trpc';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { OptimizedImage } from '@/components/OptimizedImage';
 import { Search, MapPin, Building2, Car, ShieldCheck, ArrowRight, CheckCircle2, Award, Clock, Bot, Send, Mic, Bookmark, Check, Calendar, DollarSign, Filter, Phone } from 'lucide-react';
-import { PARTNERS, LISTINGS, ListingItem } from '@/data/b2rent';
+import { PARTNERS, LISTINGS, ListingItem } from '@/data/altusplace';
 import { SmartRecommendations } from '@/components/SmartRecommendations';
 import { FAQSection } from '@/components/FAQSection';
 import { toast } from 'sonner';
@@ -15,6 +16,7 @@ function getListingPath(item: { id: string; type: string }) {
 
 export default function Home() {
   const [, setLocation] = useLocation();
+  const { t, direction } = useLanguage();
   const [activeTab, setActiveTab] = useState<'cars' | 'properties'>('cars');
   
   // Search states for Cars
@@ -32,15 +34,15 @@ export default function Home() {
   const activeListings = dbListings.length > 0 ? dbListings.map(item => ({
     id: String(item.id),
     title: item.title,
-    category: item.category === 'property' ? 'عقار' : 'سيارة',
+    category: item.category === 'property' ? t('listingCategoryProperty') : t('listingCategoryCar'),
     type: item.category,
     pricePerUnit: item.pricePerDay,
     image: item.imageUrl || 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=800',
     city: item.city || 'الدار البيضاء',
-    providerName: 'بيانات الإعلان من B2-Rent',
+    providerName: t('providerNamePlaceholder'),
     specs: {
-      transmission: 'أوتوماتيك',
-      fuel: 'ديزل / بنزين',
+      transmission: t('transmissionAutomatic'),
+      fuel: t('fuelDieselPetrol'),
       seats: '5'
     }
   })) : LISTINGS;
@@ -55,7 +57,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col" dir="rtl">
+    <div className="min-h-screen bg-background text-foreground flex flex-col" dir={direction}>
       
       {/* Modern Hero Section with Elegant Navy Background */}
       <section className="relative pt-8 pb-16 md:pt-12 md:pb-24 px-4 overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
@@ -64,15 +66,15 @@ export default function Home() {
         <div className="container mx-auto max-w-6xl text-center space-y-5 md:space-y-8 relative z-10">
           <div className="inline-flex items-center gap-2 bg-[#00A3FF]/20 border border-[#00A3FF]/40 px-4 py-2 rounded-full text-[#00A3FF] text-sm font-bold tracking-wide fade-in">
             <ShieldCheck className="w-4 h-4 text-[#00A3FF]" />
-            <span>منصة الوساطة الأولى المعتمدة بين المزودين والزبائن في المغرب</span>
+            <span>{t('heroBadge')}</span>
           </div>
 
           <h1 className="text-3xl sm:text-4xl md:text-6xl font-black tracking-tight leading-[1.25] md:leading-tight">
-            بوابتك الموثوقة لحجز <span className="text-[#D98236]">السيارات</span> و<span className="text-[#D98236]">العقارات</span> بكل أمان
+            {t('heroTitlePrefix')} <span className="text-[#D98236]">{t('heroTitleCars')}</span> {t('heroTitleAnd')} <span className="text-[#D98236]">{t('heroTitleProperties')}</span> {t('heroTitleSuffix')}
           </h1>
 
           <p className="text-slate-300 text-xs sm:text-sm md:text-base max-w-2xl mx-auto leading-relaxed">
-            B2-Rent منصة وسيطة ذكية تربطك بأرقى شركات كراء السيارات والوكالات العقارية المستقلة عبر المدن المغربية، مع عقود رقمية وتوقيع إلكتروني فوري.
+            {t('heroDescription')}
           </p>
           
           <div className="flex justify-center gap-4 mt-6">
@@ -81,7 +83,7 @@ export default function Home() {
               className="bg-white/10 hover:bg-white/20 text-white border border-white/30 px-6 py-2 rounded-xl text-sm font-bold flex items-center gap-2"
             >
               <Award className="w-4 h-4" />
-              <span>عرض مراجعة الأعمال 2025</span>
+              <span>{t('heroReviewButton')}</span>
             </Button>
           </div>
 
@@ -99,7 +101,7 @@ export default function Home() {
                 }`}
               >
                 <Car className="w-5 h-5" />
-                <span>بحث عن السيارات</span>
+                <span>{t('searchTabCars')}</span>
               </button>
               <button
                 type="button"
@@ -111,7 +113,7 @@ export default function Home() {
                 }`}
               >
                 <Building2 className="w-5 h-5" />
-                <span>بحث عن العقارات</span>
+                <span>{t('searchTabProperties')}</span>
               </button>
             </div>
 
@@ -120,7 +122,7 @@ export default function Home() {
               {activeTab === 'cars' ? (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
                   <div className="space-y-1">
-                    <label className="text-xs font-semibold text-slate-300">المدينة أو الوكالة</label>
+                    <label className="text-xs font-semibold text-slate-300">{t('searchCityOrAgency')}</label>
                     <div className="relative">
                       <MapPin className="absolute right-3.5 top-3.5 w-5 h-5 text-slate-400" />
                       <select
@@ -128,17 +130,17 @@ export default function Home() {
                         onChange={(e) => setCarCity(e.target.value)}
                         className="w-full bg-slate-900/90 text-white border border-white/20 rounded-xl py-3 pr-11 pl-4 text-sm focus:outline-none focus:border-[#D98236] min-h-12"
                       >
-                        <option value="الدار البيضاء">الدار البيضاء</option>
-                        <option value="مراكش">مراكش</option>
-                        <option value="أغادير">أغادير</option>
-                        <option value="طنجة">طنجة</option>
-                        <option value="الرباط">الرباط</option>
+                        <option value="الدار البيضاء">{t('cityCasablanca')}</option>
+                        <option value="مراكش">{t('cityMarrakech')}</option>
+                        <option value="أغادير">{t('cityAgadir')}</option>
+                        <option value="طنجة">{t('cityTangier')}</option>
+                        <option value="الرباط">{t('cityRabat')}</option>
                       </select>
                     </div>
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-xs font-semibold text-slate-300">تاريخ الاستلام</label>
+                    <label className="text-xs font-semibold text-slate-300">{t('searchPickupDate')}</label>
                     <div className="relative">
                       <Calendar className="absolute right-3.5 top-3.5 w-5 h-5 text-slate-400" />
                       <input
@@ -151,7 +153,7 @@ export default function Home() {
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-xs font-semibold text-slate-300">تاريخ التسليم</label>
+                    <label className="text-xs font-semibold text-slate-300">{t('searchDropoffDate')}</label>
                     <div className="relative">
                       <Calendar className="absolute right-3.5 top-3.5 w-5 h-5 text-slate-400" />
                       <input
@@ -166,7 +168,7 @@ export default function Home() {
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
                   <div className="space-y-1">
-                    <label className="text-xs font-semibold text-slate-300">المنطقة / المدينة</label>
+                    <label className="text-xs font-semibold text-slate-300">{t('searchPropertyLocation')}</label>
                     <div className="relative">
                       <MapPin className="absolute right-3.5 top-3.5 w-5 h-5 text-slate-400" />
                       <select
@@ -174,16 +176,16 @@ export default function Home() {
                         onChange={(e) => setPropLocation(e.target.value)}
                         className="w-full bg-slate-900/90 text-white border border-white/20 rounded-xl py-3 pr-11 pl-4 text-sm focus:outline-none focus:border-[#D98236] min-h-12"
                       >
-                        <option value="مراكش">مراكش (جيليز، النخيل)</option>
-                        <option value="الدار البيضاء">الدار البيضاء (أنفا، المعاريف)</option>
-                        <option value="طنجة">طنجة (كورنيش، مالاباطا)</option>
-                        <option value="الرباط">الرباط (أكدال، السويسي)</option>
+                        <option value="مراكش">{t('marrakechDistricts')}</option>
+                        <option value="الدار البيضاء">{t('casablancaDistricts')}</option>
+                        <option value="طنجة">{t('tangierDistricts')}</option>
+                        <option value="الرباط">{t('rabatDistricts')}</option>
                       </select>
                     </div>
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-xs font-semibold text-slate-300">نوع العقار</label>
+                    <label className="text-xs font-semibold text-slate-300">{t('searchPropertyType')}</label>
                     <div className="relative">
                       <Building2 className="absolute right-3.5 top-3.5 w-5 h-5 text-slate-400" />
                       <select
@@ -191,15 +193,15 @@ export default function Home() {
                         onChange={(e) => setPropType(e.target.value)}
                         className="w-full bg-slate-900/90 text-white border border-white/20 rounded-xl py-3 pr-11 pl-4 text-sm focus:outline-none focus:border-[#D98236] min-h-12"
                       >
-                        <option value="apartment">شقة فاخرة</option>
-                        <option value="villa">فيلا بمسبح</option>
-                        <option value="studio">استوديو مودرن</option>
+                        <option value="apartment">{t('propTypeApartment')}</option>
+                        <option value="villa">{t('propTypeVilla')}</option>
+                        <option value="studio">{t('propTypeStudio')}</option>
                       </select>
                     </div>
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-xs font-semibold text-slate-300">الحد الأقصى للسعر (درهم/ليلة)</label>
+                    <label className="text-xs font-semibold text-slate-300">{t('searchMaxPrice')}</label>
                     <div className="relative">
                       <DollarSign className="absolute right-3.5 top-3.5 w-5 h-5 text-slate-400" />
                       <select
@@ -207,10 +209,10 @@ export default function Home() {
                         onChange={(e) => setMaxPrice(e.target.value)}
                         className="w-full bg-slate-900/90 text-white border border-white/20 rounded-xl py-3 pr-11 pl-4 text-sm focus:outline-none focus:border-[#D98236] min-h-12"
                       >
-                        <option value="1000">أقل من 1000 درهم</option>
-                        <option value="2500">أقل من 2500 درهم</option>
-                        <option value="5000">أقل من 5000 درهم</option>
-                        <option value="10000">أكثر من 5000 درهم</option>
+                        <option value="1000">{t('maxPriceUnder1000')}</option>
+                        <option value="2500">{t('maxPriceUnder2500')}</option>
+                        <option value="5000">{t('maxPriceUnder5000')}</option>
+                        <option value="10000">{t('maxPriceOver5000')}</option>
                       </select>
                     </div>
                   </div>
@@ -223,7 +225,7 @@ export default function Home() {
                   className="w-full bg-[#D98236] hover:bg-[#B96A28] text-white font-black py-3.5 md:py-4 rounded-xl md:rounded-2xl text-sm md:text-base shadow-xl shadow-[#D98236]/40 flex items-center justify-center gap-2.5 cursor-pointer transition-all"
                 >
                   <Search className="w-5 h-5" />
-                  <span>بحث متقدم وعرض النتائج الفورية</span>
+                  <span>{t('searchSubmitAdvanced')}</span>
                 </Button>
               </div>
             </form>
@@ -234,25 +236,25 @@ export default function Home() {
       {/* Car Brands Marquee Section (OneClickDrive Morocco Style) */}
       <section className="py-7 md:py-10 bg-card/40 border-y border-border overflow-hidden">
         <div className="container mx-auto max-w-6xl px-4 text-center mb-4 md:mb-6">
-          <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">أشهر ماركات السيارات العالمية المتوفرة في المنصة</p>
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{t('popularCarBrandsTitle')}</p>
         </div>
         <div className="flex overflow-x-auto no-scrollbar gap-3 md:gap-6 px-4 py-2 justify-start md:justify-center items-stretch flex-nowrap md:flex-wrap max-w-6xl mx-auto snap-x">
           {[
-            { name: "Mercedes-Benz", icon: "⭐", count: "45+ سيارة" },
-            { name: "Range Rover", icon: "🚙", count: "30+ سيارة" },
-            { name: "BMW", icon: "🏎️", count: "40+ سيارة" },
-            { name: "Audi", icon: "🚘", count: "25+ سيارة" },
-            { name: "Dacia", icon: "🚗", count: "80+ سيارة" },
-            { name: "Renault", icon: "🚙", count: "60+ سيارة" },
-            { name: "Hyundai", icon: "🚗", count: "50+ سيارة" },
-            { name: "Volkswagen", icon: "🚘", count: "35+ سيارة" }
+            { name: "Mercedes-Benz", icon: "⭐", count: 45 },
+            { name: "Range Rover", icon: "🚙", count: 30 },
+            { name: "BMW", icon: "🏎️", count: 40 },
+            { name: "Audi", icon: "🚘", count: 25 },
+            { name: "Dacia", icon: "🚗", count: 80 },
+            { name: "Renault", icon: "🚙", count: 60 },
+            { name: "Hyundai", icon: "🚗", count: 50 },
+            { name: "Volkswagen", icon: "🚘", count: 35 }
           ].map((brand, idx) => (
             <Link key={idx} href={`/search?type=car&brand=${brand.name}`}>
               <div className="bg-card hover:bg-[#D98236] hover:text-white text-foreground border border-border hover:border-[#D98236] px-4 md:px-6 py-3 md:py-4 rounded-xl md:rounded-2xl shadow-sm transition-all duration-300 flex items-center gap-2.5 cursor-pointer group min-w-[150px] md:min-w-[160px] shrink-0 snap-start justify-center">
                 <span className="text-2xl group-hover:scale-110 transition-transform">{brand.icon}</span>
                 <div className="text-right">
                   <h4 className="font-black text-sm">{brand.name}</h4>
-                  <span className="text-[10px] text-slate-400 group-hover:text-white">{brand.count}</span>
+                  <span className="text-[10px] text-slate-400 group-hover:text-white">{t('brandCarCount', { count: brand.count })}</span>
                 </div>
               </div>
             </Link>
@@ -263,22 +265,22 @@ export default function Home() {
       {/* Real Estate Types Marquee Section */}
       <section className="py-8 bg-card/40 border-b border-border overflow-hidden">
         <div className="container mx-auto max-w-6xl px-4 text-center mb-4 md:mb-6">
-          <p className="text-xs font-bold text-[#0B0F15] uppercase tracking-widest">أنواع العقارات والفلل والشقق المتاحة للإيجار</p>
+          <p className="text-xs font-bold text-[#0B0F15] uppercase tracking-widest">{t('propertyTypesTitle')}</p>
         </div>
         <div className="flex overflow-x-auto no-scrollbar gap-3 md:gap-6 px-4 py-2 justify-start md:justify-center items-stretch flex-nowrap md:flex-wrap max-w-6xl mx-auto snap-x">
           {[
-            { name: "فلل فاخرة بمسبح", icon: "🏡", count: "25+ عقار" },
-            { name: "شقق مودرن", icon: "🏢", count: "90+ عقار" },
-            { name: "بنتهاوس كورنيش", icon: "🏙️", count: "15+ عقار" },
-            { name: "استوديوهات رجال الأعمال", icon: "🏨", count: "40+ عقار" },
-            { name: "إقامات محروسة", icon: "🏘️", count: "30+ عقار" }
+            { nameKey: "propLuxuryVillas", icon: "🏡", count: 25 },
+            { nameKey: "propModernApartments", icon: "🏢", count: 90 },
+            { nameKey: "propCornichePenthouses", icon: "🏙️", count: 15 },
+            { nameKey: "propBusinessStudios", icon: "🏨", count: 40 },
+            { nameKey: "propSecureResidences", icon: "🏘️", count: 30 }
           ].map((type, idx) => (
-            <Link key={idx} href={`/search?type=property&category=${type.name}`}>
+            <Link key={idx} href={`/search?type=property&category=${type.nameKey}`}>
               <div className="bg-muted hover:bg-[#D98236] hover:text-white text-foreground border border-border hover:border-[#D98236] px-4 md:px-6 py-3 md:py-3.5 rounded-xl md:rounded-2xl shadow-sm transition-all duration-300 flex items-center gap-2.5 cursor-pointer group min-w-[160px] md:min-w-[170px] shrink-0 snap-start justify-center">
                 <span className="text-2xl group-hover:scale-110 transition-transform">{type.icon}</span>
                 <div className="text-right">
-                  <h4 className="font-black text-sm">{type.name}</h4>
-                  <span className="text-[10px] text-muted-foreground group-hover:text-white">{type.count}</span>
+                  <h4 className="font-black text-sm">{t(type.nameKey)}</h4>
+                  <span className="text-[10px] text-muted-foreground group-hover:text-white">{t('brandPropertyCount', { count: type.count })}</span>
                 </div>
               </div>
             </Link>
@@ -290,11 +292,11 @@ export default function Home() {
       <section className="py-10 md:py-16 px-4 container mx-auto max-w-6xl">
         <div className="text-center space-y-3 mb-8 md:mb-12">
           <span className="text-[#D98236] font-bold text-xs uppercase tracking-widest bg-[#D98236]/10 px-3 py-1 rounded-full border border-[#D98236]/30">
-            تصميم هندسي متطور
+            {t('bentoBadge')}
           </span>
-          <h2 className="text-2xl md:text-3xl font-black text-[#0B0F15]">استكشف الأقسام الرئيسية (Bento Grid)</h2>
+          <h2 className="text-2xl md:text-3xl font-black text-[#0B0F15]">{t('bentoTitle')}</h2>
           <p className="text-muted-foreground text-sm max-w-xl mx-auto">
-            اختر ما بين أسطول السيارات الفاخرة أو العقارات الحصرية مع ضمانات حماية كاملة.
+            {t('bentoSubtitle')}
           </p>
         </div>
 
@@ -307,14 +309,14 @@ export default function Home() {
               <div className="w-12 h-12 bg-[#D98236] rounded-2xl flex items-center justify-center text-white shadow-lg">
                 <Car className="w-6 h-6" />
               </div>
-              <h3 className="text-2xl font-black">أسطول السيارات الفاخرة والاقتصادية</h3>
+              <h3 className="text-2xl font-black">{t('bentoFleetTitle')}</h3>
               <p className="text-slate-300 text-xs sm:text-sm leading-relaxed">
-                أحدث موديلات سيارات الدفع الرباعي، السيارات العائلية، والسيارات الرياضية في الدار البيضاء، مراكش، طنجة وأغادير مع توصيل مجاني.
+                {t('bentoFleetDescription')}
               </p>
               <div>
                 <Link href="/search?type=car">
                   <Button className="bg-[#D98236] hover:bg-[#B96A28] text-white font-bold px-6 py-3 rounded-xl text-xs flex items-center gap-2 shadow-lg shadow-[#D98236]/40 cursor-pointer">
-                    <span>تصفح السيارات المتاحة</span>
+                    <span>{t('browseCarsAvailable')}</span>
                     <ArrowRight className="w-4 h-4" />
                   </Button>
                 </Link>
@@ -335,14 +337,14 @@ export default function Home() {
               <div className="w-12 h-12 bg-[#0B0F15] rounded-2xl flex items-center justify-center text-white shadow-lg">
                 <Building2 className="w-6 h-6 text-[#D98236]" />
               </div>
-              <h3 className="text-xl font-black text-[#0B0F15]">العقارات والشقق الفاخرة</h3>
+              <h3 className="text-xl font-black text-[#0B0F15]">{t('bentoRealEstateTitle')}</h3>
               <p className="text-muted-foreground text-xs sm:text-sm leading-relaxed">
-                شقق مودرن مطلة على الكورنيش وفيلات خاصة بمسبح في أرقى الأحياء السكنية.
+                {t('bentoRealEstateDescription')}
               </p>
               <div>
                 <Link href="/search?type=property">
                   <Button className="bg-[#0B0F15] hover:bg-[#062940] text-white font-bold px-6 py-3 rounded-xl text-xs flex items-center gap-2 shadow-md cursor-pointer">
-                    <span>تصفح العقارات</span>
+                    <span>{t('browsePropertiesAvailable')}</span>
                     <ArrowRight className="w-4 h-4" />
                   </Button>
                 </Link>
@@ -370,13 +372,13 @@ export default function Home() {
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-7 md:mb-10 gap-4">
           <div>
             <span className="text-[#D98236] font-bold text-xs uppercase tracking-widest bg-[#D98236]/10 px-3 py-1 rounded-full border border-[#D98236]/30">
-              إعلانات متاحة للتصفح
+              {t('featuredListingsBadge')}
             </span>
-            <h2 className="text-2xl md:text-3xl font-black text-[#0B0F15] mt-2">إعلانات مختارة من المنصة</h2>
+            <h2 className="text-2xl md:text-3xl font-black text-[#0B0F15] mt-2">{t('featuredListingsTitle')}</h2>
           </div>
           <Link href="/search">
             <Button variant="outline" className="w-full md:w-auto border-[#0B0F15] text-[#0B0F15] hover:bg-[#0B0F15] hover:text-white font-bold rounded-xl text-xs">
-              عرض كافة الإعلانات ({activeListings.length})
+              {t('viewAllListings', { count: activeListings.length })}
             </Button>
           </Link>
         </div>
@@ -416,13 +418,13 @@ export default function Home() {
 
                 <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
                   <div>
-                    <span className="text-xs text-muted-foreground block">السعر اليومي</span>
-                    <span className="text-lg font-black text-[#D98236]">{item.pricePerUnit} درهم</span>
+                    <span className="text-xs text-muted-foreground block">{t('dailyPrice')}</span>
+                    <span className="text-lg font-black text-[#D98236]">{item.pricePerUnit} {t('madUnit')}</span>
                   </div>
                   <div className="flex gap-2">
                     <Link href={getListingPath(item)}>
                       <Button className="b2-card-action bg-[#0B0F15] hover:bg-[#062940] text-white font-bold px-4 py-2.5 rounded-xl text-xs shadow-md cursor-pointer">
-                        احجز الآن
+                        {t('bookNow')}
                       </Button>
                     </Link>
                   </div>
@@ -438,12 +440,12 @@ export default function Home() {
         <div className="container mx-auto max-w-6xl px-4 space-y-8">
           <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-4">
             <div>
-              <span className="text-[#D98236] font-bold text-xs uppercase tracking-widest bg-[#D98236]/10 px-3 py-1 rounded-full">مدونة المنصة</span>
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-[#0B0F15] mt-2">أحدث المقالات والنصائح العقارية والسياحية</h2>
+              <span className="text-[#D98236] font-bold text-xs uppercase tracking-widest bg-[#D98236]/10 px-3 py-1 rounded-full">{t('blogBadge')}</span>
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-[#0B0F15] mt-2">{t('blogTitle')}</h2>
             </div>
             <Link href="/blog">
               <Button variant="outline" className="border-[#0B0F15] text-[#0B0F15] hover:bg-[#0B0F15] hover:text-white rounded-xl text-xs font-bold gap-2">
-                <span>تصفح جميع المقالات</span>
+                <span>{t('browseAllArticles')}</span>
                 <ArrowRight className="w-4 h-4" />
               </Button>
             </Link>
@@ -455,11 +457,11 @@ export default function Home() {
                 <OptimizedImage src="https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=800" alt="Car rental" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
               </div>
               <div className="p-4 sm:p-6 flex-1 flex flex-col justify-between space-y-3">
-                <span className="text-xs font-bold text-[#D98236]">دليل السفر</span>
-                <h3 className="font-black text-[#0B0F15] text-base group-hover:text-[#D98236] transition-colors">دليلك الشامل لكراء السيارات في الدار البيضاء ومراكش 2026</h3>
-                <p className="text-xs text-muted-foreground line-clamp-2">تعرف على أهم النصائح القانونية والتقنية لتأجير السيارات بكل أمان في المدن الكبرى بالمغرب.</p>
+                <span className="text-xs font-bold text-[#D98236]">{t('blogTravelGuideTag')}</span>
+                <h3 className="font-black text-[#0B0F15] text-base group-hover:text-[#D98236] transition-colors">{t('blogCard1Title')}</h3>
+                <p className="text-xs text-muted-foreground line-clamp-2">{t('blogCard1Description')}</p>
                 <Link href="/blog">
-                  <span className="text-xs font-bold text-[#0B0F15] flex items-center gap-1 pt-2 hover:underline">اقرأ المزيد <ArrowRight className="w-3 h-3" /></span>
+                  <span className="text-xs font-bold text-[#0B0F15] flex items-center gap-1 pt-2 hover:underline">{t('readMore')} <ArrowRight className="w-3 h-3" /></span>
                 </Link>
               </div>
             </div>
@@ -469,11 +471,11 @@ export default function Home() {
                 <OptimizedImage src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=800" alt="Real Estate" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
               </div>
               <div className="p-4 sm:p-6 flex-1 flex flex-col justify-between space-y-3">
-                <span className="text-xs font-bold text-[#D98236]">استثمار عقاري</span>
-                <h3 className="font-black text-[#0B0F15] text-base group-hover:text-[#D98236] transition-colors">أفضل المناطق الاستثمارية العقارية في طنجة وأغادير</h3>
-                <p className="text-xs text-muted-foreground line-clamp-2">استعراض لأهم الأحياء المطلة على البحر والتي تشهد إقبالاً كبيراً من السياح والمستثمرين.</p>
+                <span className="text-xs font-bold text-[#D98236]">{t('blogPropInvestmentTag')}</span>
+                <h3 className="font-black text-[#0B0F15] text-base group-hover:text-[#D98236] transition-colors">{t('blogCard2Title')}</h3>
+                <p className="text-xs text-muted-foreground line-clamp-2">{t('blogCard2Description')}</p>
                 <Link href="/blog">
-                  <span className="text-xs font-bold text-[#0B0F15] flex items-center gap-1 pt-2 hover:underline">اقرأ المزيد <ArrowRight className="w-3 h-3" /></span>
+                  <span className="text-xs font-bold text-[#0B0F15] flex items-center gap-1 pt-2 hover:underline">{t('readMore')} <ArrowRight className="w-3 h-3" /></span>
                 </Link>
               </div>
             </div>
@@ -483,11 +485,11 @@ export default function Home() {
                 <OptimizedImage src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=800" alt="Driving" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
               </div>
               <div className="p-4 sm:p-6 flex-1 flex flex-col justify-between space-y-3">
-                <span className="text-xs font-bold text-[#D98236]">نصائح قيادة</span>
-                <h3 className="font-black text-[#0B0F15] text-base group-hover:text-[#D98236] transition-colors">كيف تختار السيارة المناسبة لرحلتك العائلية عبر الطرق السيارة؟</h3>
-                <p className="text-xs text-muted-foreground line-clamp-2">مقارنة شاملة بين سيارات الـ SUV والاقتصادية والفاخرة لضمان أقصى درجات الراحة والأمان.</p>
+                <span className="text-xs font-bold text-[#D98236]">{t('blogDrivingTipsTag')}</span>
+                <h3 className="font-black text-[#0B0F15] text-base group-hover:text-[#D98236] transition-colors">{t('blogCard3Title')}</h3>
+                <p className="text-xs text-muted-foreground line-clamp-2">{t('blogCard3Description')}</p>
                 <Link href="/blog">
-                  <span className="text-xs font-bold text-[#0B0F15] flex items-center gap-1 pt-2 hover:underline">اقرأ المزيد <ArrowRight className="w-3 h-3" /></span>
+                  <span className="text-xs font-bold text-[#0B0F15] flex items-center gap-1 pt-2 hover:underline">{t('readMore')} <ArrowRight className="w-3 h-3" /></span>
                 </Link>
               </div>
             </div>
@@ -505,22 +507,22 @@ export default function Home() {
             <div className="w-14 h-14 bg-[#D98236] text-white rounded-2xl flex items-center justify-center mx-auto shadow-lg">
               <ShieldCheck className="w-7 h-7" />
             </div>
-            <h4 className="font-bold text-base md:text-lg">حماية ودفع آمن 100%</h4>
-            <p className="text-xs text-slate-300">بوابات دفع معتمدة وعقود رقمية مختومة قانونياً.</p>
+            <h4 className="font-bold text-base md:text-lg">{t('trustTitle1')}</h4>
+            <p className="text-xs text-slate-300">{t('trustDesc1')}</p>
           </div>
           <div className="space-y-3">
             <div className="w-14 h-14 bg-[#D98236] text-white rounded-2xl flex items-center justify-center mx-auto shadow-lg">
               <Award className="w-7 h-7" />
             </div>
-            <h4 className="font-bold text-base md:text-lg">وكالات معتمدة وموثوقة</h4>
-            <p className="text-xs text-slate-300">مراجعة وتدقيق دوري لجميع شركائنا في المغرب.</p>
+            <h4 className="font-bold text-base md:text-lg">{t('trustTitle2')}</h4>
+            <p className="text-xs text-slate-300">{t('trustDesc2')}</p>
           </div>
           <div className="space-y-3">
             <div className="w-14 h-14 bg-[#D98236] text-white rounded-2xl flex items-center justify-center mx-auto shadow-lg">
               <Clock className="w-7 h-7" />
             </div>
-            <h4 className="font-bold text-base md:text-lg">دعم فني على مدار الساعة</h4>
-            <p className="text-xs text-slate-300">فريق خدمة عملاء متواجد دائماً لمساعدتك.</p>
+            <h4 className="font-bold text-base md:text-lg">{t('trustTitle3')}</h4>
+            <p className="text-xs text-slate-300">{t('trustDesc3')}</p>
           </div>
         </div>
       </section>

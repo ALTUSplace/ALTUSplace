@@ -28,7 +28,7 @@ export function generateServerCommercialLeasePdf(input: CommercialLeaseInput): B
   doc.setTextColor(255, 255, 255);
   doc.setFont(hasUnicodeFont ? "DejaVuSans" : "helvetica", "bold");
   doc.setFontSize(18);
-  doc.text("B2-RENT", margin, 13);
+  doc.text("ALTUSplace", margin, 13);
   doc.setFontSize(10);
   doc.text(isArabic ? shapeArabic("عقد كراء تجاري / مهني") : "CONTRAT DE BAIL COMMERCIAL / PROFESSIONNEL", margin, 21);
   doc.setTextColor(0, 0, 0);
@@ -50,6 +50,6 @@ export function generateServerCommercialLeasePdf(input: CommercialLeaseInput): B
   doc.setFont(hasUnicodeFont ? "DejaVuSans" : "helvetica", "normal");
   doc.setFontSize(8);
   doc.setTextColor(100, 100, 100);
-  doc.text(isArabic ? shapeArabic("B2-Rent — نموذج تقني للمراجعة القانونية قبل الاستعمال.") : "B2-Rent — Modèle technique à faire valider par un professionnel du droit.", margin, 287);
+  doc.text(isArabic ? shapeArabic("ALTUSplace — نموذج تقني للمراجعة القانونية قبل الاستعمال.") : "ALTUSplace — Modèle technique à faire valider par un professionnel du droit.", margin, 287);
   return Buffer.from(doc.output("arraybuffer"));
 }

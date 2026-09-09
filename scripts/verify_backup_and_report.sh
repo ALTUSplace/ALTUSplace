@@ -1,12 +1,12 @@
 #!/bin/bash
 
 # ==========================================
-# B2-Rent Platform - Automated Backup Verification & Reporting Script
+# ALTUSplace Platform - Automated Backup Verification & Reporting Script
 # ==========================================
 
-BACKUP_DIR="/var/backups/b2_rent"
-LOG_FILE="/var/log/b2_rent_backup.log"
-REPORT_LOG="/var/log/b2_rent_backup_verification.log"
+BACKUP_DIR="/var/backups/altusplace"
+LOG_FILE="/var/log/altusplace_backup.log"
+REPORT_LOG="/var/log/altusplace_backup_verification.log"
 DATE=$(date +"%Y-%m-%d %H:%M:%S")
 
 echo "[$DATE] Starting automated backup verification..." >> $REPORT_LOG

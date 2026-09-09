@@ -35,7 +35,7 @@ export default function Profile() {
 
   const bookingsQuery = trpc.bookings.list.useQuery(undefined, { enabled: isAuthenticated });
   const invoicesQuery = trpc.invoices.list.useQuery(undefined, { enabled: isAuthenticated });
-  const displayName = name || user?.name || "مستخدم B2-Rent";
+  const displayName = name || user?.name || "مستخدم ALTUSplace";
   const initials = displayName.split(/\s+/).filter(Boolean).slice(0, 2).map((part: string) => part[0]).join("").toUpperCase() || "BR";
 
   const invoicesByBooking = useMemo(() => new Map((invoicesQuery.data ?? []).map(invoice => [invoice.bookingId, invoice])), [invoicesQuery.data]);

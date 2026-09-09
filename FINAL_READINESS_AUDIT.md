@@ -1,4 +1,4 @@
-# تقرير تدقيق جاهزية B2-Rent
+# تقرير تدقيق جاهزية ALTUSplace
 
 ## النطاق
 تم تدقيق مساري النشر المباشر للعروض وتواصل WhatsApp بعد الحجز، مع مراجعة واجهات AddCar وHostDashboard وPartnerDashboard وSuccess، واختبارات الخادم ومسار القسيمة Voucher.

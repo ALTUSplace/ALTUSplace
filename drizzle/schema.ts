@@ -213,7 +213,7 @@ export const platformSettings = mysqlTable("platform_settings", {
   id: int("setting_id").autoincrement().primaryKey(),
   commissionRateBasisPoints: int("commission_rate_basis_points").default(1000).notNull(),
   vatRateBasisPoints: int("vat_rate_basis_points").default(2000).notNull(),
-  platformName: varchar("platform_name", { length: 180 }).default("B2-Rent").notNull(),
+  platformName: varchar("platform_name", { length: 180 }).default("ALTUSplace").notNull(),
   contactEmail: varchar("contact_email", { length: 320 }),
   contactPhone: varchar("contact_phone", { length: 40 }),
   maintenanceMode: boolean("maintenance_mode").default(false).notNull(),
