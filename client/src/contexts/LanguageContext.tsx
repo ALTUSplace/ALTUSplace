@@ -101,6 +101,11 @@ const translations: Record<Language, Record<string, string>> = {
     footerAddress: "الدروة، تجزئة النجمة البيضاء، الدار البيضاء، المغرب",
     footerNoticeText: "جميع الحقوق محفوظة لمنصة ألتوس بليس للحجوزات",
     readTermsAndAgree: "بالاستمرار، فإنك توافق على شروط الاستخدام وسياسة الخصوصية",
+    cityAgadir: "تأجير في أكادير",
+    cityMarrakech: "تأجير في مراكش",
+    cityCasablancaFooter: "تأجير في الدار البيضاء",
+    cityTangier: "تأجير في طنجة",
+    cityRabat: "تأجير في الرباط",
   },
   fr: {
     home: "Accueil",
@@ -192,6 +197,11 @@ const translations: Record<Language, Record<string, string>> = {
     footerAddress: "Deroua, Lotissement Etoile Blanche, Casablanca, Maroc",
     footerNoticeText: "Tous droits réservés pour Altus Place",
     readTermsAndAgree: "En continuant, vous acceptez les conditions d'utilisation",
+    cityAgadir: "Louer à Agadir",
+    cityMarrakech: "Louer à Marrakech",
+    cityCasablancaFooter: "Louer à Casablanca",
+    cityTangier: "Louer à Tanger",
+    cityRabat: "Louer à Rabat",
   },
   en: {
     home: "Home",
@@ -283,6 +293,11 @@ const translations: Record<Language, Record<string, string>> = {
     footerAddress: "Deroua, Lotissement Etoile Blanche, Casablanca, Morocco",
     footerNoticeText: "All rights reserved for Altus Place",
     readTermsAndAgree: "By continuing, you agree to the Terms of Service and Privacy Policy",
+    cityAgadir: "Rent in Agadir",
+    cityMarrakech: "Rent in Marrakech",
+    cityCasablancaFooter: "Rent in Casablanca",
+    cityTangier: "Rent in Tanger",
+    cityRabat: "Rent in Rabat",
   },
 };
 
