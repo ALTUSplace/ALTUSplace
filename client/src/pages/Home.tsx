@@ -57,11 +57,11 @@ export default function Home() {
   };
 
   // ── Floating glass search widget style tokens (international marketplace UI) ──
-  const searchLabelClass = 'text-xs font-semibold text-slate-300';
+  const searchLabelClass = 'text-xs font-bold tracking-wide text-slate-200';
   const searchFieldClass =
-    'w-full min-h-12 rounded-xl border border-white/10 bg-[#0F172A]/70 py-3 pr-11 pl-4 text-sm text-white outline-none transition-all duration-200 [color-scheme:dark] focus:border-blue-500/60 focus:bg-[#0F172A] focus:ring-2 focus:ring-blue-500';
+    'w-full min-h-12 rounded-xl border border-white/15 bg-[#0B0F19]/85 py-3 pr-11 pl-4 text-sm font-semibold text-white outline-none antialiased transition-all duration-200 [color-scheme:dark] selection:bg-blue-500/40 hover:border-white/25 hover:bg-[#0B0F19] placeholder:text-slate-400 focus:border-blue-400/70 focus:bg-[#0B0F19] focus:ring-2 focus:ring-blue-500/80 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-90';
   const searchIconClass =
-    'pointer-events-none absolute right-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400 transition-colors group-focus-within:text-blue-400';
+    'pointer-events-none absolute right-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-300 transition-colors duration-200 group-hover:text-blue-300 group-focus-within:text-blue-400';
   const highlightTextClass =
     'bg-gradient-to-r from-blue-400 via-sky-300 to-blue-500 bg-clip-text text-transparent';
 
@@ -69,7 +69,7 @@ export default function Home() {
     <div className="min-h-screen bg-background text-foreground flex flex-col" dir={direction}>
       
       {/* ── Hero: Deep Slate Navy with Electric Blue aurora ── */}
-      <section className="relative pt-10 pb-16 md:pt-16 md:pb-24 px-4 overflow-hidden bg-[#0B0F19] text-white">
+      <section className="relative pt-14 pb-20 md:pt-24 md:pb-28 px-4 overflow-hidden bg-[#0B0F19] text-white">
         {/* Aurora glows + dot grid */}
         <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
           <div className="absolute -top-32 left-1/4 h-72 w-72 rounded-full bg-blue-600/25 blur-3xl" />
@@ -79,24 +79,24 @@ export default function Home() {
           <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-blue-500/40 to-transparent"></div>
         </div>
         
-        <div className="container mx-auto max-w-6xl text-center space-y-5 md:space-y-8 relative z-10">
-          <div className="inline-flex items-center gap-2 border border-blue-400/20 bg-blue-500/10 px-4 py-2 rounded-full text-blue-300 text-sm font-bold tracking-wide fade-in">
+        <div className="container mx-auto max-w-6xl text-center space-y-6 md:space-y-10 relative z-10">
+          <div className="inline-flex items-center gap-2 border border-blue-400/20 bg-blue-500/10 px-5 py-2.5 rounded-full text-blue-200 text-sm font-bold tracking-wide fade-in shadow-lg shadow-blue-950/30">
             <ShieldCheck className="w-4 h-4 text-amber-400" />
             <span>{t('heroBadge')}</span>
           </div>
 
-          <h1 className="text-3xl sm:text-4xl md:text-6xl font-black tracking-tight leading-[1.25] md:leading-tight">
+          <h1 className="text-3xl sm:text-4xl md:text-6xl font-black tracking-tight leading-[1.25] md:leading-[1.15]">
             {t('heroTitlePrefix')} <span className={highlightTextClass}>{t('heroTitleCars')}</span> {t('heroTitleAnd')} <span className={highlightTextClass}>{t('heroTitleProperties')}</span> <span className="text-amber-400">{t('heroTitleSuffix')}</span>
           </h1>
 
-          <p className="text-slate-300 text-xs sm:text-sm md:text-base max-w-2xl mx-auto leading-relaxed">
+          <p className="text-slate-300/95 text-xs sm:text-sm md:text-base max-w-2xl mx-auto leading-relaxed">
             {t('heroDescription')}
           </p>
           
           <div className="flex justify-center gap-4 mt-2">
             <Button 
               onClick={() => window.open('/slides_project/cover_slide.html', '_blank')}
-              className="bg-white/5 hover:bg-white/10 text-white border border-white/10 px-6 py-2 rounded-xl text-sm font-bold flex items-center gap-2 backdrop-blur transition-colors"
+              className="bg-white/[0.07] hover:bg-white/[0.14] text-white border border-white/15 px-6 py-2 rounded-xl text-sm font-bold flex items-center gap-2 backdrop-blur transition-colors duration-200"
             >
               <Award className="w-4 h-4" />
               <span>{t('heroReviewButton')}</span>
@@ -104,7 +104,7 @@ export default function Home() {
           </div>
 
           {/* ── Floating glassmorphism search card ── */}
-          <div className="max-w-4xl mx-auto bg-white/[0.06] backdrop-blur-xl border border-white/10 p-3 md:p-6 rounded-2xl shadow-2xl shadow-blue-500/10 text-right">
+          <div className="max-w-4xl mx-auto mt-4 md:mt-8 bg-gradient-to-b from-white/[0.09] to-white/[0.03] backdrop-blur-xl border border-white/10 ring-1 ring-inset ring-white/5 p-4 md:p-7 rounded-2xl shadow-2xl shadow-blue-500/10 text-right">
             {/* Segmented control tabs (Cars vs Properties) */}
             <div className="mb-4 md:mb-6 rounded-xl border border-white/10 bg-[#0F172A]/60 p-1" role="tablist" aria-label={t('searchTabCars')}>
               <div className="grid grid-cols-2 gap-1">
@@ -115,7 +115,7 @@ export default function Home() {
                   onClick={() => setActiveTab('cars')}
                   className={`flex items-center justify-center gap-1.5 py-2.5 px-2 sm:px-4 rounded-lg font-bold text-xs sm:text-sm transition-all duration-200 ${
                     activeTab === 'cars'
-                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/25'
+                      ? 'bg-gradient-to-b from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30'
                       : 'text-slate-300 hover:bg-white/5 hover:text-white'
                   }`}
                 >
@@ -129,7 +129,7 @@ export default function Home() {
                   onClick={() => setActiveTab('properties')}
                   className={`flex items-center justify-center gap-1.5 py-2.5 px-2 sm:px-4 rounded-lg font-bold text-xs sm:text-sm transition-all duration-200 ${
                     activeTab === 'properties'
-                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/25'
+                      ? 'bg-gradient-to-b from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30'
                       : 'text-slate-300 hover:bg-white/5 hover:text-white'
                   }`}
                 >
@@ -241,10 +241,10 @@ export default function Home() {
                 </div>
               )}
 
-              <div className="pt-1 md:pt-2">
+              <div className="pt-2 md:pt-3">
                 <Button
                   type="submit"
-                  className="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-3.5 md:py-4 rounded-xl md:rounded-2xl text-sm md:text-base shadow-lg shadow-blue-500/30 hover:shadow-2xl hover:shadow-blue-500/50 hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2.5 cursor-pointer transition-all duration-300"
+                  className="w-full bg-gradient-to-l from-blue-600 via-blue-600 to-indigo-600 hover:from-blue-500 hover:via-blue-500 hover:to-indigo-500 text-white font-extrabold tracking-wide py-3.5 md:py-4 rounded-xl md:rounded-2xl text-sm md:text-base border border-blue-400/30 shadow-xl shadow-blue-600/30 hover:shadow-2xl hover:shadow-blue-500/60 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99] flex items-center justify-center gap-2.5 cursor-pointer transition-all duration-300"
                 >
                   <Search className="w-5 h-5" />
                   <span>{t('searchSubmitAdvanced')}</span>

@@ -120,7 +120,7 @@ function NavSelector({
         aria-expanded={open}
         aria-haspopup="listbox"
         title={title}
-        className="inline-flex min-h-10 items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 text-xs font-bold text-slate-200 transition-colors hover:bg-white/10 hover:text-white"
+        className="inline-flex min-h-10 items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 text-xs font-bold text-slate-200 shadow-sm transition-all duration-200 hover:border-white/20 hover:bg-white/10 hover:text-white hover:shadow-blue-500/10 focus-visible:border-blue-400/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/50 active:scale-[0.97]"
       >
         <Icon className="h-4 w-4 text-blue-300" aria-hidden="true" />
         <span>{value}</span>
@@ -131,7 +131,7 @@ function NavSelector({
         <div
           role="listbox"
           aria-label={title}
-          className="absolute left-0 top-full z-50 mt-2 w-40 overflow-hidden rounded-xl border border-slate-200 bg-white p-1 shadow-2xl shadow-slate-950/20"
+          className="absolute left-0 top-full z-50 mt-2 w-44 origin-top animate-in fade-in-0 zoom-in-95 slide-in-from-top-1 overflow-hidden rounded-xl border border-slate-200/80 bg-white p-1 shadow-2xl shadow-slate-950/25 ring-1 ring-slate-900/5 duration-150"
         >
           {options.map((option) => (
             <button
@@ -143,7 +143,7 @@ function NavSelector({
                 onSelect(option.value);
                 setOpen(false);
               }}
-              className={`flex min-h-9 w-full items-center justify-between rounded-lg px-3 text-xs font-bold transition-colors ${
+              className={`flex min-h-9 w-full items-center justify-between gap-2 rounded-lg px-3 text-xs font-bold transition-colors duration-150 ${
                 option.current
                   ? "bg-blue-50 text-blue-700"
                   : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
@@ -387,7 +387,7 @@ export default function Navbar() {
   return (
     <>
       <header
-        className="sticky top-0 z-50 border-b border-white/10 bg-slate-900/80 text-white shadow-lg shadow-slate-950/20 backdrop-blur-md supports-[backdrop-filter]:bg-slate-900/70"
+        className="sticky top-0 z-50 border-b border-white/10 bg-slate-900/75 bg-[linear-gradient(to_bottom,rgba(255,255,255,0.05),transparent_60%)] text-white shadow-xl shadow-slate-950/25 backdrop-blur-xl supports-[backdrop-filter]:bg-slate-900/60"
         dir={direction}
       >
         <div className="container mx-auto flex h-16 sm:h-20 items-center justify-between gap-2 sm:gap-4 px-3 sm:px-4">
@@ -566,7 +566,7 @@ export default function Navbar() {
               </button>
             )}
 
-            <Link href="/add-car" className="inline-flex min-h-11 items-center rounded-xl bg-blue-600 px-4 py-2 text-xs font-extrabold text-white shadow-lg shadow-blue-500/25 transition-all hover:-translate-y-0.5 hover:bg-blue-500 hover:shadow-xl hover:shadow-blue-500/40">
+            <Link href="/add-car" className="inline-flex min-h-11 items-center rounded-xl bg-gradient-to-l from-blue-600 to-indigo-600 border border-blue-400/30 px-4 py-2 text-xs font-extrabold text-white shadow-lg shadow-blue-600/30 transition-all duration-200 hover:-translate-y-0.5 hover:from-blue-500 hover:to-indigo-500 hover:shadow-xl hover:shadow-blue-500/50">
               {t("addCar")}
             </Link>
           </div>
@@ -653,7 +653,7 @@ export default function Navbar() {
                 <button type="button" onClick={() => { setCmiModalOpen(true); setMobileMenuOpen(false); }} className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-muted px-3 py-2 text-xs font-bold text-foreground hover:bg-background"><CreditCard className="h-3.5 w-3.5 text-[#2563EB] dark:text-[#2563EB]" /> {t("cmiPaymentMobile")}</button>
               </div>
 
-              <Link href="/add-car" onClick={() => setMobileMenuOpen(false)} className="flex min-h-11 items-center justify-center rounded-xl bg-[#2563EB] px-4 py-3 text-sm font-extrabold text-white hover:bg-[#1D4ED8]">
+              <Link href="/add-car" onClick={() => setMobileMenuOpen(false)} className="flex min-h-11 items-center justify-center rounded-xl bg-gradient-to-l from-blue-600 to-indigo-600 px-4 py-3 text-sm font-extrabold text-white shadow-lg shadow-blue-600/25 transition-all hover:from-blue-500 hover:to-indigo-500 hover:shadow-xl hover:shadow-blue-500/40">
                 {t("addCar")}
               </Link>
             </div>
