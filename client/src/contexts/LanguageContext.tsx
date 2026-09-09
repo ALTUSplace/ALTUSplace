@@ -49,16 +49,16 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<Language>("ar");
 
   useEffect(() => {
-    const brand = readBrandPreference() as any;
-    if (brand && ["ar", "fr", "en"].includes(brand.defaultLanguage)) {
+    const brand = readBrandPreference() as Record<string, any>;
+    if (brand && brand.defaultLanguage && ["ar", "fr", "en"].includes(brand.defaultLanguage)) {
       setLanguageState(brand.defaultLanguage as Language);
     }
   }, []);
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);
-    const brand = readBrandPreference() as any || {};
-    writeBrandPreference({ ...brand, defaultLanguage: lang });
+    const brand = (readBrandPreference() as Record<string, any>) || {};
+    writeBrandPreference({ ...brand, defaultLanguage: lang } as any);
   };
 
   const direction = language === "ar" ? "rtl" : "ltr";
