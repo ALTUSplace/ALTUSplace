@@ -256,7 +256,7 @@ export const appRouter = router({
         return [listing.id, listing.title, listing.category, listing.status, analytics.views, analytics.whatsappClicks, analytics.contactClicks, analytics.whatsappClicks + analytics.contactClicks, listing.createdAt?.toISOString?.() ?? ""].map(csvField).join(",");
       });
       const date = new Date().toISOString().slice(0, 10);
-      return { filename: `ALTUSplace-agency-analytics-${date}.csv`, csv: `\uFEFF${header.map(csvField).join(",")}\n${rows.join("\n")}` };
+      return { filename: `altusplace-agency-analytics-${date}.csv`, csv: `\uFEFF${header.map(csvField).join(",")}\n${rows.join("\n")}` };
     }),
   }),
 
@@ -886,6 +886,9 @@ export const appRouter = router({
         const result = await db.select().from(listings).where(and(eq(listings.id, input.id), inArray(listings.status, ['Published', 'Available', 'Approved']))).limit(1);
         if (!result[0]) {
           console.error(`Listing not found or not accessible. ID: ${input.id}, Status check: ['Published', 'Available', 'Approved']`);
+          // Debug: Check what the actual status is
+          const fullListing = await db.select({ id: listings.id, status: listings.status }).from(listings).where(eq(listings.id, input.id)).limit(1);
+          console.error(`Full listing debug - ID: ${input.id}, Actual status: ${fullListing[0]?.status || 'Not found'}`);
         }
         return result[0] || null;
       }),
