@@ -6,8 +6,10 @@ import { Heart, MapPin, Trash2, SlidersHorizontal } from 'lucide-react';
 import { toast } from 'sonner';
 import { OptimizedImage } from '@/components/OptimizedImage';
 import { readBrandPreference, writeBrandPreference } from '@/config/brand';
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function Favorites() {
+  const { direction } = useLanguage();
   const [favorites, setFavorites] = useState<string[]>([]);
   const [filterType, setFilterType] = useState<'all' | 'car' | 'property'>('all');
   const [sortBy, setSortBy] = useState<'price-asc' | 'price-desc'>('price-asc');
@@ -43,7 +45,7 @@ export default function Favorites() {
   });
 
   return (
-    <div className="min-h-screen bg-background text-foreground py-12" dir="rtl">
+    <div className="min-h-screen bg-background text-foreground py-12" dir={direction}>
       <div className="container mx-auto px-4 space-y-8">
         
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-border pb-6">

@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { HelpCircle, ChevronDown, Mail, Send, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SUPPORT_EMAIL } from '@/config/brand';
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function Help() {
+  const { direction } = useLanguage();
   const [openIndex, setOpenIndex] = useState<number | null>(0);
   const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' });
   const [submitted, setSubmitted] = useState(false);
@@ -34,7 +36,7 @@ export default function Help() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground py-12 px-4" dir="rtl">
+    <div className="min-h-screen bg-background text-foreground py-12 px-4" dir={direction}>
       <div className="container mx-auto max-w-4xl space-y-12">
         
         <div className="text-center space-y-3">

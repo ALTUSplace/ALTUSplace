@@ -2,8 +2,10 @@ import React from 'react';
 import { Link } from 'wouter';
 import { BookOpen, Calendar, User, ArrowRight, Sparkles, Tag, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function BlogPage() {
+  const { direction } = useLanguage();
   const articles = [
     {
       id: 1,
@@ -38,7 +40,7 @@ export default function BlogPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 py-12 px-4" dir="rtl">
+    <div className="min-h-screen bg-slate-50 text-slate-900 py-12 px-4" dir={direction}>
       <div className="container mx-auto max-w-6xl space-y-12">
         
         {/* WordPress-style Header Banner */}

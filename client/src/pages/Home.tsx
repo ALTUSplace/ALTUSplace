@@ -8,6 +8,8 @@ import { Search, MapPin, Building2, Car, ShieldCheck, ArrowRight, CheckCircle2, 
 import { PARTNERS, LISTINGS, ListingItem } from '@/data/altusplace';
 import { SmartRecommendations } from '@/components/SmartRecommendations';
 import { FAQSection } from '@/components/FAQSection';
+import { ListingCard } from '@/components/ui/ListingCard';
+import { PageHeader } from '@/components/ui/PageHeader';
 import { toast } from 'sonner';
 
 function getListingPath(item: { id: string; type: string }) {
@@ -391,68 +393,31 @@ export default function Home() {
 
       {/* Featured Listing Cards Section */}
       <section className="py-10 md:py-16 px-4 container mx-auto max-w-6xl">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-7 md:mb-10 gap-4">
-          <div>
-            <span className="text-[#2563EB] font-bold text-xs uppercase tracking-widest bg-[#2563EB]/10 px-3 py-1 rounded-full border border-[#2563EB]/30">
-              {t('featuredListingsBadge')}
-            </span>
-            <h2 className="text-2xl md:text-3xl font-black text-[#0B0F19] mt-2">{t('featuredListingsTitle')}</h2>
-          </div>
-          <Link href="/search">
-            <Button variant="outline" className="w-full md:w-auto border-[#0B0F19] text-[#0B0F19] hover:bg-[#0B0F19] hover:text-white font-bold rounded-xl text-xs">
-              {t('viewAllListings')}
-            </Button>
-          </Link>
-        </div>
+        <PageHeader
+          eyebrow={t('featuredListingsBadge')}
+          title={t('featuredListingsTitle')}
+          action={{ label: t('viewAllListings'), href: '/search' }}
+        />
 
         {/* Listing Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-          {activeListings.slice(0, 6).map((item) => (
-            <article key={item.id} className="b2-card b2-touch-card shadow-md hover:-translate-y-2 hover:shadow-2xl transition-all duration-300 flex flex-col group">
-              <div className="relative h-48 sm:h-56 overflow-hidden">
-                <OptimizedImage
-                  src={item.image}
-                  alt={item.title}
-                  loading="lazy"
-                  decoding="async"
-                  width={800}
-                  height={448}
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                  srcSet={`${item.image} 800w`}
-                  className="b2-responsive-media group-hover:scale-105 transition-transform duration-500"
-                />
-                <div className="absolute top-3 right-3 bg-[#0B0F19]/90 backdrop-blur-md text-white text-xs font-bold px-3 py-1 rounded-full shadow">
-                  {item.category}
-                </div>
-              </div>
-
-              <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-4">
-                <div className="space-y-2">
-                  <div className="flex items-center text-muted-foreground text-xs gap-1">
-                    <MapPin className="w-3.5 h-3.5 text-[#2563EB]" />
-                    <span>{item.city}</span>
-                  </div>
-                  <h3 className="text-base font-black text-[#0B0F19] line-clamp-1">{item.title}</h3>
-                  <div className="text-xs text-muted-foreground bg-muted px-3 py-1 rounded-xl inline-block">
-                    {item.providerName}
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
-                  <div>
-                    <span className="text-xs text-muted-foreground block">{t('dailyPrice')}</span>
-                    <span className="text-lg font-black text-[#2563EB]">{item.pricePerUnit} {t('madUnit')}</span>
-                  </div>
-                  <div className="flex gap-2">
-                    <Link href={getListingPath(item)}>
-                      <Button className="b2-card-action bg-[#0B0F19] hover:bg-[#062940] text-white font-bold px-4 py-2.5 rounded-xl text-xs shadow-md cursor-pointer">
-                        {t('bookNow')}
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </article>
+        <div className="mt-7 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {activeListings.slice(0, 6).map((item, index) => (
+            <ListingCard
+              key={item.id}
+              id={item.id}
+              title={item.title}
+              city={item.city}
+              pricePerDay={item.pricePerUnit}
+              images={item.image ? [item.image] : []}
+              type={item.type === 'property' ? 'property' : 'car'}
+              specs={{
+                transmission: item.specs?.transmission,
+                fuel: item.specs?.fuel,
+                seats: item.specs?.seats ? Number(item.specs.seats) : undefined,
+                rooms: (item.specs as any)?.rooms ? Number((item.specs as any).rooms) : undefined,
+              }}
+              className={`stagger-${Math.min(index + 1, 8)} animate-fade-up`}
+            />
           ))}
         </div>
       </section>

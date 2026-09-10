@@ -7,8 +7,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function BookingMessages() {
+  const { direction } = useLanguage();
   const params = useParams<{ bookingId: string }>();
   const bookingId = Number(params.bookingId);
   const { user } = useAuth();
@@ -42,7 +44,7 @@ export default function BookingMessages() {
   }
 
   return (
-    <main dir="rtl" className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6">
+    <main dir={direction} className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6">
       <div className="mx-auto max-w-3xl space-y-5">
         <div className="flex items-center justify-between gap-3">
           <div>

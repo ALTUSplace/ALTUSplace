@@ -19,6 +19,13 @@ export default defineConfig({
     env: {
       JWT_SECRET: "test-only-signing-secret",
     },
-    include: ["server/**/*.test.ts", "server/**/*.spec.ts", "client/**/*.test.ts", "client/**/*.spec.ts"],
+    include: [
+      "server/**/*.test.ts",
+      "server/**/*.spec.ts",
+      "client/**/*.test.ts",
+      "client/**/*.spec.ts",
+      "tests/**/*.test.ts",
+      "tests/**/*.spec.ts",
+    ],
   },
 });

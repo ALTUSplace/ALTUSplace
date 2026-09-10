@@ -3,12 +3,15 @@ import { useLocation } from 'wouter';
 import { ListingItem } from '@/data/altusplace';
 import { trpc } from '@/lib/trpc';
 import { Button } from '@/components/ui/button';
-import { OptimizedImage } from '@/components/OptimizedImage';
-import { Filter, Star, ShieldCheck, Users, Car as CarIcon, ArrowUpDown, Award, MapPin, Scale, X, Eye, Home, Map, LayoutGrid } from 'lucide-react';
+import { Filter, Star, ShieldCheck, Users, Car as CarIcon, ArrowUpDown, Award, MapPin, Scale, X, Eye, Home, Map, LayoutGrid, Search as SearchIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { MapSearchView } from '@/components/MapSearchView';
 import { InteractiveMap } from '@/components/InteractiveMap';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { OptimizedImage } from '@/components/OptimizedImage';
+import { ListingCard, ListingCardSkeleton } from '@/components/ui/ListingCard';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { ErrorState } from '@/components/ui/ErrorState';
 
 const CITIES = [
   { id: 'all', name: 'جميع المدن' },
@@ -411,104 +414,48 @@ export default function Search() {
             </div>
 
             {listingsQuery.isLoading && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6" aria-live="polite">
-                {[1, 2, 3, 4].map((skeleton) => (
-                  <div key={skeleton} className="min-h-80 rounded-3xl bg-slate-950 border border-slate-800 animate-pulse" aria-label={t('loadingListings')} />
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <ListingCardSkeleton key={i} />
                 ))}
               </div>
             )}
             {listingsQuery.error && (
-              <div className="rounded-2xl border border-red-500/30 bg-red-950/20 p-6 text-red-200" role="alert">
-                {t('listingsLoadError')}
-              </div>
+              <ErrorState
+                title={t('listingsLoadErrorTitle') || 'Unable to load listings'}
+                message={t('listingsLoadError') || 'Something went wrong while fetching listings.'}
+                onRetry={() => listingsQuery.refetch()}
+              />
             )}
             {!listingsQuery.isLoading && !listingsQuery.error && filteredListings.length === 0 && (
-              <div className="rounded-2xl border border-slate-800 bg-slate-950 p-8 text-center text-slate-300" aria-live="polite">
-                {t('noMatchingListings')}
-              </div>
+              <EmptyState
+                icon="search"
+                title={t('noMatchingListings') || 'No listings found'}
+                description={t('noMatchingListingsDesc') || 'Try adjusting your filters or search in a different city.'}
+              />
             )}
 
             {/* Grid View */}
-            {viewMode === 'grid' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {filteredListings.map((item) => {
-                const isCompared = compareList.some(c => c.id === item.id);
-                return (
-                  <div
+            {viewMode === 'grid' && filteredListings.length > 0 && (
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {filteredListings.map((item, index) => (
+                  <ListingCard
                     key={item.id}
-                    className="b2-card b2-touch-card bg-slate-950 border-slate-800 shadow-xl hover:border-amber-500 hover:shadow-2xl hover:shadow-amber-500/10 transition-all duration-300 flex flex-col group relative"
-                  >
-                    <div className="relative h-56 overflow-hidden">
-                      {item.image ? (
-                        <OptimizedImage
-                          src={item.image}
-                          srcSet={`${item.image} 800w`}
-                          sizes="(max-width: 768px) 100vw, 50vw"
-                          alt={item.title}
-                          loading="lazy"
-                          decoding="async"
-                          width={800}
-                          height={448}
-                          className="b2-responsive-media group-hover:scale-110 transition-transform duration-700 ease-out"
-                        />
-                      ) : (
-                        <div className="h-full w-full bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center" aria-label="لا توجد صورة للإعلان">
-                          <Home className="w-12 h-12 text-slate-600" />
-                        </div>
-                      )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent opacity-60" />
-                      
-                      <div className="absolute top-4 right-4 bg-slate-900/90 backdrop-blur-md text-amber-400 font-bold px-3 py-1 rounded-xl text-xs border border-amber-500/30">
-                        {item.city}
-                      </div>
-
-    
-                      {/* زر المقارنة */}
-                      <button
-                        onClick={() => toggleCompare(item)}
-                        className={`absolute bottom-4 left-4 min-h-11 px-3 py-1 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-lg ${isCompared ? 'bg-amber-500 text-slate-950' : 'bg-slate-950/80 text-white hover:bg-slate-900 border border-slate-700'}`}
-                      >
-                        <Scale className="w-3.5 h-3.5" /> {isCompared ? 'مضاف للمقارنة' : 'مقارنة'}
-                      </button>
-
-                      {/* زر العرض السريع (Quick View) */}
-                      <button
-                        onClick={() => setQuickViewItem(item)}
-                        className="absolute bottom-4 right-4 min-h-11 bg-slate-950/90 hover:bg-slate-900 text-amber-400 border border-amber-500/30 px-3 py-1 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-lg"
-                      >
-                        <Eye className="w-3.5 h-3.5" /> عرض سريع
-                      </button>
-                    </div>
-
-                    <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
-                      <div className="space-y-2">
-                        <div className="text-xs text-slate-400 font-medium flex items-center gap-1">
-                          <span>{item.providerName}</span>
-                          <span className="text-[10px] bg-slate-900 px-2 py-0.5 rounded text-amber-400">
-                            {item.type === 'car' ? 'سيارة' : item.type === 'office' ? 'مكتب' : 'عقار'}
-                          </span>
-                        </div>
-                        <h3 className="text-lg font-bold text-white group-hover:text-amber-400 transition-colors">
-                          {item.title}
-                        </h3>
-                      </div>
-
-                      <div className="flex items-center justify-between pt-2 border-t border-slate-800">
-                        <div>
-                          <span className="text-2xl font-extrabold text-white">{item.pricePerUnit}</span>
-                          <span className="text-xs text-slate-400 mr-1">{item.unitLabel}</span>
-                        </div>
-                        <Button
-                          onClick={() => setLocation(listingRoute(item))}
-                          className="b2-card-action min-h-11 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs shadow-lg shadow-amber-500/20"
-                        >
-                          التفاصيل والحجز
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+                    id={String(item.id)}
+                    title={item.title}
+                    city={item.city}
+                    pricePerDay={item.pricePerUnit}
+                    images={item.image ? [item.image] : []}
+                    type={item.type === 'property' ? 'property' : 'car'}
+                    specs={{
+                      transmission: item.specs?.transmission,
+                      fuel: item.specs?.fuel,
+                      seats: item.specs?.seats ? Number(item.specs.seats) : undefined,
+                      rooms: item.specs?.rooms ? Number(item.specs.rooms) : undefined,
+                    }}
+                    className={`stagger-${Math.min(index + 1, 8)} animate-fade-up`}
+                  />
+                ))}
               </div>
             )}
 

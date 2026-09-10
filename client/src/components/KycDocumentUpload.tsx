@@ -9,64 +9,41 @@ import {
   ShieldCheck,
   AlertTriangle,
   Loader2,
+  CalendarClock,
+  Hash,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import { useLanguage } from "@/contexts/LanguageContext";
+import {
+  DOCUMENT_TYPE_LABELS,
+  KYC_STATUS_CONFIG,
+  getKycStatusFromSubmission,
+  requiredDocumentsFor,
+} from "@/lib/kyc";
+import type { KycDocumentType, KycStatus, BookingCategory } from "@/lib/kyc";
 
-export type KycDocumentType = "cni" | "driving_license" | "commercial_register";
-export type KycStatus = "unverified" | "pending" | "verified" | "rejected";
+// Re-exported for legacy imports (KycVerification page, dashboards).
+export type { KycDocumentType, KycStatus };
+export { DOCUMENT_TYPE_LABELS, KYC_STATUS_CONFIG, getKycStatusFromSubmission };
 
 interface KycDocumentUploadProps {
   documentType?: KycDocumentType;
-  rentalCategory?: "car" | "real_estate";
+  rentalCategory?: BookingCategory;
   onSuccess?: (submissionId: number) => void;
   compact?: boolean;
   showTypeSelector?: boolean;
+  /** When true, only the documents valid for `rentalCategory` are selectable. */
+  enforceCategoryDocuments?: boolean;
 }
 
 const MAX_FILE_SIZE = 8 * 1024 * 1024;
 const ALLOWED_TYPES = ["application/pdf", "image/jpeg", "image/png"] as const;
 type AllowedMimeType = (typeof ALLOWED_TYPES)[number];
-
-export const DOCUMENT_TYPE_LABELS: Record<KycDocumentType, { ar: string; fr: string; en: string }> = {
-  cni: { ar: "بطاقة التعريف الوطنية", fr: "Carte nationale d'identité", en: "National ID" },
-  driving_license: { ar: "رخصة القيادة", fr: "Permis de conduire", en: "Driving License" },
-  commercial_register: { ar: "السجل التجاري", fr: "Registre du commerce", en: "Commercial Register" },
-};
-
-export const KYC_STATUS_CONFIG = {
-  verified: {
-    icon: CheckCircle2,
-    label: { ar: "تم التحقق", fr: "Vérifié", en: "Verified" },
-    badgeClass: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-400 dark:border-emerald-700",
-  },
-  pending: {
-    icon: Clock3,
-    label: { ar: "قيد المراجعة", fr: "En cours de révision", en: "Pending Review" },
-    badgeClass: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/40 dark:text-amber-400 dark:border-amber-700",
-  },
-  rejected: {
-    icon: XCircle,
-    label: { ar: "مرفوضة", fr: "Rejeté", en: "Rejected" },
-    badgeClass: "bg-red-100 text-red-700 border-red-200 dark:bg-red-900/40 dark:text-red-400 dark:border-red-700",
-  },
-  unverified: {
-    icon: AlertTriangle,
-    label: { ar: "غير موثق", fr: "Non vérifié", en: "Unverified" },
-    badgeClass: "bg-slate-100 text-slate-600 border-slate-300 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-600",
-  },
-} as const;
-
-export function getKycStatusFromSubmission(status: string | undefined): KycStatus {
-  if (!status) return "unverified";
-  if (status === "Approved") return "verified";
-  if (status === "Rejected") return "rejected";
-  return "pending";
-}
 
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -91,6 +68,8 @@ export function KycDocumentUpload({
   const [documentType, setDocumentType] = useState<KycDocumentType>(
     initialDocType ?? (rentalCategory === "car" ? "driving_license" : "cni"),
   );
+  const [documentNumber, setDocumentNumber] = useState("");
+  const [expiryDate, setExpiryDate] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
 
@@ -191,6 +170,9 @@ export function KycDocumentUpload({
         fileName: file.name,
         mimeType: file.type as AllowedMimeType,
         contentBase64,
+        ...(documentNumber.trim().length >= 4 ? { documentNumber: documentNumber.trim() } : {}),
+        ...(expiryDate ? { expiryDate } : {}),
+        ...(rentalCategory ? { categoryContext: rentalCategory } : {}),
       });
       setUploadProgress(80);
     } catch {
@@ -254,6 +236,39 @@ export function KycDocumentUpload({
           <span className="text-xs font-semibold text-amber-700 dark:text-amber-400">
             {DOCUMENT_TYPE_LABELS[documentType][lang]}
           </span>
+        </div>
+      )}
+      {documentType !== "commercial_register" && (
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="space-y-1.5">
+            <span className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+              <Hash className="h-3.5 w-3.5" />
+              {language === "ar" ? "رقم الوثيقة (اختياري)" : "Numéro du document (optionnel)"}
+            </span>
+            <Input
+              type="text"
+              inputMode="numeric"
+              maxLength={32}
+              value={documentNumber}
+              onChange={(event) => setDocumentNumber(event.target.value)}
+              placeholder={language === "ar" ? "****" : "****"}
+              autoComplete="off"
+              className="h-9"
+            />
+          </label>
+          <label className="space-y-1.5">
+            <span className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+              <CalendarClock className="h-3.5 w-3.5" />
+              {language === "ar" ? "تاريخ الصلاحية" : "Date d'expiration"}
+            </span>
+            <Input
+              type="date"
+              value={expiryDate}
+              min={new Date().toISOString().slice(0, 10)}
+              onChange={(event) => setExpiryDate(event.target.value)}
+              className="h-9"
+            />
+          </label>
         </div>
       )}
       {currentStatus === "rejected" && latestSubmission?.rejectionReason && (

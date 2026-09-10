@@ -653,6 +653,21 @@ export default function Navbar() {
                 <button type="button" onClick={() => { setCmiModalOpen(true); setMobileMenuOpen(false); }} className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-muted px-3 py-2 text-xs font-bold text-foreground hover:bg-background"><CreditCard className="h-3.5 w-3.5 text-[#2563EB] dark:text-[#2563EB]" /> {t("cmiPaymentMobile")}</button>
               </div>
 
+              {toggleTheme && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    toggleTheme();
+                    toast.success(theme === "dark" ? t("themeToLightToast") : t("themeToDarkToast"));
+                  }}
+                  className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-border bg-muted px-3 py-2 text-xs font-bold text-foreground hover:bg-background"
+                  aria-label={t("toggleThemeLabel")}
+                >
+                  {theme === "dark" ? <Sun className="h-3.5 w-3.5 text-amber-400" /> : <Moon className="h-3.5 w-3.5 text-[#2563EB]" />}
+                  {t("toggleThemeLabel")}
+                </button>
+              )}
+
               <Link href="/add-car" onClick={() => setMobileMenuOpen(false)} className="flex min-h-11 items-center justify-center rounded-xl bg-gradient-to-l from-blue-600 to-indigo-600 px-4 py-3 text-sm font-extrabold text-white shadow-lg shadow-blue-600/25 transition-all hover:from-blue-500 hover:to-indigo-500 hover:shadow-xl hover:shadow-blue-500/40">
                 {t("addCar")}
               </Link>

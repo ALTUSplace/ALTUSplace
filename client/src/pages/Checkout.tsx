@@ -2,11 +2,13 @@ import { useState } from 'react';
 import { useLocation, useSearch } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CreditCard } from 'lucide-react';
+import { CreditCard, ShieldAlert } from 'lucide-react';
 import { toast } from 'sonner';
 import { trpc } from '@/lib/trpc';
 import { LoadingAnimation } from '@/components/LoadingAnimation';
 import { calculateRentalDays, calculateRentalSubtotal } from '@/lib/pricing';
+import { useAuth } from '@/_core/hooks/useAuth';
+import { isKycSatisfiedFor, KYC_STATUS_CONFIG, type KycStatus } from '@/lib/kyc';
 import PaymentCheckoutModal from '@/components/PaymentCheckoutModal';
 
 export default function CheckoutPage() {
@@ -25,8 +27,26 @@ export default function CheckoutPage() {
     { enabled: !isNaN(parsedListingId) && parsedListingId > 0 }
   );
 
+  // KYC gate — mirrors the server-side enforcement in payments.create:
+  // unverified/pending/rejected profiles cannot open the payment flow.
+  const { isAuthenticated } = useAuth();
+  const kycStatusQuery = trpc.kyc.status.useQuery(undefined, { enabled: isAuthenticated });
+  const kycVerified = !isAuthenticated
+    || (kycStatusQuery.data
+      ? isKycSatisfiedFor(kycStatusQuery.data.status as KycStatus, kycStatusQuery.data.approvedDocumentTypes, listing?.category ?? null)
+      : false);
+  const kycBlocked = isAuthenticated && kycStatusQuery.isSuccess && !kycVerified;
+  const kycStatusLabel = kycStatusQuery.data
+    ? KYC_STATUS_CONFIG[kycStatusQuery.data.status as KycStatus]?.label.ar
+    : '';
+
   const handleCheckout = (e: React.FormEvent) => {
     e.preventDefault();
+    if (isAuthenticated && !kycVerified) {
+      toast.error('التحقق من الهوية مطلوب قبل الدفع. يرجى رفع وثيقتك أولاً.');
+      setLocation('/kyc');
+      return;
+    }
     setShowPaymentModal(true);
   };
 
@@ -100,9 +120,22 @@ export default function CheckoutPage() {
                   <span>المجموع</span>
                   <span className="font-semibold">{subtotal} درهم</span>
                 </div>
-                <Button type="submit" className="w-full bg-amber-500 hover:bg-amber-600 text-white">
-                  تأكيد الدفع
-                </Button>
+                {kycBlocked ? (
+                  <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-700 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-400" role="alert">
+                    <p className="flex items-center gap-1.5 font-bold">
+                      <ShieldAlert className="h-3.5 w-3.5" />
+                      {`التحقق من الهوية مطلوب (${kycStatusLabel})`}
+                    </p>
+                    <p className="mt-1">لا يمكن إتمام الدفع قبل الموافقة على وثيقة هويتك.</p>
+                    <Button type="button" onClick={() => setLocation('/kyc')} className="mt-2 w-full bg-amber-500 font-bold text-slate-950 hover:bg-amber-600">
+                      إكمال التحقق من الهوية
+                    </Button>
+                  </div>
+                ) : (
+                  <Button type="submit" className="w-full bg-amber-500 hover:bg-amber-600 text-white">
+                    تأكيد الدفع
+                  </Button>
+                )}
               </CardContent>
             </Card>
           </div>

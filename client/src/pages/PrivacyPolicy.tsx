@@ -1,5 +1,6 @@
 import { Link } from "wouter";
 import { ArrowRight, CheckCircle2, LockKeyhole, ShieldCheck } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const sections = [
   {
@@ -21,8 +22,9 @@ const sections = [
 ];
 
 export default function PrivacyPolicy() {
+  const { direction } = useLanguage();
   return (
-    <div className="b2-page-shell" dir="rtl">
+    <div className="b2-page-shell" dir={direction}>
       <section className="b2-container b2-section max-w-4xl">
         <Link href="/" className="mb-8 inline-flex min-h-11 items-center gap-2 text-sm font-bold text-amber-700 hover:underline dark:text-amber-300">
           <ArrowRight className="h-4 w-4" /> العودة إلى الرئيسية

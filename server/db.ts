@@ -18,6 +18,21 @@ export async function getDb() {
   return _db;
 }
 
+/**
+ * Execute a callback inside a database transaction.
+ * Automatically rolls back on any thrown error.
+ * Returns the callback's return value.
+ */
+export async function withTransaction<T>(
+  fn: (tx: any) => Promise<T>,
+): Promise<T> {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  return db.transaction(async (tx) => {
+    return fn(tx);
+  });
+}
+
 export async function upsertUser(user: InsertUser): Promise<void> {
   if (!user.openId) {
     throw new Error("User openId is required for upsert");

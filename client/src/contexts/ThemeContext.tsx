@@ -16,6 +16,39 @@ interface ThemeProviderProps {
   switchable?: boolean;
 }
 
+function readStoredTheme(): Theme | null {
+  try {
+    const stored = localStorage.getItem("theme");
+    return stored === "light" || stored === "dark" ? stored : null;
+  } catch {
+    return null;
+  }
+}
+
+function preferSystemTheme(): Theme {
+  try {
+    return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches
+      ? "dark"
+      : "light";
+  } catch {
+    return "light";
+  }
+}
+
+// Kept in sync with the inline script in client/index.html (anti-FOUC).
+function applyThemeToDocument(theme: Theme): void {
+  const root = document.documentElement;
+  if (theme === "dark") {
+    root.classList.add("dark");
+    root.style.colorScheme = "dark";
+  } else {
+    root.classList.remove("dark");
+    root.style.colorScheme = "light";
+  }
+  const themeMeta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+  themeMeta?.setAttribute("content", theme === "dark" ? "#0B0F19" : "#F8FAFC");
+}
+
 export function ThemeProvider({
   children,
   defaultTheme = "light",
@@ -23,22 +56,20 @@ export function ThemeProvider({
 }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(() => {
     if (switchable) {
-      const stored = localStorage.getItem("theme");
-      return (stored as Theme) || defaultTheme;
+      // Respect the user's explicit choice first, otherwise follow the OS.
+      return readStoredTheme() ?? (switchable ? preferSystemTheme() : defaultTheme);
     }
     return defaultTheme;
   });
 
   useEffect(() => {
-    const root = document.documentElement;
-    if (theme === "dark") {
-      root.classList.add("dark");
-    } else {
-      root.classList.remove("dark");
-    }
-
+    applyThemeToDocument(theme);
     if (switchable) {
-      localStorage.setItem("theme", theme);
+      try {
+        localStorage.setItem("theme", theme);
+      } catch {
+        // Storage unavailable (private mode / sandbox) — session-only is fine.
+      }
     }
   }, [theme, switchable]);
 

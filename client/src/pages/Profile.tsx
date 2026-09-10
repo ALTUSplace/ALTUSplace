@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import type { InvoicePdfInput } from "@/lib/invoicePdf";
 
 const money = (value: number, currency = "MAD") => `${new Intl.NumberFormat("fr-MA").format(value)} ${currency}`;
@@ -20,6 +21,7 @@ const statusLabel: Record<string, string> = {
 export default function Profile() {
   const { user, loading: authLoading, isAuthenticated } = useAuth({ redirectOnUnauthenticated: true });
   const { theme, toggleTheme } = useTheme();
+  const { direction } = useLanguage();
   const [activeTab, setActiveTab] = useState<"info" | "bookings" | "invoices">("info");
   const [name, setName] = useState("");
   const [whatsappPhone, setWhatsappPhone] = useState("");
@@ -69,7 +71,7 @@ export default function Profile() {
   if (!isAuthenticated || !user) return null;
 
   return (
-    <div className="min-h-screen bg-background text-foreground py-8 px-4" dir="rtl">
+    <div className="min-h-screen bg-background text-foreground py-8 px-4" dir={direction}>
       <div className="container max-w-5xl mx-auto space-y-6">
         <section className="bg-slate-900 text-white rounded-3xl p-6 md:p-8 shadow-xl">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">

@@ -8,7 +8,28 @@ const t = initTRPC.context<TrpcContext>().create({
 });
 
 export const router = t.router;
-export const publicProcedure = t.procedure;
+export const publicProcedure = t.procedure.use(
+  t.middleware(async opts => {
+    // Enterprise XSS shield: recursively sanitize + HTML-escape every string
+    // in the validated procedure input before any handler runs. Numbers,
+    // booleans, dates and arrays lengths are untouched; zod limits still apply.
+    const { sanitizeTrpcInput } = await import("./security");
+    const input = (opts as { input?: unknown }).input;
+    if (input !== undefined && input !== null) {
+      return opts.next({ input: sanitizeTrpcInput(input) });
+    }
+    return opts.next();
+  }),
+);
+
+export const sanitizeInputMiddleware = t.middleware(async opts => {
+  const { sanitizeTrpcInput } = await import("./security");
+  const input = (opts as { input?: unknown }).input;
+  if (input !== undefined && input !== null) {
+    return opts.next({ input: sanitizeTrpcInput(input) });
+  }
+  return opts.next();
+});
 
 const requireUser = t.middleware(async opts => {
   const { ctx, next } = opts;
@@ -28,7 +49,7 @@ const requireUser = t.middleware(async opts => {
   });
 });
 
-export const protectedProcedure = t.procedure.use(requireUser);
+export const protectedProcedure = t.procedure.use(sanitizeInputMiddleware).use(requireUser);
 
 export const ownerProcedure = protectedProcedure.use(
   t.middleware(async opts => {
@@ -40,7 +61,7 @@ export const ownerProcedure = protectedProcedure.use(
   }),
 );
 
-export const adminProcedure = t.procedure.use(
+export const adminProcedure = t.procedure.use(sanitizeInputMiddleware).use(
   t.middleware(async opts => {
     const { ctx, next } = opts;
 

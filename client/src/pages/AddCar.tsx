@@ -8,8 +8,10 @@ import { trpc } from '@/lib/trpc';
 import { Checkbox } from '@/components/ui/checkbox';
 import { persistLegalConsent } from '@/lib/legalDisclosure';
 import { Link } from 'wouter';
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function AddCar() {
+  const { direction } = useLanguage();
   const [, setLocation] = useLocation();
   const [submitted, setSubmitted] = useState(false);
   const [imageUrl, setImageUrl] = useState('');
@@ -68,7 +70,7 @@ export default function AddCar() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 py-12 px-4" dir="rtl">
+    <div className="min-h-screen bg-slate-950 text-slate-100 py-12 px-4" dir={direction}>
       <div className="container mx-auto max-w-2xl">
         <button
           onClick={() => setLocation('/host')}

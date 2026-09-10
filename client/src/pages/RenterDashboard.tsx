@@ -8,8 +8,10 @@ import { Calendar, FileText, Headphones, Car, Building2, CheckCircle2, Clock, XC
 import { toast } from 'sonner';
 import type { InvoicePdfInput } from '@/lib/invoicePdf';
 import { SUPPORT_EMAIL } from '@/config/brand';
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function RenterDashboard() {
+  const { direction } = useLanguage();
   const { data: user } = trpc.auth.me.useQuery();
   const { data: bookings = [], isLoading } = trpc.bookings.list.useQuery();
   const { data: invoices = [], isLoading: invoicesLoading } = trpc.invoices.list.useQuery();
@@ -23,7 +25,7 @@ export default function RenterDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground p-6 md:p-10 font-sans" dir="rtl">
+    <div className="min-h-screen bg-background text-foreground p-6 md:p-10 font-sans" dir={direction}>
       <div className="max-w-7xl mx-auto space-y-8">
         
         {/* Header */}

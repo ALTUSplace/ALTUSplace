@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { trpc } from '@/lib/trpc';
 import { toast } from 'sonner';
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type DisputeStatus = 'Open' | 'UnderReview' | 'Resolved' | 'Rejected';
 type DisputeAttachment = { id: number; name: string; mimeType: string; size: number; url: string };
@@ -56,6 +57,7 @@ function fileToBase64(file: File): Promise<string> {
 }
 
 export default function DisputeResolution() {
+  const { direction } = useLanguage();
   const utils = trpc.useUtils();
   const disputesQuery = trpc.disputes.listMine.useQuery();
   const createDispute = trpc.disputes.create.useMutation({
@@ -122,7 +124,7 @@ export default function DisputeResolution() {
   const disputes = (disputesQuery.data ?? []) as Dispute[];
 
   return (
-    <div className="min-h-screen bg-slate-50 py-10 px-4 sm:px-6 lg:px-8" dir="rtl">
+    <div className="min-h-screen bg-slate-50 py-10 px-4 sm:px-6 lg:px-8" dir={direction}>
       <div className="max-w-5xl mx-auto space-y-8">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
           <div>

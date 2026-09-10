@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { ShieldCheck, FileText, History } from "lucide-react";
+import { ShieldCheck, FileText, History, Car, Home } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { KycDocumentUpload } from "@/components/KycDocumentUpload";
 import { KYC_STATUS_CONFIG, getKycStatusFromSubmission } from "@/components/KycDocumentUpload";
+import type { KycStatus } from "@/lib/kyc";
 import { Badge } from "@/components/ui/badge";
 
 export default function KycVerification() {
@@ -12,9 +13,14 @@ export default function KycVerification() {
   const { language, direction, t } = useLanguage();
   const [activeTab, setActiveTab] = useState<"upload" | "history">("upload");
   const submissions = trpc.kyc.listMine.useQuery(undefined, { enabled: isAuthenticated });
+  const kycStatus = trpc.kyc.status.useQuery(undefined, { enabled: isAuthenticated });
   const lang = language === "ar" ? "ar" : language === "fr" ? "fr" : "en";
-  const roleLabel = (value: string) => value === "owner" ? (language === "ar" ? "\u0645\u0627\u0644\u0643" : "Propri\u00e9taire") : value === "company" ? (language === "ar" ? "\u0634\u0631\u0643\u0629" : "Entreprise") : (language === "ar" ? "\u0645\u0633\u062a\u0623\u062c\u0631" : "Locataire");
+  const roleLabel = (value: string) => value === "owner" ? (language === "ar" ? "مالك" : "Propriétaire") : value === "company" ? (language === "ar" ? "شركة" : "Entreprise") : (language === "ar" ? "مستأجر" : "Locataire");
   if (authLoading || !isAuthenticated) return <div className="min-h-screen grid place-items-center">{t("loading")}</div>;
+  const status = (kycStatus.data?.status ?? "unverified") as KycStatus;
+  const statusConfig = KYC_STATUS_CONFIG[status];
+  const StatusBannerIcon = statusConfig.icon;
+  const rejectedReason = status === "rejected" ? kycStatus.data?.lastRejectionReason ?? submissions.data?.find((item) => item.status === "Rejected")?.rejectionReason ?? null : null;
   return (
     <main dir={direction} lang={language} className="min-h-screen bg-background px-4 py-8 text-foreground">
       <div className="mx-auto max-w-3xl space-y-6">
@@ -24,9 +30,31 @@ export default function KycVerification() {
             <div><h1 className="text-2xl font-black">{t("kycTitle")}</h1><p className="mt-2 text-sm text-slate-300">{t("kycSubtitle")}</p></div>
           </div>
         </header>
+        {/* Live verification state — mirrors the server gate enforced on bookings & payments */}
+        <section aria-live="polite" className={`flex items-start gap-3 rounded-2xl border p-4 ${statusConfig.badgeClass}`}>
+          <StatusBannerIcon className="mt-0.5 h-5 w-5 shrink-0" />
+          <div className="space-y-1 text-sm">
+            <p className="font-bold">{statusConfig.label[lang]}</p>
+            {status === "pending" && <p className="text-xs opacity-80">{language === "ar" ? "لا يمكن إتمام الحجز أو الدفع قبل الموافقة على وثيقتك." : "Les réservations et paiements restent bloqués jusqu'à la validation de votre document."}</p>}
+            {status === "rejected" && rejectedReason && <p className="text-xs opacity-90">{rejectedReason}</p>}
+            {status === "unverified" && <p className="text-xs opacity-80">{language === "ar" ? "ارفع وثيقة هوية صالحة لتفعيل الحجز والدفع." : "Téléversez une pièce d'identité valide pour débloquer les réservations."}</p>}
+            {status === "verified" && <p className="text-xs opacity-80">{language === "ar" ? "حسابك موثق. يمكنك الحجز والدفع بحرية." : "Votre compte est vérifié. Vous pouvez réserver et payer."}</p>}
+          </div>
+        </section>
+        {/* Document requirements per booking category */}
+        <section className="grid gap-3 sm:grid-cols-2">
+          <div className="rounded-2xl border bg-card p-4">
+            <p className="flex items-center gap-2 text-sm font-bold"><Car className="h-4 w-4 text-amber-600" />{language === "ar" ? "حجز سيارة" : "Location de voiture"}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{language === "ar" ? "رخصة قيادة سارية المفعول (إلزامي)." : "Permis de conduire valide (obligatoire)."}</p>
+          </div>
+          <div className="rounded-2xl border bg-card p-4">
+            <p className="flex items-center gap-2 text-sm font-bold"><Home className="h-4 w-4 text-amber-600" />{language === "ar" ? "حجز عقار / إقامة" : "Séjour / immobilier"}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{language === "ar" ? "بطاقة التعريف الوطنية أو جواز السفر (إلزامي)." : "CNI ou passeport (obligatoire)."}</p>
+          </div>
+        </section>
         <div className="flex gap-2 rounded-2xl border bg-card p-1.5">
-          <button type="button" onClick={() => setActiveTab("upload")} className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition-all ${activeTab === "upload" ? "bg-amber-500 text-slate-950 shadow-sm" : "text-muted-foreground hover:text-foreground"}`}><ShieldCheck className="h-4 w-4" />{language === "ar" ? "\u0631\u0641\u0639 \u0648\u062b\u064a\u0642\u0629" : "T\u00e9l\u00e9charger"}</button>
-          <button type="button" onClick={() => setActiveTab("history")} className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition-all ${activeTab === "history" ? "bg-amber-500 text-slate-950 shadow-sm" : "text-muted-foreground hover:text-foreground"}`}><History className="h-4 w-4" />{language === "ar" ? "\u0627\u0644\u0633\u062c\u0644" : "Historique"}</button>
+          <button type="button" onClick={() => setActiveTab("upload")} className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition-all ${activeTab === "upload" ? "bg-amber-500 text-slate-950 shadow-sm" : "text-muted-foreground hover:text-foreground"}`}><ShieldCheck className="h-4 w-4" />{language === "ar" ? "رفع وثيقة" : "Télécharger"}</button>
+          <button type="button" onClick={() => setActiveTab("history")} className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition-all ${activeTab === "history" ? "bg-amber-500 text-slate-950 shadow-sm" : "text-muted-foreground hover:text-foreground"}`}><History className="h-4 w-4" />{language === "ar" ? "السجل" : "Historique"}</button>
         </div>
         {activeTab === "upload" && <KycDocumentUpload />}
         {activeTab === "history" && (

@@ -21,6 +21,7 @@ import { syncListingIcal } from "./ical";
 import { CANCELLATION_POLICY_VERSION, CANCELLATION_POLICY_TEXT, CANCELLATION_POLICY_FINGERPRINT } from "../shared/cancellationPolicySnapshot";
 import { createImageVerificationProof, ORIGINAL_IMAGE_REJECTION_MESSAGE, verifyImageVerificationProof, verifyOriginalListingImage } from "./imageVerification";
 import { isRangeAvailable, overlaps, parseBlockedRanges, parseDateRange } from "./availability";
+import { getTranslatedListing, invalidateTranslationCache, isTranslationAvailable, SUPPORTED_LANGUAGES, translateWithAws } from "./_core/translation";
 
 async function writeAuditLog(input: {
   actorId: number;
@@ -876,7 +877,7 @@ export const appRouter = router({
       }),
 
     getById: publicProcedure
-      .input(z.object({ id: z.number() }))
+      .input(z.object({ id: z.number(), language: z.enum(["ar", "fr", "en"]).optional() }))
       .query(async ({ input }) => {
         const db = await getDb();
         if (!db) {
@@ -886,11 +887,36 @@ export const appRouter = router({
         const result = await db.select().from(listings).where(and(eq(listings.id, input.id), inArray(listings.status, ['Published', 'Available', 'Approved']))).limit(1);
         if (!result[0]) {
           console.error(`Listing not found or not accessible. ID: ${input.id}, Status check: ['Published', 'Available', 'Approved']`);
-          // Debug: Check what the actual status is
           const fullListing = await db.select({ id: listings.id, status: listings.status }).from(listings).where(eq(listings.id, input.id)).limit(1);
           console.error(`Full listing debug - ID: ${input.id}, Actual status: ${fullListing[0]?.status || 'Not found'}`);
+          return null;
         }
-        return result[0] || null;
+
+        const listing = result[0];
+        const sourceLanguage = "ar" as const;
+        const targetLanguage = input.language ?? sourceLanguage;
+
+        // If translation requested and different from source, fetch translations
+        if (targetLanguage !== sourceLanguage && ENV.translationEnabled && ENV.translationProvider !== "none" && getTranslateClient() !== null && listing.title) {
+          const translated = await getTranslatedListing(
+            { id: listing.id, title: listing.title, description: listing.description ?? null },
+            targetLanguage,
+            sourceLanguage
+          );
+          return {
+            ...listing,
+            title: translated.title ?? listing.title,
+            description: translated.description ?? listing.description,
+            _translationMeta: {
+              titleFromCache: translated.titleFromCache,
+              descriptionFromCache: translated.descriptionFromCache,
+              titleProvider: translated.titleProvider,
+              descriptionProvider: translated.descriptionProvider,
+            },
+          };
+        }
+
+        return listing;
       }),
 
     getBookedDates: publicProcedure

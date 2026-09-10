@@ -20,7 +20,7 @@ export const users = mysqlTable("users", {
   passwordHash: varchar("passwordHash", { length: 255 }),
   role: mysqlEnum("role", ["renter", "owner", "admin", "user"]).default("user").notNull(),
   accountStatus: mysqlEnum("account_status", ["active", "suspended", "banned"]).default("active").notNull(),
-  kycVerificationStatus: mysqlEnum("kyc_verification_status", ["unverified", "pending", "verified", "rejected"]).default("unverified").notNull(),
+  kycVerificationStatus: varchar("kyc_verification_status", { length: 20 }).default("unverified").notNull(), // unverified | pending | verified | rejected
   kycVerifiedAt: timestamp("kyc_verified_at"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
@@ -54,7 +54,14 @@ export const listings = mysqlTable("listings", {
   icalSyncStatus: mysqlEnum("ical_sync_status", ["never", "ok", "error"]).default("never").notNull(),
   icalSyncError: varchar("ical_sync_error", { length: 500 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
+}, (table) => ({
+  cityIdx: index("listings_city_idx").on(table.city),
+  categoryIdx: index("listings_category_idx").on(table.category),
+  pricePerDayIdx: index("listings_price_per_day_idx").on(table.pricePerDay),
+  statusIdx: index("listings_status_idx").on(table.status),
+  ownerIdIdx: index("listings_owner_id_idx").on(table.ownerId),
+  searchCompositeIdx: index("listings_search_composite_idx").on(table.city, table.category, table.status),
+}));
 
 export const listingAnalyticsEvents = mysqlTable("listing_analytics_events", {
   id: int("event_id").autoincrement().primaryKey(),
@@ -84,7 +91,11 @@ export const bookings = mysqlTable("bookings", {
   cancellationPolicyAcceptedAt: timestamp("cancellation_policy_accepted_at"),
   cancellationPolicyAcceptedBy: int("cancellation_policy_accepted_by"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
+}, (table) => ({
+  listingStatusDatesIdx: index("bookings_listing_status_dates_idx").on(table.listingId, table.status, table.startDate, table.endDate),
+  renterIdIdx: index("bookings_renter_id_idx").on(table.renterId),
+  statusIdx: index("bookings_status_idx").on(table.status),
+}));
 
 export const reviews = mysqlTable("reviews", {
   id: int("review_id").autoincrement().primaryKey(),
@@ -100,15 +111,24 @@ export const kycSubmissions = mysqlTable("kyc_submissions", {
   id: int("kyc_id").autoincrement().primaryKey(),
   userId: int("user_id").notNull(),
   applicantRole: mysqlEnum("applicant_role", ["renter", "owner", "company"]).default("renter").notNull(),
-  documentType: mysqlEnum("document_type", ["cni", "driving_license", "commercial_register"]).notNull(),
+  documentType: varchar("document_type", { length: 24 }).notNull(), // cni | driving_license | commercial_register | passport | national_id
   documentKey: varchar("document_key", { length: 512 }).notNull(),
   originalFileName: varchar("original_file_name", { length: 255 }).notNull(),
   mimeType: varchar("mime_type", { length: 100 }).notNull(),
+  provider: varchar("provider", { length: 40 }).default("manual").notNull(), // manual | stripe_identity | persona
+  providerSessionId: varchar("provider_session_id", { length: 128 }),
+  fileSize: int("file_size"),
+  documentNumberMasked: varchar("document_number_masked", { length: 32 }),
+  expiryDate: timestamp("expiry_date"),
+  categoryContext: varchar("category_context", { length: 32 }), // car | property
   status: mysqlEnum("status", ["Pending", "Approved", "Rejected"]).default("Pending").notNull(),
   rejectionReason: text("rejection_reason"),
   submittedAt: timestamp("submitted_at").defaultNow().notNull(),
   reviewedAt: timestamp("reviewed_at"),
-});
+}, (table) => ({
+  providerSessionIdx: index("kyc_submissions_provider_session_idx").on(table.providerSessionId),
+  userIdIdx: index("kyc_submissions_user_id_idx").on(table.userId),
+}));
 
 export const payments = mysqlTable("payments", {
   id: int("payment_id").autoincrement().primaryKey(),
@@ -121,7 +141,10 @@ export const payments = mysqlTable("payments", {
   providerReference: varchar("provider_reference", { length: 120 }).notNull(),
   simulated: boolean("simulated").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (table) => ({
+  bookingIdIdx: index("payments_booking_id_idx").on(table.bookingId),
+  payerIdIdx: index("payments_payer_id_idx").on(table.payerId),
+}));
 
 export const commercialLeaseContracts = mysqlTable("commercial_lease_contracts", {
   id: int("contract_id").autoincrement().primaryKey(),
@@ -179,6 +202,20 @@ export const bookingMessages = mysqlTable("booking_messages", {
   recipientUnreadIdx: index("booking_messages_recipient_unread_idx").on(table.recipientId, table.readAt),
 }));
 
+export const listingComments = mysqlTable("listing_comments", {
+  id: int("comment_id").autoincrement().primaryKey(),
+  listingId: int("listing_id").notNull(),
+  authorId: int("author_id").notNull(),
+  parentId: int("parent_id"), // one-level replies: points at a top-level comment
+  body: text("body").notNull(),
+  status: mysqlEnum("status", ["visible", "hidden"]).default("visible").notNull(),
+  editedAt: timestamp("edited_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  listingCreatedIdx: index("listing_comments_listing_created_idx").on(table.listingId, table.createdAt),
+  authorIdx: index("listing_comments_author_idx").on(table.authorId),
+}));
+
 export const auditLogs = mysqlTable("audit_logs", {
   id: int("audit_log_id").autoincrement().primaryKey(),
   actorId: int("actor_id").notNull(),
@@ -232,7 +269,10 @@ export const payoutRequests = mysqlTable("payout_requests", {
   reviewedBy: int("reviewed_by"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   reviewedAt: timestamp("reviewed_at"),
-});
+}, (table) => ({
+  ownerIdIdx: index("payout_requests_owner_id_idx").on(table.ownerId),
+  statusIdx: index("payout_requests_status_idx").on(table.status),
+}));
 
 export const bookingVouchers = mysqlTable("booking_vouchers", {
   id: int("voucher_id").autoincrement().primaryKey(),
@@ -263,7 +303,9 @@ export const invoices = mysqlTable("invoices", {
   cancellationPolicyAcceptedAt: timestamp("cancellation_policy_accepted_at"),
   cancellationPolicyAcceptedBy: int("cancellation_policy_accepted_by"),
   issuedAt: timestamp("issued_at").defaultNow().notNull(),
-});
+}, (table) => ({
+  bookingIdIdx: index("invoices_booking_id_idx").on(table.bookingId),
+}));
 
 export const disputes = mysqlTable("disputes", {
   id: int("dispute_id").autoincrement().primaryKey(),
@@ -276,7 +318,10 @@ export const disputes = mysqlTable("disputes", {
   reviewedBy: int("reviewed_by"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
-});
+}, (table) => ({
+  bookingIdIdx: index("disputes_booking_id_idx").on(table.bookingId),
+  openedByIdx: index("disputes_opened_by_idx").on(table.openedBy),
+}));
 
 export const disputeAttachments = mysqlTable("dispute_attachments", {
   id: int("attachment_id").autoincrement().primaryKey(),
@@ -299,7 +344,30 @@ export const supportTickets = mysqlTable("support_tickets", {
   respondedAt: timestamp("responded_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
-});
+}, (table) => ({
+  userIdIdx: index("support_tickets_user_id_idx").on(table.userId),
+  statusIdx: index("support_tickets_status_idx").on(table.status),
+}));
+
+// Translations table for caching machine translations
+// Stores translated content for listings to avoid repeated API calls
+export const translations = mysqlTable("translations", {
+  id: int("translation_id").autoincrement().primaryKey(),
+  listingId: int("listing_id").notNull(),
+  language: varchar("language", { length: 10 }).notNull(), // ar, fr, en
+  field: varchar("field", { length: 50 }).notNull(), // title, description
+  originalText: text("original_text").notNull(),
+  translatedText: text("translated_text").notNull(),
+  provider: varchar("provider", { length: 20 }).default("aws").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+}, (table) => ({
+  listingLanguageFieldIdx: uniqueIndex("translation_listing_language_field_idx").on(table.listingId, table.language, table.field),
+  listingLanguageIdx: index("translation_listing_language_idx").on(table.listingId, table.language),
+}));
+
+export type Translation = typeof translations.$inferSelect;
+export type InsertTranslation = typeof translations.$inferInsert;
 
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
@@ -320,6 +388,8 @@ export type BookingMessage = typeof bookingMessages.$inferSelect;
 export type InsertBookingMessage = typeof bookingMessages.$inferInsert;
 export type AuditLog = typeof auditLogs.$inferSelect;
 export type InsertAuditLog = typeof auditLogs.$inferInsert;
+export type ListingComment = typeof listingComments.$inferSelect;
+export type InsertListingComment = typeof listingComments.$inferInsert;
 export type RefundRequest = typeof refundRequests.$inferSelect;
 export type InsertRefundRequest = typeof refundRequests.$inferInsert;
 export type InsertNotification = typeof notifications.$inferInsert;

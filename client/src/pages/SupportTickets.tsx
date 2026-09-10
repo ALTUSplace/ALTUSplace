@@ -3,6 +3,7 @@ import { Headphones, Plus, MessageSquare, CheckCircle2, Clock, Send, AlertCircle
 import { Button } from '@/components/ui/button';
 import { trpc } from '@/lib/trpc';
 import { toast } from 'sonner';
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type TicketStatus = 'Open' | 'InProgress' | 'Resolved';
 type Ticket = {
@@ -26,6 +27,7 @@ const formatDate = (value: Date | string) =>
   new Intl.DateTimeFormat('ar-MA', { dateStyle: 'medium' }).format(new Date(value));
 
 export default function SupportTickets() {
+  const { direction } = useLanguage();
   const utils = trpc.useUtils();
   const ticketsQuery = trpc.supportTickets.list.useQuery();
   const createTicket = trpc.supportTickets.create.useMutation({
@@ -60,7 +62,7 @@ export default function SupportTickets() {
   const tickets = (ticketsQuery.data ?? []) as Ticket[];
 
   return (
-    <div className="min-h-screen bg-background text-foreground py-8 px-4" dir="rtl">
+    <div className="min-h-screen bg-background text-foreground py-8 px-4" dir={direction}>
       <div className="container mx-auto max-w-5xl space-y-8">
         <div className="bg-slate-950 border border-slate-800 p-6 sm:p-8 rounded-3xl shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-4">

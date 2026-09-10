@@ -37,6 +37,30 @@
     <style>
       body { font-family: 'Cairo', sans-serif; }
     </style>
+    <script>
+      // Anti-FOUC: apply the persisted (or OS-preferred) theme before first
+      // paint so dark-mode users never see a white flash. Kept in sync with
+      // client/src/contexts/ThemeContext.tsx (localStorage key: "theme").
+      (function () {
+        try {
+          var stored = localStorage.getItem("theme");
+          var theme = stored === "light" || stored === "dark"
+            ? stored
+            : (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+          var root = document.documentElement;
+          if (theme === "dark") {
+            root.classList.add("dark");
+            root.style.colorScheme = "dark";
+          } else {
+            root.style.colorScheme = "light";
+          }
+          var meta = document.querySelector('meta[name="theme-color"]');
+          if (meta) meta.setAttribute("content", theme === "dark" ? "#0B0F19" : "#F8FAFC");
+        } catch (e) {
+          /* ignore — storage unavailable */
+        }
+      })();
+    </script>
   </head>
   <body class="bg-[#F8FAFC] text-[#0F172A] antialiased">
     <div id="root"></div>

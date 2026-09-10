@@ -6,11 +6,13 @@ import { toast } from 'sonner';
 import { BookmarkCheck, Calendar, FileText, CheckCircle, Clock, Phone, Download, Receipt, MessageCircle } from 'lucide-react';
 import type { InvoicePdfInput } from '@/lib/invoicePdf';
 import { OptimizedImage } from '@/components/OptimizedImage';
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const formatDate = (value: string | Date) => new Date(value).toLocaleDateString('fr-MA');
 const formatMoney = (value: number) => new Intl.NumberFormat('fr-MA').format(value);
 
 export default function MyBookings() {
+  const { direction } = useLanguage();
   const [, setLocation] = useLocation();
   const { data: dbBookings = [], isLoading: bookingsLoading } = trpc.bookings.list.useQuery();
   const { data: listings = [] } = trpc.listings.list.useQuery();
@@ -46,7 +48,7 @@ export default function MyBookings() {
   }, [contractQuery.data, contractQuery.isError]);
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100 py-12" dir="rtl">
+    <div className="min-h-screen bg-slate-900 text-slate-100 py-12" dir={direction}>
       <div className="container mx-auto px-4 max-w-4xl space-y-8">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-950 border border-slate-800 p-8 rounded-3xl shadow-xl">
           <div className="flex items-center gap-4">

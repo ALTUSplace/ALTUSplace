@@ -2,6 +2,7 @@ import express from "express";
 import { createServer } from "http";
 import path from "path";
 import { fileURLToPath } from "url";
+import { getCacheMetrics } from "./_core/cache";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -26,6 +27,7 @@ async function startServer() {
   // Health check endpoint for high availability and monitoring
   app.get("/api/health", (_req, res) => {
     const memoryUsage = process.memoryUsage();
+    const cacheMetrics = getCacheMetrics();
     res.json({
       status: "healthy",
       timestamp: new Date().toISOString(),
@@ -35,8 +37,24 @@ async function startServer() {
         heapUsed: `${Math.round(memoryUsage.heapUsed / 1024 / 1024)} MB`,
       },
       database: { status: "connected" },
-      redisCache: { status: "synchronized" },
+      redisCache: {
+        status: cacheMetrics.isEnabled ? "synchronized" : "disabled",
+        hitRate: `${cacheMetrics.hitRate}%`,
+        hits: cacheMetrics.hits,
+        misses: cacheMetrics.misses,
+        errors: cacheMetrics.errors,
+      },
       storage: { status: "operational" }
+    });
+  });
+
+  // Cache status endpoint for monitoring
+  app.get("/api/cache/status", (_req, res) => {
+    const cacheMetrics = getCacheMetrics();
+    res.json({
+      enabled: cacheMetrics.isEnabled,
+      metrics: cacheMetrics,
+      timestamp: new Date().toISOString(),
     });
   });
 
