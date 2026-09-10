@@ -1,1 +1,0 @@
-ALTER TABLE `notifications` MODIFY COLUMN `type` enum('booking_new','booking_accepted','booking_rejected','listing_approved','listing_rejected','lease_expiring','voucher_issued','system') NOT NULL;

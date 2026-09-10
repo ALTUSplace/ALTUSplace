@@ -9,11 +9,11 @@ describe("listing comment system audit", () => {
   it("declares the listing_comments table in the drizzle schema", () => {
     const schema = read("drizzle/schema.ts");
     expect(schema).toContain("listingComments");
-    expect(schema).toMatch(/mysqlTable\(\"listing_comments\"/);
-    expect(schema).toContain('parentId: int("parent_id")');
-    expect(schema).toContain('listingId: int("listing_id").notNull()');
-    expect(schema).toContain('authorId: int("author_id").notNull()');
-    expect(schema).toContain('status: mysqlEnum("status", ["visible", "hidden"])');
+    expect(schema).toMatch(/pgTable\(\"listing_comments\"/);
+    expect(schema).toContain('parentId: integer("parent_id")');
+    expect(schema).toContain('listingId: integer("listing_id").notNull()');
+    expect(schema).toContain('authorId: integer("author_id").notNull()');
+    expect(schema).toContain('status: commentStatusEnum("status").default("visible").notNull()');
     expect(schema).toContain("listingCreatedIdx");
   });
 

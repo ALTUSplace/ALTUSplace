@@ -114,7 +114,7 @@ export async function notifyUser(input: NotificationInput): Promise<number | nul
     entityId: input.entityId,
     dedupeKey: input.dedupeKey,
     emailStatus: input.email ? "not_sent" : "skipped",
-  });
+  }).returning({ insertId: notifications.id });
 
   const notificationId = Number(inserted.insertId);
   if (!input.email) return notificationId;

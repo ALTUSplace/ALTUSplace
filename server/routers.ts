@@ -9,7 +9,7 @@ import { adminProcedure, ownerProcedure, publicProcedure, protectedProcedure, ro
 import { getDb } from "./db";
 import { listings, listingAnalyticsEvents, listingComments, bookings, reviews, users, commercialLeaseContracts, notifications, platformSettings, commissionTiers, escrowEntries, payoutRequests, disputes, disputeAttachments, supportTickets, payments, invoices, kycSubmissions, bookingVouchers, bookingMessages, auditLogs, refundRequests } from "../drizzle/schema";
 import { eq, and, lte, gte, lt, gt, desc, count, isNull, inArray, ne, sql } from "drizzle-orm";
-import { alias } from "drizzle-orm/mysql-core";
+import { alias } from "drizzle-orm/pg-core";
 import { safeNotifyUser, buildEmailContent } from "./notificationService";
 import { z } from "zod";
 import { storageGet, storagePut } from "./storage";
@@ -339,7 +339,7 @@ export const appRouter = router({
         const participants = [booking.renterId, booking.ownerId];
         if (!participants.includes(ctx.user!.id)) throw new TRPCError({ code: "FORBIDDEN", message: "المراسلة متاحة فقط لأطراف الحجز." });
         const recipientId = ctx.user!.id === booking.renterId ? booking.ownerId : booking.renterId;
-        const [inserted] = await db.insert(bookingMessages).values({ bookingId: input.bookingId, senderId: ctx.user!.id, recipientId, body: input.body });
+        const [inserted] = await db.insert(bookingMessages).values({ bookingId: input.bookingId, senderId: ctx.user!.id, recipientId, body: input.body }).returning({ insertId: bookingMessages.id });
         const messageId = Number(inserted.insertId);
         await safeNotifyUser({ userId: recipientId, type: "system", title: "رسالة جديدة حول الحجز / Nouveau message", message: input.body.slice(0, 180), href: `/my-bookings?booking=${input.bookingId}`, entityType: "booking_message", entityId: messageId });
         return { success: true as const, messageId };
@@ -373,7 +373,7 @@ export const appRouter = router({
         if (input.amount > booking.totalPrice) throw new TRPCError({ code: "BAD_REQUEST", message: "مبلغ الاسترداد لا يمكن أن يتجاوز قيمة الحجز." });
         const pending = await db.select({ id: refundRequests.id }).from(refundRequests).where(and(eq(refundRequests.bookingId, input.bookingId), eq(refundRequests.status, "Pending"))).limit(1);
         if (pending.length) throw new TRPCError({ code: "CONFLICT", message: "يوجد طلب استرداد قيد المراجعة لهذا الحجز." });
-        const [inserted] = await db.insert(refundRequests).values({ bookingId: input.bookingId, requestedBy: ctx.user!.id, amount: input.amount, reason: input.reason });
+        const [inserted] = await db.insert(refundRequests).values({ bookingId: input.bookingId, requestedBy: ctx.user!.id, amount: input.amount, reason: input.reason }).returning({ insertId: refundRequests.id });
         const refundId = Number(inserted.insertId);
         await writeAuditLog({ actorId: ctx.user!.id, action: "refund.requested", entityType: "refund_request", entityId: refundId, afterData: { bookingId: input.bookingId, amount: input.amount, reason: input.reason } });
         return { success: true as const, refundId };
@@ -499,7 +499,7 @@ export const appRouter = router({
           ...(input.documentNumber ? { documentNumberMasked: maskDocumentNumber(input.documentNumber) } : {}),
           ...(input.expiryDate ? { expiryDate: new Date(input.expiryDate) } : {}),
           ...(input.categoryContext ? { categoryContext: input.categoryContext } : {}),
-        }).$returningId();
+        }).returning({ id: kycSubmissions.id });
         await db.update(users).set({ kycVerificationStatus: "pending" }).where(eq(users.id, ctx.user!.id));
         return { id: created.id, status: "Pending" as const };
       }),
@@ -945,7 +945,7 @@ export const appRouter = router({
       .mutation(async ({ ctx, input }) => {
         const db = await getDb();
         if (!db) throw new Error("Database unavailable");
-        const [inserted] = await db.insert(supportTickets).values({ userId: ctx.user!.id, subject: input.subject, category: input.category, description: input.description, status: "Open" });
+        const [inserted] = await db.insert(supportTickets).values({ userId: ctx.user!.id, subject: input.subject, category: input.category, description: input.description, status: "Open" }).returning({ insertId: supportTickets.id });
         const ticketId = Number(inserted.insertId);
         const admins = await db.select({ id: users.id }).from(users).where(eq(users.role, "admin")).limit(20);
         await Promise.all(admins.filter(admin => admin.id !== ctx.user!.id).map(admin => safeNotifyUser({
@@ -987,7 +987,7 @@ export const appRouter = router({
         if (files.some(file => !allowedTypes.includes(file.mimeType))) throw new Error("نوع ملف مرفق غير مدعوم.");
         const totalBytes = files.reduce((total, file) => total + Math.floor(file.contentBase64.length * 0.75), 0);
         if (totalBytes > 10 * 1024 * 1024) throw new Error("إجمالي المرفقات يتجاوز 10 ميجابايت.");
-        const [inserted] = await db.insert(disputes).values({ bookingId: input.bookingId, openedBy: ctx.user!.id, type: input.type, description: input.description, status: "Open" });
+        const [inserted] = await db.insert(disputes).values({ bookingId: input.bookingId, openedBy: ctx.user!.id, type: input.type, description: input.description, status: "Open" }).returning({ insertId: disputes.id });
         const disputeId = Number(inserted.insertId);
         for (const file of files) {
           const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
@@ -1259,7 +1259,7 @@ export const appRouter = router({
           rentalPeriod: input.rentalPeriod,
           amenities: input.amenities?.join(',') || null,
           status: "Published",
-        });
+        }).returning({ insertId: listings.id });
         const listingId = Number(inserted.insertId);
         const notificationTitle = "تم نشر إعلانك / Annonce publiée";
         const notificationMessage = `تم نشر إعلان «${input.title}» مباشرة بعد اجتياز فحص الصور.\n\nL'annonce «${input.title}» est publiée après validation automatique des images.`;
@@ -1458,7 +1458,7 @@ export const appRouter = router({
           cancellationPolicyFingerprint: CANCELLATION_POLICY_FINGERPRINT,
           cancellationPolicyAcceptedAt: policyAcceptedAt,
           cancellationPolicyAcceptedBy: ctx.user!.id,
-        });
+        }).returning({ insertId: bookings.id });
         const bookingId = Number(inserted.insertId);
         const dateLabel = `${start.toLocaleDateString("fr-MA")} → ${end.toLocaleDateString("fr-MA")}`;
         const ownerTitle = "حجز جديد / Nouvelle réservation";
@@ -1557,7 +1557,7 @@ export const appRouter = router({
             const start = new Date(booking.startDate);
             const end = new Date(booking.endDate);
             if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || start >= end) throw new Error("تواريخ الحجز غير صالحة.");
-            // MySQL row lock serializes confirmations for the same listing.
+            // Row lock (SELECT ... FOR UPDATE) serializes confirmations for the same listing.
             await tx.execute(sql`SELECT listing_id FROM listings WHERE listing_id = ${booking.listingId} FOR UPDATE`);
             const currentListing = await tx.select({ status: listings.status, availability: listings.availability, icalImportedRanges: listings.icalImportedRanges }).from(listings).where(eq(listings.id, booking.listingId)).limit(1);
             if (!currentListing[0] || !["Published", "Available", "Approved"].includes(currentListing[0].status)) {
@@ -1574,9 +1574,9 @@ export const appRouter = router({
             )).limit(1);
             if (overlapping[0]) throw new Error("لا يمكن قبول الحجز لأن الفترة أصبحت محجوزة.");
           }
-          return tx.update(bookings).set({ status: input.status }).where(and(eq(bookings.id, input.bookingId), eq(bookings.status, "Pending")));
+          return tx.update(bookings).set({ status: input.status }).where(and(eq(bookings.id, input.bookingId), eq(bookings.status, "Pending"))).returning({ id: bookings.id });
         });
-        if (Number(updated[0]?.affectedRows ?? 0) === 0) throw new Error("تم تحديث الحجز من مستخدم آخر؛ أعد تحميل الصفحة.");
+        if (updated.length === 0) throw new Error("تم تحديث الحجز من مستخدم آخر؛ أعد تحميل الصفحة.");
 
         const accepted = input.status === "Confirmed";
         const title = accepted ? "تم قبول الحجز / Réservation acceptée" : "تم رفض الحجز / Réservation refusée";
@@ -1662,7 +1662,7 @@ export const appRouter = router({
           currency: totals.currency,
           providerReference,
           simulated: true,
-        });
+        }).returning({ insertId: payments.id });
         const paymentId = Number(paymentInsert.insertId);
         const [invoiceInsert] = await db.insert(invoices).values({
           invoiceNumber: createInvoiceNumber(booking.id),
@@ -1681,7 +1681,7 @@ export const appRouter = router({
           cancellationPolicyFingerprint: booking.cancellationPolicyFingerprint ?? CANCELLATION_POLICY_FINGERPRINT,
           cancellationPolicyAcceptedAt: booking.cancellationPolicyAcceptedAt ?? new Date(),
           cancellationPolicyAcceptedBy: booking.cancellationPolicyAcceptedBy ?? booking.renterId,
-        });
+        }).returning({ insertId: invoices.id });
         const invoiceId = Number(invoiceInsert.insertId);
         const createdInvoice = await db.select().from(invoices).where(eq(invoices.id, invoiceId)).limit(1);
         const createdPayment = await db.select().from(payments).where(eq(payments.id, paymentId)).limit(1);
@@ -1719,7 +1719,7 @@ export const appRouter = router({
               code,
               qrPayload: voucherUrl,
               status: "Issued",
-            });
+            }).returning({ insertId: bookingVouchers.id });
             const voucherRows = await db.select().from(bookingVouchers)
               .where(eq(bookingVouchers.id, Number(voucherInsert.insertId))).limit(1);
             voucher = voucherRows[0] ?? null;
@@ -1956,7 +1956,7 @@ export const appRouter = router({
           legalNotice,
           pdfKey: storedPdf.key,
           status: "Generated",
-        });
+        }).returning({ insertId: commercialLeaseContracts.id });
         const contractId = Number(inserted.insertId);
         let reminderTaskUid: string | null = null;
         try {

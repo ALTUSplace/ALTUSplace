@@ -11,7 +11,7 @@ describe("invoice and profile audit contracts", () => {
   const bookingsPage = readFileSync(resolve(process.cwd(), "client/src/pages/MyBookings.tsx"), "utf8");
 
   it("keeps invoice schema and protected list/get procedures aligned", () => {
-    expect(schemaSource).toMatch(/export const invoices = mysqlTable\("invoices"/);
+    expect(schemaSource).toMatch(/export const invoices = pgTable\("invoices"/);
     expect(schemaSource).toMatch(/vatRateBasisPoints/);
     expect(routerSource).toMatch(/invoices:\s*router\(/);
     expect(routerSource).toMatch(/list:\s*protectedProcedure/);

@@ -153,7 +153,8 @@ async function storeTranslation(
         translatedText,
         provider,
       })
-      .onDuplicateKeyUpdate({
+      .onConflictDoUpdate({
+        target: [translations.listingId, translations.language, translations.field],
         set: { translatedText, provider, updatedAt: new Date() },
       });
 
@@ -259,11 +260,12 @@ export async function invalidateTranslationCache(listingId: number): Promise<num
   if (!database) return 0;
 
   try {
-    const result = await database
+    const deleted = await database
       .delete(translations)
-      .where(eq(translations.listingId, listingId));
+      .where(eq(translations.listingId, listingId))
+      .returning({ id: translations.id });
 
-    return Number((result as { affectedRows?: number }).affectedRows ?? 0);
+    return deleted.length;
   } catch (error) {
     console.error("[Translation] Cache invalidation error:", error);
     return 0;

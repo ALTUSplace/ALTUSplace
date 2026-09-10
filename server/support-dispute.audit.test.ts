@@ -16,7 +16,7 @@ describe("support and dispute audit contracts", () => {
     expect(routerSource).toMatch(/supportTickets:\s*router\(/);
     expect(routerSource).toMatch(/list:\s*protectedProcedure[\s\S]*?supportTickets\.userId,\s*ctx\.user!\.id/);
     expect(routerSource).toMatch(/create:\s*protectedProcedure[\s\S]*?userId:\s*ctx\.user!\.id/);
-    expect(schemaSource).toMatch(/export const supportTickets = mysqlTable\("support_tickets"/);
+    expect(schemaSource).toMatch(/export const supportTickets = pgTable\("support_tickets"/);
   });
 
   it("validates dispute ownership and persists uploaded evidence metadata", () => {
@@ -24,7 +24,7 @@ describe("support and dispute audit contracts", () => {
     expect(routerSource).toMatch(/booking\[0\]\.renterId === ctx\.user!\.id/);
     expect(routerSource).toMatch(/listing\[0\]\?\.ownerId === ctx\.user!\.id/);
     expect(routerSource).toMatch(/storagePut\(`disputes/);
-    expect(schemaSource).toMatch(/export const disputeAttachments = mysqlTable\("dispute_attachments"/);
+    expect(schemaSource).toMatch(/export const disputeAttachments = pgTable\("dispute_attachments"/);
   });
 
   it("keeps booking approval notifications aligned with Pending to Confirmed flow", () => {

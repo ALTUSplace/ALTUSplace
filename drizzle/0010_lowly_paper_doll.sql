@@ -1,1 +1,0 @@
-ALTER TABLE `commercial_lease_contracts` ADD `landlord_rc` varchar(120);
