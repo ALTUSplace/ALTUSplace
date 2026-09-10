@@ -5,10 +5,11 @@ import { TRPCError } from "@trpc/server";
 import { parse as parseCookie } from "cookie";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
-import { adminProcedure, ownerProcedure, publicProcedure, protectedProcedure, router } from "./_core/trpc";
+import { adminProcedure, ownerProcedure, publicProcedure, protectedProcedure, router, superAdminProcedure } from "./_core/trpc";
 import { getDb } from "./db";
-import { listings, listingAnalyticsEvents, bookings, reviews, users, commercialLeaseContracts, notifications, platformSettings, payoutRequests, disputes, disputeAttachments, supportTickets, payments, invoices, kycSubmissions, bookingVouchers, bookingMessages, auditLogs, refundRequests } from "../drizzle/schema";
+import { listings, listingAnalyticsEvents, listingComments, bookings, reviews, users, commercialLeaseContracts, notifications, platformSettings, commissionTiers, escrowEntries, payoutRequests, disputes, disputeAttachments, supportTickets, payments, invoices, kycSubmissions, bookingVouchers, bookingMessages, auditLogs, refundRequests } from "../drizzle/schema";
 import { eq, and, lte, gte, lt, gt, desc, count, isNull, inArray, ne, sql } from "drizzle-orm";
+import { alias } from "drizzle-orm/mysql-core";
 import { safeNotifyUser, buildEmailContent } from "./notificationService";
 import { z } from "zod";
 import { storageGet, storagePut } from "./storage";
@@ -21,7 +22,11 @@ import { syncListingIcal } from "./ical";
 import { CANCELLATION_POLICY_VERSION, CANCELLATION_POLICY_TEXT, CANCELLATION_POLICY_FINGERPRINT } from "../shared/cancellationPolicySnapshot";
 import { createImageVerificationProof, ORIGINAL_IMAGE_REJECTION_MESSAGE, verifyImageVerificationProof, verifyOriginalListingImage } from "./imageVerification";
 import { isRangeAvailable, overlaps, parseBlockedRanges, parseDateRange } from "./availability";
-import { getTranslatedListing, invalidateTranslationCache, isTranslationAvailable, SUPPORTED_LANGUAGES, translateWithAws } from "./_core/translation";
+import { getTranslatedListing, getTranslationStats, invalidateTranslationCache, isTranslationAvailable, SUPPORTED_LANGUAGES, translateWithAws } from "./_core/translation";
+import { ENV } from "./_core/env";
+import { getKycStatusPayload } from "./verification/eligibility";
+import { maskDocumentNumber } from "./verification/requirements";
+import { createEscrowEntry, freezeEscrowEntry, getGlobalCommission, getTierCommission, mediateEscrowEntry, releaseEscrowEntry, resolveEffectiveCommission, upsertGlobalCommission, upsertTierCommission, VENDOR_TIERS } from "./escrow";
 
 async function writeAuditLog(input: {
   actorId: number;
@@ -448,13 +453,30 @@ export const appRouter = router({
         reviewedAt: kycSubmissions.reviewedAt,
       }).from(kycSubmissions).where(eq(kycSubmissions.userId, ctx.user!.id)).orderBy(desc(kycSubmissions.submittedAt));
     }),
+    status: protectedProcedure.query(async ({ ctx }) => {
+      const db = await getDb();
+      if (!db) {
+        return {
+          status: "unverified" as const,
+          kycVerifiedAt: null,
+          requiredDocuments: { car: ["driving_license"], property: ["national_id", "cni", "passport"] },
+          approvedDocumentTypes: [] as string[],
+          pendingCount: 0,
+          lastRejectionReason: null,
+        };
+      }
+      return getKycStatusPayload({ db, userId: ctx.user!.id });
+    }),
     submit: protectedProcedure
       .input(z.object({
         applicantRole: z.enum(["renter", "owner", "company"]),
-        documentType: z.enum(["cni", "driving_license", "commercial_register"]),
+        documentType: z.enum(["commercial_register", "cni", "driving_license", "passport", "national_id"]),
         fileName: z.string().trim().min(1).max(255),
         mimeType: z.enum(["application/pdf", "image/jpeg", "image/png"]),
         contentBase64: z.string().min(1).max(12_000_000),
+        documentNumber: z.string().trim().min(4).max(32).optional(),
+        expiryDate: z.string().optional(),
+        categoryContext: z.enum(["car", "property"]).optional(),
       }))
       .mutation(async ({ ctx, input }) => {
         const db = await getDb();
@@ -466,7 +488,18 @@ export const appRouter = router({
         if (!bytes.length || bytes.length > 8 * 1024 * 1024) throw new TRPCError({ code: "BAD_REQUEST", message: "حجم المستند يجب ألا يتجاوز 8 ميجابايت." });
         const safeName = input.fileName.replace(/[^a-zA-Z0-9._-]/g, "-").slice(-180) || "identity-document";
         const stored = await storagePut(`users/${ctx.user!.id}/kyc/${Date.now()}-${safeName}`, bytes, input.mimeType);
-        const [created] = await db.insert(kycSubmissions).values({ userId: ctx.user!.id, applicantRole: input.applicantRole, documentType: input.documentType, documentKey: stored.key, originalFileName: input.fileName, mimeType: input.mimeType, status: "Pending" }).$returningId();
+        const [created] = await db.insert(kycSubmissions).values({
+          userId: ctx.user!.id,
+          applicantRole: input.applicantRole,
+          documentType: input.documentType,
+          documentKey: stored.key,
+          originalFileName: input.fileName,
+          mimeType: input.mimeType,
+          status: "Pending",
+          ...(input.documentNumber ? { documentNumberMasked: maskDocumentNumber(input.documentNumber) } : {}),
+          ...(input.expiryDate ? { expiryDate: new Date(input.expiryDate) } : {}),
+          ...(input.categoryContext ? { categoryContext: input.categoryContext } : {}),
+        }).$returningId();
         await db.update(users).set({ kycVerificationStatus: "pending" }).where(eq(users.id, ctx.user!.id));
         return { id: created.id, status: "Pending" as const };
       }),
@@ -547,7 +580,7 @@ export const appRouter = router({
     users: adminProcedure.query(async () => {
       const db = await getDb();
       if (!db) return [];
-      return db.select({ id: users.id, name: users.name, email: users.email, role: users.role, accountStatus: users.accountStatus, kycVerificationStatus: users.kycVerificationStatus, agencyName: users.agencyName, commercialRegister: users.commercialRegister, createdAt: users.createdAt }).from(users).orderBy(desc(users.createdAt)).limit(200);
+      return db.select({ id: users.id, name: users.name, email: users.email, role: users.role, vendorTier: users.vendorTier, accountStatus: users.accountStatus, kycVerificationStatus: users.kycVerificationStatus, agencyName: users.agencyName, commercialRegister: users.commercialRegister, createdAt: users.createdAt }).from(users).orderBy(desc(users.createdAt)).limit(200);
     }),
     updateUserStatus: adminProcedure
       .input(z.object({ userId: z.number().int().positive(), status: z.enum(['active', 'suspended', 'banned']) }))
@@ -562,7 +595,7 @@ export const appRouter = router({
         return { success: true as const };
       }),
     updateUserRole: adminProcedure
-      .input(z.object({ userId: z.number().int().positive(), role: z.enum(['renter', 'owner', 'admin', 'user']) }))
+      .input(z.object({ userId: z.number().int().positive(), role: z.enum(['renter', 'owner', 'admin', 'user', 'SUPER_ADMIN']) }))
       .mutation(async ({ input }) => {
         const db = await getDb();
         if (!db) throw new Error('Database unavailable');
@@ -702,6 +735,187 @@ export const appRouter = router({
         await db.update(disputes).set({ status: input.status, resolutionNote: input.resolutionNote, reviewedBy: ctx.user.id, updatedAt: new Date() }).where(eq(disputes.id, input.disputeId));
         return { success: true };
       }),
+    super: router({
+      financialOverview: superAdminProcedure.query(async () => {
+        const db = await getDb();
+        if (!db) return { grossBookingValue: 0, netPlatformRevenue: 0, activeEscrowBalance: 0, totalRefundedVolume: 0, confirmedBookings: 0, activeEscrowEntries: 0, propertyGbv: 0, carGbv: 0, propertyNet: 0, carNet: 0 };
+        const [confirmedRows, escrowRows, refundRows] = await Promise.all([
+          db.select({ totalPrice: bookings.totalPrice, commissionFee: bookings.commissionFee, category: listings.category })
+            .from(bookings).innerJoin(listings, eq(bookings.listingId, listings.id))
+            .where(eq(bookings.status, 'Confirmed')),
+          db.select({ totalPaid: escrowEntries.totalPaid, status: escrowEntries.status }).from(escrowEntries),
+          db.select({ amount: refundRequests.amount }).from(refundRequests)
+            .where(inArray(refundRequests.status, ['Approved', 'Paid'])),
+        ]);
+        const activeStatuses = ['held', 'releasable', 'frozen'];
+        const activeEscrows = escrowRows.filter(row => activeStatuses.includes(row.status));
+        const propertyRows = confirmedRows.filter(row => row.category === 'real_estate');
+        const carRows = confirmedRows.filter(row => row.category && row.category !== 'real_estate');
+        return {
+          grossBookingValue: confirmedRows.reduce((sum, row) => sum + row.totalPrice, 0),
+          netPlatformRevenue: confirmedRows.reduce((sum, row) => sum + row.commissionFee, 0),
+          activeEscrowBalance: activeEscrows.reduce((sum, row) => sum + row.totalPaid, 0),
+          totalRefundedVolume: refundRows.reduce((sum, row) => sum + row.amount, 0),
+          confirmedBookings: confirmedRows.length,
+          activeEscrowEntries: activeEscrows.length,
+          propertyGbv: propertyRows.reduce((sum, row) => sum + row.totalPrice, 0),
+          carGbv: carRows.reduce((sum, row) => sum + row.totalPrice, 0),
+          propertyNet: propertyRows.reduce((sum, row) => sum + row.commissionFee, 0),
+          carNet: carRows.reduce((sum, row) => sum + row.commissionFee, 0),
+        };
+      }),
+      revenueSeries: superAdminProcedure.query(async () => {
+        const db = await getDb();
+        if (!db) return [];
+        const [rows, refundRows] = await Promise.all([
+          db.select({ totalPrice: bookings.totalPrice, commissionFee: bookings.commissionFee, createdAt: bookings.createdAt, category: listings.category })
+            .from(bookings).innerJoin(listings, eq(bookings.listingId, listings.id))
+            .where(eq(bookings.status, 'Confirmed')),
+          db.select({ amount: refundRequests.amount, createdAt: refundRequests.createdAt }).from(refundRequests)
+            .where(inArray(refundRequests.status, ['Approved', 'Paid'])),
+        ]);
+        const monthKey = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        const now = new Date();
+        const buckets: Array<{ key: string; label: string; gbv: number; net: number; refunds: number; propertyGbv: number; carGbv: number; propertyNet: number; carNet: number }> = [];
+        for (let i = 11; i >= 0; i--) {
+          const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+          const key = monthKey(d);
+          buckets.push({ key, label: key, gbv: 0, net: 0, refunds: 0, propertyGbv: 0, carGbv: 0, propertyNet: 0, carNet: 0 });
+        }
+        for (const row of rows) {
+          if (!row.createdAt) continue;
+          const bucket = buckets.find(b => b.key === monthKey(new Date(row.createdAt)));
+          if (!bucket) continue;
+          const isProperty = row.category === 'real_estate';
+          bucket.gbv += row.totalPrice;
+          bucket.net += row.commissionFee;
+          if (isProperty) { bucket.propertyGbv += row.totalPrice; bucket.propertyNet += row.commissionFee; }
+          else { bucket.carGbv += row.totalPrice; bucket.carNet += row.commissionFee; }
+        }
+        for (const row of refundRows) {
+          if (!row.createdAt) continue;
+          const bucket = buckets.find(b => b.key === monthKey(new Date(row.createdAt)));
+          if (bucket) bucket.refunds += row.amount;
+        }
+        return buckets;
+      }),
+      escrowLedger: superAdminProcedure.query(async () => {
+        const db = await getDb();
+        if (!db) return [];
+        const guest = alias(users, "guest");
+        const vendor = alias(users, "vendor");
+        return db.select({
+          id: escrowEntries.id,
+          bookingId: escrowEntries.bookingId,
+          guestId: escrowEntries.guestId,
+          guestName: guest.name,
+          vendorId: escrowEntries.vendorId,
+          vendorName: vendor.name,
+          listingTitle: listings.title,
+          listingCategory: escrowEntries.listingCategory,
+          totalPaid: escrowEntries.totalPaid,
+          platformCut: escrowEntries.platformCut,
+          vendorPayoutShare: escrowEntries.vendorPayoutShare,
+          releaseDate: escrowEntries.releaseDate,
+          stripeTransferStatus: escrowEntries.stripeTransferStatus,
+          stripeTransferId: escrowEntries.stripeTransferId,
+          status: escrowEntries.status,
+          mediationNote: escrowEntries.mediationNote,
+          createdAt: escrowEntries.createdAt,
+        }).from(escrowEntries)
+          .innerJoin(bookings, eq(escrowEntries.bookingId, bookings.id))
+          .leftJoin(guest, eq(escrowEntries.guestId, guest.id))
+          .leftJoin(vendor, eq(escrowEntries.vendorId, vendor.id))
+          .leftJoin(listings, eq(bookings.listingId, listings.id))
+          .orderBy(desc(escrowEntries.createdAt))
+          .limit(500);
+      }),
+      getCommission: superAdminProcedure.query(async () => {
+        const db = await getDb();
+        if (!db) return { global: { mode: 'percent' as const, percentBasisPoints: 1000, flatAmount: 0 }, tiers: [], tierDistribution: {} };
+        const global = await getGlobalCommission(db);
+        const tiers: Array<{ tier: string; mode: 'percent' | 'flat'; percentBasisPoints: number; flatAmount: number; active: boolean }> = [];
+        for (const tier of VENDOR_TIERS) {
+          const override = await getTierCommission(db, tier);
+          tiers.push({ tier, ...(override ?? { mode: 'percent', percentBasisPoints: 1000, flatAmount: 0 }), active: Boolean(override) });
+        }
+        const distRows = await db.select({ tier: users.vendorTier, total: count() }).from(users).groupBy(users.vendorTier);
+        return {
+          global,
+          tiers,
+          tierDistribution: distRows.reduce<Record<string, number>>((acc, row) => { acc[row.tier] = Number(row.total); return acc; }, {}),
+        };
+      }),
+      updateGlobalCommission: superAdminProcedure
+        .input(z.object({ mode: z.enum(['percent', 'flat']), percentBasisPoints: z.number().int().min(0).max(10000).optional(), flatAmount: z.number().int().min(0).max(1000000000).optional() }))
+        .mutation(async ({ ctx, input }) => {
+          const db = await getDb();
+          if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'قاعدة البيانات غير متاحة.' });
+          const before = await getGlobalCommission(db);
+          const updated = await upsertGlobalCommission(db, input, ctx.user!.id);
+          await writeAuditLog({ actorId: ctx.user!.id, action: 'commission.global.updated', entityType: 'platform_settings', beforeData: before, afterData: updated });
+          return { success: true as const, updated };
+        }),
+      updateTierCommission: superAdminProcedure
+        .input(z.object({ tier: z.enum(VENDOR_TIERS), mode: z.enum(['percent', 'flat']), percentBasisPoints: z.number().int().min(0).max(10000).optional(), flatAmount: z.number().int().min(0).max(1000000000).optional() }))
+        .mutation(async ({ ctx, input }) => {
+          const db = await getDb();
+          if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'قاعدة البيانات غير متاحة.' });
+          const before = await getTierCommission(db, input.tier);
+          const updated = await upsertTierCommission(db, input, ctx.user!.id);
+          await writeAuditLog({ actorId: ctx.user!.id, action: `commission.tier.${input.tier}.updated`, entityType: 'commission_tier', beforeData: before, afterData: { tier: input.tier, ...updated } });
+          return { success: true as const, updated };
+        }),
+      updateVendorTier: superAdminProcedure
+        .input(z.object({ userId: z.number().int().positive(), tier: z.enum(VENDOR_TIERS) }))
+        .mutation(async ({ ctx, input }) => {
+          const db = await getDb();
+          if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'قاعدة البيانات غير متاحة.' });
+          const [vendor] = await db.select({ id: users.id, vendorTier: users.vendorTier }).from(users).where(eq(users.id, input.userId)).limit(1);
+          if (!vendor) throw new TRPCError({ code: 'NOT_FOUND', message: 'المستخدم غير موجود.' });
+          await db.update(users).set({ vendorTier: input.tier }).where(eq(users.id, input.userId));
+          await writeAuditLog({ actorId: ctx.user!.id, action: 'commission.tier.assigned', entityType: 'user', entityId: input.userId, beforeData: { vendorTier: vendor.vendorTier }, afterData: { vendorTier: input.tier } });
+          return { success: true as const, vendorTier: input.tier };
+        }),
+      forceHoldPayout: superAdminProcedure
+        .input(z.object({ escrowId: z.number().int().positive(), reason: z.string().trim().max(500).optional() }))
+        .mutation(async ({ ctx, input }) => {
+          const db = await getDb();
+          if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'قاعدة البيانات غير متاحة.' });
+          const [entry] = await db.select({ id: escrowEntries.id, bookingId: escrowEntries.bookingId, vendorId: escrowEntries.vendorId, status: escrowEntries.status }).from(escrowEntries).where(eq(escrowEntries.id, input.escrowId)).limit(1);
+          if (!entry) throw new TRPCError({ code: 'NOT_FOUND', message: 'السجل الإسكرو غير موجود.' });
+          const outcome = await freezeEscrowEntry(db, input.escrowId);
+          if (!outcome.frozen) throw new TRPCError({ code: 'BAD_REQUEST', message: outcome.message });
+          await writeAuditLog({ actorId: ctx.user!.id, action: 'escrow.frozen', entityType: 'escrow', entityId: input.escrowId, beforeData: { status: entry.status }, afterData: { status: 'frozen', reason: input.reason ?? null } });
+          await safeNotifyUser({ userId: entry.vendorId, type: "system", title: "تجميد دفع مؤقت / Paiement gelé", message: `تم تجميد دفع الحجز #${entry.bookingId} مؤقتاً. ${input.reason ?? ''}`, href: "/host", entityType: "escrow", entityId: input.escrowId });
+          return { success: true as const, message: outcome.message };
+        }),
+      releaseEscrow: superAdminProcedure
+        .input(z.object({ escrowId: z.number().int().positive() }))
+        .mutation(async ({ ctx, input }) => {
+          const db = await getDb();
+          if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'قاعدة البيانات غير متاحة.' });
+          const [entry] = await db.select({ id: escrowEntries.id, status: escrowEntries.status }).from(escrowEntries).where(eq(escrowEntries.id, input.escrowId)).limit(1);
+          if (!entry) throw new TRPCError({ code: 'NOT_FOUND', message: 'السجل الإسكرو غير موجود.' });
+          const outcome = await releaseEscrowEntry(db, input.escrowId);
+          if (!outcome.released) throw new TRPCError({ code: 'BAD_REQUEST', message: outcome.message });
+          await writeAuditLog({ actorId: ctx.user!.id, action: 'escrow.released', entityType: 'escrow', entityId: input.escrowId, beforeData: { status: entry.status }, afterData: { status: 'releasable' } });
+          return { success: true as const, message: outcome.message };
+        }),
+      mediateDispute: superAdminProcedure
+        .input(z.object({ escrowId: z.number().int().positive(), resolution: z.enum(['release_to_vendor', 'refund_to_guest']), mediationNote: z.string().trim().min(2).max(2000) }))
+        .mutation(async ({ ctx, input }) => {
+          const db = await getDb();
+          if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'قاعدة البيانات غير متاحة.' });
+          const [entry] = await db.select({ id: escrowEntries.id, bookingId: escrowEntries.bookingId, vendorId: escrowEntries.vendorId, status: escrowEntries.status }).from(escrowEntries).where(eq(escrowEntries.id, input.escrowId)).limit(1);
+          if (!entry) throw new TRPCError({ code: 'NOT_FOUND', message: 'السجل الإسكرو غير موجود.' });
+          const outcome = await mediateEscrowEntry(db, input.escrowId, input.resolution, input.mediationNote);
+          if (!outcome.mediated) throw new TRPCError({ code: 'BAD_REQUEST', message: outcome.message });
+          await writeAuditLog({ actorId: ctx.user!.id, action: `escrow.mediated.${input.resolution}`, entityType: 'escrow', entityId: input.escrowId, beforeData: { status: entry.status }, afterData: { status: 'mediated', resolution: input.resolution, mediationNote: input.mediationNote } });
+          await safeNotifyUser({ userId: entry.vendorId, type: "system", title: "نزاع محلول / Litige résolu", message: `تم حسم النزاع الخاص بالحجز #${entry.bookingId}: ${input.resolution === 'release_to_vendor' ? 'تسوية لصالح المزوّد' : 'تسوية لصالح الضيف'}.`, href: "/host", entityType: "escrow", entityId: input.escrowId });
+          return { success: true as const, message: outcome.message };
+        }),
+    }),
     ownerFinancials: ownerProcedure.query(async ({ ctx }) => {
       const db = await getDb();
       if (!db) return { gross: 0, platformFees: 0, net: 0, requested: 0, paid: 0 };
@@ -897,7 +1111,7 @@ export const appRouter = router({
         const targetLanguage = input.language ?? sourceLanguage;
 
         // If translation requested and different from source, fetch translations
-        if (targetLanguage !== sourceLanguage && ENV.translationEnabled && ENV.translationProvider !== "none" && getTranslateClient() !== null && listing.title) {
+        if (targetLanguage !== sourceLanguage && isTranslationAvailable() && listing.title) {
           const translated = await getTranslatedListing(
             { id: listing.id, title: listing.title, description: listing.description ?? null },
             targetLanguage,
@@ -1221,9 +1435,10 @@ export const appRouter = router({
         const durationDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
         if (!Number.isInteger(durationDays) || durationDays <= 0) throw new Error("مدة الحجز غير صالحة.");
         const subtotal = listing[0].pricePerDay * durationDays;
-        const settings = await db.select({ commissionRateBasisPoints: platformSettings.commissionRateBasisPoints }).from(platformSettings).limit(1);
-        const commissionRateBasisPoints = settings[0]?.commissionRateBasisPoints ?? 1_000;
-        const commissionFee = Math.round(subtotal * commissionRateBasisPoints / 10_000);
+        // Tier-aware, live commission split: recomputed from the database on
+        // every booking so Commission Controller changes apply instantly.
+        const commissionPolicy = await resolveEffectiveCommission(db, listing[0].ownerId, subtotal);
+        const commissionFee = commissionPolicy.fee;
         const netProfit = subtotal - commissionFee;
 
         // Pending requests may overlap while awaiting approval. The owner/admin confirmation path below
@@ -1272,7 +1487,7 @@ export const appRouter = router({
       .mutation(async ({ ctx, input }) => {
         const db = await getDb();
         if (!db) throw new Error("Database unavailable");
-        if (ctx.user!.role !== 'admin') {
+        if (!['admin', 'SUPER_ADMIN'].includes(ctx.user!.role)) {
           throw new Error("عذراً، هذه العملية مخصصة لمدير المنصة والمشرفين فقط.");
         }
         await db
@@ -1470,6 +1685,22 @@ export const appRouter = router({
         const invoiceId = Number(invoiceInsert.insertId);
         const createdInvoice = await db.select().from(invoices).where(eq(invoices.id, invoiceId)).limit(1);
         const createdPayment = await db.select().from(payments).where(eq(payments.id, paymentId)).limit(1);
+        // Multi-vendor escrow: once a confirmed booking is paid, hold the split
+        // in the escrow ledger until the release date (booking end date).
+        if (paymentStatus === "Succeeded" && booking.status === "Confirmed") {
+          const escrowListing = await db.select({ ownerId: listings.ownerId, category: listings.category }).from(listings).where(eq(listings.id, booking.listingId)).limit(1);
+          if (escrowListing[0]) {
+            await createEscrowEntry(db, {
+              bookingId: booking.id,
+              paymentId,
+              guestId: booking.renterId,
+              vendorId: escrowListing[0].ownerId,
+              listingCategory: escrowListing[0].category ?? "real_estate",
+              totalPaid: totals.total,
+              releaseDate: new Date(booking.endDate),
+            });
+          }
+        }
         if (!createdInvoice[0] || !createdPayment[0]) throw new Error("تعذر حفظ تفاصيل الفاتورة.");
 
         let voucher: typeof bookingVouchers.$inferSelect | null = null;
@@ -1832,6 +2063,128 @@ export const appRouter = router({
         });
         return { success: true };
       }),
+  }),
+
+  comments: router({
+    listByListing: publicProcedure
+      .input(z.object({
+        listingId: z.number().int().positive(),
+        limit: z.number().int().min(1).max(50).default(20),
+        cursor: z.number().int().positive().optional(),
+      }))
+      .query(async ({ ctx, input }) => {
+        const db = await getDb();
+        if (!db) return { items: [], nextCursor: null as number | null };
+        const viewerId = ctx.user?.id ?? null;
+        const filters = [eq(listingComments.listingId, input.listingId), eq(listingComments.status, "visible")];
+        if (input.cursor) filters.push(lt(listingComments.id, input.cursor));
+        const result = await db
+          .select({
+            id: listingComments.id,
+            parentId: listingComments.parentId,
+            body: listingComments.body,
+            authorName: users.name,
+            authorId: listingComments.authorId,
+            createdAt: listingComments.createdAt,
+          })
+          .from(listingComments)
+          .innerJoin(users, eq(listingComments.authorId, users.id))
+          .where(and(...filters))
+          .orderBy(desc(listingComments.id))
+          .limit(input.limit + 1);
+        const rows = result.slice(0, input.limit);
+        const nextCursor = result.length > input.limit ? rows[rows.length - 1].id : null;
+        const topLevel = rows.filter((row) => row.parentId === null);
+        const items = topLevel.map((comment) => ({
+          id: comment.id,
+          body: comment.body,
+          authorName: comment.authorName ?? "guest",
+          createdAt: comment.createdAt,
+          isMine: comment.authorId === viewerId,
+          replies: rows
+            .filter((row) => row.parentId === comment.id)
+            .map((reply) => ({
+              id: reply.id,
+              parentId: reply.parentId!,
+              body: reply.body,
+              authorName: reply.authorName ?? "guest",
+              createdAt: reply.createdAt,
+              isMine: reply.authorId === viewerId,
+            })),
+        }));
+        return { items, nextCursor };
+      }),
+
+    create: protectedProcedure
+      .input(z.object({
+        listingId: z.number().int().positive(),
+        body: z.string().trim().min(1).max(2000),
+        parentId: z.number().int().positive().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "قاعدة البيانات غير متاحة." });
+        if (input.parentId) {
+          const [parentRow] = await db
+            .select({ id: listingComments.id })
+            .from(listingComments)
+            .where(and(eq(listingComments.id, input.parentId), eq(listingComments.listingId, input.listingId)))
+            .limit(1);
+          if (!parentRow) throw new TRPCError({ code: "BAD_REQUEST", message: "التعليق الأصلي غير موجود." });
+        }
+        await db.insert(listingComments).values({
+          listingId: input.listingId,
+          authorId: ctx.user!.id,
+          parentId: input.parentId ?? null,
+          body: input.body,
+          status: "visible",
+        });
+        return { success: true as const };
+      }),
+
+    remove: protectedProcedure
+      .input(z.object({ commentId: z.number().int().positive() }))
+      .mutation(async ({ ctx, input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "قاعدة البيانات غير متاحة." });
+        const [row] = await db
+          .select({ authorId: listingComments.authorId })
+          .from(listingComments)
+          .where(eq(listingComments.id, input.commentId))
+          .limit(1);
+        if (!row) throw new TRPCError({ code: "NOT_FOUND", message: "التعليق غير موجود." });
+        if (row.authorId !== ctx.user!.id && ctx.user!.role !== "admin") {
+          throw new TRPCError({ code: "FORBIDDEN", message: "لا يمكنك حذف هذا التعليق." });
+        }
+        await db.delete(listingComments).where(eq(listingComments.id, input.commentId));
+        return { success: true as const };
+      }),
+  }),
+
+  translation: router({
+    translateText: protectedProcedure
+      .input(z.object({
+        text: z.string().trim().min(1).max(2000),
+        targetLanguage: z.enum(["ar", "fr", "en"]),
+        sourceLanguage: z.enum(["ar", "fr", "en"]).optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const result = await translateWithAws(input.text, input.sourceLanguage ?? "ar", input.targetLanguage);
+        return { translatedText: result.translatedText ?? input.text, fromCache: result.fromCache, provider: result.provider };
+      }),
+    clearCache: protectedProcedure
+      .input(z.object({ listingId: z.number().int().positive() }))
+      .mutation(async ({ input }) => ({ cleared: await invalidateTranslationCache(input.listingId) })),
+    stats: protectedProcedure.query(async () => getTranslationStats()),
+    health: publicProcedure.query(() => ({
+      enabled: ENV.translationEnabled,
+      provider: ENV.translationProvider,
+      available: isTranslationAvailable(),
+      supportedLanguages: SUPPORTED_LANGUAGES,
+      awsConfigured: Boolean(ENV.awsTranslateAccessKeyId && ENV.awsTranslateSecretAccessKey),
+      googleConfigured: Boolean(ENV.googleTranslateApiKey),
+      deeplConfigured: Boolean(ENV.deeplApiKey),
+    })),
   }),
 });
 

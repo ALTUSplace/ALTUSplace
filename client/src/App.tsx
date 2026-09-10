@@ -40,6 +40,7 @@ const CarDetailsPage = lazy(() => import("./pages/CarDetails"));
 const BookingPage = lazy(() => import("./pages/Booking"));
 const SuccessPage = lazy(() => import("./pages/Success"));
 const AdminDashboardPage = lazy(() => import("./pages/AdminDashboard"));
+const SuperDashboardPage = lazy(() => import("./pages/SuperDashboard"));
 const ProfilePage = lazy(() => import("./pages/Profile"));
 const CheckoutPage = lazy(() => import("./pages/Checkout"));
 const KycVerificationPage = lazy(() => import("./pages/KycVerification"));
@@ -59,13 +60,17 @@ function PageLoader() {
   );
 }
 
-function AccessGuard({ area, children }: { area: 'admin' | 'host'; children: React.ReactNode }) {
+function AccessGuard({ area, children }: { area: 'admin' | 'superadmin' | 'host'; children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const { t } = useLanguage();
   if (loading) return <div className="min-h-[50vh] flex items-center justify-center">{t("accessChecking")}</div>;
   if (!user) return <div className="min-h-[50vh] flex flex-col items-center justify-center gap-4 p-6 text-center"><h1 className="text-2xl font-bold">{t("loginRequired")}</h1><p className="text-muted-foreground">{t("loginRequiredDesc")}</p><Button onClick={() => startLogin()}>{t("loginAction")}</Button></div>;
   if (user.accountStatus && user.accountStatus !== 'active') return <div className="min-h-[50vh] flex flex-col items-center justify-center gap-3 p-6 text-center"><h1 className="text-2xl font-bold">{t("accountInactive")}</h1><p className="text-muted-foreground">{t("accountInactiveDesc")}</p></div>;
-  const allowed = area === 'admin' ? user.role === 'admin' : user.role === 'owner' || user.role === 'admin';
+  const allowed = area === 'admin'
+    ? user.role === 'admin' || user.role === 'SUPER_ADMIN'
+    : area === 'superadmin'
+      ? user.role === 'SUPER_ADMIN'
+      : user.role === 'owner' || user.role === 'admin' || user.role === 'SUPER_ADMIN';
   if (!allowed) return <div className="min-h-[50vh] flex flex-col items-center justify-center gap-3 p-6 text-center"><h1 className="text-2xl font-bold">{t("forbiddenTitle")}</h1><p className="text-muted-foreground">{t("forbiddenDesc")}</p></div>;
   return <>{children}</>;
 }
@@ -111,6 +116,7 @@ function Router() {
       </Route>
       <Route path="/dashboard">{() => <AccessGuard area="host"><HostDashboard /></AccessGuard>}</Route>
       <Route path="/admin">{() => <AccessGuard area="admin"><Suspense fallback={<PageLoader />}><AdminDashboardPage /></Suspense></AccessGuard>}</Route>
+      <Route path="/admin/super">{() => <AccessGuard area="superadmin"><Suspense fallback={<PageLoader />}><SuperDashboardPage /></Suspense></AccessGuard>}</Route>
       <Route path="/dispute-resolution" component={DisputeResolutionPage} />
       <Route path="/terms" component={TermsPage} />
       <Route path="/register">{() => <Suspense fallback={<PageLoader />}><RegisterPage /></Suspense>}</Route>

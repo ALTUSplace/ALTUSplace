@@ -13,7 +13,7 @@ const RoleContext = createContext<RoleContextType | undefined>(undefined);
 
 export function RoleProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
-  const role: UserRole = user?.role === 'admin' ? 'super_admin' : 'agency_manager';
+  const role: UserRole = user?.role === 'admin' || user?.role === 'SUPER_ADMIN' ? 'super_admin' : 'agency_manager';
 
   // Kept for backwards-compatible UI consumers. It intentionally cannot alter
   // the authenticated role or persist an impersonated role in the browser.

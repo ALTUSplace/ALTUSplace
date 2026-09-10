@@ -7,6 +7,7 @@ import { registerOAuthRoutes } from "./oauth";
 import { createPaymentsWebhookHandler, paymentStrictLimiter, registerSecurity } from "./security";
 import { createVerificationWebhookHandler } from "../verification/webhook";
 import { configureProviderSecrets } from "../verification/provider";
+import { createEscrowWebhookHandler } from "../escrow";
 import { ENV } from "./env";
 import { registerStorageProxy } from "./storageProxy";
 import { appRouter } from "../routers";
@@ -75,6 +76,16 @@ async function startServer() {
     express.raw({ type: "*/*", limit: "1mb" }),
     createPaymentsWebhookHandler(async rawBody => {
       logger.info("Payment webhook received and verified (legacy)", { bytes: rawBody.length, path: "/api/payments/webhook" });
+    })
+  );
+  // Stripe Connect escrow webhook: reconcile transfer and payment_intent
+  // lifecycle events with the escrow ledger (freeze/release/mediation).
+  app.post(
+    "/api/v1/escrow/webhook",
+    paymentStrictLimiter,
+    express.raw({ type: "*/*", limit: "1mb" }),
+    createEscrowWebhookHandler({
+      getSecret: () => ENV.stripeWebhookSecret,
     })
   );
   // Configure body parser with larger size limit for file uploads

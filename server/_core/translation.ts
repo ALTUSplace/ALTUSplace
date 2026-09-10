@@ -103,7 +103,7 @@ async function getCachedTranslation(
   field: "title" | "description",
   originalText: string
 ): Promise<string | null> {
-  const database = await db();
+  const database = await getDb();
   if (!database) return null;
 
   try {
@@ -139,7 +139,7 @@ async function storeTranslation(
   translatedText: string,
   provider: string = "aws"
 ): Promise<boolean> {
-  const database = await db();
+  const database = await getDb();
   if (!database) return false;
 
   try {
@@ -153,8 +153,7 @@ async function storeTranslation(
         translatedText,
         provider,
       })
-      .onConflictDoUpdate({
-        target: [translations.listingId, translations.language, translations.field, translations.originalText],
+      .onDuplicateKeyUpdate({
         set: { translatedText, provider, updatedAt: new Date() },
       });
 
@@ -198,8 +197,9 @@ export async function getTranslatedListingField<T extends "title" | "description
   let provider = "none";
 
   if (ENV.translationProvider === "aws") {
-    translatedText = await translateWithAws(originalText, sourceLanguage, targetLanguage);
-    provider = "aws";
+    const awsResult = await translateWithAws(originalText, sourceLanguage, targetLanguage);
+    translatedText = awsResult.translatedText;
+    provider = awsResult.provider;
   }
 
   // If translation failed, return original text
@@ -255,7 +255,7 @@ export async function getTranslatedListing(
  * Call this when a listing is updated
  */
 export async function invalidateTranslationCache(listingId: number): Promise<number> {
-  const database = await db();
+  const database = await getDb();
   if (!database) return 0;
 
   try {
@@ -263,7 +263,7 @@ export async function invalidateTranslationCache(listingId: number): Promise<num
       .delete(translations)
       .where(eq(translations.listingId, listingId));
 
-    return Number(result.numRowsAffected ?? 0);
+    return Number((result as { affectedRows?: number }).affectedRows ?? 0);
   } catch (error) {
     console.error("[Translation] Cache invalidation error:", error);
     return 0;
@@ -278,7 +278,7 @@ export async function getTranslationStats(listingId?: number): Promise<{
   cachedTranslations: number;
   byLanguage: Record<Language, number>;
 }> {
-  const database = await db();
+  const database = await getDb();
   if (!database) {
     return { totalTranslations: 0, cachedTranslations: 0, byLanguage: { ar: 0, fr: 0, en: 0 } };
   }

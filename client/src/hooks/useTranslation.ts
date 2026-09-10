@@ -1,4 +1,4 @@
-import { useTRPC } from "@/trpc";
+import { trpc } from "@/lib/trpc";
 import { useEffect, useState } from "react";
 
 // Hook to get the user's current language preference and sync with API
@@ -17,51 +17,38 @@ interface TranslationResult {
 }
 
 export function useTranslation({ listingId, targetLanguage }: UseTranslationOptions = {}) {
-  const trpc = useTRPC();
+  const utils = trpc.useUtils();
+  const translateMutation = trpc.translation.translateText.useMutation();
+  const clearCacheMutation = trpc.translation.clearCache.useMutation();
+
+  const { data: listing, isFetching } = trpc.listings.getById.useQuery(
+    { id: listingId ?? 0, language: targetLanguage },
+    { enabled: Boolean(listingId && targetLanguage) },
+  );
+
   const [translatedText, setTranslatedText] = useState<TranslationResult | null>(null);
-  const [isTranslating, setIsTranslating] = useState(false);
 
-  // Fetch translated listing if listingId is provided
   useEffect(() => {
-    if (!listingId || !targetLanguage) return;
-
-    const fetchTranslation = async () => {
-      setIsTranslating(true);
-      try {
-        const listing = await trpc.listings.getById.query({
-          id: listingId,
-          language: targetLanguage,
-        });
-        
-        if (listing?._translationMeta) {
-          setTranslatedText({
-            title: listing.title,
-            description: listing.description,
-            titleFromCache: listing._translationMeta.titleFromCache,
-            descriptionFromCache: listing._translationMeta.descriptionFromCache,
-            titleProvider: listing._translationMeta.titleProvider,
-            descriptionProvider: listing._translationMeta.descriptionProvider,
-          });
-        }
-      } catch (error) {
-        console.error("Failed to fetch translation:", error);
-      } finally {
-        setIsTranslating(false);
-      }
-    };
-
-    fetchTranslation();
-  }, [listingId, targetLanguage, trpc.listings.getById]);
+    if (!listing || !("_translationMeta" in listing) || !listing._translationMeta) return;
+    setTranslatedText({
+      title: listing.title,
+      description: listing.description,
+      titleFromCache: listing._translationMeta.titleFromCache,
+      descriptionFromCache: listing._translationMeta.descriptionFromCache,
+      titleProvider: listing._translationMeta.titleProvider,
+      descriptionProvider: listing._translationMeta.descriptionProvider,
+    });
+  }, [listing]);
 
   return {
     translatedText,
-    isTranslating,
+    isTranslating: isFetching || translateMutation.isPending,
     // Raw translate text mutation (for manual translation)
-    translateText: trpc.translation.translateText.mutate,
+    translateText: translateMutation.mutate,
     // Clear translation cache for a listing
-    clearCache: (id: number) => trpc.translation.clearCache.mutate({ listingId: id }),
+    clearCache: (id: number) => clearCacheMutation.mutate({ listingId: id }),
     // Translation stats
-    stats: trpc.translation.stats.query,
+    stats: () => utils.translation.stats.fetch(),
   };
 }
 
@@ -77,9 +64,8 @@ interface TranslationHealth {
 }
 
 export function useTranslationHealth() {
-  const trpc = useTRPC();
   const { data, isLoading, error } = trpc.translation.health.useQuery();
-  
+
   return {
     health: data as TranslationHealth | undefined,
     isLoading,

@@ -54,7 +54,7 @@ export const protectedProcedure = t.procedure.use(sanitizeInputMiddleware).use(r
 export const ownerProcedure = protectedProcedure.use(
   t.middleware(async opts => {
     const { ctx, next } = opts;
-    if (!['owner', 'admin'].includes(ctx.user!.role)) {
+    if (!['owner', 'admin', 'SUPER_ADMIN'].includes(ctx.user!.role)) {
       throw new TRPCError({ code: 'FORBIDDEN', message: 'هذه العملية مخصصة للملاك.' });
     }
     return next({ ctx: { ...ctx, user: ctx.user } });
@@ -65,8 +65,28 @@ export const adminProcedure = t.procedure.use(sanitizeInputMiddleware).use(
   t.middleware(async opts => {
     const { ctx, next } = opts;
 
-    if (!ctx.user || ctx.user.role !== 'admin') {
+    if (!ctx.user || !['admin', 'SUPER_ADMIN'].includes(ctx.user.role)) {
       throw new TRPCError({ code: "FORBIDDEN", message: NOT_ADMIN_ERR_MSG });
+    }
+
+    return next({
+      ctx: {
+        ...ctx,
+        user: ctx.user,
+      },
+    });
+  }),
+);
+
+// Super-admin tier: the ONLY role that may query or view the executive
+// financial dashboard, escrow/ledger monitor and dynamic commission
+// controller. Enforced on every procedure of the `admin.super` router.
+export const superAdminProcedure = t.procedure.use(sanitizeInputMiddleware).use(
+  t.middleware(async opts => {
+    const { ctx, next } = opts;
+
+    if (!ctx.user || ctx.user.role !== 'SUPER_ADMIN') {
+      throw new TRPCError({ code: "FORBIDDEN", message: "هذه العملية مخصصة لمديري المنصة الأساسيين (SUPER ADMIN) فقط." });
     }
 
     return next({

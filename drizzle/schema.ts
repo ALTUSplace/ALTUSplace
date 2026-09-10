@@ -18,7 +18,9 @@ export const users = mysqlTable("users", {
   agencyHours: text("agency_hours"),
   loginMethod: varchar("loginMethod", { length: 64 }),
   passwordHash: varchar("passwordHash", { length: 255 }),
-  role: mysqlEnum("role", ["renter", "owner", "admin", "user"]).default("user").notNull(),
+  role: mysqlEnum("role", ["renter", "owner", "admin", "user", "SUPER_ADMIN"]).default("user").notNull(),
+  vendorTier: mysqlEnum("vendor_tier", ["bronze", "silver", "gold"]).default("bronze").notNull(), // commission tier: Bronze | Silver | Gold
+  stripeAccountId: varchar("stripe_account_id", { length: 120 }), // Stripe Connect express account for vendor payouts
   accountStatus: mysqlEnum("account_status", ["active", "suspended", "banned"]).default("active").notNull(),
   kycVerificationStatus: varchar("kyc_verification_status", { length: 20 }).default("unverified").notNull(), // unverified | pending | verified | rejected
   kycVerifiedAt: timestamp("kyc_verified_at"),
@@ -249,6 +251,8 @@ export const refundRequests = mysqlTable("refund_requests", {
 export const platformSettings = mysqlTable("platform_settings", {
   id: int("setting_id").autoincrement().primaryKey(),
   commissionRateBasisPoints: int("commission_rate_basis_points").default(1000).notNull(),
+  commissionMode: mysqlEnum("commission_mode", ["percent", "flat"]).default("percent").notNull(), // global default split: percentage or flat fee
+  flatCommissionAmount: int("flat_commission_amount").default(0).notNull(), // fixed platform fee in MAD for flat mode
   vatRateBasisPoints: int("vat_rate_basis_points").default(2000).notNull(),
   platformName: varchar("platform_name", { length: 180 }).default("ALTUSplace").notNull(),
   contactEmail: varchar("contact_email", { length: 320 }),
@@ -257,6 +261,43 @@ export const platformSettings = mysqlTable("platform_settings", {
   updatedBy: int("updated_by"),
   updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
 });
+
+// Per-vendor-tier commission overrides used by the dynamic commission
+// controller. Bronze/Silver/Gold are the managed tiers; when a tier override
+// exists it wins over the global platform default.
+export const commissionTiers = mysqlTable("commission_tiers", {
+  id: int("tier_id").autoincrement().primaryKey(),
+  tier: mysqlEnum("tier", ["bronze", "silver", "gold"]).notNull().unique(),
+  mode: mysqlEnum("mode", ["percent", "flat"]).default("percent").notNull(),
+  percentBasisPoints: int("percent_basis_points").default(1000).notNull(),
+  flatAmount: int("flat_amount").default(0).notNull(), // fixed fee in MAD for flat mode
+  updatedBy: int("updated_by"),
+  updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+});
+
+// Escrow ledger: one row per settled payment held until the posting date.
+// Backs the multi-vendor escrow monitor and Stripe Connect payout lifecycle.
+export const escrowEntries = mysqlTable("escrow_ledger", {
+  id: int("escrow_id").autoincrement().primaryKey(),
+  bookingId: int("booking_id").notNull(),
+  paymentId: int("payment_id").notNull(),
+  guestId: int("guest_id").notNull(),
+  vendorId: int("vendor_id").notNull(),
+  listingCategory: varchar("listing_category", { length: 64 }).notNull(), // car | real_estate (Properties vs Car Rentals)
+  totalPaid: int("total_paid").notNull(),
+  platformCut: int("platform_cut").notNull(),
+  vendorPayoutShare: int("vendor_payout_share").notNull(),
+  releaseDate: timestamp("release_date").notNull(), // scheduled escrow release (booking end date)
+  stripeTransferStatus: mysqlEnum("stripe_transfer_status", ["pending", "sent", "held", "failed", "released"]).default("pending").notNull(),
+  stripeTransferId: varchar("stripe_transfer_id", { length: 120 }),
+  status: mysqlEnum("status", ["held", "releasable", "released", "frozen", "mediated"]).default("held").notNull(),
+  mediationNote: text("mediation_note"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+}, (table) => ({
+  bookingIdx: index("escrow_ledger_booking_idx").on(table.bookingId),
+  vendorStatusIdx: index("escrow_ledger_vendor_status_idx").on(table.vendorId, table.status),
+}));
 
 export const payoutRequests = mysqlTable("payout_requests", {
   id: int("payout_id").autoincrement().primaryKey(),
@@ -409,3 +450,7 @@ export type DisputeAttachment = typeof disputeAttachments.$inferSelect;
 export type InsertDisputeAttachment = typeof disputeAttachments.$inferInsert;
 export type SupportTicket = typeof supportTickets.$inferSelect;
 export type InsertSupportTicket = typeof supportTickets.$inferInsert;
+export type CommissionTier = typeof commissionTiers.$inferSelect;
+export type InsertCommissionTier = typeof commissionTiers.$inferInsert;
+export type EscrowEntry = typeof escrowEntries.$inferSelect;
+export type InsertEscrowEntry = typeof escrowEntries.$inferInsert;

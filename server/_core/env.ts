@@ -1,7 +1,7 @@
 export const ENV = {
   appId: process.env.VITE_APP_ID ?? "",
   cookieSecret: process.env.JWT_SECRET ?? "",
-  databaseUrl: process.env.DATABASE_URL ?? "",
+  databaseUrl: process.env.DATABASE_URL ?? process.env.SUPABASE_DB_URL ?? "",
   oAuthServerUrl: process.env.OAUTH_SERVER_URL ?? "",
   ownerOpenId: process.env.OWNER_OPEN_ID ?? "",
   isProduction: process.env.NODE_ENV === "production",
@@ -15,6 +15,9 @@ export const ENV = {
   stripeIdentityWebhookSecret: process.env.STRIPE_IDENTITY_WEBHOOK_SECRET ?? "",
   personaApiKey: process.env.PERSONA_API_KEY ?? "",
   personaWebhookSecret: process.env.PERSONA_WEBHOOK_SECRET ?? "",
+  // Stripe Connect split payments (multi-vendor escrow & payouts)
+  stripeSecretKey: process.env.STRIPE_SECRET_KEY ?? "",
+  stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET ?? "",
   // Redis cache configuration (Upstash Redis)
   redisUrl: process.env.UPSTASH_REDIS_REST_URL ?? "",
   redisToken: process.env.UPSTASH_REDIS_REST_TOKEN ?? "",
