@@ -13,8 +13,9 @@
 
 import { TranslateClient, TranslateTextCommand } from "@aws-sdk/client-translate";
 import { ENV } from "./env";
-import { db } from "../db";
-import { translations, Translation } from "../drizzle/schema";
+import { getDb } from "../db";
+import { translations, Translation } from "../../drizzle/schema"; // أو مسار الـ schema الصحيح لديك
+
 import { eq, and, desc } from "drizzle-orm";
 
 // Supported languages for translation

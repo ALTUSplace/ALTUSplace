@@ -109,3 +109,12 @@ export async function getUserByOpenId(openId: string) {
 }
 
 // TODO: add feature queries here as your schema grows.
+export const db = new Proxy({} as any, {
+  get(_, prop) {
+    // يتم توجيه الطلبات تلقائياً لقاعدة البيانات
+    return (async () => {
+      const database = await getDb();
+      return (database as any)[prop];
+    })();
+  }
+});
