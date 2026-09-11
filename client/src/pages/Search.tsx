@@ -5,9 +5,9 @@ import { trpc } from '@/lib/trpc';
 import { Button } from '@/components/ui/button';
 import { Filter, Star, ShieldCheck, Users, Car as CarIcon, ArrowUpDown, Award, MapPin, Scale, X, Eye, Home, Map, LayoutGrid, Search as SearchIcon } from 'lucide-react';
 import { toast } from 'sonner';
-import { MapSearchView } from '@/components/MapSearchView';
-import { InteractiveMap } from '@/components/InteractiveMap';
+import { MapboxSearchMap } from '@/components/MapboxSearchMap';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { MOROCCO_CENTER, cityToCoords, resolveListingCoords } from '@/lib/mapbox';
 import { OptimizedImage } from '@/components/OptimizedImage';
 import { ListingCard, ListingCardSkeleton } from '@/components/ui/ListingCard';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -139,8 +139,47 @@ export default function Search() {
   const [quickViewItem, setQuickViewItem] = useState<ListingItem | null>(null);
 
   // عرض الخريطة التفاعلية
-  const [showMap, setShowMap] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
+  const [mapRegion, setMapRegion] = useState(() => ({
+    center: resolvedCity !== 'all' ? (cityToCoords(resolvedCity) ?? MOROCCO_CENTER) : MOROCCO_CENTER,
+    zoom: 7,
+  }));
+  const [mapRadius, setMapRadius] = useState(25);
+
+  const mapSearch = trpc.listings.search.useQuery(
+    viewMode === 'map'
+      ? {
+          lat: mapRegion.center.lat,
+          lng: mapRegion.center.lng,
+          radiusKm: mapRadius,
+          type: typeFilter === 'all' ? undefined : (typeFilter as 'car' | 'property' | 'office'),
+          officeType: typeFilter === 'office' && officeTypeFilter !== 'all' ? officeTypeFilter : undefined,
+          rentalPeriod: typeFilter === 'office' && rentalTermFilter !== 'all' ? (rentalTermFilter as 'daily' | 'monthly' | 'yearly') : undefined,
+          amenities: typeFilter === 'office' && amenityFilters.length > 0 ? amenityFilters : undefined,
+          maxPrice,
+          q: searchQuery.trim() || undefined,
+          sort: 'distance',
+          pageSize: 100,
+        }
+      : undefined,
+    { enabled: viewMode === 'map', staleTime: 15_000 },
+  );
+
+  const mapMarkers = useMemo(() => (mapSearch.data?.items ?? []).map((item) => {
+    const li = toListingItem(item);
+    const coords = resolveListingCoords(item.lat, item.lng, item.city) ?? MOROCCO_CENTER;
+    return {
+      id: li.id,
+      title: li.title,
+      type: li.type,
+      city: li.city,
+      pricePerUnit: li.pricePerUnit,
+      unitLabel: li.unitLabel,
+      image: li.image,
+      lat: coords.lat,
+      lng: coords.lng,
+    };
+  }), [mapSearch.data]);
 
   // ميزة المقارنة (Side-by-Side Comparison)
   const [compareList, setCompareList] = useState<ListingItem[]>([]);
@@ -231,29 +270,7 @@ export default function Search() {
             <h1 className="text-3xl font-extrabold text-white">{language === 'fr' ? 'Guide des voitures, biens et bureaux disponibles' : 'دليل السيارات والعقارات والمكاتب المتاحة'}</h1>
             <p className="text-slate-400 text-sm">{language === 'fr' ? 'Découvrez les offres vérifiées au Maroc avec filtres professionnels et réservation simplifiée.' : 'استعرض أفضل العروض المعتمدة في المغرب مع فلاتر مهنية وحجز مبسط.'}</p>
           </div>
-
-          <Button
-            onClick={() => setShowMap(!showMap)}
-            className="bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold px-5 py-2.5 rounded-2xl text-xs flex items-center gap-2 border border-amber-500/30 shadow-lg"
-          >
-            <Map className="w-4 h-4" /> {showMap ? t('hideMap') : t('showMap')}
-          </Button>
         </div>
-
-        {/* الخريطة التفاعلية المتقدمة مع دبابيس الأسعار */}
-        {showMap && (
-          <div className="bg-slate-950 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-4 animate-in fade-in-50">
-            <div className="flex items-center justify-between">
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-amber-500" /> خريطة الأسعار التفاعلية (Search as I move the map)
-              </h3>
-              <span className="text-xs text-slate-400">انقر على الدبابيس لعرض تفاصيل الإعلان السريعة</span>
-            </div>
-            <MapSearchView listings={filteredListings as any} onSelectListing={(item) => {
-              toast.info(`تم اختيار: ${item.title}`);
-            }} />
-          </div>
-        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           <div className="lg:col-span-1 bg-slate-950 border border-slate-800 p-6 rounded-3xl space-y-6 h-fit sticky top-28 shadow-xl">
@@ -461,32 +478,76 @@ export default function Search() {
 
             {/* Map View */}
             {viewMode === 'map' && (
-              <InteractiveMap
-                listings={filteredListings.map((item, index) => ({
-                  id: item.id,
-                  title: item.title,
-                  type: item.type,
-                  category: item.category,
-                  city: item.city,
-                  pricePerUnit: item.pricePerUnit,
-                  unitLabel: item.unitLabel,
-                  image: item.image,
-                  lat: item.city === 'الدار البيضاء' ? 33.5731 + (index * 0.01 - 0.03)
-                    : item.city === 'مراكش' ? 31.6295 + (index * 0.01 - 0.03)
-                    : item.city === 'أغادير' ? 30.4278 + (index * 0.01 - 0.03)
-                    : item.city === 'طنجة' ? 35.7595 + (index * 0.01 - 0.03)
-                    : item.city === 'الرباط' ? 34.0209 + (index * 0.01 - 0.03)
-                    : 33.5731 + (index * 0.01 - 0.03),
-                  lng: item.city === 'الدار البيضاء' ? -7.5898 + (index * 0.01 - 0.03)
-                    : item.city === 'مراكش' ? -7.9811 + (index * 0.01 - 0.03)
-                    : item.city === 'أغادير' ? -9.5981 + (index * 0.01 - 0.03)
-                    : item.city === 'طنجة' ? -5.8340 + (index * 0.01 - 0.03)
-                    : item.city === 'الرباط' ? -6.8416 + (index * 0.01 - 0.03)
-                    : -7.5898 + (index * 0.01 - 0.03),
-                }))}
-                onSelectListing={(listing) => setLocation(listingRoute(listing as unknown as ListingItem))}
-                height="550px"
-              />
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                <div className="lg:col-span-2 min-w-0">
+                  <MapboxSearchMap
+                    listings={mapMarkers}
+                    center={mapRegion.center}
+                    radiusKm={mapRadius}
+                    onSelectListing={(listing) => setLocation(listing.type === 'car' ? `/car/${listing.id}` : `/property/${listing.id}`)}
+                    onViewportChange={(viewport) => setMapRegion({ center: viewport.center, zoom: viewport.zoom })}
+                    height="640px"
+                  />
+                </div>
+
+                <div className="space-y-4">
+                  <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-semibold text-slate-300">{t('searchRadius')}</label>
+                      <span className="text-xs font-bold text-amber-400">{mapRadius} {t('mapKmUnit')}</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="5"
+                      max="150"
+                      step="5"
+                      value={mapRadius}
+                      onChange={(e) => setMapRadius(Number(e.target.value))}
+                      className="w-full accent-amber-500 bg-slate-800 cursor-pointer"
+                    />
+                  </div>
+
+                  <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-3">
+                    <div className="text-xs font-bold text-white border-b border-slate-800 pb-2">
+                      {t('mapResultsTitle')} — <span className="text-amber-400">{mapSearch.data?.total ?? 0}</span>
+                    </div>
+                    {mapSearch.isLoading && (
+                      <div className="flex items-center justify-center py-8 text-xs text-slate-400">جاري البحث في المنطقة…</div>
+                    )}
+                    {!mapSearch.isLoading && (mapSearch.data?.total ?? 0) === 0 && (
+                      <p className="text-xs text-slate-400 leading-relaxed">{t('mapNoResults')}</p>
+                    )}
+                    <div className="space-y-3 max-h-[520px] overflow-y-auto pl-1">
+                      {(mapSearch.data?.items ?? []).map((item) => {
+                        const li = toListingItem(item);
+                        return (
+                          <div key={li.id} className="flex gap-3 bg-slate-900 border border-slate-800 rounded-xl p-3 items-center">
+                            <img
+                              src={li.image}
+                              alt={li.title}
+                              loading="lazy"
+                              className="w-16 h-16 object-cover rounded-lg flex-shrink-0"
+                            />
+                            <div className="flex-1 min-w-0 space-y-1">
+                              <h5 className="text-xs font-bold text-white line-clamp-1">{li.title}</h5>
+                              <p className="text-[11px] text-slate-400 flex items-center gap-1">
+                                <MapPin className="w-3 h-3" /> {li.city}
+                              </p>
+                              <div className="text-xs font-extrabold text-amber-400">{li.pricePerUnit} {li.unitLabel}</div>
+                            </div>
+                            <button
+                              onClick={() => setLocation(listingRoute(li))}
+                              className="self-center bg-amber-500 hover:bg-amber-600 text-slate-950 text-[11px] font-bold px-3 py-1.5 rounded-lg shrink-0"
+                            >
+                              {t('mapViewListing')}
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
         </div>

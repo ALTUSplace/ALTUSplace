@@ -8,7 +8,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { adminProcedure, ownerProcedure, publicProcedure, protectedProcedure, router, superAdminProcedure } from "./_core/trpc";
 import { getDb } from "./db";
 import { listings, listingAnalyticsEvents, listingComments, bookings, reviews, users, commercialLeaseContracts, notifications, platformSettings, commissionTiers, escrowEntries, payoutRequests, disputes, disputeAttachments, supportTickets, payments, invoices, kycSubmissions, bookingVouchers, bookingMessages, auditLogs, refundRequests } from "../drizzle/schema";
-import { eq, and, lte, gte, lt, gt, desc, count, isNull, inArray, ne, sql } from "drizzle-orm";
+import { eq, and, lte, gte, lt, gt, desc, count, isNull, inArray, ne, or, not, ilike, sql, type SQL } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { safeNotifyUser, buildEmailContent } from "./notificationService";
 import { z } from "zod";
@@ -27,6 +27,14 @@ import { ENV } from "./_core/env";
 import { getKycStatusPayload } from "./verification/eligibility";
 import { maskDocumentNumber } from "./verification/requirements";
 import { createEscrowEntry, freezeEscrowEntry, getGlobalCommission, getTierCommission, mediateEscrowEntry, releaseEscrowEntry, resolveEffectiveCommission, upsertGlobalCommission, upsertTierCommission, VENDOR_TIERS } from "./escrow";
+
+function haversineKm(aLat: number, aLng: number, bLat: number, bLng: number): number {
+  const toRad = (value: number) => (value * Math.PI) / 180;
+  const dLat = toRad(bLat - aLat);
+  const dLng = toRad(bLng - aLng);
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(aLat)) * Math.cos(toRad(bLat)) * Math.sin(dLng / 2) ** 2;
+  return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
 
 async function writeAuditLog(input: {
   actorId: number;
@@ -1075,6 +1083,118 @@ export const appRouter = router({
         });
       }),
 
+    search: publicProcedure
+      .input(
+        z.object({
+          lat: z.number().min(-90).max(90).optional(),
+          lng: z.number().min(-180).max(180).optional(),
+          radiusKm: z.number().positive().max(500).optional(),
+          city: z.string().trim().min(1).max(64).optional(),
+          q: z.string().trim().max(200).optional(),
+          type: z.enum(["all", "car", "property", "office"]).optional(),
+          officeType: z.string().trim().max(64).optional(),
+          rentalPeriod: z.enum(["daily", "monthly", "yearly"]).optional(),
+          amenities: z.array(z.string()).max(10).optional(),
+          minPrice: z.number().nonnegative().optional(),
+          maxPrice: z.number().positive().optional(),
+          startDate: z.string().optional(),
+          endDate: z.string().optional(),
+          sort: z.enum(["price-asc", "price-desc", "newest", "distance"]).optional(),
+          page: z.number().int().min(1).optional(),
+          pageSize: z.number().int().min(1).max(200).optional(),
+        }).optional()
+      )
+      .query(async ({ input }) => {
+        const db = await getDb();
+        const page = input?.page ?? 1;
+        const pageSize = input?.pageSize ?? 50;
+        if (!db) return { items: [], total: 0, page, pageSize, hasMore: false };
+
+        const conds: (SQL | undefined)[] = [inArray(listings.status, ['Published', 'Available', 'Approved'])];
+
+        if (input?.city && input.city !== "all") conds.push(eq(listings.city, input.city));
+
+        if (input?.q?.trim()) {
+          const q = `%${input.q.trim().toLowerCase()}%`;
+          conds.push(or(ilike(listings.title, q), ilike(listings.description, q), ilike(listings.city, q), ilike(listings.category, q)));
+        }
+
+        if (input?.minPrice !== undefined || input?.maxPrice !== undefined) {
+          if (input.minPrice !== undefined) conds.push(gte(listings.pricePerDay, input.minPrice));
+          if (input.maxPrice !== undefined) conds.push(lte(listings.pricePerDay, input.maxPrice));
+        }
+
+        const carCond = or(ilike(listings.category, "%car%"), ilike(listings.category, "%سيارة%"))!;
+        const officeCond = or(ilike(listings.category, "%office%"), ilike(listings.category, "%مكتب%"))!;
+        if (input?.type && input.type !== "all") {
+          if (input.type === "car") conds.push(carCond);
+          else if (input.type === "office") conds.push(officeCond);
+          else conds.push(and(not(carCond), not(officeCond)));
+        }
+        if (input?.type === "office" && input.officeType) {
+          conds.push(eq(listings.officeType, input.officeType));
+        }
+        if (input?.type === "office" && input.rentalPeriod) {
+          conds.push(eq(listings.rentalPeriod, input.rentalPeriod));
+        }
+        if (input?.type === "office" && Array.isArray(input.amenities) && input.amenities.length > 0) {
+          conds.push(ilike(listings.amenities, `%${input.amenities.join("%")}%`));
+        }
+
+        let origin: { lat: number; lng: number } | null = null;
+        if (input?.lat !== undefined && input?.lng !== undefined) {
+          origin = { lat: input.lat, lng: input.lng };
+          const radiusKm = input.radiusKm ?? 25;
+          const deltaLat = radiusKm / 110.574;
+          const deltaLng = radiusKm / (111.32 * Math.max(0.2, Math.cos((origin.lat * Math.PI) / 180)));
+          conds.push(
+            gte(listings.lat, origin.lat - deltaLat),
+            lte(listings.lat, origin.lat + deltaLat),
+            gte(listings.lng, origin.lng - deltaLng),
+            lte(listings.lng, origin.lng + deltaLng),
+            not(isNull(listings.lat)),
+            not(isNull(listings.lng))
+          );
+        }
+
+        const baseFilter = and(...conds);
+        const rows = await db
+          .select({ listing: listings, ownerName: users.name })
+          .from(listings)
+          .leftJoin(users, eq(listings.ownerId, users.id))
+          .where(baseFilter)
+          .orderBy(desc(listings.createdAt));
+
+        const requestedRange = input?.startDate && input?.endDate ? parseDateRange(input.startDate, input.endDate) : null;
+        const confirmedRanges = requestedRange
+          ? await db.select({ listingId: bookings.listingId, start: bookings.startDate, end: bookings.endDate }).from(bookings).where(eq(bookings.status, "Confirmed"))
+          : [];
+
+        const enriched = rows
+          .filter(({ listing: item }) => {
+            if (!requestedRange) return true;
+            const blockedRanges = [
+              ...parseBlockedRanges(item.availability),
+              ...parseBlockedRanges(item.icalImportedRanges),
+              ...confirmedRanges.filter((range) => range.listingId === item.id).map((range) => ({ start: new Date(range.start), end: new Date(range.end) })),
+            ];
+            return isRangeAvailable(requestedRange, blockedRanges);
+          })
+          .map(({ listing: item, ownerName }) => ({
+            ...item,
+            ownerName: ownerName ?? null,
+            distanceKm: origin && item.lat !== null && item.lng !== null ? haversineKm(origin.lat, origin.lng, item.lat, item.lng) : null,
+          }));
+
+        if (input?.sort === "price-asc") enriched.sort((a, b) => a.pricePerDay - b.pricePerDay);
+        else if (input?.sort === "price-desc") enriched.sort((a, b) => b.pricePerDay - a.pricePerDay);
+        else if (input?.sort === "distance") enriched.sort((a, b) => (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity));
+
+        const start = (page - 1) * pageSize;
+        const items = enriched.slice(start, start + pageSize);
+        return { items, total: enriched.length, page, pageSize, hasMore: start + items.length < enriched.length };
+      }),
+
     trackEvent: publicProcedure
       .input(z.object({ listingId: z.number().int().positive(), eventType: z.enum(["view", "whatsapp_click", "contact_click"]), visitorKey: z.string().trim().min(16).max(128).optional() }))
       .mutation(async ({ input }) => {
@@ -1224,6 +1344,8 @@ export const appRouter = router({
           imageUrl: z.string().min(1),
           imageVerificationProof: z.string().min(1),
           city: z.string(),
+          lat: z.number().min(-90).max(90).optional(),
+          lng: z.number().min(-180).max(180).optional(),
           officeType: z.string().optional(),
           rentalPeriod: z.enum(['daily', 'monthly', 'yearly']).optional(),
           amenities: z.array(z.string()).optional(),
@@ -1255,6 +1377,8 @@ export const appRouter = router({
           pricePerDay: input.pricePerDay,
           imageUrl: input.imageUrl,
           city: input.city,
+          lat: input.lat,
+          lng: input.lng,
           officeType: input.officeType,
           rentalPeriod: input.rentalPeriod,
           amenities: input.amenities?.join(',') || null,
@@ -1284,6 +1408,8 @@ export const appRouter = router({
         description: z.string().optional(),
         pricePerDay: z.number().int().nonnegative().optional(),
         city: z.string().min(2).optional(),
+        lat: z.number().min(-90).max(90).optional(),
+        lng: z.number().min(-180).max(180).optional(),
         imageUrl: z.string().optional(),
         imageVerificationProof: z.string().optional(),
         officeType: z.string().optional(),
@@ -1312,6 +1438,8 @@ export const appRouter = router({
         description: z.string().optional(),
         pricePerDay: z.number().int().nonnegative(),
         city: z.string().min(2),
+        lat: z.number().min(-90).max(90).optional(),
+        lng: z.number().min(-180).max(180).optional(),
         imageUrl: z.string().min(1),
         imageVerificationProof: z.string().min(1),
         officeType: z.string().optional(),

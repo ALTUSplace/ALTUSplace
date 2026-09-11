@@ -1,4 +1,4 @@
-import { boolean, index, integer, pgEnum, pgTable, text, timestamp, uniqueIndex, varchar } from "drizzle-orm/pg-core";
+import { boolean, doublePrecision, index, integer, pgEnum, pgTable, text, timestamp, uniqueIndex, varchar } from "drizzle-orm/pg-core";
 
 export const userRoleEnum = pgEnum("user_role", ["renter", "owner", "admin", "user", "SUPER_ADMIN"]);
 export const vendorTierEnum = pgEnum("vendor_tier", ["bronze", "silver", "gold"]);
@@ -70,6 +70,8 @@ export const listings = pgTable("listings", {
   status: listingStatusEnum("status").default("Published").notNull(),
   isFeatured: boolean("is_featured").default(false).notNull(),
   city: varchar("city", { length: 64 }).default("الدار البيضاء").notNull(),
+  lat: doublePrecision("latitude"),
+  lng: doublePrecision("longitude"),
   fuelType: varchar("fuel_type", { length: 32 }).default("ديزل"),
   transmission: varchar("transmission", { length: 32 }).default("أوتوماتيك"),
   rooms: integer("rooms").default(0),
@@ -91,6 +93,7 @@ export const listings = pgTable("listings", {
   statusIdx: index("listings_status_idx").on(table.status),
   ownerIdIdx: index("listings_owner_id_idx").on(table.ownerId),
   searchCompositeIdx: index("listings_search_composite_idx").on(table.city, table.category, table.status),
+  latLngIdx: index("listings_lat_lng_idx").on(table.lat, table.lng),
 }));
 
 export const listingAnalyticsEvents = pgTable("listing_analytics_events", {
