@@ -85,7 +85,7 @@ export default function ReviewsSection({ listingId, bookingId }: ReviewsSectionP
             <Card key={review.id} className="border-border shadow-sm transition-shadow hover:shadow-md">
               <CardHeader className="flex flex-row items-start justify-between gap-3 p-5 pb-0">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 font-bold text-primary">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 ring-2 ring-primary/5 ring-offset-2 ring-offset-background font-bold text-primary">
                     <User className="h-5 w-5" />
                   </div>
                   <div>
