@@ -98,7 +98,7 @@ export default function InteractiveCalendar({ listingId, bookedDates = [], onDat
                 booked 
                   ? 'bg-rose-500/10 text-rose-600 border border-rose-500/30 cursor-not-allowed opacity-75' 
                   : isSelected
-                  ? 'bg-primary text-primary-foreground shadow-md scale-105'
+                  ? 'bg-primary text-primary-foreground shadow-md scale-105 ring-2 ring-primary/40 ring-offset-1 ring-offset-background'
                   : 'bg-background hover:bg-muted border border-border text-foreground'
               }`}
             >
