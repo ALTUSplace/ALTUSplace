@@ -96,10 +96,10 @@ export const LISTINGS: ListingItem[] = [
     city: 'أغادير',
     pricePerUnit: 450,
     unitLabel: 'درهم / يوم',
-    image: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80',
+    image: '/car-photos/car1.webp',
     images: [
-      'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=800&q=80'
+      '/car-photos/car1.webp',
+      '/car-photos/car2.webp'
     ],
     features: ['تكييف رقمي', 'تحكم في المقود', 'توصيل مجاني للمطار', 'ناقل مانوال', 'شاشة تعمل باللمس'],
     description: 'سيارة دفع رباعي اقتصادية وقوية، ممتازة للطرق الوعرة والمدن المغربية. تشمل التأمين الشامل والصيانة الدورية.',
@@ -134,9 +134,9 @@ export const LISTINGS: ListingItem[] = [
     city: 'الدار البيضاء',
     pricePerUnit: 320,
     unitLabel: 'درهم / يوم',
-    image: 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=800&q=80',
+    image: '/car-photos/car3.webp',
     images: [
-      'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=800&q=80'
+      '/car-photos/car3.webp'
     ],
     features: ['اقتصادية جداً في الوقود', 'حساسات وقوف', 'بلوتوث ونظام صوتي متطور', 'تكييف هواء'],
     description: 'السيارة الأكثر طلباً للتنقل الحضري في الدار البيضاء ومحطة قطار محمد الخامس والمطارات.',
