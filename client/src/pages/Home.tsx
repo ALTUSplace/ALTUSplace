@@ -161,7 +161,7 @@ export default function Home() {
                   <label className={fieldBase}>
                     <MapPin className={fieldIconClass} strokeWidth={1.5} />
                     <span className="flex min-w-0 flex-1 flex-col items-start text-right">
-                      <span className={fieldCaptionClass}>{t('searchCityOrAgency')}</span>
+                      <span className={fieldCaptionClass}>{t('searchCityOdgency')}</span>
                       <select
                         value={carCity}
                         onChange={(e) => setCarCity(e.target.value)}

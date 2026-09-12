@@ -61,7 +61,7 @@ export function FAQSection() {
                 <button
                   onClick={() => setOpenIndex(isOpen ? null : idx)}
                   aria-expanded={isOpen}
-                  className="w-full px-4 md:px-6 py-4 md:py-5 text-right flex items-center justify-between gap-2 md:gap-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-inset"
+                  className="w-full px-4 md:px-6 py-4 md:py-5 text-start flex items-center justify-between gap-2 md:gap-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-inset"
                 >
                   <div className="flex min-w-0 items-center gap-3 md:gap-4">
                     <div className="w-9 h-9 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-[#2563EB]/10 dark:bg-[#2563EB]/20 flex items-center justify-center text-[#2563EB] dark:text-[#2563EB] shrink-0">

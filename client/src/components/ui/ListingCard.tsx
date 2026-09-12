@@ -45,6 +45,7 @@ export function ListingCard(props: ListingCardProps) {
   const hasImages = images.length > 0;
   const displayImages = hasImages ? images : [""];
   const totalSlides = displayImages.length;
+  const safePrice = Number.isFinite(Number(pricePerDay)) ? Number(pricePerDay) : 0;
 
   const goTo = useCallback((dir: number) => {
     setActiveSlide((prev) => {
@@ -108,9 +109,8 @@ export function ListingCard(props: ListingCardProps) {
         )}
         <div className="absolute bottom-3 left-3">
           <div className="rounded-xl bg-white/85 px-3 py-1.5 shadow-lg backdrop-blur-md ring-1 ring-white/20">
-            <span key={`${activeCurrency}-${showTotal ? "total" : "day"}`} className="inline-block text-lg font-bold text-slate-900 animate-fade-in">{showTotal ? formatTotalPrice(pricePerDay) : formatPrice(pricePerDay)}</span>
-            <span className="ml-1 text-xs font-semibold text-slate-600">{currency}</span>
-            <span className="ml-1 text-[10px] font-medium text-slate-500">/ day</span>
+            <span key={`${activeCurrency}-${showTotal ? "total" : "day"}`} className="inline-block text-lg font-bold text-slate-900 animate-fade-in">{showTotal ? formatTotalPrice(safePrice) : formatPrice(safePrice)}</span>
+            <span className="ml-1 text-[10px] font-medium text-slate-500" aria-label={currency}>/ day</span>
           </div>
         </div>
         {totalSlides > 1 && (<>

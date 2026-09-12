@@ -8,7 +8,7 @@ export default function Footer() {
   return (
     <footer className="bg-slate-900 text-slate-300 pt-12 pb-8 border-t border-slate-800">
       <div className="container mx-auto px-4">
-        <div className="mb-12 grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-4">
+        <div className="mb-12 grid grid-cols-1 gap-10">
           <div>
             <h3 className="mb-4 border-l-2 border-blue-600 pl-3 text-base font-bold text-white">
               {t("searchCityOdgency")}
