@@ -15,6 +15,7 @@ import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { leaseEndReminderHandler } from "../leaseReminder";
 import { icalExportHandler, icalSyncHandler } from "../ical";
+import { ensureDemoData } from "../demoSeed";
 import { logger } from "./logger";
 
 function isPortAvailable(port: number): Promise<boolean> {
@@ -113,6 +114,10 @@ async function startServer() {
   } else {
     serveStatic(app);
   }
+
+  // Seed the demo catalog once when the database is empty so the marketplace
+  // and bookings work end-to-end out of the box. Non-fatal when unavailable.
+  await ensureDemoData();
 
   const preferredPort = parseInt(process.env.PORT || "3000");
   const port = await findAvailablePort(preferredPort);
