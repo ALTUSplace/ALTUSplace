@@ -94,7 +94,7 @@ export default function InteractiveCalendar({ listingId, bookedDates = [], onDat
               type="button"
               disabled={booked}
               onClick={() => handleDateClick(dateStr)}
-              className={`p-3 rounded-xl text-center text-xs font-semibold transition-all flex flex-col items-center justify-center gap-1 ${
+              className={`p-3 rounded-xl text-center text-xs font-semibold transition-all hover:scale-[1.02] hover:shadow-md hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background flex flex-col items-center justify-center gap-1 ${
                 booked 
                   ? 'bg-rose-500/10 text-rose-600 border border-rose-500/30 cursor-not-allowed opacity-75' 
                   : isSelected
