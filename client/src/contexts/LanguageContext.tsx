@@ -24,7 +24,7 @@ interface LanguageContextType {
 
 const translations: Record<Language, Record<string, string>> = {
   ar: {
-    searchCityOdgency: "المدينة أو الوكالة",
+    searchCityOdgency: "اختر المدينة أو الوكالة",
     cityAgadir: "تأجير في أكادير",
     cityMarrakech: "تأجير في مراكش",
     cityCasablancaFooter: "تأجير في الدار البيضاء",
