@@ -22,12 +22,12 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<'cars' | 'properties'>('cars');
   
   // Search states for Cars
-  const [carCity, setCarCity] = useState('الدار البيضاء');
+  const [carCity, setCarCity] = useState('Ø§Ù„Ø¯Ø§Ø± Ø§Ù„Ø¨ÙŠØ¶Ø§Ø¡');
   const [pickupDate, setPickupDate] = useState('');
   const [dropoffDate, setDropoffDate] = useState('');
 
   // Search states for Properties
-  const [propLocation, setPropLocation] = useState('مراكش');
+  const [propLocation, setPropLocation] = useState('Ù…Ø±Ø§ÙƒØ´');
   const [propType, setPropType] = useState('apartment');
   const [maxPrice, setMaxPrice] = useState('2000');
 
@@ -40,7 +40,7 @@ export default function Home() {
     type: item.category,
     pricePerUnit: item.pricePerDay,
     image: item.imageUrl || 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=800',
-    city: item.city || 'الدار البيضاء',
+    city: item.city || 'Ø§Ù„Ø¯Ø§Ø± Ø§Ù„Ø¨ÙŠØ¶Ø§Ø¡',
     providerName: t('providerNamePlaceholder'),
     specs: {
       transmission: t('transmissionAutomatic'),
@@ -58,7 +58,7 @@ export default function Home() {
     }
   };
 
-  // ── Premium light hero style tokens (international marketplace UI) ──
+  // â”€â”€ Premium light hero style tokens (international marketplace UI) â”€â”€
   const fieldBase =
     'group relative flex flex-1 items-center gap-3 rounded-xl px-4 py-3 text-right transition-all duration-200 cursor-pointer hover:bg-slate-50 focus-within:bg-slate-50 focus-within:ring-2 focus-within:ring-inset focus-within:ring-amber-400/40';
   const fieldDivider = 'border-t sm:border-t-0 sm:border-s sm:border-slate-100';
@@ -72,7 +72,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col" dir={direction}>
       
-      {/* ── Hero: Light premium Airbnb/Turo-style marketplace hero ── */}
+      {/* â”€â”€ Hero: Light premium Airbnb/Turo-style marketplace hero â”€â”€ */}
       <section className="relative pt-14 pb-16 md:pt-20 md:pb-24 px-4 overflow-hidden bg-gradient-to-b from-[#F4F6FB] via-white to-white text-slate-900">
         {/* Soft mesh gradient background */}
         <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
@@ -110,7 +110,7 @@ export default function Home() {
             </Button>
           </div>
 
-          {/* ── Segmented pill tab switcher with sliding indicator ── */}
+          {/* â”€â”€ Segmented pill tab switcher with sliding indicator â”€â”€ */}
           <div className="mx-auto w-fit mt-1">
             <div
               className="relative inline-flex rounded-full bg-slate-100/90 p-1.5 ring-1 ring-inset ring-slate-900/5"
@@ -153,7 +153,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* ── Floating seamless search pill bar ── */}
+          {/* â”€â”€ Floating seamless search pill bar â”€â”€ */}
           <div className="mx-auto max-w-3xl rounded-2xl bg-white/95 backdrop-blur-xl p-2 ring-1 ring-slate-900/5 shadow-[0_28px_70px_-28px_rgba(2,6,23,0.35)]">
             <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row sm:items-stretch rounded-xl text-right">
               {activeTab === 'cars' ? (
@@ -167,11 +167,11 @@ export default function Home() {
                         onChange={(e) => setCarCity(e.target.value)}
                         className={fieldControlClass}
                       >
-                        <option value="الدار البيضاء">{t('cityCasablanca')}</option>
-                        <option value="مراكش">{t('cityMarrakech')}</option>
-                        <option value="أغادير">{t('cityAgadir')}</option>
-                        <option value="طنجة">{t('cityTangier')}</option>
-                        <option value="الرباط">{t('cityRabat')}</option>
+                        <option value="Ø§Ù„Ø¯Ø§Ø± Ø§Ù„Ø¨ÙŠØ¶Ø§Ø¡">{t('cityCasablanca')}</option>
+                        <option value="Ù…Ø±Ø§ÙƒØ´">{t('cityMarrakech')}</option>
+                        <option value="Ø£ØºØ§Ø¯ÙŠØ±">{t('cityAgadir')}</option>
+                        <option value="Ø·Ù†Ø¬Ø©">{t('cityTangier')}</option>
+                        <option value="Ø§Ù„Ø±Ø¨Ø§Ø·">{t('cityRabat')}</option>
                       </select>
                     </span>
                   </label>
@@ -213,10 +213,10 @@ export default function Home() {
                         onChange={(e) => setPropLocation(e.target.value)}
                         className={fieldControlClass}
                       >
-                        <option value="مراكش">{t('marrakechDistricts')}</option>
-                        <option value="الدار البيضاء">{t('casablancaDistricts')}</option>
-                        <option value="طنجة">{t('tangierDistricts')}</option>
-                        <option value="الرباط">{t('rabatDistricts')}</option>
+                        <option value="Ù…Ø±Ø§ÙƒØ´">{t('marrakechDistricts')}</option>
+                        <option value="Ø§Ù„Ø¯Ø§Ø± Ø§Ù„Ø¨ÙŠØ¶Ø§Ø¡">{t('casablancaDistricts')}</option>
+                        <option value="Ø·Ù†Ø¬Ø©">{t('tangierDistricts')}</option>
+                        <option value="Ø§Ù„Ø±Ø¨Ø§Ø·">{t('rabatDistricts')}</option>
                       </select>
                     </span>
                   </label>
@@ -268,61 +268,6 @@ export default function Home() {
               </div>
             </form>
           </div>
-        </div>
-      </section>
-
-      {/* Car Brands Marquee Section (OneClickDrive Morocco Style) */}
-      <section className="py-7 md:py-10 bg-card/40 border-y border-border overflow-hidden">
-        <div className="container mx-auto max-w-6xl px-4 text-center mb-4 md:mb-6">
-          <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{t('popularCarBrandsTitle')}</p>
-        </div>
-        <div className="flex overflow-x-auto no-scrollbar gap-3 md:gap-6 px-4 py-2 justify-start md:justify-center items-stretch flex-nowrap md:flex-wrap max-w-6xl mx-auto snap-x">
-          {[
-            { name: "Mercedes-Benz", icon: "⭐", count: 45 },
-            { name: "Range Rover", icon: "🚙", count: 30 },
-            { name: "BMW", icon: "🏎️", count: 40 },
-            { name: "Audi", icon: "🚘", count: 25 },
-            { name: "Dacia", icon: "🚗", count: 80 },
-            { name: "Renault", icon: "🚙", count: 60 },
-            { name: "Hyundai", icon: "🚗", count: 50 },
-            { name: "Volkswagen", icon: "🚘", count: 35 }
-          ].map((brand, idx) => (
-            <Link key={idx} href={`/search?type=car&brand=${brand.name}`}>
-              <div className="bg-card hover:bg-[#2563EB] hover:text-white text-foreground border border-border hover:border-[#2563EB] px-4 md:px-6 py-3 md:py-4 rounded-xl md:rounded-2xl shadow-sm transition-all duration-300 flex items-center gap-2.5 cursor-pointer group min-w-[150px] md:min-w-[160px] shrink-0 snap-start justify-center">
-                <span className="text-2xl group-hover:scale-110 transition-transform">{brand.icon}</span>
-                <div className="text-right">
-                  <h4 className="font-black text-sm">{brand.name}</h4>
-                  <span className="text-[10px] text-slate-400 group-hover:text-white">{t('brandCarCount')}</span>
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* Real Estate Types Marquee Section */}
-      <section className="py-8 bg-card/40 border-b border-border overflow-hidden">
-        <div className="container mx-auto max-w-6xl px-4 text-center mb-4 md:mb-6">
-          <p className="text-xs font-bold text-[#0B0F19] uppercase tracking-widest">{t('propertyTypesTitle')}</p>
-        </div>
-        <div className="flex overflow-x-auto no-scrollbar gap-3 md:gap-6 px-4 py-2 justify-start md:justify-center items-stretch flex-nowrap md:flex-wrap max-w-6xl mx-auto snap-x">
-          {[
-            { nameKey: "propLuxuryVillas", icon: "🏡", count: 25 },
-            { nameKey: "propModernApartments", icon: "🏢", count: 90 },
-            { nameKey: "propCornichePenthouses", icon: "🏙️", count: 15 },
-            { nameKey: "propBusinessStudios", icon: "🏨", count: 40 },
-            { nameKey: "propSecureResidences", icon: "🏘️", count: 30 }
-          ].map((type, idx) => (
-            <Link key={idx} href={`/search?type=property&category=${type.nameKey}`}>
-              <div className="bg-muted hover:bg-[#2563EB] hover:text-white text-foreground border border-border hover:border-[#2563EB] px-4 md:px-6 py-3 md:py-3.5 rounded-xl md:rounded-2xl shadow-sm transition-all duration-300 flex items-center gap-2.5 cursor-pointer group min-w-[160px] md:min-w-[170px] shrink-0 snap-start justify-center">
-                <span className="text-2xl group-hover:scale-110 transition-transform">{type.icon}</span>
-                <div className="text-right">
-                  <h4 className="font-black text-sm">{t(type.nameKey)}</h4>
-                  <span className="text-[10px] text-muted-foreground group-hover:text-white">{t('brandPropertyCount')}</span>
-                </div>
-              </div>
-            </Link>
-          ))}
         </div>
       </section>
 
