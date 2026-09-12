@@ -136,7 +136,8 @@ export const LISTINGS: ListingItem[] = [
     unitLabel: 'درهم / يوم',
     image: '/car-photos/car3.webp',
     images: [
-      '/car-photos/car3.webp'
+      '/car-photos/car3.webp',
+      '/car-photos/car4.webp'
     ],
     features: ['اقتصادية جداً في الوقود', 'حساسات وقوف', 'بلوتوث ونظام صوتي متطور', 'تكييف هواء'],
     description: 'السيارة الأكثر طلباً للتنقل الحضري في الدار البيضاء ومحطة قطار محمد الخامس والمطارات.',
