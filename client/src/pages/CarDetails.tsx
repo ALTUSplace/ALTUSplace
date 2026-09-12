@@ -5,6 +5,7 @@ import InteractiveCalendar from '@/components/InteractiveCalendar';
 import { Star, ShieldCheck, Users, Car as CarIcon, Fuel, MapPin, Phone, CheckCircle2, Award, Calendar, ChevronRight, Share2, Copy, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { trpc } from '@/lib/trpc';
+import { LISTINGS } from '@/data/altusplace';
 import { OptimizedImage } from '@/components/OptimizedImage';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { BABY_SEAT_FEE_PER_DAY, calculateRentalDays, calculateRentalSubtotal, INSURANCE_FEE_PER_DAY } from '@/lib/pricing';
@@ -26,6 +27,9 @@ export default function CarDetails() {
     { enabled: numericListingId !== null },
   );
   const listing = listingQuery.data;
+  const staticCar = numericListingId === null
+    ? LISTINGS.find((item) => item.id === carId && item.type === 'car')
+    : undefined;
   const car = listing ? {
     id: String(listing.id),
     name: listing.title,
@@ -38,6 +42,18 @@ export default function CarDetails() {
     seats: 5,
     features: listing.amenities ? listing.amenities.split(',').map((item) => item.trim()).filter(Boolean) : [],
     agency: { name: 'المؤجر على ALTUSplace', address: listing.city, whatsapp: '' },
+  } : staticCar ? {
+    id: staticCar.id,
+    name: staticCar.title,
+    brand: staticCar.title.split(' ')[0] || 'ALTUSplace',
+    cityName: staticCar.city,
+    pricePerDay: staticCar.pricePerUnit,
+    image: staticCar.image,
+    transmission: staticCar.specs?.transmission || 'غير محدد',
+    fuel: staticCar.specs?.fuel || 'غير محدد',
+    seats: 5,
+    features: staticCar.features || [],
+    agency: { name: staticCar.providerName || 'المؤجر على ALTUSplace', address: staticCar.city, whatsapp: '' },
   } : null;
 
   const [startDate, setStartDate] = useState(() => {
@@ -57,11 +73,11 @@ export default function CarDetails() {
 
   const { data: bookedDatesData, isLoading: bookedDatesLoading, isError: bookedDatesError } = trpc.listings.getBookedDates.useQuery(
     { listingId: numericListingId! },
-    { enabled: Boolean(car) },
+    { enabled: numericListingId !== null && Boolean(car) },
   );
   const reviewsQuery = trpc.reviews.listByListing.useQuery(
     { listingId: numericListingId! },
-    { enabled: Boolean(car) },
+    { enabled: numericListingId !== null && Boolean(car) },
   );
   const reviews = reviewsQuery.data ?? [];
 
@@ -76,7 +92,7 @@ export default function CarDetails() {
   }
   
   // Missing or invalid listing ID — show friendly message before query
-  if (numericListingId === null) {
+  if (numericListingId === null && !staticCar) {
     return (
       <div className="min-h-screen flex flex-col gap-4 items-center justify-center bg-slate-950 text-slate-200">
         <p>معرّف الإعلان غير صالح أو مفقود من الرابط.</p>
@@ -86,7 +102,7 @@ export default function CarDetails() {
     );
   }
 
-  if (!car || listingQuery.isError) {
+  if (!car) {
     return (
       <div className="min-h-screen flex flex-col gap-4 items-center justify-center bg-slate-950 text-slate-200">
         <p>{t("listingsLoadError")}</p>
@@ -119,18 +135,20 @@ export default function CarDetails() {
     }
   };
 
-  const handleProceedBooking = () => {
-    if (!startDate || !endDate) {
+  const handleProceedBooking = (dates?: { checkIn: string; checkOut: string }) => {
+    const start = dates?.checkIn ?? startDate;
+    const end = dates?.checkOut ?? endDate;
+    if (!start || !end) {
       toast.error('يرجى تحديد تاريخ الاستلام والإرجاع');
       return;
     }
     const checkoutParams = new URLSearchParams({
-      listingId: String(numericListingId),
+      listingId: String(car.id),
       title: car.name,
       pricePerDay: String(dailyPrice),
-      days: String(daysCount),
-      startDate,
-      endDate,
+      days: String(calculateRentalDays(start, end) || 1),
+      startDate: start,
+      endDate: end,
     });
     setLocation(`/checkout?${checkoutParams.toString()}`);
   };
@@ -328,9 +346,7 @@ export default function CarDetails() {
               pricePerDay={car.pricePerDay}
               currency="MAD"
               onReserve={({ checkIn, checkOut }) => {
-                setStartDate(checkIn);
-                setEndDate(checkOut);
-                handleProceedBooking();
+                handleProceedBooking({ checkIn, checkOut });
               }}
             />
           </div>

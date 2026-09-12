@@ -22,12 +22,12 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<'cars' | 'properties'>('cars');
   
   // Search states for Cars
-  const [carCity, setCarCity] = useState('Ø§Ù„Ø¯Ø§Ø± Ø§Ù„Ø¨ÙŠØ¶Ø§Ø¡');
+  const [carCity, setCarCity] = useState('casablanca');
   const [pickupDate, setPickupDate] = useState('');
   const [dropoffDate, setDropoffDate] = useState('');
 
   // Search states for Properties
-  const [propLocation, setPropLocation] = useState('Ù…Ø±Ø§ÙƒØ´');
+  const [propLocation, setPropLocation] = useState('marrakech');
   const [propType, setPropType] = useState('apartment');
   const [maxPrice, setMaxPrice] = useState('2000');
 
@@ -40,7 +40,7 @@ export default function Home() {
     type: item.category,
     pricePerUnit: item.pricePerDay,
     image: item.imageUrl || 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=800',
-    city: item.city || 'Ø§Ù„Ø¯Ø§Ø± Ø§Ù„Ø¨ÙŠØ¶Ø§Ø¡',
+    city: item.city || 'الدار البيضاء',
     providerName: t('providerNamePlaceholder'),
     specs: {
       transmission: t('transmissionAutomatic'),
@@ -167,11 +167,11 @@ export default function Home() {
                         onChange={(e) => setCarCity(e.target.value)}
                         className={fieldControlClass}
                       >
-                        <option value="Ø§Ù„Ø¯Ø§Ø± Ø§Ù„Ø¨ÙŠØ¶Ø§Ø¡">{t('cityCasablanca')}</option>
-                        <option value="Ù…Ø±Ø§ÙƒØ´">{t('cityMarrakech')}</option>
-                        <option value="Ø£ØºØ§Ø¯ÙŠØ±">{t('cityAgadir')}</option>
-                        <option value="Ø·Ù†Ø¬Ø©">{t('cityTangier')}</option>
-                        <option value="Ø§Ù„Ø±Ø¨Ø§Ø·">{t('cityRabat')}</option>
+                        <option value="casablanca">{t('cityCasablanca')}</option>
+                        <option value="marrakech">{t('cityMarrakech')}</option>
+                        <option value="agadir">{t('cityAgadir')}</option>
+                        <option value="tangier">{t('cityTangier')}</option>
+                        <option value="rabat">{t('cityRabat')}</option>
                       </select>
                     </span>
                   </label>
@@ -213,10 +213,10 @@ export default function Home() {
                         onChange={(e) => setPropLocation(e.target.value)}
                         className={fieldControlClass}
                       >
-                        <option value="Ù…Ø±Ø§ÙƒØ´">{t('marrakechDistricts')}</option>
-                        <option value="Ø§Ù„Ø¯Ø§Ø± Ø§Ù„Ø¨ÙŠØ¶Ø§Ø¡">{t('casablancaDistricts')}</option>
-                        <option value="Ø·Ù†Ø¬Ø©">{t('tangierDistricts')}</option>
-                        <option value="Ø§Ù„Ø±Ø¨Ø§Ø·">{t('rabatDistricts')}</option>
+                        <option value="marrakech">{t('marrakechDistricts')}</option>
+                        <option value="casablanca">{t('casablancaDistricts')}</option>
+                        <option value="tangier">{t('tangierDistricts')}</option>
+                        <option value="rabat">{t('rabatDistricts')}</option>
                       </select>
                     </span>
                   </label>

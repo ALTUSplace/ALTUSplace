@@ -25,6 +25,8 @@ interface LanguageContextType {
 const translations: Record<Language, Record<string, string>> = {
   ar: {
     searchCityOdgency: "اختر المدينة أو الوكالة",
+    search: "بحث",
+    cityCasablanca: "الدار البيضاء",
     cityAgadir: "تأجير في أكادير",
     cityMarrakech: "تأجير في مراكش",
     cityCasablancaFooter: "تأجير في الدار البيضاء",
@@ -170,6 +172,8 @@ const translations: Record<Language, Record<string, string>> = {
   },
   fr: {
     searchCityOdgency: "Ville ou agence",
+    search: "Recherche",
+    cityCasablanca: "Casablanca",
     cityAgadir: "Louer à Agadir",
     cityMarrakech: "Louer à Marrakech",
     cityCasablancaFooter: "Louer à Casablanca",
@@ -354,6 +358,8 @@ const translations: Record<Language, Record<string, string>> = {
   },
   en: {
     searchCityOdgency: "City or Agency",
+    search: "Search",
+    cityCasablanca: "Casablanca",
     cityAgadir: "Rent in Agadir",
     cityMarrakech: "Rent in Marrakech",
     cityCasablancaFooter: "Rent in Casablanca",

@@ -10,6 +10,8 @@ import { calculateRentalDays, calculateRentalSubtotal } from '@/lib/pricing';
 import { useAuth } from '@/_core/hooks/useAuth';
 import { isKycSatisfiedFor, KYC_STATUS_CONFIG, type KycStatus } from '@/lib/kyc';
 import PaymentCheckoutModal from '@/components/PaymentCheckoutModal';
+import { LISTINGS } from '@/data/altusplace';
+import { calculateRentalDays as calcDays } from '@/lib/pricing';
 
 export default function CheckoutPage() {
   const [, setLocation] = useLocation();
@@ -18,14 +20,27 @@ export default function CheckoutPage() {
 
   const rawListingId = searchParams.get('listingId') || '';
   const parsedListingId = Number(rawListingId);
+  const startDateParam = searchParams.get('startDate') || '';
+  const endDateParam = searchParams.get('endDate') || '';
 
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'cmi_card' | 'cash'>('cmi_card');
+  const [creatingBooking, setCreatingBooking] = useState(false);
 
   const { data: listing, isLoading, error } = trpc.listings.getById.useQuery(
     { id: parsedListingId },
     { enabled: !isNaN(parsedListingId) && parsedListingId > 0 }
   );
+
+  // Static seed fallback so checkout works for demo listings (l1..l8) too.
+  const staticListing = !listing ? LISTINGS.find((item) => item.id === rawListingId) : undefined;
+  const resolvedListing = listing ?? staticListing;
+  const resTitle = resolvedListing?.title ?? rawListingId;
+  const resPricePerDay = resolvedListing
+    ? ('pricePerDay' in resolvedListing ? resolvedListing.pricePerDay : resolvedListing.pricePerUnit)
+    : Number(searchParams.get('pricePerDay') ?? 0);
+
+  const bookingMutation = trpc.bookings.create.useMutation();
 
   // KYC gate — mirrors the server-side enforcement in payments.create:
   // unverified/pending/rejected profiles cannot open the payment flow.
@@ -42,6 +57,11 @@ export default function CheckoutPage() {
 
   const handleCheckout = (e: React.FormEvent) => {
     e.preventDefault();
+    const bookingDays = calcDays(startDateParam, endDateParam);
+    if (!startDateParam || !endDateParam || bookingDays <= 0) {
+      toast.error('يرجى تحديد تواريخ استلام وإرجاع صحيحة قبل تأكيد الدفع.');
+      return;
+    }
     if (isAuthenticated && !kycVerified) {
       toast.error('التحقق من الهوية مطلوب قبل الدفع. يرجى رفع وثيقتك أولاً.');
       setLocation('/kyc');
@@ -50,16 +70,34 @@ export default function CheckoutPage() {
     setShowPaymentModal(true);
   };
 
-  const handlePaymentSuccess = () => {
-    toast.success('تم تأكيد الحجز بنجاح!');
-    setLocation('/my-bookings');
+  const handlePaymentSuccess = (payload: { transactionId: string }) => {
+    if (creatingBooking) return;
+    const bookingDays = calcDays(startDateParam, endDateParam);
+    if (isNaN(parsedListingId) || parsedListingId <= 0 || bookingDays <= 0) {
+      toast.error('تعذر إتمام الحجز: معرّف الإعلان أو التواريخ غير صالحة.');
+      return;
+    }
+    setCreatingBooking(true);
+    bookingMutation.mutate(
+      { listingId: parsedListingId, startDate: startDateParam, endDate: endDateParam },
+      {
+        onSuccess: (result) => {
+          toast.success('تم تأكيد الحجز بنجاح! رقم الحجز: ALT-' + result.bookingId);
+          setLocation(`/success?bookingId=${result.bookingId}&language=ar`);
+        },
+        onError: (err) => {
+          toast.error('تعذر حفظ الحجز في قاعدة البيانات: ' + (err.message ?? 'خطأ غير متوقع.'));
+          setCreatingBooking(false);
+        },
+      },
+    );
   };
 
   if (isLoading) {
     return <LoadingAnimation />;
   }
 
-  if (error || !listing || isNaN(parsedListingId) || parsedListingId <= 0) {
+  if (error || (!listing && !staticListing) || (!isNaN(parsedListingId) && parsedListingId <= 0)) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center p-6 text-center">
         <p className="text-lg text-slate-600 mb-4">تعذر تحميل العروض حالياً. يرجى المحاولة مرة أخرى بعد قليل.</p>
@@ -68,11 +106,10 @@ export default function CheckoutPage() {
     );
   }
 
-  const days = calculateRentalDays(
-    searchParams.get('startDate') || new Date().toISOString(),
-    searchParams.get('endDate') || new Date().toISOString()
-  );
-  const subtotal = calculateRentalSubtotal(listing.pricePerDay || 100, days);
+  const bookingStart = startDateParam || new Date().toISOString().slice(0, 10);
+  const bookingEnd = endDateParam || new Date().toISOString().slice(0, 10);
+  const days = calculateRentalDays(bookingStart, bookingEnd);
+  const subtotal = calculateRentalSubtotal(resPricePerDay > 0 ? resPricePerDay : (listing?.pricePerDay || 0), days);
 
   return (
     <>
@@ -84,7 +121,7 @@ export default function CheckoutPage() {
                 <CardTitle className="text-xl">تفاصيل الحجز</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <p className="font-semibold">{listing.title}</p>
+                <p className="font-semibold">{resTitle}</p>
                 <p className="text-sm text-slate-500">المدة: {days} أيام</p>
               </CardContent>
             </Card>

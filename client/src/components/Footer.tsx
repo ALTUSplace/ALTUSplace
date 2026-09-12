@@ -15,31 +15,31 @@ export default function Footer() {
             </h3>
             <ul className="space-y-3 text-sm">
               <li>
-                <Link href="/search?city=Agadir" className="flex items-center gap-2 hover:text-white">
+                <Link href="/search?city=agadir" className="flex items-center gap-2 hover:text-white">
                   <MapPin className="h-4 w-4 text-blue-600" />
                   <span>{t("cityAgadir")}</span>
                 </Link>
               </li>
               <li>
-                <Link href="/search?city=Marrakech" className="flex items-center gap-2 hover:text-white">
+                <Link href="/search?city=marrakech" className="flex items-center gap-2 hover:text-white">
                   <MapPin className="h-4 w-4 text-blue-600" />
                   <span>{t("cityMarrakech")}</span>
                 </Link>
               </li>
               <li>
-                <Link href="/search?city=Casablanca" className="flex items-center gap-2 hover:text-white">
+                <Link href="/search?city=casablanca" className="flex items-center gap-2 hover:text-white">
                   <MapPin className="h-4 w-4 text-blue-600" />
                   <span>{t("cityCasablancaFooter")}</span>
                 </Link>
               </li>
               <li>
-                <Link href="/search?city=Tangier" className="flex items-center gap-2 hover:text-white">
+                <Link href="/search?city=tangier" className="flex items-center gap-2 hover:text-white">
                   <MapPin className="h-4 w-4 text-blue-600" />
                   <span>{t("cityTangier")}</span>
                 </Link>
               </li>
               <li>
-                <Link href="/search?city=Rabat" className="flex items-center gap-2 hover:text-white">
+                <Link href="/search?city=rabat" className="flex items-center gap-2 hover:text-white">
                   <MapPin className="h-4 w-4 text-blue-600" />
                   <span>{t("cityRabat")}</span>
                 </Link>
