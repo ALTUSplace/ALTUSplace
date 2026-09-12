@@ -2,8 +2,10 @@ import * as React from "react";
 import { useState, useCallback, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Car, Home, MapPin, Star, Heart, Fuel, Settings, Users, Award, Zap, CheckCircle2 } from "lucide-react";
+
 import { cn } from "@/lib/utils";
 import { OptimizedImage } from "@/components/OptimizedImage";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 export interface ListingCardProps {
   id: string;
@@ -38,6 +40,7 @@ export function ListingCard(props: ListingCardProps) {
   const [, setLocation] = useLocation();
   const [activeSlide, setActiveSlide] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
+  const { currency: activeCurrency, formatPrice, formatTotalPrice, showTotal } = useCurrency();
   const [imgError, setImgError] = useState<Record<number, boolean>>({});
   const hasImages = images.length > 0;
   const displayImages = hasImages ? images : [""];
@@ -71,7 +74,7 @@ export function ListingCard(props: ListingCardProps) {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={handleCardClick}
-      role="link" tabIndex={0} aria-label={`${title} — ${city}`}
+      role="link" tabIndex={0} aria-label={`${title} ÔÇö ${city}`}
       onKeyDown={(e) => { if (e.key === "Enter") handleCardClick(); }}
     >
       <div className="relative aspect-[4/3] overflow-hidden bg-bg-muted">
@@ -79,7 +82,7 @@ export function ListingCard(props: ListingCardProps) {
           {displayImages.map((src, i) => (
             <div key={i} className="relative h-full w-full shrink-0">
               {src && !imgError[i] ? (
-                <OptimizedImage src={src} alt={`${title} — photo ${i + 1}`} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" width={640} height={480} onError={() => setImgError((p) => ({ ...p, [i]: true }))} />
+                <OptimizedImage src={src} alt={`${title} ÔÇö photo ${i + 1}`} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" width={640} height={480} onError={() => setImgError((p) => ({ ...p, [i]: true }))} />
               ) : (
                 <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-700">
                   {type === "car" ? <Car className="h-12 w-12 text-slate-300" /> : <Home className="h-12 w-12 text-slate-300" />}
@@ -105,7 +108,7 @@ export function ListingCard(props: ListingCardProps) {
         )}
         <div className="absolute bottom-3 left-3">
           <div className="rounded-xl bg-white/85 px-3 py-1.5 shadow-lg backdrop-blur-md ring-1 ring-white/20">
-            <span className="text-lg font-bold text-slate-900">{pricePerDay.toLocaleString()}</span>
+            <span key={`${activeCurrency}-${showTotal ? "total" : "day"}`} className="inline-block text-lg font-bold text-slate-900 animate-fade-in">{showTotal ? formatTotalPrice(pricePerDay) : formatPrice(pricePerDay)}</span>
             <span className="ml-1 text-xs font-semibold text-slate-600">{currency}</span>
             <span className="ml-1 text-[10px] font-medium text-slate-500">/ day</span>
           </div>
@@ -142,7 +145,7 @@ export function ListingCard(props: ListingCardProps) {
   );
 }
 
-// ── Skeleton Variant ────────────────────────────────────────────────────────
+// ÔöÇÔöÇ Skeleton Variant ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
 
 export function ListingCardSkeleton({ className }: { className?: string }) {
   return (
