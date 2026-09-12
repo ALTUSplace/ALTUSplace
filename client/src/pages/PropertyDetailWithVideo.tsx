@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { trpc } from "@/lib/trpc";
 import { calculateRentalDays, calculateRentalSubtotal } from "@/lib/pricing";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { LISTINGS, type ListingItem } from "@/data/altusplace";
 import { toast } from "sonner";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import CommentSection from "@/components/CommentSection";
@@ -21,6 +22,67 @@ function parseAmenities(value: string | null | undefined): string[] {
   }
 }
 
+type PropertyDetailShape = {
+  id: number | string;
+  title: string;
+  description: string | null;
+  imageUrl: string | null;
+  city: string;
+  status: string;
+  pricePerDay: number;
+  officeType: string | null;
+  category: string;
+  rooms: number | null;
+  rentalPeriod: "daily" | "monthly" | "yearly" | null;
+  amenities: string | null;
+};
+
+function mapStaticToDetail(item: ListingItem): PropertyDetailShape {
+  const roomsNumber = Number.parseInt(String(item.specs?.rooms ?? "").replace(/[^0-9]/g, ""), 10);
+  const amenities = Array.isArray(item.amenities) && item.amenities.length
+    ? item.amenities.join(", ")
+    : item.features.length
+      ? item.features.join(", ")
+      : null;
+  return {
+    id: item.id,
+    title: item.title,
+    description: item.description,
+    imageUrl: item.image,
+    city: item.city,
+    status: "متاح",
+    pricePerDay: item.pricePerUnit,
+    officeType: item.officeType ?? null,
+    category: item.category,
+    rooms: Number.isNaN(roomsNumber) ? null : roomsNumber,
+    rentalPeriod: item.rentalTerms?.[0] ?? null,
+    amenities,
+  };
+}
+
+const OFFICE_TYPE_LABEL: Record<string, string> = {
+  private: "مكتب خاص",
+  coworking: "مساحة عمل مشتركة",
+  meeting_room: "قاعة اجتماعات",
+  company_headquarters: "مقر شركة",
+};
+const OFFICE_TYPE_LABEL_FR: Record<string, string> = {
+  private: "Bureau privé",
+  coworking: "Coworking",
+  meeting_room: "Salle de réunion",
+  company_headquarters: "Siège d'entreprise",
+};
+const RENTAL_LABEL: Record<string, string> = {
+  daily: "يومي",
+  monthly: "شهري",
+  yearly: "سنوي",
+};
+const RENTAL_LABEL_FR: Record<string, string> = {
+  daily: "Quotidien",
+  monthly: "Mensuel",
+  yearly: "Annuel",
+};
+
 export default function PropertyDetailWithVideo() {
   const params = useParams<{ id?: string }>();
   const [, setLocation] = useLocation();
@@ -30,11 +92,30 @@ export default function PropertyDetailWithVideo() {
   const parsedId = Number(params.id);
   const listingId = Number.isInteger(parsedId) && parsedId > 0 ? parsedId : null;
   const listingQuery = trpc.listings.getById.useQuery({ id: listingId! }, { enabled: listingId !== null });
-  const listing = listingQuery.data;
+  const staticItem = listingId === null ? LISTINGS.find((item) => item.id === params.id && item.type !== "car") : undefined;
+  const listing = (listingQuery.data ?? (staticItem ? mapStaticToDetail(staticItem) : undefined)) as PropertyDetailShape | undefined;
   const amenities = useMemo(() => parseAmenities(listing?.amenities), [listing?.amenities]);
   const imageUrl = listing?.imageUrl || "";
-  const title = listing?.title || (language === "fr" ? "Détails de l’annonce" : "تفاصيل الإعلان");
+  const title = listing?.title || (language === "fr" ? "Détails de l'annonce" : "تفاصيل الإعلان");
   const description = listing?.description || (language === "fr" ? "Aucune description fournie par le propriétaire." : "لم يضف المالك وصفاً لهذا الإعلان بعد.");
+  const rawPrice = Number(listing?.pricePerDay);
+  const safePrice = Number.isFinite(rawPrice) ? rawPrice : 0;
+  const unitLabel = useMemo(() => {
+    if (staticItem?.unitLabel) return staticItem.unitLabel;
+    if (!listing) return language === "fr" ? "MAD / nuit" : "درهم / ليلة";
+    if (language === "fr") {
+      if (listing.officeType) {
+        const map: Record<string, string> = { daily: "MAD / jour", monthly: "MAD / mois", yearly: "MAD / an" };
+        return map[listing.rentalPeriod ?? "daily"] ?? "MAD / jour";
+      }
+      return "MAD / nuit";
+    }
+    if (listing.officeType) {
+      const map: Record<string, string> = { daily: "درهم / يوم", monthly: "درهم / شهر", yearly: "درهم / سنة" };
+      return map[listing.rentalPeriod ?? "daily"] ?? "درهم / يوم";
+    }
+    return "درهم / ليلة";
+  }, [listing, staticItem, language]);
 
   if (listingQuery.isLoading) {
     return <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-600">{t("loading")}</div>;
@@ -47,7 +128,7 @@ export default function PropertyDetailWithVideo() {
   }
   
   // Missing or invalid listing ID — show friendly message before query
-  if (listingId === null) {
+  if (listingId === null && !staticItem) {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center gap-4 px-4 text-center" dir={direction}>
         <h1 className="text-2xl font-bold text-slate-900">معرّف الإعلان غير صالح</h1>
@@ -74,7 +155,7 @@ export default function PropertyDetailWithVideo() {
     description,
     image: imageUrl ? [imageUrl] : [],
     address: { "@type": "PostalAddress", addressLocality: listing.city, addressCountry: "MA" },
-    offers: { "@type": "Offer", priceCurrency: "MAD", price: listing.pricePerDay, availability: "https://schema.org/InStock" },
+    offers: { "@type": "Offer", priceCurrency: "MAD", price: safePrice, availability: "https://schema.org/InStock" },
   };
 
   // Booking state
@@ -94,7 +175,7 @@ export default function PropertyDetailWithVideo() {
     [startDate, endDate],
   );
 
-  const totalPrice = calculateRentalSubtotal(listing.pricePerDay, daysCount) || listing.pricePerDay * daysCount;
+  const totalPrice = calculateRentalSubtotal(safePrice, daysCount) || safePrice * daysCount;
 
   const handleProceedToCheckout = () => {
     if (!startDate || !endDate) {
@@ -108,7 +189,7 @@ export default function PropertyDetailWithVideo() {
     const checkoutParams = new URLSearchParams({
       listingId: String(listing.id),
       title: listing.title,
-      pricePerDay: String(listing.pricePerDay),
+      pricePerDay: String(safePrice),
       startDate,
       endDate,
     });
@@ -143,7 +224,7 @@ export default function PropertyDetailWithVideo() {
             <CardContent className="p-5 space-y-4">
               <div>
                 <p className="text-xs text-slate-500">{t("price")}</p>
-                <p className="text-3xl font-bold text-slate-900">{listing.pricePerDay.toLocaleString()} <span className="text-sm font-normal">MAD / {language === "fr" ? "jour" : "يوم"}</span></p>
+                <p className="text-3xl font-bold text-slate-900">{safePrice.toLocaleString("fr-MA")} <span className="text-sm font-normal">{unitLabel}</span></p>
               </div>
               
               {/* Date Selection */}
@@ -174,7 +255,7 @@ export default function PropertyDetailWithVideo() {
                 </div>
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-slate-500">{daysCount} {language === "fr" ? "jours" : "أيام"}</span>
-                  <span className="font-bold text-amber-600">{totalPrice.toLocaleString()} MAD</span>
+                  <span className="font-bold text-amber-600">{totalPrice.toLocaleString("fr-MA")} {language === "fr" ? "MAD" : "درهم"}</span>
                 </div>
               </div>
 
@@ -192,12 +273,12 @@ export default function PropertyDetailWithVideo() {
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {[[Building2, language === "fr" ? "Type" : "النوع", listing.officeType || listing.category], [Bed, language === "fr" ? "Pièces" : "الغرف", listing.rooms ? String(listing.rooms) : "—"], [Bath, language === "fr" ? "Période" : "المدة", listing.rentalPeriod || "—"], [MapPin, language === "fr" ? "Ville" : "المدينة", listing.city]].map(([Icon, label, value]) => <Card key={String(label)}><CardContent className="p-4"><Icon className="w-5 h-5 text-amber-600 mb-2" /><p className="text-xs text-slate-500">{String(label)}</p><p className="font-semibold text-slate-800 truncate">{String(value)}</p></CardContent></Card>)}
+          {[[Building2, language === "fr" ? "Type" : "النوع", listing.officeType ? (language === "fr" ? OFFICE_TYPE_LABEL_FR[listing.officeType] : OFFICE_TYPE_LABEL[listing.officeType]) || listing.officeType : listing.category || "—"], [Bed, language === "fr" ? "Pièces" : "الغرف", listing.rooms ? String(listing.rooms) : "—"], [Bath, language === "fr" ? "Période" : "المدة", listing.rentalPeriod ? (language === "fr" ? RENTAL_LABEL_FR[listing.rentalPeriod] : RENTAL_LABEL[listing.rentalPeriod]) : "—"], [MapPin, language === "fr" ? "Ville" : "المدينة", listing.city]].map(([Icon, label, value]) => <Card key={String(label)}><CardContent className="p-4"><Icon className="w-5 h-5 text-amber-600 mb-2" /><p className="text-xs text-slate-500">{String(label)}</p><p className="font-semibold text-slate-800 truncate">{String(value)}</p></CardContent></Card>)}
         </div>
 
         <Card><CardContent className="p-5 space-y-4"><h2 className="text-xl font-bold text-slate-900">{language === "fr" ? "Description" : "الوصف"}</h2><p className="text-slate-600 leading-7">{description}</p></CardContent></Card>
         <Card><CardContent className="p-5 space-y-4"><h2 className="text-xl font-bold text-slate-900">{language === "fr" ? "Équipements et visite vidéo" : "التجهيزات وجولة الفيديو"}</h2>{amenities.length ? <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">{amenities.map((item) => <div key={item} className="flex items-center gap-2 text-sm text-slate-700"><CheckCircle2 className="w-4 h-4 text-emerald-600" />{item}</div>)}</div> : <p className="text-sm text-slate-500">{language === "fr" ? "Aucun équipement renseigné." : "لم تُسجل تجهيزات لهذا الإعلان بعد."}</p>}<div className="border-t pt-4 flex items-center gap-3 text-sm text-slate-500"><Video className="w-5 h-5 text-slate-400" />{language === "fr" ? "Aucune vidéo vérifiée n’est disponible pour cette annonce." : "لا يوجد فيديو موثق متاح لهذا الإعلان حالياً."}</div></CardContent></Card>
-        <CommentSection listingId={listingId} />
+        {listingId !== null && <CommentSection listingId={listingId} />}
       </div>
     </div>
   );

@@ -462,8 +462,9 @@ export default function Search() {
                     title={item.title}
                     city={item.city}
                     pricePerDay={item.pricePerUnit}
+                    unitLabel={item.unitLabel}
                     images={item.image ? [item.image] : []}
-                    type={item.type === 'property' ? 'property' : 'car'}
+                    type={item.type === 'car' ? 'car' : 'property'}
                     specs={{
                       transmission: item.specs?.transmission,
                       fuel: item.specs?.fuel,

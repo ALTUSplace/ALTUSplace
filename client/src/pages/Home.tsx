@@ -13,7 +13,7 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { toast } from 'sonner';
 
 function getListingPath(item: { id: string; type: string }) {
-  return item.type === 'property' ? `/property/${item.id}` : `/car/${item.id}`;
+  return item.type === 'car' ? `/car/${item.id}` : `/property/${item.id}`;
 }
 
 export default function Home() {
@@ -368,7 +368,7 @@ export default function Home() {
               city={item.city}
               pricePerDay={item.pricePerUnit}
               images={item.image ? [item.image] : []}
-              type={item.type === 'property' ? 'property' : 'car'}
+              type={item.type === 'car' ? 'car' : 'property'}
               specs={{
                 transmission: item.specs?.transmission,
                 fuel: item.specs?.fuel,

@@ -12,6 +12,7 @@ export interface ListingCardProps {
   title: string;
   city: string;
   pricePerDay: number;
+  unitLabel?: string;
   currency?: string;
   images: string[];
   type: "car" | "property";
@@ -35,7 +36,7 @@ const BADGE_CONFIG: Record<string, { label: string; icon: typeof Award; classNam
 };
 
 export function ListingCard(props: ListingCardProps) {
-  const { id, title, city, pricePerDay, currency = "MAD", images, type,
+  const { id, title, city, pricePerDay, unitLabel = "/ day", currency = "MAD", images, type,
     badges, rating, reviewCount, hostName, isFavorite, onToggleFavorite, specs, className, style } = props;
   const [, setLocation] = useLocation();
   const [activeSlide, setActiveSlide] = useState(0);
@@ -110,7 +111,7 @@ export function ListingCard(props: ListingCardProps) {
         <div className="absolute bottom-3 left-3">
           <div className="rounded-xl bg-white/85 px-3 py-1.5 shadow-lg backdrop-blur-md ring-1 ring-white/20">
             <span key={`${activeCurrency}-${showTotal ? "total" : "day"}`} className="inline-block text-lg font-bold text-slate-900 animate-fade-in">{showTotal ? formatTotalPrice(safePrice) : formatPrice(safePrice)}</span>
-            <span className="ml-1 text-[10px] font-medium text-slate-500" aria-label={currency}>/ day</span>
+            <span className="ml-1 text-[10px] font-medium text-slate-500" aria-label={currency}>{unitLabel}</span>
           </div>
         </div>
         {totalSlides > 1 && (<>
