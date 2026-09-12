@@ -74,7 +74,11 @@ export default function ReviewsSection({ listingId, bookingId }: ReviewsSectionP
           )}
           {!reviewsQuery.isLoading && !reviewsQuery.isError && reviews.length === 0 && (
             <Card className="border-border shadow-sm">
-              <CardContent className="p-6 text-sm text-muted-foreground">لا توجد مراجعات موثقة لهذا العرض بعد.</CardContent>
+              <CardContent className="flex flex-col items-center justify-center gap-3 p-8 text-center">
+<div aria-hidden className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+<Star className="h-6 w-6 text-muted-foreground" />
+</div>
+لا توجد مراجعات موثقة لهذا العرض بعد.</CardContent>
             </Card>
           )}
           {reviews.map((review) => (
