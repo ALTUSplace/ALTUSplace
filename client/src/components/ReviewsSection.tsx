@@ -82,7 +82,7 @@ export default function ReviewsSection({ listingId, bookingId }: ReviewsSectionP
             </Card>
           )}
           {reviews.map((review) => (
-            <Card key={review.id} className="border-border shadow-sm">
+            <Card key={review.id} className="border-border shadow-sm transition-shadow hover:shadow-md">
               <CardHeader className="flex flex-row items-start justify-between gap-3 p-5 pb-0">
                 <div className="flex items-center gap-3">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 font-bold text-primary">
