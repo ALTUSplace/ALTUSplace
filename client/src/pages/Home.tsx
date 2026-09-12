@@ -58,199 +58,213 @@ export default function Home() {
     }
   };
 
-  // ── Floating glass search widget style tokens (international marketplace UI) ──
-  const searchLabelClass = 'text-xs font-bold tracking-wide text-slate-200';
-  const searchFieldClass =
-    'w-full min-h-12 rounded-xl border border-white/15 bg-[#0B0F19]/85 py-3 pr-11 pl-4 text-sm font-semibold text-white outline-none antialiased transition-all duration-200 [color-scheme:dark] selection:bg-blue-500/40 hover:border-white/25 hover:bg-[#0B0F19] placeholder:text-slate-400 focus:border-blue-400/70 focus:bg-[#0B0F19] focus:ring-2 focus:ring-blue-500/80 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-90';
-  const searchIconClass =
-    'pointer-events-none absolute right-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-300 transition-colors duration-200 group-hover:text-blue-300 group-focus-within:text-blue-400';
-  const highlightTextClass =
-    'bg-gradient-to-r from-blue-400 via-sky-300 to-blue-500 bg-clip-text text-transparent';
+  // ── Premium light hero style tokens (international marketplace UI) ──
+  const fieldBase =
+    'group relative flex flex-1 items-center gap-3 rounded-xl px-4 py-3 text-right transition-all duration-200 cursor-pointer hover:bg-slate-50 focus-within:bg-slate-50 focus-within:ring-2 focus-within:ring-inset focus-within:ring-amber-400/40';
+  const fieldDivider = 'border-t sm:border-t-0 sm:border-s sm:border-slate-100';
+  const fieldIconClass =
+    'shrink-0 h-5 w-5 text-slate-400 transition-colors duration-200 group-hover:text-slate-500 group-focus-within:text-amber-500';
+  const fieldCaptionClass =
+    'text-[10px] sm:text-[11px] font-bold uppercase tracking-wide text-slate-400 transition-colors duration-200 group-focus-within:text-slate-500';
+  const fieldControlClass =
+    'w-full min-w-0 bg-transparent outline-none text-sm font-bold text-slate-800 placeholder:text-slate-300 cursor-pointer [color-scheme:light] [&::-webkit-calendar-picker-indicator]:cursor-pointer';
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col" dir={direction}>
       
-      {/* ── Hero: Deep Slate Navy with Electric Blue aurora ── */}
-      <section className="relative pt-14 pb-20 md:pt-24 md:pb-28 px-4 overflow-hidden bg-[#0B0F19] text-white">
-        {/* Aurora glows + dot grid */}
+      {/* ── Hero: Light premium Airbnb/Turo-style marketplace hero ── */}
+      <section className="relative pt-14 pb-16 md:pt-20 md:pb-24 px-4 overflow-hidden bg-gradient-to-b from-[#F4F6FB] via-white to-white text-slate-900">
+        {/* Soft mesh gradient background */}
         <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-          <div className="absolute -top-32 left-1/4 h-72 w-72 rounded-full bg-blue-600/25 blur-3xl" />
-          <div className="absolute top-10 right-1/4 h-64 w-64 rounded-full bg-indigo-500/20 blur-3xl" />
-          <div className="absolute bottom-0 left-0 h-56 w-56 rounded-full bg-amber-500/10 blur-3xl" />
-          <div className="absolute inset-0 opacity-[0.07] bg-[radial-gradient(#3B82F6_1px,transparent_1px)] [background-size:28px_28px]"></div>
-          <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-blue-500/40 to-transparent"></div>
+          <div className="absolute -top-44 right-[10%] h-[420px] w-[420px] rounded-full bg-amber-200/40 blur-[120px]" />
+          <div className="absolute top-6 left-[2%] h-96 w-96 rounded-full bg-sky-200/50 blur-[110px]" />
+          <div className="absolute -bottom-32 left-1/3 h-80 w-80 rounded-full bg-rose-200/30 blur-[110px]" />
+          <div className="absolute inset-x-0 top-0 h-px bg-slate-900/5" />
         </div>
-        
-        <div className="container mx-auto max-w-6xl text-center space-y-6 md:space-y-10 relative z-10">
-          <div className="inline-flex items-center gap-2 border border-blue-400/20 bg-blue-500/10 px-5 py-2.5 rounded-full text-blue-200 text-sm font-bold tracking-wide fade-in shadow-lg shadow-blue-950/30">
-            <ShieldCheck className="w-4 h-4 text-amber-400" />
+
+        <div className="container mx-auto max-w-5xl text-center space-y-6 md:space-y-8 relative z-10">
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur px-5 py-2.5 rounded-full text-slate-700 text-sm font-bold tracking-wide shadow-sm ring-1 ring-slate-900/5 fade-in">
+            <ShieldCheck className="w-4 h-4 text-amber-500" />
             <span>{t('heroBadge')}</span>
           </div>
 
-          <h1 className="text-3xl sm:text-4xl md:text-6xl font-black tracking-tight leading-[1.25] md:leading-[1.15]">
-            {t('heroTitlePrefix')} <span className={highlightTextClass}>{t('heroTitleCars')}</span> {t('heroTitleAnd')} <span className={highlightTextClass}>{t('heroTitleProperties')}</span> <span className="text-amber-400">{t('heroTitleSuffix')}</span>
+          {/* Premium heading */}
+          <h1 className="mx-auto max-w-3xl font-display text-[clamp(2rem,6vw,4.25rem)] font-black tracking-tight leading-[1.2]">
+            {t('heroTitlePrefix')} <span className="text-amber-500">{t('heroTitleCars')}</span> {t('heroTitleAnd')} <span className="text-sky-600">{t('heroTitleProperties')}</span> <span className="text-slate-400">{t('heroTitleSuffix')}</span>
           </h1>
 
-          <p className="text-slate-300/95 text-xs sm:text-sm md:text-base max-w-2xl mx-auto leading-relaxed">
+          {/* Subtitle */}
+          <p className="text-slate-500 text-xs sm:text-sm md:text-base max-w-2xl mx-auto leading-relaxed font-medium">
             {t('heroDescription')}
           </p>
-          
-          <div className="flex justify-center gap-4 mt-2">
-            <Button 
+
+          {/* Featured review CTA */}
+          <div className="flex justify-center">
+            <Button
               onClick={() => window.open('/slides_project/cover_slide.html', '_blank')}
-              className="bg-white/[0.07] hover:bg-white/[0.14] text-white border border-white/15 px-6 py-2 rounded-xl text-sm font-bold flex items-center gap-2 backdrop-blur transition-colors duration-200"
+              className="bg-white/80 hover:bg-white text-slate-600 hover:text-slate-900 border border-slate-200 px-6 py-2 rounded-full text-sm font-bold flex items-center gap-2 backdrop-blur shadow-sm hover:shadow-md transition-all duration-200"
             >
-              <Award className="w-4 h-4" />
+              <Award className="w-4 h-4 text-amber-500" />
               <span>{t('heroReviewButton')}</span>
             </Button>
           </div>
 
-          {/* ── Floating glassmorphism search card ── */}
-          <div className="max-w-4xl mx-auto mt-4 md:mt-8 bg-gradient-to-b from-white/[0.09] to-white/[0.03] backdrop-blur-xl border border-white/10 ring-1 ring-inset ring-white/5 p-4 md:p-7 rounded-2xl shadow-2xl shadow-blue-500/10 text-right">
-            {/* Segmented control tabs (Cars vs Properties) */}
-            <div className="mb-4 md:mb-6 rounded-xl border border-white/10 bg-[#0F172A]/60 p-1" role="tablist" aria-label={t('searchTabCars')}>
-              <div className="grid grid-cols-2 gap-1">
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={activeTab === 'cars'}
-                  onClick={() => setActiveTab('cars')}
-                  className={`flex items-center justify-center gap-1.5 py-2.5 px-2 sm:px-4 rounded-lg font-bold text-xs sm:text-sm transition-all duration-200 ${
-                    activeTab === 'cars'
-                      ? 'bg-gradient-to-b from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30'
-                      : 'text-slate-300 hover:bg-white/5 hover:text-white'
-                  }`}
-                >
-                  <Car className="w-5 h-5" />
-                  <span>{t('searchTabCars')}</span>
-                </button>
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={activeTab === 'properties'}
-                  onClick={() => setActiveTab('properties')}
-                  className={`flex items-center justify-center gap-1.5 py-2.5 px-2 sm:px-4 rounded-lg font-bold text-xs sm:text-sm transition-all duration-200 ${
-                    activeTab === 'properties'
-                      ? 'bg-gradient-to-b from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30'
-                      : 'text-slate-300 hover:bg-white/5 hover:text-white'
-                  }`}
-                >
-                  <Building2 className="w-5 h-5" />
-                  <span>{t('searchTabProperties')}</span>
-                </button>
-              </div>
+          {/* ── Segmented pill tab switcher with sliding indicator ── */}
+          <div className="mx-auto w-fit mt-1">
+            <div
+              className="relative inline-flex rounded-full bg-slate-100/90 p-1.5 ring-1 ring-inset ring-slate-900/5"
+              role="tablist"
+              aria-label={t('searchTabCars')}
+            >
+              <span
+                aria-hidden="true"
+                className="absolute inset-y-1.5 w-[calc(50%-6px)] rounded-full bg-white shadow-md ring-1 ring-slate-900/5 transition-all duration-300 ease-out"
+                style={
+                  activeTab === 'cars'
+                    ? { insetInlineStart: '6px', insetInlineEnd: 'auto' }
+                    : { insetInlineStart: 'auto', insetInlineEnd: '6px' }
+                }
+              />
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activeTab === 'cars'}
+                onClick={() => setActiveTab('cars')}
+                className={`relative z-10 inline-flex items-center justify-center gap-2 rounded-full px-6 sm:px-8 py-2.5 text-xs sm:text-sm font-bold transition-colors duration-200 ${
+                  activeTab === 'cars' ? 'text-slate-900' : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                <Car className="w-5 h-5" strokeWidth={2} />
+                <span>{t('searchTabCars')}</span>
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activeTab === 'properties'}
+                onClick={() => setActiveTab('properties')}
+                className={`relative z-10 inline-flex items-center justify-center gap-2 rounded-full px-6 sm:px-8 py-2.5 text-xs sm:text-sm font-bold transition-colors duration-200 ${
+                  activeTab === 'properties' ? 'text-slate-900' : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                <Building2 className="w-5 h-5" strokeWidth={2} />
+                <span>{t('searchTabProperties')}</span>
+              </button>
             </div>
+          </div>
 
-            {/* Search Form */}
-            <form onSubmit={handleSearchSubmit} className="space-y-3 md:space-y-4">
+          {/* ── Floating seamless search pill bar ── */}
+          <div className="mx-auto max-w-3xl rounded-2xl bg-white/95 backdrop-blur-xl p-2 ring-1 ring-slate-900/5 shadow-[0_28px_70px_-28px_rgba(2,6,23,0.35)]">
+            <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row sm:items-stretch rounded-xl text-right">
               {activeTab === 'cars' ? (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
-                  <div className="space-y-1.5">
-                    <label className={searchLabelClass}>{t('searchCityOrAgency')}</label>
-                    <div className="group relative">
-                      <MapPin className={searchIconClass} />
+                <>
+                  <label className={fieldBase}>
+                    <MapPin className={fieldIconClass} strokeWidth={1.5} />
+                    <span className="flex min-w-0 flex-1 flex-col items-start text-right">
+                      <span className={fieldCaptionClass}>{t('searchCityOrAgency')}</span>
                       <select
                         value={carCity}
                         onChange={(e) => setCarCity(e.target.value)}
-                        className={searchFieldClass}
+                        className={fieldControlClass}
                       >
-                        <option value="الدار البيضاء" className="bg-[#0F172A] text-white">{t('cityCasablanca')}</option>
-                        <option value="مراكش" className="bg-[#0F172A] text-white">{t('cityMarrakech')}</option>
-                        <option value="أغادير" className="bg-[#0F172A] text-white">{t('cityAgadir')}</option>
-                        <option value="طنجة" className="bg-[#0F172A] text-white">{t('cityTangier')}</option>
-                        <option value="الرباط" className="bg-[#0F172A] text-white">{t('cityRabat')}</option>
+                        <option value="الدار البيضاء">{t('cityCasablanca')}</option>
+                        <option value="مراكش">{t('cityMarrakech')}</option>
+                        <option value="أغادير">{t('cityAgadir')}</option>
+                        <option value="طنجة">{t('cityTangier')}</option>
+                        <option value="الرباط">{t('cityRabat')}</option>
                       </select>
-                    </div>
-                  </div>
+                    </span>
+                  </label>
 
-                  <div className="space-y-1.5">
-                    <label className={searchLabelClass}>{t('searchPickupDate')}</label>
-                    <div className="group relative">
-                      <Calendar className={searchIconClass} />
+                  <label className={`${fieldBase} ${fieldDivider}`}>
+                    <Calendar className={fieldIconClass} strokeWidth={1.5} />
+                    <span className="flex min-w-0 flex-1 flex-col items-start text-right">
+                      <span className={fieldCaptionClass}>{t('searchPickupDate')}</span>
                       <input
                         type="date"
                         value={pickupDate}
                         onChange={(e) => setPickupDate(e.target.value)}
-                        className={searchFieldClass}
+                        className={fieldControlClass}
                       />
-                    </div>
-                  </div>
+                    </span>
+                  </label>
 
-                  <div className="space-y-1.5">
-                    <label className={searchLabelClass}>{t('searchDropoffDate')}</label>
-                    <div className="group relative">
-                      <Calendar className={searchIconClass} />
+                  <label className={`${fieldBase} ${fieldDivider}`}>
+                    <Calendar className={fieldIconClass} strokeWidth={1.5} />
+                    <span className="flex min-w-0 flex-1 flex-col items-start text-right">
+                      <span className={fieldCaptionClass}>{t('searchDropoffDate')}</span>
                       <input
                         type="date"
                         value={dropoffDate}
                         onChange={(e) => setDropoffDate(e.target.value)}
-                        className={searchFieldClass}
+                        className={fieldControlClass}
                       />
-                    </div>
-                  </div>
-                </div>
+                    </span>
+                  </label>
+                </>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
-                  <div className="space-y-1.5">
-                    <label className={searchLabelClass}>{t('searchPropertyLocation')}</label>
-                    <div className="group relative">
-                      <MapPin className={searchIconClass} />
+                <>
+                  <label className={fieldBase}>
+                    <MapPin className={fieldIconClass} strokeWidth={1.5} />
+                    <span className="flex min-w-0 flex-1 flex-col items-start text-right">
+                      <span className={fieldCaptionClass}>{t('searchPropertyLocation')}</span>
                       <select
                         value={propLocation}
                         onChange={(e) => setPropLocation(e.target.value)}
-                        className={searchFieldClass}
+                        className={fieldControlClass}
                       >
-                        <option value="مراكش" className="bg-[#0F172A] text-white">{t('marrakechDistricts')}</option>
-                        <option value="الدار البيضاء" className="bg-[#0F172A] text-white">{t('casablancaDistricts')}</option>
-                        <option value="طنجة" className="bg-[#0F172A] text-white">{t('tangierDistricts')}</option>
-                        <option value="الرباط" className="bg-[#0F172A] text-white">{t('rabatDistricts')}</option>
+                        <option value="مراكش">{t('marrakechDistricts')}</option>
+                        <option value="الدار البيضاء">{t('casablancaDistricts')}</option>
+                        <option value="طنجة">{t('tangierDistricts')}</option>
+                        <option value="الرباط">{t('rabatDistricts')}</option>
                       </select>
-                    </div>
-                  </div>
+                    </span>
+                  </label>
 
-                  <div className="space-y-1.5">
-                    <label className={searchLabelClass}>{t('searchPropertyType')}</label>
-                    <div className="group relative">
-                      <Building2 className={searchIconClass} />
+                  <label className={`${fieldBase} ${fieldDivider}`}>
+                    <Building2 className={fieldIconClass} strokeWidth={1.5} />
+                    <span className="flex min-w-0 flex-1 flex-col items-start text-right">
+                      <span className={fieldCaptionClass}>{t('searchPropertyType')}</span>
                       <select
                         value={propType}
                         onChange={(e) => setPropType(e.target.value)}
-                        className={searchFieldClass}
+                        className={fieldControlClass}
                       >
-                        <option value="apartment" className="bg-[#0F172A] text-white">{t('propTypeApartment')}</option>
-                        <option value="villa" className="bg-[#0F172A] text-white">{t('propTypeVilla')}</option>
-                        <option value="studio" className="bg-[#0F172A] text-white">{t('propTypeStudio')}</option>
+                        <option value="apartment">{t('propTypeApartment')}</option>
+                        <option value="villa">{t('propTypeVilla')}</option>
+                        <option value="studio">{t('propTypeStudio')}</option>
                       </select>
-                    </div>
-                  </div>
+                    </span>
+                  </label>
 
-                  <div className="space-y-1.5">
-                    <label className={searchLabelClass}>{t('searchMaxPrice')}</label>
-                    <div className="group relative">
-                      <DollarSign className={searchIconClass} />
+                  <label className={`${fieldBase} ${fieldDivider}`}>
+                    <DollarSign className={fieldIconClass} strokeWidth={1.5} />
+                    <span className="flex min-w-0 flex-1 flex-col items-start text-right">
+                      <span className={fieldCaptionClass}>{t('searchMaxPrice')}</span>
                       <select
                         value={maxPrice}
                         onChange={(e) => setMaxPrice(e.target.value)}
-                        className={searchFieldClass}
+                        className={fieldControlClass}
                       >
-                        <option value="1000" className="bg-[#0F172A] text-white">{t('maxPriceUnder1000')}</option>
-                        <option value="2500" className="bg-[#0F172A] text-white">{t('maxPriceUnder2500')}</option>
-                        <option value="5000" className="bg-[#0F172A] text-white">{t('maxPriceUnder5000')}</option>
-                        <option value="10000" className="bg-[#0F172A] text-white">{t('maxPriceOver5000')}</option>
+                        <option value="1000">{t('maxPriceUnder1000')}</option>
+                        <option value="2500">{t('maxPriceUnder2500')}</option>
+                        <option value="5000">{t('maxPriceUnder5000')}</option>
+                        <option value="10000">{t('maxPriceOver5000')}</option>
                       </select>
-                    </div>
-                  </div>
-                </div>
+                    </span>
+                  </label>
+                </>
               )}
 
-              <div className="pt-2 md:pt-3">
-                <Button
+              {/* Circular search button */}
+              <div className="flex items-center justify-center px-3 py-2 sm:py-0">
+                <button
                   type="submit"
-                  className="w-full bg-gradient-to-l from-blue-600 via-blue-600 to-indigo-600 hover:from-blue-500 hover:via-blue-500 hover:to-indigo-500 text-white font-extrabold tracking-wide py-3.5 md:py-4 rounded-xl md:rounded-2xl text-sm md:text-base border border-blue-400/30 shadow-xl shadow-blue-600/30 hover:shadow-2xl hover:shadow-blue-500/60 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99] flex items-center justify-center gap-2.5 cursor-pointer transition-all duration-300"
+                  aria-label={t('searchSubmitAdvanced')}
+                  className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-lg shadow-amber-500/30 transition-all duration-200 hover:scale-105 hover:from-amber-500 hover:to-orange-600 active:scale-95 active:shadow-md"
                 >
-                  <Search className="w-5 h-5" />
-                  <span>{t('searchSubmitAdvanced')}</span>
-                </Button>
+                  <Search className="h-5 w-5" strokeWidth={2.5} />
+                </button>
               </div>
             </form>
           </div>
@@ -400,7 +414,7 @@ export default function Home() {
         />
 
         {/* Listing Cards Grid */}
-        <div className="mt-7 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-7 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {activeListings.slice(0, 6).map((item, index) => (
             <ListingCard
               key={item.id}

@@ -94,8 +94,8 @@
                               color var(--dur-fast) var(--ease-smooth);
 
     /* Typography Tokens */
-    --font-display: 'Satoshi', 'Inter', system-ui, -apple-system, sans-serif;
-    --font-body:    'Inter', system-ui, -apple-system, sans-serif;
+    --font-display: 'Cairo', 'Satoshi', 'Inter', system-ui, -apple-system, sans-serif;
+    --font-body:    'Cairo', 'Inter', system-ui, -apple-system, sans-serif;
     --font-serif:   'Playfair Display', Georgia, 'Times New Roman', serif;
 
     --text-display: clamp(2.75rem, 6vw, 5.5rem);
