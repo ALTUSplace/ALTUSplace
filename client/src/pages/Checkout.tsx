@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useLocation, useSearch } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Check, MessageCircle, ShieldAlert, ShieldCheck, Sparkles } from 'lucide-react';
+import { Check, MessageCircle, ShieldAlert, ShieldCheck, Sparkles, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { trpc } from '@/lib/trpc';
 import { LoadingAnimation } from '@/components/LoadingAnimation';
@@ -31,6 +31,10 @@ interface WhatsAppBookingDetails {
   days: number;
   totalMAD: number;
   addOns: AddOnId[];
+  residencyLabel: string;
+  identityLabel: string;
+  licenseName: string;
+  identityName: string;
 }
 
 // Builds the pre-filled WhatsApp booking message with a polite greeting and a
@@ -49,10 +53,76 @@ function buildWhatsAppBookingMessage(details: WhatsAppBookingDetails): string {
     const amount = def.perDay ? def.fee * details.days : def.fee;
     lines.push(`- إضافة: ${def.labelAr} (${formatMAD(amount)})`);
   });
+  lines.push(`- حالة الإقامة: ${details.residencyLabel}`);
+  lines.push(`- رخصة السياقة (البيرمي): ${details.licenseName ? `${details.licenseName} — مرفقة` : 'غير مرفقة'} للفحص المسبق من الوكالة`);
+  lines.push(`- وثيقة الهوية (${details.identityLabel}): ${details.identityName ? `${details.identityName} — مرفقة` : 'غير مرفقة'} للفحص المسبق من الوكالة`);
   lines.push(`- الإجمالي: ${formatMAD(details.totalMAD)}`);
   lines.push('');
   lines.push('شكراً لكم، بانتظار تأكيدكم. مع تحياتي.');
   return lines.join('\n');
+}
+
+type ResidencyStatus = 'resident' | 'foreigner';
+
+const RESIDENCY_OPTIONS: { value: ResidencyStatus; label: string; sublabel: string }[] = [
+  { value: 'resident', label: 'مقيم بالمغرب', sublabel: 'بطاقة التعريف الوطنية (CIN)' },
+  { value: 'foreigner', label: 'أجنبي', sublabel: 'جواز السفر (Passport)' },
+];
+
+function DocumentUploadField({
+  label,
+  hint,
+  file,
+  onFileChange,
+}: {
+  label: string;
+  hint: string;
+  file: File | null;
+  onFileChange: (file: File | null) => void;
+}) {
+  return (
+    <div className="space-y-2">
+      <p className="text-sm font-bold text-slate-600 dark:text-slate-300">{label}</p>
+      {file ? (
+        <div className="flex items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-800 dark:bg-emerald-950/30">
+          <div className="flex min-w-0 items-center gap-2">
+            <ShieldCheck className="h-4 w-4 shrink-0 text-emerald-600" />
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-emerald-800 dark:text-emerald-300" dir="ltr">{file.name}</p>
+              <p className="text-[11px] text-emerald-700 dark:text-emerald-400">{Math.max(1, Math.round(file.size / 1024))} KB — تم اختياره</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              onFileChange(null);
+            }}
+            className="shrink-0 rounded-lg border border-emerald-300 px-2 py-1 text-[11px] font-bold text-emerald-700 hover:bg-emerald-100 dark:hover:bg-emerald-800"
+          >
+            إزالة
+          </button>
+        </div>
+      ) : (
+        <label className="flex cursor-pointer items-center gap-3 rounded-xl border-2 border-dashed border-slate-300 p-3 text-sm text-slate-600 transition-all hover:border-amber-400 hover:bg-amber-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-amber-950/20">
+          <Upload className="h-5 w-5 text-amber-600" />
+          اضغط لاختيار الملف
+          <input
+            type="file"
+            accept="image/*,application/pdf"
+            className="sr-only"
+            onChange={(event) => {
+              const picked = event.target.files?.[0] ?? null;
+              onFileChange(picked);
+              event.currentTarget.value = '';
+            }}
+          />
+        </label>
+      )}
+      <p className="text-[11px] text-slate-400">{hint}</p>
+    </div>
+  );
 }
 
 export default function CheckoutPage() {
@@ -70,6 +140,9 @@ export default function CheckoutPage() {
     .filter(isAddOnId);
 
   const [selectedAddOns, setSelectedAddOns] = useState<AddOnId[]>(addOnsFromUrl);
+  const [residency, setResidency] = useState<ResidencyStatus>('resident');
+  const [driverLicenseFile, setDriverLicenseFile] = useState<File | null>(null);
+  const [identityFile, setIdentityFile] = useState<File | null>(null);
 
   const { data: listing, isLoading, error } = trpc.listings.getById.useQuery(
     { id: parsedListingId },
@@ -98,6 +171,12 @@ export default function CheckoutPage() {
   const totals = calculateCheckoutTotal(pricePerDay, days, selectedAddOns);
   const showTotalDisplay = formatMAD(totals.total);
 
+  const residencyOption = RESIDENCY_OPTIONS.find((option) => option.value === residency) ?? RESIDENCY_OPTIONS[0];
+  const identityLabel = residencyOption.sublabel;
+  const identityShortLabel = residency === 'resident' ? 'البطاقة الوطنية CIN' : 'جواز السفر';
+  const residencyLabel = residency === 'resident' ? 'مقيم بالمغرب (Resident)' : 'أجنبي (Foreigner)';
+  const documentsComplete = driverLicenseFile !== null && identityFile !== null;
+
   const whatsappMessage = buildWhatsAppBookingMessage({
     carTitle: resTitle,
     startDate: bookingStart,
@@ -105,6 +184,10 @@ export default function CheckoutPage() {
     days,
     totalMAD: totals.total,
     addOns: selectedAddOns,
+    residencyLabel,
+    identityLabel: identityShortLabel,
+    licenseName: driverLicenseFile?.name ?? '',
+    identityName: identityFile?.name ?? '',
   });
   const whatsappUrl = buildContactWhatsAppUrl(agencyPhone, whatsappMessage);
 
@@ -133,6 +216,10 @@ export default function CheckoutPage() {
     const bookingDays = calcDays(startDateParam, endDateParam);
     if (!startDateParam || !endDateParam || bookingDays <= 0) {
       toast.error('يرجى تحديد تواريخ استلام وإرجاع صحيحة قبل تأكيد الحجز.');
+      return;
+    }
+    if (!documentsComplete) {
+      toast.error('يرجى إرفاق البيرمي ووثيقة الهوية قبل تأكيد الحجز عبر الواتساب.');
       return;
     }
     if (isAuthenticated && !kycVerified) {
@@ -220,6 +307,68 @@ export default function CheckoutPage() {
             <Card>
               <CardHeader>
                 <CardTitle className="text-xl flex items-center gap-2">
+                  <ShieldAlert className="w-5 h-5 text-amber-500" />
+                  التحقق الإلزامي من الوثائق
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <p className="text-sm font-bold text-slate-600 dark:text-slate-300">حالة الإقامة</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {RESIDENCY_OPTIONS.map((option) => {
+                      const selected = residency === option.value;
+                      return (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => setResidency(option.value)}
+                          className={`p-3 rounded-xl border-2 text-sm transition-all ${
+                            selected
+                              ? 'border-amber-500 bg-amber-50 shadow-sm dark:bg-amber-950/20'
+                              : 'border-slate-200 hover:border-slate-300 dark:border-slate-700'
+                          }`}
+                        >
+                          <span className="block font-bold">{option.label}</span>
+                          <span className="block text-[11px] text-slate-500 dark:text-slate-400">{option.sublabel}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <DocumentUploadField
+                  label="رخصة السياقة (البيرمي)"
+                  hint="مطلوبة لجميع الحجوزات — صورة واضحة أو PDF"
+                  file={driverLicenseFile}
+                  onFileChange={setDriverLicenseFile}
+                />
+
+                <DocumentUploadField
+                  label={identityLabel}
+                  hint={residency === 'resident' ? 'مطلوبة للمقيمين — بطاقة التعريف الوطنية' : 'مطلوب للأجانب — جواز السفر'}
+                  file={identityFile}
+                  onFileChange={setIdentityFile}
+                />
+
+                {!documentsComplete && (
+                  <div className="rounded-xl border border-amber-300/40 bg-amber-50 p-3 text-xs text-amber-700 leading-relaxed dark:bg-amber-950/20 dark:text-amber-400" role="alert">
+                    <p className="flex items-center gap-1.5 font-bold">
+                      <ShieldAlert className="h-4 w-4" />
+                      الوثائق المطلوبة غير مكتملة بعد
+                    </p>
+                    <ul className="mt-1 list-disc pr-4 space-y-0.5">
+                      <li>رخصة السياقة (البيرمي) — للجميع</li>
+                      <li>{identityLabel} — {residency === 'resident' ? 'للمقيمين' : 'للأجانب'}</li>
+                    </ul>
+                    <p className="mt-1">لن يُفتح زر تأكيد الحجز عبر الواتساب إلا بعد إرفاق الوثيقتين.</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-xl flex items-center gap-2">
                   <MessageCircle className="w-5 h-5 text-[#25D366]" />
                   تأكيد الحجز عبر الواتساب
                 </CardTitle>
@@ -238,11 +387,17 @@ export default function CheckoutPage() {
                 <Button
                   type="submit"
                   size="lg"
+                  disabled={!documentsComplete}
                   className="w-full bg-[#25D366] text-white hover:bg-[#1ebe5d]"
                 >
                   <MessageCircle className="mr-2 h-5 w-5" />
                   تأكيد الحجز عبر الواتساب
                 </Button>
+                {!documentsComplete && (
+                  <p className="rounded-lg border border-amber-300/40 bg-amber-50 p-2 text-[11px] text-amber-700 leading-relaxed dark:bg-amber-950/20 dark:text-amber-400" role="alert">
+                    أرفق البيرمي ووثيقة الهوية في قسم «التحقق الإلزامي من الوثائق» أعلاه لتفعيل زر التأكيد.
+                  </p>
+                )}
                 {!agencyPhone && (
                   <p className="text-[11px] text-slate-400">
                     لم تشارك الوكالة رقم واتساب بعد؛ ستُوجَّه رسالتك إلى خط دعم ALTUSplace الذي ينسّق معها.
@@ -296,10 +451,21 @@ export default function CheckoutPage() {
                     </Button>
                   </div>
                 ) : (
-                  <Button type="submit" size="lg" className="w-full bg-[#25D366] text-white hover:bg-[#1ebe5d]">
-                    <MessageCircle className="mr-2 h-5 w-5" />
-                    تأكيد الحجز عبر الواتساب ({showTotalDisplay})
-                  </Button>
+                  <div className="space-y-3">
+                    {!documentsComplete && (
+                      <div className="rounded-lg border border-amber-300/40 bg-amber-50 p-2 text-[11px] text-amber-700 leading-relaxed dark:bg-amber-950/20 dark:text-amber-400" role="alert">
+                        <p className="flex items-center gap-1 font-bold">
+                          <ShieldAlert className="h-3.5 w-3.5" />
+                          الوثائق الإلزامية غير مكتملة
+                        </p>
+                        <p className="mt-0.5">أرفق البيرمي ووثيقة الهوية (CIN أو جواز السفر) في قسم «التحقق الإلزامي من الوثائق» لتفعيل الزر.</p>
+                      </div>
+                    )}
+                    <Button type="submit" size="lg" disabled={!documentsComplete} className="w-full bg-[#25D366] text-white hover:bg-[#1ebe5d]">
+                      <MessageCircle className="mr-2 h-5 w-5" />
+                      تأكيد الحجز عبر الواتساب ({showTotalDisplay})
+                    </Button>
+                  </div>
                 )}
               </CardContent>
             </Card>
