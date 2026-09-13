@@ -1385,7 +1385,18 @@ export const appRouter = router({
           console.error('Database unavailable in getById query for listing ID:', input.id);
           return null;
         }
-        const result = await db.select().from(listings).where(and(eq(listings.id, input.id), inArray(listings.status, ['Published', 'Available', 'Approved']))).limit(1);
+        const result = await db
+          .select({
+            listing: listings,
+            ownerName: users.name,
+            agencyName: users.agencyName,
+            agencyPhone: users.agencyPhone,
+            whatsappPhone: users.whatsappPhone,
+          })
+          .from(listings)
+          .leftJoin(users, eq(listings.ownerId, users.id))
+          .where(and(eq(listings.id, input.id), inArray(listings.status, ['Published', 'Available', 'Approved'])))
+          .limit(1);
         if (!result[0]) {
           console.error(`Listing not found or not accessible. ID: ${input.id}, Status check: ['Published', 'Available', 'Approved']`);
           const fullListing = await db.select({ id: listings.id, status: listings.status }).from(listings).where(eq(listings.id, input.id)).limit(1);
@@ -1393,7 +1404,7 @@ export const appRouter = router({
           return null;
         }
 
-        const listing = result[0];
+        const { listing, ownerName, agencyName, agencyPhone, whatsappPhone } = result[0];
         const sourceLanguage = "ar" as const;
         const targetLanguage = input.language ?? sourceLanguage;
 
@@ -1414,10 +1425,14 @@ export const appRouter = router({
               titleProvider: translated.titleProvider,
               descriptionProvider: translated.descriptionProvider,
             },
+            ownerName,
+            agencyName,
+            agencyPhone,
+            whatsappPhone,
           });
         }
 
-        return toPublicListing({ ...listing, _translationMeta: null });
+        return toPublicListing({ ...listing, _translationMeta: null, ownerName, agencyName, agencyPhone, whatsappPhone });
       }),
 
     getBookedDates: publicProcedure

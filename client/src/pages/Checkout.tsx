@@ -1,11 +1,13 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { useLocation, useSearch } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CreditCard, Loader2, ShieldAlert, ShieldCheck, Check, Sparkles, Building2, Fingerprint, Landmark, Banknote } from 'lucide-react';
+import { Check, MessageCircle, ShieldAlert, ShieldCheck, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { trpc } from '@/lib/trpc';
 import { LoadingAnimation } from '@/components/LoadingAnimation';
+import { useAuth } from '@/_core/hooks/useAuth';
+import { isKycSatisfiedFor, KYC_STATUS_CONFIG, type KycStatus } from '@/lib/kyc';
 import {
   ADDON_CATALOG,
   calculateCheckoutTotal,
@@ -13,35 +15,45 @@ import {
   isAddOnId,
   type AddOnId,
 } from '@/lib/pricing';
-import { useAuth } from '@/_core/hooks/useAuth';
-import { isKycSatisfiedFor, KYC_STATUS_CONFIG, type KycStatus } from '@/lib/kyc';
-import PaymentCheckoutModal, { type PaymentMethod, type PaymentSuccessResult } from '@/components/PaymentCheckoutModal';
-import { LISTINGS } from '@/data/altusplace';
-import { useCurrency } from '@/contexts/CurrencyContext';
-import {
-  CHECKOUT_CURRENCIES,
-  GATEWAYS,
-  GATEWAY_GROUPS,
-  gatewaysForCurrency,
-  gatewaySupportsCurrency,
-  type CheckoutCurrency,
-  type GatewayCode,
-  type PaymentOutcome,
-} from '@/lib/payments';
+import { LISTINGS, PARTNERS } from '@/data/altusplace';
+import { buildContactWhatsAppUrl } from '@/lib/whatsapp';
 
 const ALL_ADDON_IDS = Object.keys(ADDON_CATALOG) as AddOnId[];
 
-const GATEWAY_ICONS: Record<GatewayCode, typeof CreditCard> = {
-  cmi_card: CreditCard,
-  stripe_card: CreditCard,
-  paypal: Fingerprint,
-  bank_transfer: Building2,
-  payzone: CreditCard,
-  paytabs: CreditCard,
-  cashplus: Landmark,
-  wafacash: Landmark,
-  arrival: Banknote,
-};
+function formatMAD(amount: number): string {
+  return `${new Intl.NumberFormat('fr-MA').format(amount)} درهم`;
+}
+
+interface WhatsAppBookingDetails {
+  carTitle: string;
+  startDate: string;
+  endDate: string;
+  days: number;
+  totalMAD: number;
+  addOns: AddOnId[];
+}
+
+// Builds the pre-filled WhatsApp booking message with a polite greeting and a
+// clean one-line-per-item layout so agencies can confirm the booking at a glance.
+function buildWhatsAppBookingMessage(details: WhatsAppBookingDetails): string {
+  const lines = [
+    'السلام عليكم، أرغب في تأكيد حجز عبر منصة ALTUSplace، وإليكم تفاصيل الحجز:',
+    '',
+    `- السيارة: ${details.carTitle}`,
+    `- تاريخ الاستلام: ${details.startDate}`,
+    `- تاريخ الإرجاع: ${details.endDate}`,
+    `- المدة: ${details.days} ${details.days === 1 ? 'يوم' : 'أيام'}`,
+  ];
+  details.addOns.forEach((id) => {
+    const def = ADDON_CATALOG[id];
+    const amount = def.perDay ? def.fee * details.days : def.fee;
+    lines.push(`- إضافة: ${def.labelAr} (${formatMAD(amount)})`);
+  });
+  lines.push(`- الإجمالي: ${formatMAD(details.totalMAD)}`);
+  lines.push('');
+  lines.push('شكراً لكم، بانتظار تأكيدكم. مع تحياتي.');
+  return lines.join('\n');
+}
 
 export default function CheckoutPage() {
   const [, setLocation] = useLocation();
@@ -57,12 +69,7 @@ export default function CheckoutPage() {
     .map((id) => id.trim())
     .filter(isAddOnId);
 
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [selectedGateway, setSelectedGateway] = useState<GatewayCode>('cmi_card');
-  const [creatingBooking, setCreatingBooking] = useState(false);
   const [selectedAddOns, setSelectedAddOns] = useState<AddOnId[]>(addOnsFromUrl);
-
-  const { currency, setCurrency, formatPrice, convertPrice, symbol } = useCurrency();
 
   const { data: listing, isLoading, error } = trpc.listings.getById.useQuery(
     { id: parsedListingId },
@@ -77,17 +84,32 @@ export default function CheckoutPage() {
     ? ('pricePerDay' in resolvedListing ? resolvedListing.pricePerDay : resolvedListing.pricePerUnit)
     : Number(searchParams.get('pricePerDay') ?? 0);
 
-  const bookingMutation = trpc.bookings.create.useMutation();
-  const paymentMutation = trpc.payments.create.useMutation();
+  // WhatsApp recipient: the agency's own number from the owner profile when
+  // available, then the static demo partner phone, and finally the platform
+  // concierge line so a booking request is never dropped.
+  const staticPartner = staticListing ? PARTNERS.find((partner) => partner.id === staticListing.providerId) : undefined;
+  const agencyPhone = listing?.whatsappPhone ?? listing?.agencyPhone ?? staticPartner?.phone ?? '';
+  const agencyName = listing?.agencyName ?? listing?.ownerName ?? staticPartner?.name ?? 'الوكالة المؤجِرة';
 
-  // Every gateway supports MAD; switching to a currency the selected gateway
-  // cannot charge in falls back to the first gateway valid for that currency.
-  useEffect(() => {
-    setSelectedGateway((prev) => (gatewaySupportsCurrency(prev, currency) ? prev : (gatewaysForCurrency(currency)[0] ?? 'cmi_card')));
-  }, [currency]);
+  const bookingStart = startDateParam || new Date().toISOString().slice(0, 10);
+  const bookingEnd = endDateParam || new Date().toISOString().slice(0, 10);
+  const days = calculateRentalDays(bookingStart, bookingEnd);
+  const pricePerDay = resPricePerDay > 0 ? resPricePerDay : (listing?.pricePerDay || 0);
+  const totals = calculateCheckoutTotal(pricePerDay, days, selectedAddOns);
+  const showTotalDisplay = formatMAD(totals.total);
 
-  // KYC gate — mirrors the server-side enforcement in payments.create:
-  // unverified/pending/rejected profiles cannot open the payment flow.
+  const whatsappMessage = buildWhatsAppBookingMessage({
+    carTitle: resTitle,
+    startDate: bookingStart,
+    endDate: bookingEnd,
+    days,
+    totalMAD: totals.total,
+    addOns: selectedAddOns,
+  });
+  const whatsappUrl = buildContactWhatsAppUrl(agencyPhone, whatsappMessage);
+
+  // KYC gate — mirrors the server-side enforcement in bookings.create:
+  // unverified/pending/rejected profiles cannot open the booking flow.
   const { isAuthenticated } = useAuth();
   const kycStatusQuery = trpc.kyc.status.useQuery(undefined, { enabled: isAuthenticated });
   const kycVerified = !isAuthenticated
@@ -106,119 +128,24 @@ export default function CheckoutPage() {
     });
   };
 
-  const handleCheckout = (e: React.FormEvent) => {
+  const handleWhatsAppConfirm = (e: React.FormEvent) => {
     e.preventDefault();
     const bookingDays = calcDays(startDateParam, endDateParam);
     if (!startDateParam || !endDateParam || bookingDays <= 0) {
-      toast.error('يرجى تحديد تواريخ استلام وإرجاع صحيحة قبل تأكيد الدفع.');
+      toast.error('يرجى تحديد تواريخ استلام وإرجاع صحيحة قبل تأكيد الحجز.');
       return;
     }
     if (isAuthenticated && !kycVerified) {
-      toast.error('التحقق من الهوية مطلوب قبل الدفع. يرجى رفع وثيقتك أولاً.');
+      toast.error('التحقق من الهوية مطلوب قبل الحجز. يرجى رفع وثيقتك أولاً.');
       setLocation('/kyc');
       return;
     }
-    setShowPaymentModal(true);
-  };
-
-  // The modal delegates the charge here: booking.create then payments.create.
-  // The resolved outcome tells the modal which step to render (redirect gate,
-  // cash voucher, instant settled or pending), so the real transaction state
-  // drives the UI instead of a local simulation.
-  const lastOutcomeRef = useRef<PaymentOutcome | null>(null);
-  const bookingIdRef = useRef<number | null>(null);
-
-  const handleCreatePayment = (method: PaymentMethod): Promise<PaymentOutcome> => {
-    return new Promise<PaymentOutcome>((resolve, reject) => {
-      const bookingDays = calcDays(startDateParam, endDateParam);
-      if (isNaN(parsedListingId) || parsedListingId <= 0 || bookingDays <= 0) {
-        reject(new Error('تعذر إتمام الحجز: معرّف الإعلان أو التواريخ غير صالحة.'));
-        return;
-      }
-      if (creatingBooking) {
-        reject(new Error('جاري إنشاء الحجز، يرجى الانتظار.'));
-        return;
-      }
-      setCreatingBooking(true);
-      bookingMutation.mutate(
-        {
-          listingId: parsedListingId,
-          startDate: startDateParam,
-          endDate: endDateParam,
-          addOns: selectedAddOns,
-        },
-        {
-          onSuccess: (result) => {
-            bookingIdRef.current = result.bookingId;
-            paymentMutation.mutate(
-              { bookingId: result.bookingId, method: method as GatewayCode, currency },
-              {
-                onSuccess: (payResult) => {
-                  let outcome: PaymentOutcome;
-                  if (payResult.gatewayRedirect?.kind === 'redirect') {
-                    outcome = {
-                      kind: 'redirect',
-                      provider: payResult.gatewayRedirect.provider,
-                      url: payResult.gatewayRedirect.url,
-                      externalReference: payResult.gatewayRedirect.externalReference,
-                      transactionId: payResult.transaction?.id ?? '',
-                    };
-                  } else if (payResult.gatewayRedirect?.kind === 'voucher') {
-                    outcome = {
-                      kind: 'voucher',
-                      provider: payResult.gatewayRedirect.provider,
-                      reference: payResult.gatewayRedirect.reference,
-                      expiresAt: payResult.gatewayRedirect.expiresAt
-                        ? new Date(payResult.gatewayRedirect.expiresAt).toISOString()
-                        : null,
-                      amount: payResult.payment.amount,
-                    };
-                  } else if (payResult.payment.status === 'Succeeded') {
-                    outcome = {
-                      kind: 'settled',
-                      transactionId: payResult.transaction?.id ?? payResult.payment.providerReference,
-                      method: method as GatewayCode,
-                      amount: payResult.payment.amount,
-                    };
-                  } else {
-                    outcome = {
-                      kind: 'pending',
-                      transactionId: payResult.transaction?.id ?? payResult.payment.providerReference,
-                      method: method as GatewayCode,
-                      amount: payResult.payment.amount,
-                    };
-                  }
-                  lastOutcomeRef.current = outcome;
-                  setCreatingBooking(false);
-                  resolve(outcome);
-                },
-                onError: (err) => {
-                  setCreatingBooking(false);
-                  reject(new Error('تم تأكيد الحجز لكن تعذر تسجيل الدفع: ' + (err.message ?? 'خطأ غير متوقع.')));
-                },
-              },
-            );
-          },
-          onError: (err) => {
-            setCreatingBooking(false);
-            reject(new Error('تعذر حفظ الحجز في قاعدة البيانات: ' + (err.message ?? 'خطأ غير متوقع.')));
-          },
-        },
-      );
-    });
-  };
-
-  // Navigation only — the actual booking/payment ran inside handleCreatePayment.
-  const handlePaymentSuccess = (_payload: PaymentSuccessResult) => {
-    const outcome = lastOutcomeRef.current;
-    if (outcome?.kind === 'settled') {
-      const bookingId = bookingIdRef.current;
-      toast.success('تم تأكيد الحجز والدفع بنجاح! رقم الحجز: ALT-' + (bookingId ?? ''));
-      setLocation(bookingId ? `/success?bookingId=${bookingId}&language=ar` : '/my-bookings');
-    } else {
-      toast.info('تم إنشاء الحجز وطلب الدفع. تابع الحالة من حجوزاتي.');
-      setLocation('/my-bookings');
+    if (!whatsappUrl) {
+      toast.error('لا يوجد رقم واتساب متاح لهذه الوكالة حالياً. يرجى المحاولة لاحقاً.');
+      return;
     }
+    window.open(whatsappUrl, '_blank');
+    toast.success('تم تجهيز رسالة الحجز مع تفاصيله. أرسلها عبر الواتساب لتأكيد الحجز.');
   };
 
   if (isLoading) {
@@ -234,18 +161,10 @@ export default function CheckoutPage() {
     );
   }
 
-  const bookingStart = startDateParam || new Date().toISOString().slice(0, 10);
-  const bookingEnd = endDateParam || new Date().toISOString().slice(0, 10);
-  const days = calculateRentalDays(bookingStart, bookingEnd);
-  const pricePerDay = resPricePerDay > 0 ? resPricePerDay : (listing?.pricePerDay || 0);
-  const totals = calculateCheckoutTotal(pricePerDay, days, selectedAddOns);
-  const availableGateways = gatewaysForCurrency(currency);
-  const showTotalDisplay = formatPrice(totals.total);
-
   return (
     <>
       <div className="max-w-5xl mx-auto space-y-5 sm:space-y-7 p-4">
-        <form onSubmit={handleCheckout} className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <form onSubmit={handleWhatsAppConfirm} className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="md:col-span-2 space-y-6">
             <Card>
               <CardHeader>
@@ -253,7 +172,7 @@ export default function CheckoutPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="font-semibold">{resTitle}</p>
-                <p className="text-sm text-slate-500">المدة: {days} أيام × {formatPrice(pricePerDay)} / يوم</p>
+                <p className="text-sm text-slate-500">المدة: {days} أيام × {formatMAD(pricePerDay)} / يوم</p>
               </CardContent>
             </Card>
 
@@ -288,10 +207,10 @@ export default function CheckoutPage() {
                       <div className="flex-1">
                         <p className="font-semibold">{def.labelAr}</p>
                         <p className="text-xs text-slate-500">
-                          {def.perDay ? `${formatPrice(def.fee)} / يوم (${formatPrice(def.fee * days)})` : `${formatPrice(def.fee)} (مرة واحدة)`}
+                          {def.perDay ? `${formatMAD(def.fee)} / يوم (${formatMAD(def.fee * days)})` : `${formatMAD(def.fee)} (مرة واحدة)`}
                         </p>
                       </div>
-                      <span className="font-bold text-slate-700">{formatPrice(addOnPrice)}</span>
+                      <span className="font-bold text-slate-700">{formatMAD(addOnPrice)}</span>
                     </button>
                   );
                 })}
@@ -300,68 +219,35 @@ export default function CheckoutPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-xl flex items-center justify-between">
-                  <span>طريقة الدفع</span>
-                  <span className="text-xs font-normal text-slate-400">ALTUSplace Secure Checkout</span>
+                <CardTitle className="text-xl flex items-center gap-2">
+                  <MessageCircle className="w-5 h-5 text-[#25D366]" />
+                  تأكيد الحجز عبر الواتساب
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <p className="text-sm font-bold text-slate-600">عملة الدفع</p>
-                  <div className="flex rounded-xl overflow-hidden border-2 border-slate-200">
-                    {CHECKOUT_CURRENCIES.map((code: CheckoutCurrency) => (
-                      <button
-                        key={code}
-                        type="button"
-                        onClick={() => setCurrency(code)}
-                        className={`flex-1 py-2.5 text-sm font-black transition-colors ${
-                          currency === code ? 'bg-amber-500 text-slate-950' : 'bg-white text-slate-500 hover:bg-amber-50'
-                        }`}
-                      >
-                        {code}
-                      </button>
-                    ))}
-                  </div>
+                <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                  لا حاجة إلى بطاقة دفع. سيتم فتح محادثة واتساب مع {agencyName} ورسالة جاهزة تحوي تفاصيل حجزك —
+                  راجعها ثم أرسلها لتأكيد الحجز مباشرة.
+                </p>
+                <div
+                  className="rounded-xl border border-slate-200 bg-slate-50 dark:bg-slate-900/60 dark:border-slate-700 p-4 text-sm leading-relaxed text-slate-700 dark:text-slate-300 whitespace-pre-line"
+                  dir="rtl"
+                >
+                  {whatsappMessage}
                 </div>
-                <div className="space-y-4">
-                  {GATEWAY_GROUPS.map((group) => {
-                    const groupMethods = availableGateways.filter((code) => (GATEWAYS[code].group ?? 'other') === group.key);
-                    if (groupMethods.length === 0) return null;
-                    return (
-                      <div key={group.key} className="space-y-2">
-                        <p className="text-xs font-bold text-slate-500 mt-4 first:mt-0">{group.labelAr}</p>
-                        {groupMethods.map((code: GatewayCode) => {
-                          const def = GATEWAYS[code];
-                          const Icon = GATEWAY_ICONS[code];
-                          const selected = selectedGateway === code;
-                          return (
-                            <div
-                              key={code}
-                              onClick={() => setSelectedGateway(code)}
-                              role="button"
-                              className={`p-4 rounded-xl border-2 cursor-pointer flex items-center gap-3 transition-all ${
-                                selected ? 'border-amber-500 bg-amber-50 shadow-sm dark:bg-amber-950/20' : 'border-slate-200 hover:border-slate-300'
-                              }`}
-                            >
-                              <Icon className="w-6 h-6 text-amber-600" />
-                              <div className="flex-1">
-                                <p className="font-semibold">{def.labelAr}</p>
-                                <p className="text-xs text-slate-500">
-                                  {def.international ? 'مدفوعات دولية آمنة' : 'دفع محلي ومباشر'}
-                                  {def.instant ? ' — فوري' : ' — حتى 48 ساعة'}
-                                </p>
-                              </div>
-                              <span className={`w-4 h-4 rounded-full border-2 ${selected ? 'border-amber-500 bg-amber-500' : 'border-slate-300'}`} />
-                            </div>
-                          );
-                        })}
-                      </div>
-                    );
-                  })}
-                  <div className="rounded-xl border border-amber-300/40 bg-amber-50 dark:bg-amber-950/20 p-3 text-[11px] text-amber-700 dark:text-amber-400 leading-relaxed">
-                    بوابة دفع مغربية محاكية: لا تدخل رقم بطاقة أو رمز CVV حقيقياً، لا نخزن بيانات البطاقة، ولا تتصل بمؤسسة CMI. يتم تأكيد المدفوعات الواقعية عبر وصلات آمنة توفرها جهات الدفع.
-                  </div>
-                </div>
+                <Button
+                  type="submit"
+                  size="lg"
+                  className="w-full bg-[#25D366] text-white hover:bg-[#1ebe5d]"
+                >
+                  <MessageCircle className="mr-2 h-5 w-5" />
+                  تأكيد الحجز عبر الواتساب
+                </Button>
+                {!agencyPhone && (
+                  <p className="text-[11px] text-slate-400">
+                    لم تشارك الوكالة رقم واتساب بعد؛ ستُوجَّه رسالتك إلى خط دعم ALTUSplace الذي ينسّق معها.
+                  </p>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -376,7 +262,7 @@ export default function CheckoutPage() {
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span>قيمة الاشتراك ({days} أيام)</span>
-                    <span>{formatPrice(totals.subtotal)}</span>
+                    <span>{formatMAD(totals.subtotal)}</span>
                   </div>
                   {selectedAddOns.map((id) => {
                     const def = ADDON_CATALOG[id];
@@ -384,7 +270,7 @@ export default function CheckoutPage() {
                     return (
                       <div key={id} className="flex justify-between text-slate-500">
                         <span>{def.labelAr}</span>
-                        <span>+{formatPrice(amount)}</span>
+                        <span>+{formatMAD(amount)}</span>
                       </div>
                     );
                   })}
@@ -404,19 +290,15 @@ export default function CheckoutPage() {
                       <ShieldAlert className="h-3.5 w-3.5" />
                       {`التحقق من الهوية مطلوب (${kycStatusLabel})`}
                     </p>
-                    <p className="mt-1">لا يمكن إتمام الدفع قبل الموافقة على وثيقة هويتك.</p>
+                    <p className="mt-1">لا يمكن إتمام الحجز قبل الموافقة على وثيقة هويتك.</p>
                     <Button type="button" onClick={() => setLocation('/kyc')} className="mt-2 w-full bg-amber-500 font-bold text-slate-950 hover:bg-amber-600">
                       إكمال التحقق من الهوية
                     </Button>
                   </div>
-                ) : creatingBooking ? (
-                  <div className="flex items-center justify-center gap-2 rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs font-bold text-amber-700 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-400" role="status">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    جاري تأكيد الحجز وإنشاء رقم المرجع...
-                  </div>
                 ) : (
-                  <Button type="submit" className="w-full bg-amber-500 hover:bg-amber-600 text-white">
-                    تأكيد الدفع ({showTotalDisplay})
+                  <Button type="submit" size="lg" className="w-full bg-[#25D366] text-white hover:bg-[#1ebe5d]">
+                    <MessageCircle className="mr-2 h-5 w-5" />
+                    تأكيد الحجز عبر الواتساب ({showTotalDisplay})
                   </Button>
                 )}
               </CardContent>
@@ -424,24 +306,6 @@ export default function CheckoutPage() {
           </div>
         </form>
       </div>
-
-      <PaymentCheckoutModal
-        isOpen={showPaymentModal}
-        onClose={() => setShowPaymentModal(false)}
-        onSuccess={handlePaymentSuccess}
-        onCreatePayment={handleCreatePayment}
-        amount={convertPrice(totals.total)}
-        currency={symbol}
-        description={resTitle}
-        bookingDetails={{
-          title: resTitle,
-          startDate: bookingStart,
-          endDate: bookingEnd,
-          days,
-        }}
-        initialMethod={selectedGateway as PaymentMethod}
-        supportedMethods={availableGateways as PaymentMethod[]}
-      />
     </>
   );
 }
