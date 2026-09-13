@@ -42,6 +42,7 @@ const toListingItem = (item: {
   id: number;
   ownerId: number;
   title: string;
+  titleFr?: string | null;
   description: string | null;
   category: string;
   pricePerDay: number;
@@ -74,6 +75,7 @@ const toListingItem = (item: {
     providerName: item.ownerName || `مالك الإعلان #${item.ownerId}`,
     type,
     title: item.title,
+    titleFr: item.titleFr ?? undefined,
     category: item.category,
     city: item.city,
     pricePerUnit: item.dynamicPricePerDay ?? item.pricePerDay,
@@ -460,6 +462,7 @@ export default function Search() {
                     key={item.id}
                     id={String(item.id)}
                     title={item.title}
+                    titleFr={item.titleFr}
                     city={item.city}
                     pricePerDay={item.pricePerUnit}
                     unitLabel={item.unitLabel}

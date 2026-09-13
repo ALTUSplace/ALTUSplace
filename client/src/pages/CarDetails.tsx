@@ -9,7 +9,7 @@ import { LISTINGS } from '@/data/altusplace';
 import { OptimizedImage } from '@/components/OptimizedImage';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { BABY_SEAT_FEE_PER_DAY, calculateRentalDays, calculateRentalSubtotal, INSURANCE_FEE_PER_DAY } from '@/lib/pricing';
-import { buildWhatsAppUrl } from '@/lib/whatsapp';
+import { buildContactWhatsAppUrl } from '@/lib/whatsapp';
 import { RENTAL_TERMS } from '@/lib/rentalTerms';
 import CommentSection from '@/components/CommentSection';
 import { BookingWidget } from '@/components/ui/BookingWidget';
@@ -79,6 +79,7 @@ export default function CarDetails() {
     { listingId: numericListingId! },
     { enabled: numericListingId !== null && Boolean(car) },
   );
+  const trackWhatsAppMutation = trpc.listings.trackEvent.useMutation();
   const reviews = reviewsQuery.data ?? [];
 
   if (listingQuery.isLoading) {
@@ -118,7 +119,7 @@ export default function CarDetails() {
   const babySeatPrice = includeBabySeat ? BABY_SEAT_FEE_PER_DAY * daysCount : 0;
   const totalPrice = calculateRentalSubtotal(dailyPrice, daysCount) + insurancePrice + babySeatPrice;
   const whatsappBookingMessage = `مرحباً، أرغب في حجز سيارة ${car.name} من ${startDate} إلى ${endDate} (${daysCount} ${daysCount === 1 ? 'يوم' : 'أيام'}) بمبلغ تقديري ${totalPrice} درهم عبر ALTUSplace.`;
-  const agencyWhatsAppUrl = buildWhatsAppUrl(car.agency.whatsapp, whatsappBookingMessage);
+  const agencyWhatsAppUrl = buildContactWhatsAppUrl(car.agency.whatsapp, whatsappBookingMessage);
 
   const handleShare = (platform: string) => {
     const url = window.location.href;
@@ -289,9 +290,14 @@ export default function CarDetails() {
                       href={agencyWhatsAppUrl}
                       target="_blank"
                       rel="noopener noreferrer"
+                      onClick={() => {
+                        if (numericListingId !== null) {
+                          trackWhatsAppMutation.mutate({ listingId: numericListingId, eventType: "whatsapp_click" });
+                        }
+                      }}
                       className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-3 rounded-2xl text-xs flex items-center justify-center gap-2 shadow-lg"
                     >
-                      <Phone className="w-4 h-4" /> مراسلة الوكالة عبر واتساب
+                      <Phone className="w-4 h-4" /> {car.agency.whatsapp ? "مراسلة الوكالة عبر واتساب" : "تواصل معنا عبر الواتساب"}
                     </a>
                   ) : (
                     <span className="w-full sm:w-auto bg-slate-800 text-slate-500 font-bold px-5 py-3 rounded-2xl text-xs flex items-center justify-center gap-2" aria-disabled="true">
@@ -335,6 +341,8 @@ export default function CarDetails() {
                   </div>
 
                 </div>
+
+                {numericListingId !== null && <CommentSection listingId={numericListingId} />}
 
               </div>
             </div>

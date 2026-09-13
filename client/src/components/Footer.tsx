@@ -49,6 +49,11 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-slate-800 pt-6 text-center text-xs text-slate-500">
+          <div className="mb-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
+            <Link href="/terms" className="hover:text-white">{t("termsOfService")}</Link>
+            <span className="opacity-40">•</span>
+            <Link href="/privacy" className="hover:text-white">{t("privacyPolicy")}</Link>
+          </div>
           <p>{t("footerNoticeText")}</p>
           <p className="mt-1">{t("footerAddress")}</p>
         </div>

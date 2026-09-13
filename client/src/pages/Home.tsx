@@ -33,21 +33,25 @@ export default function Home() {
 
   // Database listings formatted as unified items
   const { data: dbListings = [] } = trpc.listings.list.useQuery();
-  const activeListings = dbListings.length > 0 ? dbListings.map(item => ({
-    id: String(item.id),
-    title: item.title,
-    category: item.category === 'property' ? t('listingCategoryProperty') : t('listingCategoryCar'),
-    type: item.category,
-    pricePerUnit: item.pricePerDay,
-    image: item.imageUrl || 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=800',
-    city: item.city || 'الدار البيضاء',
-    providerName: t('providerNamePlaceholder'),
-    specs: {
-      transmission: t('transmissionAutomatic'),
-      fuel: t('fuelDieselPetrol'),
-      seats: '5'
-    }
-  })) : LISTINGS;
+  const activeListings = dbListings.length > 0 ? dbListings.map(item => {
+    const listingType = /سيارة|car/i.test(item.category) ? 'car' as const : 'property' as const;
+    return {
+      id: String(item.id),
+      title: item.title,
+      titleFr: undefined as string | undefined,
+      category: listingType === 'car' ? t('listingCategoryCar') : t('listingCategoryProperty'),
+      type: listingType,
+      pricePerUnit: item.pricePerDay,
+      image: item.imageUrl || 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=800',
+      city: item.city || 'الدار البيضاء',
+      providerName: t('providerNamePlaceholder'),
+      specs: {
+        transmission: t('transmissionAutomatic'),
+        fuel: t('fuelDieselPetrol'),
+        seats: '5'
+      }
+    };
+  }) : LISTINGS;
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -365,6 +369,7 @@ export default function Home() {
               key={item.id}
               id={item.id}
               title={item.title}
+              titleFr={item.titleFr}
               city={item.city}
               pricePerDay={item.pricePerUnit}
               images={item.image ? [item.image] : []}

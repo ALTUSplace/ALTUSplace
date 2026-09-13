@@ -613,7 +613,7 @@ export const appRouter = router({
     bookings: adminProcedure.query(async () => {
       const db = await getDb();
       if (!db) return [];
-      return db.select({ id: bookings.id, status: bookings.status, totalPrice: bookings.totalPrice, commissionFee: bookings.commissionFee, startDate: bookings.startDate, endDate: bookings.endDate, listingTitle: listings.title, renterName: users.name })
+      return db.select({ id: bookings.id, listingId: bookings.listingId, status: bookings.status, totalPrice: bookings.totalPrice, commissionFee: bookings.commissionFee, startDate: bookings.startDate, endDate: bookings.endDate, createdAt: bookings.createdAt, listingTitle: listings.title, renterName: users.name, renterEmail: users.email })
         .from(bookings).innerJoin(listings, eq(bookings.listingId, listings.id)).leftJoin(users, eq(bookings.renterId, users.id)).orderBy(desc(bookings.createdAt)).limit(200);
     }),
     cancelBooking: adminProcedure
@@ -629,7 +629,7 @@ export const appRouter = router({
     listings: adminProcedure.query(async () => {
       const db = await getDb();
       if (!db) return [];
-      return db.select({ id: listings.id, title: listings.title, category: listings.category, status: listings.status, isFeatured: listings.isFeatured, pricePerDay: listings.pricePerDay, ownerId: listings.ownerId, ownerName: users.name, createdAt: listings.createdAt })
+      return db.select({ id: listings.id, title: listings.title, description: listings.description, category: listings.category, status: listings.status, isFeatured: listings.isFeatured, pricePerDay: listings.pricePerDay, city: listings.city, imageUrl: listings.imageUrl, lat: listings.lat, lng: listings.lng, fuelType: listings.fuelType, transmission: listings.transmission, rooms: listings.rooms, officeType: listings.officeType, rentalPeriod: listings.rentalPeriod, amenities: listings.amenities, ownerId: listings.ownerId, ownerName: users.name, createdAt: listings.createdAt })
         .from(listings).leftJoin(users, eq(listings.ownerId, users.id)).orderBy(desc(listings.createdAt)).limit(200);
     }),
     moderateListing: adminProcedure
@@ -644,15 +644,83 @@ export const appRouter = router({
         return { success: true as const };
       }),
     updateListing: adminProcedure
-      .input(z.object({ listingId: z.number().int().positive(), title: z.string().trim().min(2).max(255), pricePerDay: z.number().int().positive() }))
+      .input(z.object({
+        listingId: z.number().int().positive(),
+        title: z.string().trim().min(2).max(255).optional(),
+        description: z.string().trim().max(10000).nullable().optional(),
+        category: z.string().trim().min(2).max(64).optional(),
+        pricePerDay: z.number().int().positive().optional(),
+        imageUrl: z.string().trim().max(2000).nullable().optional(),
+        city: z.string().trim().min(2).max(64).optional(),
+        lat: z.number().min(-90).max(90).nullable().optional(),
+        lng: z.number().min(-180).max(180).nullable().optional(),
+        fuelType: z.string().trim().max(32).nullable().optional(),
+        transmission: z.string().trim().max(32).nullable().optional(),
+        rooms: z.number().int().min(0).max(100).nullable().optional(),
+        officeType: z.string().trim().max(64).nullable().optional(),
+        rentalPeriod: z.enum(['daily', 'monthly', 'yearly']).nullable().optional(),
+        amenities: z.array(z.string().trim().min(1).max(64)).max(30).optional(),
+        isFeatured: z.boolean().optional(),
+      }))
       .mutation(async ({ ctx, input }) => {
         const db = await getDb();
         if (!db) throw new Error('Database unavailable');
-        const [before] = await db.select({ title: listings.title, pricePerDay: listings.pricePerDay }).from(listings).where(eq(listings.id, input.listingId)).limit(1);
+        const { listingId, amenities, ...rest } = input;
+        const [before] = await db.select().from(listings).where(eq(listings.id, listingId)).limit(1);
         if (!before) throw new TRPCError({ code: 'NOT_FOUND', message: 'الإعلان غير موجود.' });
-        await db.update(listings).set({ title: input.title, pricePerDay: input.pricePerDay }).where(eq(listings.id, input.listingId));
-        await writeAuditLog({ actorId: ctx.user.id, action: 'listing.updated', entityType: 'listing', entityId: input.listingId, beforeData: before, afterData: input });
+        const patch: Partial<typeof listings.$inferInsert> = {};
+        for (const [key, value] of Object.entries(rest)) {
+          if (value !== undefined) (patch as Record<string, unknown>)[key] = value === null ? null : value;
+        }
+        if (amenities !== undefined) patch.amenities = amenities.length ? amenities.join(',') : null;
+        await db.update(listings).set(patch).where(eq(listings.id, listingId));
+        await writeAuditLog({ actorId: ctx.user.id, action: 'listing.updated', entityType: 'listing', entityId: listingId, beforeData: before, afterData: input });
         return { success: true as const };
+      }),
+    createListing: adminProcedure
+      .input(z.object({
+        title: z.string().trim().min(2).max(255),
+        description: z.string().trim().max(10000).optional(),
+        category: z.string().trim().min(2).max(64),
+        pricePerDay: z.number().int().positive(),
+        imageUrl: z.string().trim().max(2000).optional(),
+        city: z.string().trim().min(2).max(64).optional(),
+        lat: z.number().min(-90).max(90).nullable().optional(),
+        lng: z.number().min(-180).max(180).nullable().optional(),
+        fuelType: z.string().trim().max(32).nullable().optional(),
+        transmission: z.string().trim().max(32).nullable().optional(),
+        rooms: z.number().int().min(0).max(100).nullable().optional(),
+        officeType: z.string().trim().max(64).nullable().optional(),
+        rentalPeriod: z.enum(['daily', 'monthly', 'yearly']).nullable().optional(),
+        amenities: z.array(z.string().trim().min(1).max(64)).max(30).optional(),
+        isFeatured: z.boolean().optional(),
+        status: z.enum(['Published', 'Available', 'Approved', 'Pending']).optional(),
+        ownerId: z.number().int().positive().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const db = await getDb();
+        if (!db) throw new Error('Database unavailable');
+        const { amenities, status, isFeatured, ownerId, ...rest } = input;
+        const [inserted] = await db.insert(listings).values({
+          ...rest,
+          ownerId: ownerId ?? ctx.user.id,
+          isFeatured: isFeatured ?? false,
+          status: status ?? 'Published',
+          amenities: amenities?.length ? amenities.join(',') : null,
+        }).returning({ insertId: listings.id });
+        const listingId = Number(inserted.insertId);
+        await writeAuditLog({ actorId: ctx.user.id, action: 'listing.created', entityType: 'listing', entityId: listingId, afterData: input });
+        await safeNotifyUser({
+          userId: ownerId ?? ctx.user.id,
+          type: 'listing_approved',
+          title: 'تم نشر إعلانك / Annonce publiée',
+          message: `تم نشر الإعلان «${input.title}» من طرف الإدارة.\n\nL'annonce «${input.title}» a été publiée par l'administration.`,
+          href: '/host',
+          entityType: 'listing',
+          entityId: listingId,
+          dedupeKey: `listing-admin-created:${ownerId ?? ctx.user.id}:${listingId}`,
+        });
+        return { success: true as const, listingId };
       }),
     deleteListing: adminProcedure
       .input(z.object({ listingId: z.number().int().positive() }))

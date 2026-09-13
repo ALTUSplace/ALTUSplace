@@ -1,15 +1,18 @@
 import * as React from "react";
 import { useState, useCallback, useEffect } from "react";
 import { useLocation } from "wouter";
-import { Car, Home, MapPin, Star, Heart, Fuel, Settings, Users, Award, Zap, CheckCircle2 } from "lucide-react";
+import { Car, Home, MapPin, Star, Heart, Fuel, Settings, Users, Award, Zap, CheckCircle2, MessageCircle } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { buildSupportWhatsAppUrl } from "@/lib/whatsapp";
 
 export interface ListingCardProps {
   id: string;
   title: string;
+  titleFr?: string;
   city: string;
   pricePerDay: number;
   unitLabel?: string;
@@ -36,9 +39,10 @@ const BADGE_CONFIG: Record<string, { label: string; icon: typeof Award; classNam
 };
 
 export function ListingCard(props: ListingCardProps) {
-  const { id, title, city, pricePerDay, unitLabel = "/ day", currency = "MAD", images, type,
+  const { id, title, titleFr, city, pricePerDay, unitLabel = "/ day", currency = "MAD", images, type,
     badges, rating, reviewCount, hostName, isFavorite, onToggleFavorite, specs, className, style } = props;
   const [, setLocation] = useLocation();
+  const { language } = useLanguage();
   const [activeSlide, setActiveSlide] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const { currency: activeCurrency, formatPrice, formatTotalPrice, showTotal } = useCurrency();
@@ -47,6 +51,7 @@ export function ListingCard(props: ListingCardProps) {
   const displayImages = hasImages ? images : [""];
   const totalSlides = displayImages.length;
   const safePrice = Number.isFinite(Number(pricePerDay)) ? Number(pricePerDay) : 0;
+  const displayTitle = language === "fr" && titleFr ? titleFr : title;
 
   const goTo = useCallback((dir: number) => {
     setActiveSlide((prev) => {
@@ -76,7 +81,7 @@ export function ListingCard(props: ListingCardProps) {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={handleCardClick}
-      role="link" tabIndex={0} aria-label={`${title} ÔÇö ${city}`}
+      role="link" tabIndex={0} aria-label={`${displayTitle} — ${city}`}
       onKeyDown={(e) => { if (e.key === "Enter") handleCardClick(); }}
     >
       <div className="relative aspect-[4/3] overflow-hidden bg-bg-muted">
@@ -84,7 +89,7 @@ export function ListingCard(props: ListingCardProps) {
           {displayImages.map((src, i) => (
             <div key={i} className="relative h-full w-full shrink-0">
               {src && !imgError[i] ? (
-                <OptimizedImage src={src} alt={`${title} ÔÇö photo ${i + 1}`} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" width={640} height={480} onError={() => setImgError((p) => ({ ...p, [i]: true }))} />
+                <OptimizedImage src={src} alt={`${displayTitle} — photo ${i + 1}`} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" width={640} height={480} onError={() => setImgError((p) => ({ ...p, [i]: true }))} />
               ) : (
                 <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-700">
                   {type === "car" ? <Car className="h-12 w-12 text-slate-300" /> : <Home className="h-12 w-12 text-slate-300" />}
@@ -108,6 +113,17 @@ export function ListingCard(props: ListingCardProps) {
             <Heart className={cn("h-4 w-4 transition-colors", isFavorite ? "fill-rose-500 text-rose-500" : "text-slate-600")} />
           </button>
         )}
+        <a
+          href={buildSupportWhatsAppUrl(`مرحباً، أود الاستفسار عن عرض « ${displayTitle} » في ${city} عبر منصة ALTUSplace.`)}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          className="absolute right-3 top-14 flex h-9 w-9 items-center justify-center rounded-full bg-emerald-500/95 backdrop-blur-sm shadow-md text-white transition-all duration-200 hover:bg-emerald-600 hover:scale-110 active:scale-95"
+          aria-label="تواصل عبر واتساب"
+          title="تواصل عبر واتساب"
+        >
+          <MessageCircle className="h-4 w-4" />
+        </a>
         <div className="absolute bottom-3 left-3">
           <div className="rounded-xl bg-white/85 px-3 py-1.5 shadow-lg backdrop-blur-md ring-1 ring-white/20">
             <span key={`${activeCurrency}-${showTotal ? "total" : "day"}`} className="inline-block text-lg font-bold text-slate-900 animate-fade-in">{showTotal ? formatTotalPrice(safePrice) : formatPrice(safePrice)}</span>
@@ -128,7 +144,7 @@ export function ListingCard(props: ListingCardProps) {
       </div>
       <div className="flex flex-1 flex-col gap-2 p-4">
         <div className="flex items-start justify-between gap-2">
-          <h3 className="line-clamp-1 text-sm font-semibold text-ink-primary group-hover:text-accent-indigo transition-colors">{title}</h3>
+          <h3 className="line-clamp-1 text-sm font-semibold text-ink-primary group-hover:text-accent-indigo transition-colors">{displayTitle}</h3>
           {rating && rating > 0 && (<div className="flex shrink-0 items-center gap-1 text-xs font-medium text-ink-secondary"><Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" /><span>{rating.toFixed(1)}</span>{reviewCount && <span className="text-ink-tertiary">({reviewCount})</span>}</div>)}
         </div>
         <div className="flex items-center gap-1 text-xs text-ink-secondary"><MapPin className="h-3 w-3 text-ink-tertiary" /><span className="line-clamp-1">{city}</span></div>

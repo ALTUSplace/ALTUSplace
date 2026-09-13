@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link, useLocation, useParams } from "wouter";
-import { ArrowRight, Bath, Bed, Building2, CheckCircle2, Heart, MapPin, Share2, Video, Calendar, Lock, ShieldCheck } from "lucide-react";
+import { ArrowRight, Bath, Bed, Building2, CheckCircle2, Heart, MapPin, Share2, Video, Calendar, Lock, ShieldCheck, MessageCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,6 +11,7 @@ import { LISTINGS, type ListingItem } from "@/data/altusplace";
 import { toast } from "sonner";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import CommentSection from "@/components/CommentSection";
+import { buildContactWhatsAppUrl } from "@/lib/whatsapp";
 
 function parseAmenities(value: string | null | undefined): string[] {
   if (!value) return [];
@@ -25,7 +26,9 @@ function parseAmenities(value: string | null | undefined): string[] {
 type PropertyDetailShape = {
   id: number | string;
   title: string;
+  titleFr?: string | null;
   description: string | null;
+  descriptionFr?: string | null;
   imageUrl: string | null;
   city: string;
   status: string;
@@ -47,7 +50,9 @@ function mapStaticToDetail(item: ListingItem): PropertyDetailShape {
   return {
     id: item.id,
     title: item.title,
+    titleFr: item.titleFr ?? null,
     description: item.description,
+    descriptionFr: item.descriptionFr ?? null,
     imageUrl: item.image,
     city: item.city,
     status: "متاح",
@@ -92,12 +97,18 @@ export default function PropertyDetailWithVideo() {
   const parsedId = Number(params.id);
   const listingId = Number.isInteger(parsedId) && parsedId > 0 ? parsedId : null;
   const listingQuery = trpc.listings.getById.useQuery({ id: listingId! }, { enabled: listingId !== null });
+  const trackWhatsAppMutation = trpc.listings.trackEvent.useMutation();
   const staticItem = listingId === null ? LISTINGS.find((item) => item.id === params.id && item.type !== "car") : undefined;
   const listing = (listingQuery.data ?? (staticItem ? mapStaticToDetail(staticItem) : undefined)) as PropertyDetailShape | undefined;
   const amenities = useMemo(() => parseAmenities(listing?.amenities), [listing?.amenities]);
   const imageUrl = listing?.imageUrl || "";
-  const title = listing?.title || (language === "fr" ? "Détails de l'annonce" : "تفاصيل الإعلان");
-  const description = listing?.description || (language === "fr" ? "Aucune description fournie par le propriétaire." : "لم يضف المالك وصفاً لهذا الإعلان بعد.");
+  const title = language === "fr" && listing?.titleFr
+    ? listing.titleFr
+    : (listing?.title || (language === "fr" ? "Détails de l'annonce" : "تفاصيل الإعلان"));
+  const arabicTitle = listing?.title || "";
+  const description = language === "fr" && listing?.descriptionFr
+    ? listing.descriptionFr
+    : (listing?.description || (language === "fr" ? "Aucune description fournie par le propriétaire." : "لم يضف المالك وصفاً لهذا الإعلان بعد."));
   const rawPrice = Number(listing?.pricePerDay);
   const safePrice = Number.isFinite(rawPrice) ? rawPrice : 0;
   const unitLabel = useMemo(() => {
@@ -177,6 +188,16 @@ export default function PropertyDetailWithVideo() {
 
   const totalPrice = calculateRentalSubtotal(safePrice, daysCount) || safePrice * daysCount;
 
+  const whatsappMessage = language === "fr"
+    ? `Bonjour, je souhaite des informations sur « ${title} » (${listing?.city ?? ""}) à ${safePrice} ${language === "fr" ? "MAD" : "MAD"} / unité via ALTUSplace.`
+    : `مرحباً، أود الاستفسار عن « ${arabicTitle || title} » في ${listing?.city ?? ""} بسعر ${safePrice} درهم عبر منصة ALTUSplace.`;
+  const whatsappUrl = buildContactWhatsAppUrl(undefined, whatsappMessage);
+  const trackWhatsAppClick = () => {
+    if (listingId !== null) {
+      trackWhatsAppMutation.mutate({ listingId, eventType: "whatsapp_click" });
+    }
+  };
+
   const handleProceedToCheckout = () => {
     if (!startDate || !endDate) {
       toast.error(language === "fr" ? "Veuillez sélectionner les dates" : "يرجى تحديد تاريخ البداية والنهاية");
@@ -213,6 +234,7 @@ export default function PropertyDetailWithVideo() {
         <header className="space-y-2">
           <div className="flex flex-wrap items-center gap-2"><Badge className="bg-amber-500">{listing.status}</Badge><span className="text-xs text-slate-500">{language === "fr" ? "Aucun avis vérifié pour le moment" : "لا توجد مراجعات موثقة بعد"}</span></div>
           <h1 className="text-2xl sm:text-4xl font-bold text-slate-900">{title}</h1>
+          {language === "fr" && arabicTitle && title !== arabicTitle && <p className="text-sm text-slate-500 font-medium">{arabicTitle}</p>}
           <p className="flex items-center gap-1.5 text-sm text-slate-600"><MapPin className="w-4 h-4 text-amber-600" />{listing.city}</p>
         </header>
 
@@ -267,6 +289,16 @@ export default function PropertyDetailWithVideo() {
                 <Lock className="w-3 h-3 text-emerald-600" />
                 {language === "fr" ? "Paiement sécurisé via CMI (simulation)" : "دفع آمن عبر CMI (محاكاة)"}
               </div>
+              <a
+                href={whatsappUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => trackWhatsAppClick()}
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-200/50 transition-all hover:bg-emerald-600 hover:scale-[1.02] active:scale-[0.98]"
+              >
+                <MessageCircle className="w-4 h-4" />
+                {language === "fr" ? "Discuter sur WhatsApp" : t("whatsappChat")}
+              </a>
               <p className="text-xs text-slate-500 text-center">{language === "fr" ? "Le prix final est calculé côté serveur lors de la réservation." : "يُحتسب السعر النهائي على الخادم أثناء الحجز."}</p>
             </CardContent>
           </Card>
