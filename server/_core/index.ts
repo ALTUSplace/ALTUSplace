@@ -40,6 +40,25 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 async function startServer() {
   const app = express();
   const server = createServer(app);
+
+  // -----------------------------------------------------------------------
+  // Cross-origin support: when VITE_APP_URL is configured (Vercel frontend
+  // + separate Node backend) the SPA sends credentialed cross-origin requests.
+  // Same-origin mode (default) needs no CORS headers; the middleware is
+  // entirely skipped so existing dev/test flows are unchanged.
+  // -----------------------------------------------------------------------
+  const frontendOrigin = process.env.VITE_APP_URL?.trim();
+  if (frontendOrigin) {
+    app.use((_req, res, next) => {
+      res.setHeader("Access-Control-Allow-Origin", frontendOrigin);
+      res.setHeader("Access-Control-Allow-Credentials", "true");
+      res.setHeader("Access-Control-Allow-Methods", "GET,HEAD,PUT,PATCH,POST,DELETE");
+      res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+      if (_req.method === "OPTIONS") return res.sendStatus(204);
+      next();
+    });
+  }
+
   // Identity verification (KYC): inject provider secrets so external
   // verification sessions (Stripe Identity / Persona) can be created, and
   // mount the signed webhook that resolves submissions asynchronously.

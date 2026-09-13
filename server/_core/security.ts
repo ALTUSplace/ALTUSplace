@@ -150,6 +150,9 @@ export function csrfProtection(req: Request, res: Response, next: NextFunction) 
   const method = req.method.toUpperCase();
   if (method === "GET" || method === "HEAD" || method === "OPTIONS") return next();
   if (!req.path.startsWith("/api/")) return next();
+  // Bearer-authenticated requests (sessionStorage fallback or pure token auth)
+  // carry no cookies and are immune to CSRF; skip the origin check.
+  if (req.headers.authorization?.startsWith("Bearer ")) return next();
   const origin = req.headers.origin;
   const referer = req.headers.referer;
   if (!origin && !referer) return next();
