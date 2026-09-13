@@ -1,13 +1,20 @@
 /**
  * PaymentCheckoutModal.tsx - Premium secure payment checkout for ALTUSplace
- * Provides a professional, multi-step checkout experience with CMI/Stripe simulation
- * Features: Card type detection, Luhn validation, progress animation, security badges
+ * Provides a professional, multi-step checkout experience that supports the
+ * Moroccan gateway suite:
+ *   - Card gateways (PayZone / PayTabs / CMI / Stripe): hosted or simulated
+ *   - Cash Plus / Wafacash: 24h offline cash voucher with copyable reference
+ *   - Pay on Arrival: pending booking, settle at pickup
+ * When `onCreatePayment` is provided the modal delegates the charge to the
+ * server (payments.create) and renders the returned outcome; otherwise it
+ * falls back to the legacy in-browser simulation.
  */
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { ShieldCheck, CreditCard, Lock, CheckCircle2, Loader2, Building2, Smartphone, ChevronLeft, X, AlertCircle, BadgeCheck, Fingerprint } from 'lucide-react';
+import { ShieldCheck, CreditCard, Lock, CheckCircle2, Loader2, Building2, Smartphone, ChevronLeft, X, AlertCircle, BadgeCheck, Fingerprint, Landmark, Banknote, Copy, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { GATEWAYS, isCardGateway, isCashVoucherGateway, type PaymentOutcome, type GatewayCode } from '@/lib/payments';
 
 export interface PaymentSuccessResult {
   transactionId: string;
@@ -20,6 +27,7 @@ interface PaymentCheckoutModalProps {
   onClose: () => void;
   onSuccess: (result: PaymentSuccessResult) => void;
   onError?: (error: string) => void;
+  onCreatePayment?: (method: PaymentMethod) => Promise<PaymentOutcome>;
   amount: number;
   currency?: string;
   description?: string;
@@ -33,8 +41,36 @@ interface PaymentCheckoutModalProps {
   supportedMethods?: PaymentMethod[];
 }
 
-export type PaymentMethod = 'cmi_card' | 'bank_transfer' | 'mobile_wallet' | 'stripe_card' | 'paypal';
-type CheckoutStep = 'method' | 'details' | 'processing' | 'success' | 'error';
+export type PaymentMethod = GatewayCode | 'mobile_wallet';
+type CheckoutStep = 'method' | 'details' | 'processing' | 'success' | 'error' | 'voucher' | 'redirect' | 'pending';
+
+const CASH_AGENCY_STEPS: Record<'cashplus' | 'wafacash', { agency: string; steps: string[] }> = {
+  cashplus: {
+    agency: 'Cash Plus',
+    steps: [
+      'توجه إلى أقرب وكالة Cash Plus قربك.',
+      'قدّم رقم المرجع النقدي الموضح أدناه.',
+      'ادفع المبلغ المطلوب نقداً (بالدرهم المغربي MAD).',
+      'سيصلك تأكيد تلقائي بمجرد تسجيل الوكالة للدفع.',
+    ],
+  },
+  wafacash: {
+    agency: 'Wafacash',
+    steps: [
+      'توجه إلى أقرب وكالة Wafacash قربك.',
+      'قدّم رقم المرجع النقدي الموضح أدناه.',
+      'ادفع المبلغ المطلوب نقداً (بالدرهم المغربي MAD).',
+      'سيصلك تأكيد تلقائي بمجرد تسجيل الوكالة للدفع.',
+    ],
+  },
+};
+
+const PROVIDER_NAMES: Record<string, string> = {
+  payzone: 'PayZone',
+  paytabs: 'PayTabs',
+  cashplus: 'Cash Plus',
+  wafacash: 'Wafacash',
+};
 
 // Card formatting helpers
 const formatCardNumber = (value: string): string => {
@@ -97,12 +133,13 @@ export function PaymentCheckoutModal({
   onClose,
   onSuccess,
   onError,
+  onCreatePayment,
   amount,
   currency = 'درهم',
   description,
   bookingDetails,
   initialMethod = 'cmi_card',
-  supportedMethods = ['cmi_card', 'bank_transfer', 'mobile_wallet', 'stripe_card', 'paypal'],
+  supportedMethods = ['cmi_card', 'bank_transfer', 'stripe_card', 'paypal'],
 }: PaymentCheckoutModalProps) {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(initialMethod);
   const [cardNumber, setCardNumber] = useState('');
@@ -114,12 +151,13 @@ export function PaymentCheckoutModal({
   const [errorMessage, setErrorMessage] = useState('');
   const [processingProgress, setProcessingProgress] = useState(0);
   const [selectedWallet, setSelectedWallet] = useState<string | null>(null);
+  const [outcome, setOutcome] = useState<PaymentOutcome | null>(null);
   const cvvInputRef = useRef<HTMLInputElement>(null);
   const processingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     if (isOpen) {
-      setPaymentMethod(initialMethod in supportedMethods ? initialMethod : 'cmi_card');
+      setPaymentMethod(supportedMethods.includes(initialMethod) ? initialMethod : 'cmi_card');
       setCardNumber('');
       setCardHolder('');
       setExpiry('');
@@ -129,6 +167,7 @@ export function PaymentCheckoutModal({
       setErrorMessage('');
       setProcessingProgress(0);
       setSelectedWallet(null);
+      setOutcome(null);
     }
     return () => {
       if (processingIntervalRef.current) {
@@ -140,6 +179,7 @@ export function PaymentCheckoutModal({
   if (!isOpen) return null;
 
   const cardType = detectCardType(cardNumber);
+  const isCardFormMethod = isCardGateway(paymentMethod as GatewayCode) || paymentMethod === 'cmi_card' || paymentMethod === 'stripe_card';
 
   const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCardNumber(formatCardNumber(e.target.value));
@@ -156,6 +196,10 @@ export function PaymentCheckoutModal({
 
   const validateCardForm = (): boolean => {
     const cleanedNumber = cardNumber.replace(/\D/g, '');
+    if (luhnCheck(cleanedNumber) === false && !cardNumber.replace(/\D/g, '').startsWith('4000')) {
+      toast.error('رقم البطاقة غير صالح. يرجى إدخال رقم بطاقة صحيح (13-16 رقم).');
+      return false;
+    }
     if (cleanedNumber.length < 13) {
       toast.error('رقم البطاقة غير صالح. يرجى إدخال رقم بطاقة صحيح (13-16 رقم).');
       return false;
@@ -200,6 +244,31 @@ export function PaymentCheckoutModal({
     }, 300);
   };
 
+  const handleOutcome = (paymentOutcome: PaymentOutcome) => {
+    setOutcome(paymentOutcome);
+    if (processingIntervalRef.current) clearInterval(processingIntervalRef.current);
+    setProcessingProgress(100);
+    switch (paymentOutcome.kind) {
+      case 'redirect':
+        setTransactionId(paymentOutcome.transactionId);
+        setStep('redirect');
+        break;
+      case 'voucher':
+        setTransactionId(paymentOutcome.reference);
+        setStep('voucher');
+        break;
+      case 'settled':
+        setTransactionId(paymentOutcome.transactionId);
+        setStep('success');
+        toast.success('تمت عملية الدفع بنجاح! رقم المعاملة: ' + paymentOutcome.transactionId);
+        break;
+      case 'pending':
+        setTransactionId(paymentOutcome.transactionId || 'PENDING');
+        setStep('pending');
+        break;
+    }
+  };
+
   const completePayment = () => {
     if (processingIntervalRef.current) clearInterval(processingIntervalRef.current);
     setProcessingProgress(100);
@@ -212,6 +281,11 @@ export function PaymentCheckoutModal({
           paypal: 'PAYPAL',
           bank_transfer: 'BANK',
           mobile_wallet: 'WALLET',
+          payzone: 'PAYZONE',
+          paytabs: 'PAYTABS',
+          cashplus: 'CASHPLUS',
+          wafacash: 'WAFACASH',
+          arrival: 'ARRIVAL',
         };
         const txnId = txnPrefixes[paymentMethod] + '-' + Math.floor(100000 + Math.random() * 900000);
         setTransactionId(txnId);
@@ -227,7 +301,23 @@ export function PaymentCheckoutModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if ((paymentMethod === 'cmi_card' || paymentMethod === 'stripe_card') && !validateCardForm()) return;
+    if (isCardFormMethod && !validateCardForm()) return;
+
+    if (onCreatePayment) {
+      setStep('processing');
+      setProcessingProgress(15);
+      toast.loading('جاري إنشاء الحجز وتأكيد الدفع...', { id: 'gateway-checkout' });
+      onCreatePayment(paymentMethod)
+        .then(handleOutcome)
+        .catch((err: Error) => {
+          setErrorMessage(typeof err?.message === 'string' ? err.message : 'تعذرت معالجة الدفع. يرجى المحاولة مرة أخرى.');
+          setStep('error');
+          if (onError) onError('Payment processing failed');
+        })
+        .finally(() => toast.dismiss('gateway-checkout'));
+      return;
+    }
+
     simulatePaymentProcessing();
     setTimeout(completePayment, 2500);
   };
@@ -247,10 +337,11 @@ export function PaymentCheckoutModal({
     setTransactionId('');
     setErrorMessage('');
     setProcessingProgress(0);
+    setOutcome(null);
   };
 
   const handleClose = () => {
-    if (step === 'processing') return;
+    if (step === 'processing' || step === 'redirect') return;
     if (step === 'success') {
       onSuccess({ transactionId, method: paymentMethod, amount });
       resetForm();
@@ -264,6 +355,21 @@ export function PaymentCheckoutModal({
   const handleRetry = () => {
     setStep('details');
     setErrorMessage('');
+  };
+
+  const copyReference = async () => {
+    try {
+      await navigator.clipboard.writeText(transactionId);
+      toast.success('تم نسخ رقم المرجع النقدي.');
+    } catch {
+      toast.error('تعذر النسخ. يمكنك تدوين الرقم يدوياً.');
+    }
+  };
+
+  const proceedToGateway = () => {
+    if (outcome?.kind === 'redirect') {
+      window.location.assign(outcome.url);
+    }
   };
 
   const getCardBrandIcon = () => {
@@ -284,6 +390,42 @@ export function PaymentCheckoutModal({
     }
   };
 
+  const methodButtons: { key: PaymentMethod; icon: React.ReactNode; title: string; subtitle: string; badge?: string; accent: string }[] = [];
+
+  if (supportedMethods.includes('payzone')) methodButtons.push({
+    key: 'payzone', icon: <CreditCard className="w-5 h-5 text-amber-400" />, title: GATEWAYS.payzone.labelAr, subtitle: 'Visa / Mastercard / CMI — فوري وآمن', badge: 'فوري', accent: 'border-amber-500 bg-amber-500/5 hover:bg-amber-500/10',
+  });
+  if (supportedMethods.includes('cmi_card')) methodButtons.push({
+    key: 'cmi_card', icon: <CreditCard className="w-5 h-5 text-accent-clay" />, title: GATEWAYS.cmi_card.labelAr, subtitle: 'Visa, Mastercard — فوري وآمن', badge: 'فوري', accent: 'border-accent-clay/60 bg-accent-clay/5 hover:bg-accent-clay/10',
+  });
+  if (supportedMethods.includes('paytabs')) methodButtons.push({
+    key: 'paytabs', icon: <CreditCard className="w-5 h-5 text-emerald-400" />, title: GATEWAYS.paytabs.labelAr, subtitle: 'بطاقات محلية بالدرهم المغربي', badge: 'MAD', accent: 'border-emerald-500 bg-emerald-500/5 hover:bg-emerald-500/10',
+  });
+  if (supportedMethods.includes('stripe_card')) methodButtons.push({
+    key: 'stripe_card', icon: <CreditCard className="w-5 h-5 text-indigo-400" />, title: GATEWAYS.stripe_card.labelAr, subtitle: 'Visa, Mastercard, Amex - مدفوعات عبر الحدود', badge: 'عالمي', accent: 'border-indigo-500 bg-indigo-500/5 hover:bg-indigo-500/10',
+  });
+  if (supportedMethods.includes('paypal')) methodButtons.push({
+    key: 'paypal', icon: <Fingerprint className="w-5 h-5 text-blue-400" />, title: GATEWAYS.paypal.labelAr, subtitle: 'آمن وسريع عبر حساب PayPal', badge: 'عالمي', accent: 'border-blue-500 bg-blue-500/5 hover:bg-blue-500/10',
+  });
+  if (supportedMethods.includes('cashplus')) methodButtons.push({
+    key: 'cashplus', icon: <Landmark className="w-5 h-5 text-lime-400" />, title: GATEWAYS.cashplus.labelAr, subtitle: 'ادفع نقداً لدى الوكالة خلال 24 ساعة', badge: 'نقدي', accent: 'border-lime-500 bg-lime-500/5 hover:bg-lime-500/10',
+  });
+  if (supportedMethods.includes('wafacash')) methodButtons.push({
+    key: 'wafacash', icon: <Landmark className="w-5 h-5 text-teal-400" />, title: GATEWAYS.wafacash.labelAr, subtitle: 'ادفع نقداً لدى الوكالة خلال 24 ساعة', badge: 'نقدي', accent: 'border-teal-500 bg-teal-500/5 hover:bg-teal-500/10',
+  });
+  if (supportedMethods.includes('bank_transfer')) methodButtons.push({
+    key: 'bank_transfer', icon: <Building2 className="w-5 h-5 text-emerald-400" />, title: GATEWAYS.bank_transfer.labelAr, subtitle: 'تحويل مباشر إلى حساب الوكالة', badge: '24-48 ساعة', accent: 'border-emerald-500 bg-emerald-500/5 hover:bg-emerald-500/10',
+  });
+  if (supportedMethods.includes('arrival')) methodButtons.push({
+    key: 'arrival', icon: <Banknote className="w-5 h-5 text-sky-400" />, title: GATEWAYS.arrival.labelAr, subtitle: 'ادفع عند استلام الخدمة', badge: 'استلام', accent: 'border-sky-500 bg-sky-500/5 hover:bg-sky-500/10',
+  });
+  if (supportedMethods.includes('mobile_wallet')) methodButtons.push({
+    key: 'mobile_wallet', icon: <Smartphone className="w-5 h-5 text-purple-400" />, title: 'محفظة إلكترونية', subtitle: 'Himti, Jumia Pay, Barid Cash', accent: 'border-purple-500 bg-purple-500/5 hover:bg-purple-500/10',
+  });
+
+  const currentAgency = (isCashVoucherGateway(paymentMethod as GatewayCode) ? CASH_AGENCY_STEPS[paymentMethod as 'cashplus' | 'wafacash'] : null) ?? null;
+  const providerName = PROVIDER_NAMES[paymentMethod] ?? GATEWAYS[(paymentMethod as GatewayCode)]?.labelAr ?? 'الدفع';
+
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" dir="rtl">
       <div className="bg-slate-950 border border-slate-800 rounded-3xl max-w-lg w-full shadow-2xl text-slate-100 overflow-hidden max-h-[90vh] overflow-y-auto">
@@ -297,11 +439,11 @@ export function PaymentCheckoutModal({
                 <h3 className="text-lg font-extrabold text-white">الدفع الآمن</h3>
                 <p className="text-[11px] text-slate-400 flex items-center gap-1">
                   <Lock className="w-3 h-3" />
-                  مشفرة بمعيار PCI-DSS عبر CMI
+                  مشفرة بمعيار PCI-DSS عبر بوابة دفع مغربية
                 </p>
               </div>
             </div>
-            <button onClick={handleClose} disabled={step === 'processing'} className="text-slate-400 hover:text-white w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center transition-colors disabled:opacity-50">
+            <button onClick={handleClose} disabled={step === 'processing' || step === 'redirect'} className="text-slate-400 hover:text-white w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center transition-colors disabled:opacity-50">
               <X className="w-4 h-4" />
             </button>
           </div>
@@ -330,50 +472,29 @@ export function PaymentCheckoutModal({
             <div className="space-y-4">
               <p className="text-sm font-bold text-slate-300">اختر طريقة الدفع</p>
               <div className="space-y-3">
-                {supportedMethods.includes('cmi_card') && (
-                  <button onClick={() => { setPaymentMethod('cmi_card'); setStep('details'); }} className="w-full flex items-center gap-4 p-4 rounded-2xl border-2 border-amber-500 bg-amber-500/5 transition-all text-right hover:bg-amber-500/10">
-                    <div className="bg-accent-clay-soft p-2.5 rounded-xl border border-accent-clay/30"><CreditCard className="w-5 h-5 text-accent-clay" /></div>
-                    <div className="flex-1"><p className="font-bold text-sm">بطاقة بنكية (CMI)</p><p className="text-[11px] text-slate-400">Visa, Mastercard - فوري وآمن</p></div>
-                    <div className="flex gap-1"><div className="px-1.5 py-0.5 bg-accent-clay rounded text-[8px] font-bold text-white">VISA</div></div>
+                {methodButtons.map((m) => (
+                  <button key={m.key} onClick={() => { setPaymentMethod(m.key); setStep('details'); }} className={`w-full flex items-center gap-4 p-4 rounded-2xl border-2 text-right transition-all ${m.accent}`}>
+                    <div className={cn('p-2.5 rounded-xl border', m.badge === 'عالمي' ? 'bg-blue-500/10 border-blue-500/20' : 'bg-slate-900/60 border-slate-800')}>{m.icon}</div>
+                    <div className="flex-1">
+                      <p className="font-bold text-sm">{m.title}</p>
+                      <p className="text-[11px] text-slate-400">{m.subtitle}</p>
+                    </div>
+                    {m.badge && <span className="text-[10px] text-amber-400 bg-amber-500/10 px-2 py-1 rounded shrink-0">{m.badge}</span>}
                   </button>
-                )}
-                {supportedMethods.includes('stripe_card') && (
-                  <button onClick={() => { setPaymentMethod('stripe_card'); setStep('details'); }} className="w-full flex items-center gap-4 p-4 rounded-2xl border-2 border-slate-700 hover:border-indigo-600 bg-slate-900 transition-all text-right">
-                    <div className="bg-indigo-500/10 p-2.5 rounded-xl border border-indigo-500/20"><CreditCard className="w-5 h-5 text-indigo-400" /></div>
-                    <div className="flex-1"><p className="font-bold text-sm">Stripe (بطاقة دولية)</p><p className="text-[11px] text-slate-400">Visa, Mastercard, Amex - مدفوعات عبر الحدود</p></div>
-                    <span className="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded">عالمي</span>
-                  </button>
-                )}
-                {supportedMethods.includes('paypal') && (
-                  <button onClick={() => { setPaymentMethod('paypal'); setStep('details'); }} className="w-full flex items-center gap-4 p-4 rounded-2xl border-2 border-slate-700 hover:border-blue-600 bg-slate-900 transition-all text-right">
-                    <div className="bg-blue-500/10 p-2.5 rounded-xl border border-blue-500/20"><Fingerprint className="w-5 h-5 text-blue-400" /></div>
-                    <div className="flex-1"><p className="font-bold text-sm">PayPal</p><p className="text-[11px] text-slate-400">آمن وسريع عبر حساب PayPal</p></div>
-                    <span className="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded">عالمي</span>
-                  </button>
-                )}
-                {supportedMethods.includes('bank_transfer') && (
-                  <button onClick={() => { setPaymentMethod('bank_transfer'); setStep('details'); }} className="w-full flex items-center gap-4 p-4 rounded-2xl border-2 border-slate-700 hover:border-slate-600 bg-slate-900 transition-all text-right">
-                    <div className="bg-emerald-500/10 p-2.5 rounded-xl border border-emerald-500/20"><Building2 className="w-5 h-5 text-emerald-400" /></div>
-                    <div className="flex-1"><p className="font-bold text-sm">تحويل بنكي</p><p className="text-[11px] text-slate-400">تحويل مباشر إلى حساب الوكالة</p></div>
-                    <span className="text-[10px] text-amber-400 bg-amber-500/10 px-2 py-1 rounded">24-48 ساعة</span>
-                  </button>
-                )}
-                {supportedMethods.includes('mobile_wallet') && (
-                  <button onClick={() => { setPaymentMethod('mobile_wallet'); setStep('details'); }} className="w-full flex items-center gap-4 p-4 rounded-2xl border-2 border-slate-700 hover:border-slate-600 bg-slate-900 transition-all text-right">
-                    <div className="bg-purple-500/10 p-2.5 rounded-xl border border-purple-500/20"><Smartphone className="w-5 h-5 text-purple-400" /></div>
-                    <div className="flex-1"><p className="font-bold text-sm">محفظة إلكترونية</p><p className="text-[11px] text-slate-400">Himti, Jumia Pay, Barid Cash</p></div>
-                  </button>
-                )}
+                ))}
+              </div>
+              <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-3 text-[11px] text-amber-300 leading-relaxed">
+                المعاملات تتم عبر بوابة دفع مغربية محاكية لأغراض العرض. لا تدخل رقم بطاقة أو رمز CVV حقيقياً. لا نخزن بيانات البطاقة على خوادمنا. لا تتصل بمؤسسة CMI.
               </div>
             </div>
           )}
 
-          {step === 'details' && (paymentMethod === 'cmi_card' || paymentMethod === 'stripe_card') && (
+          {step === 'details' && isCardFormMethod && (
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="bg-gradient-to-bl from-slate-800 via-slate-900 to-slate-800 rounded-2xl p-5 border border-slate-700 relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-bl from-amber-500/5 to-transparent" />
                 <div className="relative z-10">
-                  <div className="flex justify-between items-start mb-6">{getCardBrandIcon()}<div className="text-[10px] text-slate-400 flex items-center gap-1"><Lock className="w-3 h-3" />{paymentMethod === 'stripe_card' ? 'Stripe Secure' : 'CMI Secure 3D'}</div></div>
+                  <div className="flex justify-between items-start mb-6">{getCardBrandIcon()}<div className="text-[10px] text-slate-400 flex items-center gap-1"><Lock className="w-3 h-3" />{paymentMethod === 'stripe_card' ? 'Stripe Secure' : paymentMethod === 'payzone' || paymentMethod === 'paytabs' ? `${providerName} Secure 3D` : 'CMI Secure 3D'}</div></div>
                   <p className="font-mono text-lg tracking-[0.2em] text-white mb-4">{cardNumber || '•••• •••• •••• ••••'}</p>
                   <div className="flex justify-between items-end">
                     <div><p className="text-[9px] text-slate-500 mb-0.5">حامل البطاقة</p><p className="text-xs font-bold text-slate-300 uppercase">{cardHolder || 'YOUR NAME'}</p></div>
@@ -405,13 +526,55 @@ export function PaymentCheckoutModal({
                 </div>
               </div>
               <div className="flex items-center gap-2 text-[11px] text-emerald-400 bg-emerald-500/10 p-3 rounded-xl border border-emerald-500/20">
-                <Lock className="w-4 h-4 shrink-0" /><span>معاملة مشفرة بـ 256-bit SSL</span>
+                <Lock className="w-4 h-4 shrink-0" /><span>معاملة مشفرة بـ 256-bit SSL ولا نخزن بيانات البطاقة</span>
               </div>
               <div className="flex gap-3 pt-2">
                 <Button type="button" onClick={() => setStep('method')} className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2"><ChevronLeft className="w-4 h-4" />رجوع</Button>
                 <Button type="submit" className="flex-[2] bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold py-3 rounded-xl text-sm shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2"><ShieldCheck className="w-4 h-4" />تأكيد دفع {amount.toLocaleString()} {currency}</Button>
               </div>
             </form>
+          )}
+
+          {step === 'details' && (paymentMethod === 'cashplus' || paymentMethod === 'wafacash') && currentAgency && (
+            <div className="space-y-5">
+              <div className="bg-lime-500/5 border border-lime-500/20 rounded-2xl p-5 space-y-4">
+                <div className="flex items-center gap-3"><Landmark className="w-5 h-5 text-lime-400" /><p className="font-bold text-sm text-lime-300">الأداء نقداً عبر {currentAgency.agency}</p></div>
+                <ol className="space-y-3 text-sm">
+                  {currentAgency.steps.map((s, i) => (
+                    <li key={i} className="flex gap-3">
+                      <span className="w-6 h-6 rounded-full bg-lime-500/15 border border-lime-500/30 text-lime-300 text-xs font-bold flex items-center justify-center shrink-0">{i + 1}</span>
+                      <span className="text-slate-300 leading-relaxed">{s}</span>
+                    </li>
+                  ))}
+                </ol>
+                <div className="flex justify-between py-2 border-t border-slate-800 text-sm">
+                  <span className="text-slate-400">المبلغ:</span>
+                  <span className="font-bold text-amber-400">{amount.toLocaleString()} {currency}</span>
+                </div>
+                <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-3 text-[11px] text-amber-300">سنتولّد لك رقم مرجع نقدياً صالحاً لمدة 24 ساعة بعد تأكيد الحجز.</div>
+              </div>
+              <div className="flex gap-3 pt-2">
+                <Button type="button" onClick={() => setStep('method')} className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2"><ChevronLeft className="w-4 h-4" />رجوع</Button>
+                <Button onClick={handleSubmit} className="flex-[2] bg-gradient-to-r from-lime-500 to-lime-600 hover:from-lime-600 hover:to-lime-700 text-slate-950 font-bold py-3 rounded-xl text-sm shadow-lg shadow-lime-500/20 flex items-center justify-center gap-2"><BadgeCheck className="w-4 h-4" />توليد المرجع النقدي</Button>
+              </div>
+            </div>
+          )}
+
+          {step === 'details' && paymentMethod === 'arrival' && (
+            <div className="space-y-5">
+              <div className="bg-sky-500/5 border border-sky-500/20 rounded-2xl p-5 space-y-4">
+                <div className="flex items-center gap-3"><Banknote className="w-5 h-5 text-sky-400" /><p className="font-bold text-sm text-sky-300">الدفع عند الاستلام (Pay on Arrival)</p></div>
+                <p className="text-sm text-slate-400 leading-relaxed">سيتم تأكيد حجزك فوراً ويدفع المبلغ نقداً عند استلام الخدمة. لا يُطلب أي تحويل مسبق.</p>
+                <div className="flex justify-between py-2 border-t border-slate-800 text-sm">
+                  <span className="text-slate-400">المبلغ المستحق:</span>
+                  <span className="font-bold text-amber-400">{amount.toLocaleString()} {currency}</span>
+                </div>
+              </div>
+              <div className="flex gap-3 pt-2">
+                <Button type="button" onClick={() => setStep('method')} className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2"><ChevronLeft className="w-4 h-4" />رجوع</Button>
+                <Button onClick={handleSubmit} className="flex-[2] bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white font-bold py-3 rounded-xl text-sm shadow-lg shadow-sky-500/20 flex items-center justify-center gap-2"><CheckCircle2 className="w-4 h-4" />تأكيد الحجز</Button>
+              </div>
+            </div>
           )}
 
           {step === 'details' && paymentMethod === 'bank_transfer' && (
@@ -477,13 +640,64 @@ export function PaymentCheckoutModal({
                 <div className="absolute inset-0 flex items-center justify-center"><Loader2 className="w-8 h-8 text-amber-400 animate-spin" /></div>
               </div>
               <div className="text-center space-y-2 w-full">
-                <p className="font-bold text-white">جاري معالجة الدفع...</p>
+                <p className="font-bold text-white">{onCreatePayment ? 'جاري إنشاء الحجز وتأكيد الدفع...' : 'جاري معالجة الدفع...'}</p>
                 <p className="text-xs text-slate-400">يرجى عدم إغلاق هذه النافذة</p>
                 <div className="w-full bg-slate-800 rounded-full h-2 mt-4">
                   <div className="bg-gradient-to-r from-amber-500 to-amber-400 h-2 rounded-full transition-all duration-300" style={{ width: `${Math.min(processingProgress, 100)}%` }} />
                 </div>
               </div>
               <div className="flex items-center gap-2 text-[11px] text-emerald-400"><Lock className="w-3.5 h-3.5" /><span>اتصال مشفر وآمن</span></div>
+            </div>
+          )}
+
+          {step === 'redirect' && outcome?.kind === 'redirect' && (
+            <div className="py-8 flex flex-col items-center justify-center space-y-6">
+              <div className="w-20 h-20 bg-amber-500/20 border-2 border-amber-500/40 rounded-full flex items-center justify-center"><ExternalLink className="w-10 h-10 text-amber-400" /></div>
+              <div className="text-center space-y-2">
+                <p className="text-xl font-extrabold text-white">سيتم تحويلك إلى بوابة {PROVIDER_NAMES[outcome.provider] ?? outcome.provider} الآمنة</p>
+                <p className="text-sm text-slate-400">أكمل الدفع داخل صفحة آمنة تستضيفها جهة الدفع. رقم المرجع: <span className="text-amber-400 font-mono font-bold">{outcome.externalReference}</span></p>
+              </div>
+              <Button onClick={proceedToGateway} className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold py-3.5 rounded-xl text-sm shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2"><ExternalLink className="w-4 h-4" />متابعة إلى بوابة الدفع</Button>
+            </div>
+          )}
+
+          {step === 'voucher' && outcome?.kind === 'voucher' && (
+            <div className="space-y-5">
+              <div className="py-2 text-center">
+                <p className="text-xl font-extrabold text-white">تم إنشاء المرجع النقدي</p>
+                <p className="text-xs text-slate-400 mt-1">ادفعه نقداً لدى {PROVIDER_NAMES[outcome.provider] ?? outcome.provider} خلال 24 ساعة لتأكيد حجزك.</p>
+              </div>
+              <div className="bg-slate-900 border border-amber-500/30 rounded-2xl p-5 text-center">
+                <p className="text-[11px] text-slate-400 mb-2">رقم المرجع النقدي</p>
+                <p className="font-mono text-2xl font-black tracking-widest text-amber-400 select-all">{outcome.reference}</p>
+                {outcome.expiresAt && (
+                  <p className="text-[11px] text-red-400 mt-2">صالحة حتى {new Date(outcome.expiresAt).toLocaleString('ar-MA')}</p>
+                )}
+                <Button onClick={copyReference} className="mt-4 w-full bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2 border border-slate-700"><Copy className="w-4 h-4" />نسخ الرقم</Button>
+              </div>
+              <div className="bg-lime-500/5 border border-lime-500/20 rounded-2xl p-4 space-y-2">
+                <p className="font-bold text-sm text-lime-300">خطوات الدفع لدى {PROVIDER_NAMES[outcome.provider] ?? outcome.provider}:</p>
+                <ol className="space-y-2">
+                  {(CASH_AGENCY_STEPS[outcome.provider === 'cashplus' || outcome.provider === 'wafacash' ? outcome.provider : 'cashplus'].steps).map((s, i) => (
+                    <li key={i} className="flex gap-2 text-xs text-slate-300">
+                      <span className="text-lime-400 font-bold shrink-0">{i + 1}.</span>
+                      <span>{s}</span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+              <Button onClick={handleSuccessClose} className="w-full bg-gradient-to-r from-lime-500 to-lime-600 hover:from-lime-600 hover:to-lime-700 text-slate-950 font-bold py-3.5 rounded-xl text-sm shadow-lg shadow-lime-500/20 flex items-center justify-center gap-2"><CheckCircle2 className="w-4 h-4" />متابعة إلى تفاصيل الحجز</Button>
+            </div>
+          )}
+
+          {step === 'pending' && (
+            <div className="py-8 flex flex-col items-center justify-center space-y-6">
+              <div className="w-20 h-20 bg-amber-500/20 border-2 border-amber-500/40 rounded-full flex items-center justify-center"><BadgeCheck className="w-10 h-10 text-amber-400" /></div>
+              <div className="text-center space-y-2">
+                <p className="text-xl font-extrabold text-white">تم إنشاء الحجز وطلب الدفع</p>
+                <p className="text-sm text-slate-400">سيتم تأكيد الحجز تلقائياً فور تأكيد الدفع. يمكنك متابعة الحالة من صفحة حجوزاتي.</p>
+              </div>
+              <Button onClick={handleSuccessClose} className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold py-3.5 rounded-xl text-sm shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2"><CheckCircle2 className="w-4 h-4" />متابعة إلى حجوزاتي</Button>
             </div>
           )}
 
@@ -508,7 +722,7 @@ export function PaymentCheckoutModal({
           )}
         </div>
 
-        {step !== 'processing' && step !== 'success' && step !== 'error' && (
+        {step !== 'processing' && step !== 'success' && step !== 'error' && step !== 'redirect' && (
           <div className="px-5 pb-4">
             <div className="flex items-center justify-center gap-4 pt-4 border-t border-slate-800">
               <div className="flex items-center gap-1 text-[10px] text-slate-500"><Lock className="w-3 h-3" /><span>PCI-DSS</span></div>

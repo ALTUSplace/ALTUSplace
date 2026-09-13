@@ -22,10 +22,11 @@ const CITIES = [
   { id: 'الرباط', name: 'الرباط' },
 ];
 
-const OFFICE_TYPES = ['private', 'coworking', 'meeting_room', 'company_headquarters'] as const;
-const AMENITY_OPTIONS = ['fiber', 'air_conditioning', 'reception', 'parking', 'security'] as const;
+const isCarCategory = (category: string) =>
+  category === 'car' ||
+  !/real_estate|property|office|coworking|شقة|فيلا|مكتب|villa|apartment|bureau|siège|salle\s*de\s*réunion/i.test(category);
 
-const listingRoute = (item: ListingItem) => item.type === 'car' ? `/car/${item.id}` : `/property/${item.id}`;
+const listingRoute = (item: ListingItem) => `/car/${item.id}`;
 
 const parseArrayField = (value: string | null | undefined): string[] => {
   if (!value) return [];
@@ -57,18 +58,9 @@ const toListingItem = (item: {
   dynamicPricePerDay?: number;
   ownerName?: string | null;
 }): ListingItem => {
-  const normalizedCategory = item.category.toLowerCase();
-  const type: ListingItem['type'] = normalizedCategory.includes('car') || normalizedCategory.includes('سيارة')
-    ? 'car'
-    : item.officeType || normalizedCategory.includes('office') || normalizedCategory.includes('مكتب')
-      ? 'office'
-      : 'property';
-  const amenities = parseArrayField(item.amenities).filter((entry): entry is NonNullable<ListingItem['amenities']>[number] =>
-    ['fiber', 'air_conditioning', 'reception', 'parking', 'security'].includes(entry),
-  );
-  const unitLabel = type === 'office'
-    ? item.rentalPeriod === 'monthly' ? 'درهم / شهر' : item.rentalPeriod === 'yearly' ? 'درهم / سنة' : 'درهم / يوم'
-    : type === 'car' ? 'درهم / يوم' : 'درهم / ليلة';
+  const amenities = parseArrayField(item.amenities);
+  const type: ListingItem['type'] = 'car';
+  const unitLabel = 'درهم / يوم';
   return {
     id: String(item.id),
     providerId: String(item.ownerId),
@@ -84,11 +76,6 @@ const toListingItem = (item: {
     images: item.imageUrl ? [item.imageUrl] : [],
     features: [item.fuelType, item.transmission, ...amenities].filter((value): value is string => Boolean(value)),
     description: item.description || '',
-    officeType: type === 'office' && ['private', 'coworking', 'meeting_room', 'company_headquarters'].includes(item.officeType || '')
-      ? item.officeType as ListingItem['officeType']
-      : undefined,
-    amenities: amenities.length ? amenities : undefined,
-    rentalTerms: item.rentalPeriod ? [item.rentalPeriod] : undefined,
     specs: {
       transmission: item.transmission || undefined,
       fuel: item.fuelType || undefined,
@@ -124,18 +111,9 @@ export default function Search() {
   const [maxPrice, setMaxPrice] = useState(4000);
   const [excellenceOnly, setExcellenceOnly] = useState(false);
   const [sortBy, setSortBy] = useState<'price-asc' | 'price-desc'>('price-asc');
-  const [officeTypeFilter, setOfficeTypeFilter] = useState<string>('all');
-  const [amenityFilters, setAmenityFilters] = useState<string[]>([]);
-  const [rentalTermFilter, setRentalTermFilter] = useState<string>('all');
   const listingInput = useMemo(() => ({ startDate: startDateParam, endDate: endDateParam }), [startDateParam, endDateParam]);
   const listingsQuery = trpc.listings.list.useQuery(listingInput);
   const serverListings = useMemo(() => (listingsQuery.data ?? []).map(toListingItem), [listingsQuery.data]);
-
-  const toggleAmenity = (amenity: string) => {
-    setAmenityFilters((current) => current.includes(amenity)
-      ? current.filter((value) => value !== amenity)
-      : [...current, amenity]);
-  };
 
   // ميزة العرض السريع (Quick View Modal)
   const [quickViewItem, setQuickViewItem] = useState<ListingItem | null>(null);
@@ -154,10 +132,7 @@ export default function Search() {
           lat: mapRegion.center.lat,
           lng: mapRegion.center.lng,
           radiusKm: mapRadius,
-          type: typeFilter === 'all' ? undefined : (typeFilter as 'car' | 'property' | 'office'),
-          officeType: typeFilter === 'office' && officeTypeFilter !== 'all' ? officeTypeFilter : undefined,
-          rentalPeriod: typeFilter === 'office' && rentalTermFilter !== 'all' ? (rentalTermFilter as 'daily' | 'monthly' | 'yearly') : undefined,
-          amenities: typeFilter === 'office' && amenityFilters.length > 0 ? amenityFilters : undefined,
+          type: 'car',
           maxPrice,
           q: searchQuery.trim() || undefined,
           sort: 'distance',
@@ -167,7 +142,9 @@ export default function Search() {
     { enabled: viewMode === 'map', staleTime: 15_000 },
   );
 
-  const mapMarkers = useMemo(() => (mapSearch.data?.items ?? []).map((item) => {
+  const mapMarkers = useMemo(() => (mapSearch.data?.items ?? [])
+    .filter((item) => isCarCategory(item.category))
+    .map((item) => {
     const li = toListingItem(item);
     const coords = resolveListingCoords(item.lat, item.lng, item.city) ?? MOROCCO_CENTER;
     return {
@@ -203,11 +180,9 @@ export default function Search() {
 
   const filteredListings = useMemo(() => {
     return serverListings.filter((item: ListingItem) => {
+      if (!isCarCategory(item.category)) return false;
       if (cityFilter !== 'all' && item.city !== cityFilter) return false;
       if (typeFilter !== 'all' && item.type !== typeFilter) return false;
-      if (typeFilter === 'office' && officeTypeFilter !== 'all' && item.officeType !== officeTypeFilter) return false;
-      if (typeFilter === 'office' && rentalTermFilter !== 'all' && !item.rentalTerms?.includes(rentalTermFilter as 'daily' | 'monthly' | 'yearly')) return false;
-      if (typeFilter === 'office' && amenityFilters.length > 0 && !amenityFilters.every((amenity) => item.amenities?.includes(amenity as NonNullable<ListingItem['amenities']>[number]))) return false;
       if (item.pricePerUnit > maxPrice) return false;
       if (brandParam) {
         const b = brandParam.toLowerCase();
@@ -232,7 +207,7 @@ export default function Search() {
       if (sortBy === 'price-desc') return b.pricePerUnit - a.pricePerUnit;
       return 0;
     });
-  }, [serverListings, cityFilter, typeFilter, maxPrice, sortBy, searchQuery, brandParam, categoryParam, excellenceOnly, officeTypeFilter, amenityFilters, rentalTermFilter]);
+  }, [serverListings, cityFilter, typeFilter, maxPrice, sortBy, searchQuery, brandParam, categoryParam, excellenceOnly]);
 
   const [isSearching, setIsSearching] = useState(false);
   const cityLabel = (city: string) => language === 'fr' ? ({ 'جميع المدن': 'Toutes les villes', 'مراكش': 'Marrakech', 'أغادير': 'Agadir', 'الدار البيضاء': 'Casablanca', 'طنجة': 'Tanger', 'الرباط': 'Rabat' }[city] ?? city) : city;
@@ -269,7 +244,7 @@ export default function Search() {
 
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div className="space-y-2">
-            <h1 className="text-3xl font-extrabold text-white">{language === 'fr' ? 'Guide des voitures, biens et bureaux disponibles' : 'دليل السيارات والعقارات والمكاتب المتاحة'}</h1>
+            <h1 className="text-3xl font-extrabold text-white">{language === 'fr' ? 'Guide des voitures disponibles' : 'دليل السيارات المتاحة'}</h1>
             <p className="text-slate-400 text-sm">{language === 'fr' ? 'Découvrez les offres vérifiées au Maroc avec filtres professionnels et réservation simplifiée.' : 'استعرض أفضل العروض المعتمدة في المغرب مع فلاتر مهنية وحجز مبسط.'}</p>
           </div>
         </div>
@@ -287,9 +262,6 @@ export default function Search() {
                   setTypeFilter('all');
                   setMaxPrice(4000);
                   setExcellenceOnly(false);
-                  setOfficeTypeFilter('all');
-                  setAmenityFilters([]);
-                  setRentalTermFilter('all');
                 }}
                 className="text-xs text-amber-400 hover:underline"
               >
@@ -307,53 +279,6 @@ export default function Search() {
                 className="w-full bg-slate-900 border border-slate-700 text-white rounded-xl p-3 text-xs focus:outline-none focus:border-amber-500"
               />
             </div>
-
-            <div className="space-y-2">
-              <label className="text-xs font-semibold text-slate-300">{t('sector')}</label>
-              <select
-                value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500"
-              >
-                <option value="all">{t('allSectors')}</option>
-                <option value="car">{t('carsOnly')}</option>
-                <option value="property">{t('propertiesOnly')}</option>
-                <option value="office">{t('officeOnly')}</option>
-              </select>
-            </div>
-
-            {typeFilter === 'office' && (
-              <>
-                <div className="space-y-2">
-                  <label className="text-xs font-semibold text-slate-300">{t('officeType')}</label>
-                  <select value={officeTypeFilter} onChange={(e) => setOfficeTypeFilter(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500">
-                    <option value="all">{t('all')}</option>
-                    {OFFICE_TYPES.map((officeType) => (
-                      <option key={officeType} value={officeType}>{t({ private: 'privateOffice', coworking: 'coworking', meeting_room: 'meetingRoom', company_headquarters: 'companyHeadquarters' }[officeType])}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-semibold text-slate-300">{t('rentalType')}</label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {(['daily', 'monthly', 'yearly'] as const).map((term) => (
-                      <button key={term} type="button" onClick={() => setRentalTermFilter(rentalTermFilter === term ? 'all' : term)} className={`rounded-lg border px-2 py-2 text-[11px] ${rentalTermFilter === term ? 'border-amber-400 bg-amber-500/15 text-amber-300' : 'border-slate-700 bg-slate-900 text-slate-300'}`}>{t(term)}</button>
-                    ))}
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-semibold text-slate-300">{t('amenities')}</label>
-                  <div className="space-y-2">
-                    {AMENITY_OPTIONS.map((amenity) => (
-                      <label key={amenity} className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
-                        <input type="checkbox" checked={amenityFilters.includes(amenity)} onChange={() => toggleAmenity(amenity)} className="accent-amber-500" />
-                        {t(amenity === 'air_conditioning' ? 'airConditioning' : amenity)}
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              </>
-            )}
 
             <div className="space-y-2">
               <label className="text-xs font-semibold text-slate-300">{t('city')}</label>
@@ -488,7 +413,7 @@ export default function Search() {
                     listings={mapMarkers}
                     center={mapRegion.center}
                     radiusKm={mapRadius}
-                    onSelectListing={(listing) => setLocation(listing.type === 'car' ? `/car/${listing.id}` : `/property/${listing.id}`)}
+                    onSelectListing={(listing) => setLocation(`/car/${listing.id}`)}
                     onViewportChange={(viewport) => setMapRegion({ center: viewport.center, zoom: viewport.zoom })}
                     height="640px"
                   />

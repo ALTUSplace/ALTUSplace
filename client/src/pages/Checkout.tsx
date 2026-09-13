@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useLocation, useSearch } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CreditCard, Loader2, ShieldAlert, ShieldCheck, Check, Sparkles, Building2, Fingerprint } from 'lucide-react';
+import { CreditCard, Loader2, ShieldAlert, ShieldCheck, Check, Sparkles, Building2, Fingerprint, Landmark, Banknote } from 'lucide-react';
 import { toast } from 'sonner';
 import { trpc } from '@/lib/trpc';
 import { LoadingAnimation } from '@/components/LoadingAnimation';
@@ -15,16 +15,18 @@ import {
 } from '@/lib/pricing';
 import { useAuth } from '@/_core/hooks/useAuth';
 import { isKycSatisfiedFor, KYC_STATUS_CONFIG, type KycStatus } from '@/lib/kyc';
-import PaymentCheckoutModal, { type PaymentMethod } from '@/components/PaymentCheckoutModal';
+import PaymentCheckoutModal, { type PaymentMethod, type PaymentSuccessResult } from '@/components/PaymentCheckoutModal';
 import { LISTINGS } from '@/data/altusplace';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import {
   CHECKOUT_CURRENCIES,
   GATEWAYS,
+  GATEWAY_GROUPS,
   gatewaysForCurrency,
   gatewaySupportsCurrency,
   type CheckoutCurrency,
   type GatewayCode,
+  type PaymentOutcome,
 } from '@/lib/payments';
 
 const ALL_ADDON_IDS = Object.keys(ADDON_CATALOG) as AddOnId[];
@@ -34,6 +36,11 @@ const GATEWAY_ICONS: Record<GatewayCode, typeof CreditCard> = {
   stripe_card: CreditCard,
   paypal: Fingerprint,
   bank_transfer: Building2,
+  payzone: CreditCard,
+  paytabs: CreditCard,
+  cashplus: Landmark,
+  wafacash: Landmark,
+  arrival: Banknote,
 };
 
 export default function CheckoutPage() {
@@ -114,50 +121,104 @@ export default function CheckoutPage() {
     setShowPaymentModal(true);
   };
 
-  const handlePaymentSuccess = (_payload: { transactionId: string }) => {
-    if (creatingBooking) return;
-    const bookingDays = calcDays(startDateParam, endDateParam);
-    if (isNaN(parsedListingId) || parsedListingId <= 0 || bookingDays <= 0) {
-      toast.error('تعذر إتمام الحجز: معرّف الإعلان أو التواريخ غير صالحة.');
-      return;
+  // The modal delegates the charge here: booking.create then payments.create.
+  // The resolved outcome tells the modal which step to render (redirect gate,
+  // cash voucher, instant settled or pending), so the real transaction state
+  // drives the UI instead of a local simulation.
+  const lastOutcomeRef = useRef<PaymentOutcome | null>(null);
+  const bookingIdRef = useRef<number | null>(null);
+
+  const handleCreatePayment = (method: PaymentMethod): Promise<PaymentOutcome> => {
+    return new Promise<PaymentOutcome>((resolve, reject) => {
+      const bookingDays = calcDays(startDateParam, endDateParam);
+      if (isNaN(parsedListingId) || parsedListingId <= 0 || bookingDays <= 0) {
+        reject(new Error('تعذر إتمام الحجز: معرّف الإعلان أو التواريخ غير صالحة.'));
+        return;
+      }
+      if (creatingBooking) {
+        reject(new Error('جاري إنشاء الحجز، يرجى الانتظار.'));
+        return;
+      }
+      setCreatingBooking(true);
+      bookingMutation.mutate(
+        {
+          listingId: parsedListingId,
+          startDate: startDateParam,
+          endDate: endDateParam,
+          addOns: selectedAddOns,
+        },
+        {
+          onSuccess: (result) => {
+            bookingIdRef.current = result.bookingId;
+            paymentMutation.mutate(
+              { bookingId: result.bookingId, method: method as GatewayCode, currency },
+              {
+                onSuccess: (payResult) => {
+                  let outcome: PaymentOutcome;
+                  if (payResult.gatewayRedirect?.kind === 'redirect') {
+                    outcome = {
+                      kind: 'redirect',
+                      provider: payResult.gatewayRedirect.provider,
+                      url: payResult.gatewayRedirect.url,
+                      externalReference: payResult.gatewayRedirect.externalReference,
+                      transactionId: payResult.transaction?.id ?? '',
+                    };
+                  } else if (payResult.gatewayRedirect?.kind === 'voucher') {
+                    outcome = {
+                      kind: 'voucher',
+                      provider: payResult.gatewayRedirect.provider,
+                      reference: payResult.gatewayRedirect.reference,
+                      expiresAt: payResult.gatewayRedirect.expiresAt
+                        ? new Date(payResult.gatewayRedirect.expiresAt).toISOString()
+                        : null,
+                      amount: payResult.payment.amount,
+                    };
+                  } else if (payResult.payment.status === 'Succeeded') {
+                    outcome = {
+                      kind: 'settled',
+                      transactionId: payResult.transaction?.id ?? payResult.payment.providerReference,
+                      method: method as GatewayCode,
+                      amount: payResult.payment.amount,
+                    };
+                  } else {
+                    outcome = {
+                      kind: 'pending',
+                      transactionId: payResult.transaction?.id ?? payResult.payment.providerReference,
+                      method: method as GatewayCode,
+                      amount: payResult.payment.amount,
+                    };
+                  }
+                  lastOutcomeRef.current = outcome;
+                  setCreatingBooking(false);
+                  resolve(outcome);
+                },
+                onError: (err) => {
+                  setCreatingBooking(false);
+                  reject(new Error('تم تأكيد الحجز لكن تعذر تسجيل الدفع: ' + (err.message ?? 'خطأ غير متوقع.')));
+                },
+              },
+            );
+          },
+          onError: (err) => {
+            setCreatingBooking(false);
+            reject(new Error('تعذر حفظ الحجز في قاعدة البيانات: ' + (err.message ?? 'خطأ غير متوقع.')));
+          },
+        },
+      );
+    });
+  };
+
+  // Navigation only — the actual booking/payment ran inside handleCreatePayment.
+  const handlePaymentSuccess = (_payload: PaymentSuccessResult) => {
+    const outcome = lastOutcomeRef.current;
+    if (outcome?.kind === 'settled') {
+      const bookingId = bookingIdRef.current;
+      toast.success('تم تأكيد الحجز والدفع بنجاح! رقم الحجز: ALT-' + (bookingId ?? ''));
+      setLocation(bookingId ? `/success?bookingId=${bookingId}&language=ar` : '/my-bookings');
+    } else {
+      toast.info('تم إنشاء الحجز وطلب الدفع. تابع الحالة من حجوزاتي.');
+      setLocation('/my-bookings');
     }
-    setCreatingBooking(true);
-    bookingMutation.mutate(
-      {
-        listingId: parsedListingId,
-        startDate: startDateParam,
-        endDate: endDateParam,
-        addOns: selectedAddOns,
-      },
-      {
-        onSuccess: (result) => {
-          // Charge the booking through the selected gateway/currency, then the
-          // server issues the invoice (converted amount), escrow and voucher.
-          paymentMutation.mutate(
-            { bookingId: result.bookingId, method: selectedGateway, currency },
-            {
-              onSuccess: (payResult) => {
-                if (payResult.payment.status === 'Succeeded') {
-                  toast.success('تم تأكيد الحجز والدفع بنجاح! رقم الحجز: ALT-' + result.bookingId);
-                  setLocation(`/success?bookingId=${result.bookingId}&language=ar`);
-                } else {
-                  toast.info('تم إنشاء طلب الدفع والحجز. الرجاء إتمام التحويل لتأكيد الحجز.');
-                  setLocation(`/my-bookings`);
-                }
-              },
-              onError: (err) => {
-                toast.error('تم تأكيد الحجز لكن تعذر تسجيل الدفع: ' + (err.message ?? 'خطأ غير متوقع.'));
-                setLocation(`/my-bookings`);
-              },
-            },
-          );
-        },
-        onError: (err) => {
-          toast.error('تعذر حفظ الحجز في قاعدة البيانات: ' + (err.message ?? 'خطأ غير متوقع.'));
-          setCreatingBooking(false);
-        },
-      },
-    );
   };
 
   if (isLoading) {
@@ -262,32 +323,44 @@ export default function CheckoutPage() {
                     ))}
                   </div>
                 </div>
-                <div className="space-y-3">
-                  {availableGateways.map((code: GatewayCode) => {
-                    const def = GATEWAYS[code];
-                    const Icon = GATEWAY_ICONS[code];
-                    const selected = selectedGateway === code;
+                <div className="space-y-4">
+                  {GATEWAY_GROUPS.map((group) => {
+                    const groupMethods = availableGateways.filter((code) => (GATEWAYS[code].group ?? 'other') === group.key);
+                    if (groupMethods.length === 0) return null;
                     return (
-                      <div
-                        key={code}
-                        onClick={() => setSelectedGateway(code)}
-                        role="button"
-                        className={`p-4 rounded-xl border-2 cursor-pointer flex items-center gap-3 transition-all ${
-                          selected ? 'border-amber-500 bg-amber-50 shadow-sm dark:bg-amber-950/20' : 'border-slate-200 hover:border-slate-300'
-                        }`}
-                      >
-                        <Icon className="w-6 h-6 text-amber-600" />
-                        <div className="flex-1">
-                          <p className="font-semibold">{def.labelAr}</p>
-                          <p className="text-xs text-slate-500">
-                            {def.international ? 'مدفوعات دولية آمنة' : 'دفع محلي ومباشر'}
-                            {def.instant ? ' — فوري' : ' — 24 إلى 48 ساعة'}
-                          </p>
-                        </div>
-                        <span className={`w-4 h-4 rounded-full border-2 ${selected ? 'border-amber-500 bg-amber-500' : 'border-slate-300'}`} />
+                      <div key={group.key} className="space-y-2">
+                        <p className="text-xs font-bold text-slate-500 mt-4 first:mt-0">{group.labelAr}</p>
+                        {groupMethods.map((code: GatewayCode) => {
+                          const def = GATEWAYS[code];
+                          const Icon = GATEWAY_ICONS[code];
+                          const selected = selectedGateway === code;
+                          return (
+                            <div
+                              key={code}
+                              onClick={() => setSelectedGateway(code)}
+                              role="button"
+                              className={`p-4 rounded-xl border-2 cursor-pointer flex items-center gap-3 transition-all ${
+                                selected ? 'border-amber-500 bg-amber-50 shadow-sm dark:bg-amber-950/20' : 'border-slate-200 hover:border-slate-300'
+                              }`}
+                            >
+                              <Icon className="w-6 h-6 text-amber-600" />
+                              <div className="flex-1">
+                                <p className="font-semibold">{def.labelAr}</p>
+                                <p className="text-xs text-slate-500">
+                                  {def.international ? 'مدفوعات دولية آمنة' : 'دفع محلي ومباشر'}
+                                  {def.instant ? ' — فوري' : ' — حتى 48 ساعة'}
+                                </p>
+                              </div>
+                              <span className={`w-4 h-4 rounded-full border-2 ${selected ? 'border-amber-500 bg-amber-500' : 'border-slate-300'}`} />
+                            </div>
+                          );
+                        })}
                       </div>
                     );
                   })}
+                  <div className="rounded-xl border border-amber-300/40 bg-amber-50 dark:bg-amber-950/20 p-3 text-[11px] text-amber-700 dark:text-amber-400 leading-relaxed">
+                    بوابة دفع مغربية محاكية: لا تدخل رقم بطاقة أو رمز CVV حقيقياً، لا نخزن بيانات البطاقة، ولا تتصل بمؤسسة CMI. يتم تأكيد المدفوعات الواقعية عبر وصلات آمنة توفرها جهات الدفع.
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -297,6 +370,7 @@ export default function CheckoutPage() {
             <Card className="md:sticky md:top-6">
               <CardHeader>
                 <CardTitle className="text-lg">ملخص الطلب</CardTitle>
+                <p className="text-[11px] font-normal text-slate-400 -mt-1">ملخص الفاتورة الشفافة — بدون رسوم خفية</p>
               </CardHeader>
               <CardContent className="space-y-4 text-sm">
                 <div className="space-y-2">
@@ -355,6 +429,7 @@ export default function CheckoutPage() {
         isOpen={showPaymentModal}
         onClose={() => setShowPaymentModal(false)}
         onSuccess={handlePaymentSuccess}
+        onCreatePayment={handleCreatePayment}
         amount={convertPrice(totals.total)}
         currency={symbol}
         description={resTitle}

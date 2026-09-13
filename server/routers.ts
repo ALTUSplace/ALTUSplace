@@ -7,7 +7,7 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { adminProcedure, ownerProcedure, publicProcedure, protectedProcedure, router, superAdminProcedure } from "./_core/trpc";
 import { getDb } from "./db";
-import { listings, listingAnalyticsEvents, listingComments, bookings, reviews, users, commercialLeaseContracts, notifications, platformSettings, commissionTiers, escrowEntries, payoutRequests, disputes, disputeAttachments, supportTickets, payments, invoices, kycSubmissions, bookingVouchers, bookingMessages, auditLogs, refundRequests } from "../drizzle/schema";
+import { listings, listingAnalyticsEvents, listingComments, bookings, reviews, users, commercialLeaseContracts, notifications, platformSettings, commissionTiers, escrowEntries, payoutRequests, disputes, disputeAttachments, supportTickets, payments, invoices, kycSubmissions, bookingVouchers, bookingMessages, auditLogs, refundRequests, transactions } from "../drizzle/schema";
 import { eq, and, lte, gte, lt, gt, desc, count, isNull, inArray, ne, or, not, ilike, sql, type SQL } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { safeNotifyUser, buildEmailContent } from "./notificationService";
@@ -31,6 +31,11 @@ import { ADDONS_CATALOG, calculateAddOnsTotal, isAddOnId } from "./addons";
 import { createEscrowEntry, freezeEscrowEntry, getGlobalCommission, getTierCommission, mediateEscrowEntry, releaseEscrowEntry, resolveEffectiveCommission, upsertGlobalCommission, upsertTierCommission, VENDOR_TIERS } from "./escrow";
 import { createProviderCharge, gatewaySupportsCurrency, type GatewayCode } from "./payments/providers";
 import { convertFromMAD, resolveExchangeRates } from "./payments/exchangeRates";
+import { isPayzoneConfigured, buildPayzoneRedirect, createPayzoneOrderRef } from "./payments/payzone";
+import { isPaytabsConfigured, createPaytabsTransaction, createPaytabsOrderId } from "./payments/paytabs";
+import { cashVoucherExpiry } from "./payments/cashVoucher";
+import { insertGatewayTransaction, reserveCashVoucherReference } from "./payments/transactionLedger";
+import type { GatewayRedirect } from "./payments/types";
 
 function haversineKm(aLat: number, aLng: number, bLat: number, bLng: number): number {
   const toRad = (value: number) => (value * Math.PI) / 180;
@@ -1930,10 +1935,45 @@ export const appRouter = router({
 
   payments: router({
     exchangeRates: publicProcedure.query(async () => resolveExchangeRates()),
+    transactionStatus: protectedProcedure
+      .input(z.object({ transactionId: z.string().uuid() }))
+      .query(async ({ ctx, input }) => {
+        const db = await getDb();
+        if (!db) throw new Error("Database unavailable");
+        const rows = await db.select({
+          id: transactions.id,
+          bookingId: transactions.bookingId,
+          gateway: transactions.gateway,
+          status: transactions.status,
+          amount: transactions.amount,
+          currency: transactions.currency,
+          externalReference: transactions.externalReference,
+          expiresAt: transactions.expiresAt,
+          createdAt: transactions.createdAt,
+          bookingRenterId: bookings.renterId,
+        }).from(transactions)
+          .innerJoin(bookings, eq(transactions.bookingId, bookings.id))
+          .where(eq(transactions.id, input.transactionId)).limit(1);
+        const row = rows[0];
+        if (!row || (ctx.user!.role !== "admin" && row.bookingRenterId !== ctx.user!.id)) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "المعاملة غير موجودة." });
+        }
+        return {
+          id: row.id,
+          bookingId: row.bookingId,
+          gateway: row.gateway,
+          status: row.status,
+          amount: row.amount,
+          currency: row.currency,
+          externalReference: row.externalReference,
+          expiresAt: row.expiresAt,
+          createdAt: row.createdAt,
+        };
+      }),
     create: protectedProcedure
       .input(z.object({
         bookingId: z.number().int().positive(),
-        method: z.enum(["cmi_card", "bank_transfer", "stripe_card", "paypal"]),
+        method: z.enum(["cmi_card", "bank_transfer", "stripe_card", "paypal", "payzone", "paytabs", "cashplus", "wafacash", "arrival"]),
         currency: z.enum(["MAD", "EUR", "USD"]).default("MAD"),
       }))
       .mutation(async ({ ctx, input }) => {
@@ -2023,8 +2063,64 @@ export const appRouter = router({
           payerId: booking.renterId,
           transferAccountId: escrowListing[0]?.stripeAccountId ?? null,
         });
-        const paymentStatus = charge.status;
-        const providerReference = charge.providerReference;
+        let paymentStatus = charge.status;
+        let providerReference = charge.providerReference;
+
+        // ── Moroccan gateway plan ─────────────────────────────────────────────
+        // PayZone/PayTabs create a real redirect charge when configured;
+        // Cash Plus / Wafacash generate an offline voucher reference valid for
+        // 24h; Arrival records a pending on-site payment. Every one of them is
+        // tracked in the transactions ledger and reconciled by the verified
+        // /api/webhooks/* endpoints (see server/payments/webhooks.ts).
+        const requestOrigin = `${ctx.req.protocol}://${ctx.req.get("host")}`;
+        const isGatewayTransaction = input.method === "payzone" || input.method === "paytabs"
+          || input.method === "cashplus" || input.method === "wafacash" || input.method === "arrival";
+        let gatewayRedirect: GatewayRedirect = null;
+        let transactionExternalReference: string | null = null;
+        let gatewayExpiresAt: Date | null = null;
+        let gatewayPayload: Record<string, unknown> | null = null;
+
+        if (input.method === "payzone" && isPayzoneConfigured()) {
+          const orderRef = createPayzoneOrderRef(booking.id);
+          const redirect = buildPayzoneRedirect({
+            amount: convertedTotal,
+            currency: input.currency,
+            orderRef,
+            returnUrl: `${requestOrigin}/my-bookings`,
+            cancelUrl: `${requestOrigin}/checkout?listingId=${booking.listingId}`,
+            callbackUrl: `${requestOrigin}/api/webhooks/payzone`,
+            cardHolderName: ctx.user!.name,
+            cardHolderEmail: ctx.user!.email,
+          });
+          paymentStatus = "Pending";
+          providerReference = orderRef;
+          transactionExternalReference = orderRef;
+          gatewayPayload = { provider: "payzone" };
+          gatewayRedirect = { kind: "redirect", provider: "payzone", url: redirect.url, externalReference: orderRef };
+        } else if (input.method === "paytabs" && isPaytabsConfigured()) {
+          const orderId = createPaytabsOrderId(booking.id);
+          const paytabsTxn = await createPaytabsTransaction({
+            amount: convertedTotal,
+            currency: input.currency,
+            orderId,
+            returnUrl: `${requestOrigin}/my-bookings`,
+            callbackUrl: `${requestOrigin}/api/webhooks/paytabs`,
+            customer: { name: ctx.user!.name, email: ctx.user!.email },
+          });
+          paymentStatus = "Pending";
+          providerReference = paytabsTxn.tranRef;
+          transactionExternalReference = orderId;
+          gatewayPayload = { provider: "paytabs", salt: paytabsTxn.salt, tranRef: paytabsTxn.tranRef };
+          gatewayRedirect = { kind: "redirect", provider: "paytabs", url: paytabsTxn.redirectUrl, externalReference: orderId };
+        } else if (input.method === "cashplus" || input.method === "wafacash") {
+          transactionExternalReference = await reserveCashVoucherReference(db, input.method);
+          gatewayExpiresAt = cashVoucherExpiry();
+          gatewayPayload = { provider: input.method, expiresAt: gatewayExpiresAt.toISOString() };
+          gatewayRedirect = { kind: "voucher", provider: input.method, reference: transactionExternalReference, expiresAt: gatewayExpiresAt };
+        } else if (input.method === "arrival") {
+          transactionExternalReference = `ARRIVAL-${booking.id}-${randomUUID().replace(/-/g, "").slice(0, 8).toUpperCase()}`;
+          gatewayPayload = { provider: "arrival", note: "الدفع عند الاستلام" };
+        }
 
         // The prototype keeps the simulated flag literal (audit contract); the
         // real Stripe Connect branch still records a real providerReference.
@@ -2060,6 +2156,21 @@ export const appRouter = router({
         const invoiceId = Number(invoiceInsert.insertId);
         const createdInvoice = await db.select().from(invoices).where(eq(invoices.id, invoiceId)).limit(1);
         const createdPayment = await db.select().from(payments).where(eq(payments.id, paymentId)).limit(1);
+
+        // ── Gateway transaction ledger (Moroccan gateways) ──────────────────
+        let createdTransaction: typeof transactions.$inferSelect | null = null;
+        if (isGatewayTransaction) {
+          createdTransaction = await insertGatewayTransaction(db, {
+            bookingId: booking.id,
+            gateway: input.method as "payzone" | "paytabs" | "cashplus" | "wafacash" | "arrival",
+            amount: convertedTotal,
+            currency: input.currency,
+            status: "pending",
+            externalReference: transactionExternalReference,
+            expiresAt: gatewayExpiresAt,
+            rawPayload: gatewayPayload,
+          });
+        }
         // Multi-vendor escrow: once a confirmed booking is paid, hold the split
         // in the escrow ledger until the release date (booking end date).
         if (paymentStatus === "Succeeded" && booking.status === "Confirmed") {
@@ -2078,7 +2189,6 @@ export const appRouter = router({
         if (!createdInvoice[0] || !createdPayment[0]) throw new Error("تعذر حفظ تفاصيل الفاتورة.");
 
         let voucher: typeof bookingVouchers.$inferSelect | null = null;
-        const requestOrigin = `${ctx.req.protocol}://${ctx.req.get("host")}`;
         if (paymentStatus === "Succeeded" && booking.status === "Confirmed") {
           const existingVoucher = await db.select().from(bookingVouchers)
             .where(eq(bookingVouchers.bookingId, booking.id)).limit(1);
@@ -2139,7 +2249,7 @@ export const appRouter = router({
             }
           }
         }
-        return { payment: createdPayment[0], invoice: createdInvoice[0], voucher };
+        return { payment: createdPayment[0], invoice: createdInvoice[0], voucher, transaction: createdTransaction, gatewayRedirect };
       }),
   }),
 

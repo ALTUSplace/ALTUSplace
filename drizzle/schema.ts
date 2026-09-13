@@ -1,4 +1,4 @@
-import { boolean, doublePrecision, index, integer, jsonb, pgEnum, pgTable, text, timestamp, uniqueIndex, varchar } from "drizzle-orm/pg-core";
+import { boolean, doublePrecision, index, integer, jsonb, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid, varchar } from "drizzle-orm/pg-core";
 
 export const userRoleEnum = pgEnum("user_role", ["renter", "owner", "admin", "user", "SUPER_ADMIN"]);
 export const vendorTierEnum = pgEnum("vendor_tier", ["bronze", "silver", "gold"]);
@@ -10,8 +10,10 @@ export const analyticsEventTypeEnum = pgEnum("analytics_event_type", ["view", "w
 export const bookingStatusEnum = pgEnum("booking_status", ["Pending", "Confirmed", "Cancelled"]);
 export const applicantRoleEnum = pgEnum("applicant_role", ["renter", "owner", "company"]);
 export const kycSubmissionStatusEnum = pgEnum("kyc_submission_status", ["Pending", "Approved", "Rejected"]);
-export const paymentMethodEnum = pgEnum("payment_method", ["cmi_card", "bank_transfer", "stripe_card", "paypal"]);
+export const paymentMethodEnum = pgEnum("payment_method", ["cmi_card", "bank_transfer", "stripe_card", "paypal", "payzone", "paytabs", "cashplus", "wafacash", "arrival"]);
 export const paymentStatusEnum = pgEnum("payment_status", ["Pending", "Succeeded", "Failed"]);
+export const transactionGatewayEnum = pgEnum("transaction_gateway", ["payzone", "paytabs", "cashplus", "wafacash", "arrival"]);
+export const transactionStatusEnum = pgEnum("transaction_status", ["pending", "paid", "failed", "expired"]);
 export const leaseTypeEnum = pgEnum("lease_type", ["commercial", "professional"]);
 export const contractStatusEnum = pgEnum("contract_status", ["Draft", "Generated", "Signed"]);
 export const notificationTypeEnum = pgEnum("notification_type", ["booking_new", "booking_accepted", "booking_rejected", "listing_approved", "listing_rejected", "lease_expiring", "voucher_issued", "system"]);
@@ -178,6 +180,28 @@ export const payments = pgTable("payments", {
 }, (table) => ({
   bookingIdIdx: index("payments_booking_id_idx").on(table.bookingId),
   payerIdIdx: index("payments_payer_id_idx").on(table.payerId),
+}));
+
+// Gateway transaction ledger: one row per charge attempt against an external
+// provider (PayZone / PayTabs / Cash Plus / Wafacash / Pay-on-Arrival).
+// The gateway-specific reference maps 1:1 to the provider's order id so
+// incoming webhooks can be reconciled idempotently.
+export const transactions = pgTable("transactions", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  bookingId: integer("booking_id").notNull(),
+  gateway: transactionGatewayEnum("gateway").notNull(),
+  amount: integer("amount").notNull(),
+  currency: varchar("currency", { length: 3 }).default("MAD").notNull(),
+  status: transactionStatusEnum("status").default("pending").notNull(),
+  externalReference: varchar("external_reference", { length: 120 }),
+  expiresAt: timestamp("expires_at"),
+  rawPayload: jsonb("raw_payload"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  bookingIdIdx: index("transactions_booking_id_idx").on(table.bookingId),
+  gatewayStatusIdx: index("transactions_gateway_status_idx").on(table.gateway, table.status),
+  externalReferenceUnique: uniqueIndex("transactions_external_reference_unique").on(table.externalReference),
 }));
 
 export const commercialLeaseContracts = pgTable("commercial_lease_contracts", {
@@ -486,3 +510,5 @@ export type CommissionTier = typeof commissionTiers.$inferSelect;
 export type InsertCommissionTier = typeof commissionTiers.$inferInsert;
 export type EscrowEntry = typeof escrowEntries.$inferSelect;
 export type InsertEscrowEntry = typeof escrowEntries.$inferInsert;
+export type Transaction = typeof transactions.$inferSelect;
+export type InsertTransaction = typeof transactions.$inferInsert;

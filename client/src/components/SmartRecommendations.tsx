@@ -83,18 +83,8 @@ export function SmartRecommendations() {
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           {recommendations.map(({ item, reason }) => {
-            const isCar = item.category.toLowerCase().includes("car") || item.category.includes("سيارة");
-            const isOffice = Boolean(item.officeType) || item.category.toLowerCase().includes("office") || item.category.includes("مكتب");
-            const route = isCar ? `/car/${item.id}` : `/property/${item.id}`;
-            const unit = isOffice
-              ? item.rentalPeriod === "monthly"
-                ? t("madPerMonth")
-                : item.rentalPeriod === "yearly"
-                  ? t("madPerYear")
-                  : t("madPerDay")
-              : isCar
-                ? t("madPerDay")
-                : t("madPerNight");
+            const route = `/car/${item.id}`;
+            const unit = t("madPerDay");
             return (
               <Card key={item.id} className="group overflow-hidden rounded-lg border border-border-subtle bg-bg-surface transition-all duration-300 hover:border-border-default hover:shadow-lg hover:-translate-y-1">
                 <div className="relative h-48 overflow-hidden bg-bg-muted">

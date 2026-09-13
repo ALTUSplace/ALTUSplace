@@ -4,58 +4,49 @@ import { trpc } from '@/lib/trpc';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { OptimizedImage } from '@/components/OptimizedImage';
-import { Search, MapPin, Building2, Car, ShieldCheck, ArrowRight, CheckCircle2, Award, Clock } from 'lucide-react';
-import { PARTNERS, LISTINGS, ListingItem } from '@/data/altusplace';
+import { Search, MapPin, Car, ShieldCheck, ArrowRight, CheckCircle2, Award, Clock } from 'lucide-react';
+import { LISTINGS } from '@/data/altusplace';
 import { SmartRecommendations } from '@/components/SmartRecommendations';
 import { FAQSection } from '@/components/FAQSection';
 import { ListingCard } from '@/components/ui/ListingCard';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { toast } from 'sonner';
 
-function getListingPath(item: { id: string; type: string }) {
-  return item.type === 'car' ? `/car/${item.id}` : `/property/${item.id}`;
-}
-
 export default function Home() {
   const [, setLocation] = useLocation();
   const { t, direction } = useLanguage();
-  const [activeTab, setActiveTab] = useState<'cars' | 'properties'>('cars');
 
   // Search states for Cars
   const [carCity, setCarCity] = useState('casablanca');
   const [pickupDate, setPickupDate] = useState('');
   const [dropoffDate, setDropoffDate] = useState('');
 
-  // Search states for Properties
-  const [propLocation, setPropLocation] = useState('marrakech');
-  const [propType, setPropType] = useState('apartment');
-  const [maxPrice, setMaxPrice] = useState('2000');
-
-  // Database listings formatted as unified items
+  // Database listings formatted as unified car items
   const { data: dbListings = [] } = trpc.listings.list.useQuery();
-  const activeListings = dbListings.length > 0 ? dbListings.map(item => ({
+  const isCarCategory = (category: string) =>
+    category === 'car' ||
+    !/real_estate|property|office|coworking|شقة|فيلا|مكتب|villa|apartment|bureau|siège|salle\s*de\s*réunion/i.test(category);
+  const activeListings = dbListings.length > 0 ? dbListings
+    .filter(item => isCarCategory(item.category))
+    .map(item => ({
     id: String(item.id),
     title: item.title,
-    category: item.category === 'property' ? t('listingCategoryProperty') : t('listingCategoryCar'),
-    type: item.category,
+    category: t('listingCategoryCar'),
+    type: 'car' as const,
     pricePerUnit: item.pricePerDay,
     image: item.imageUrl || 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=800',
     city: item.city || 'الدار البيضاء',
     providerName: t('providerNamePlaceholder'),
     specs: {
-      transmission: t('transmissionAutomatic'),
-      fuel: t('fuelDieselPetrol'),
+      transmission: item.transmission || t('transmissionAutomatic'),
+      fuel: item.fuelType || t('fuelDieselPetrol'),
       seats: '5'
     }
   })) : LISTINGS;
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (activeTab === 'cars') {
-      setLocation(`/search?type=car&city=${encodeURIComponent(carCity)}&startDate=${encodeURIComponent(pickupDate)}&endDate=${encodeURIComponent(dropoffDate)}`);
-    } else {
-      setLocation(`/search?type=property&city=${encodeURIComponent(propLocation)}&propType=${propType}&maxPrice=${maxPrice}`);
-    }
+    setLocation(`/search?type=car&city=${encodeURIComponent(carCity)}&startDate=${encodeURIComponent(pickupDate)}&endDate=${encodeURIComponent(dropoffDate)}`);
   };
 
   // Editorial search field primitives
@@ -85,9 +76,7 @@ export default function Home() {
               </div>
 
               <h1 className="font-display font-bold text-[clamp(2rem,5.2vw,4.25rem)] leading-[1.12] max-w-xl">
-                {t('heroTitlePrefix')} <span className="text-accent-clay">{t('heroTitleCars')}</span>{' '}
-                <span className="text-ink-secondary">{t('heroTitleAnd')}</span>{' '}
-                <span className="text-ink-secondary">{t('heroTitleProperties')}</span>
+                {t('heroTitlePrefix')} <span className="text-accent-clay">{t('heroTitleCars')}</span>
                 {t('heroTitleSuffix')}
               </h1>
 
@@ -135,142 +124,47 @@ export default function Home() {
             <div className="lg:col-span-12 mt-2">
               <div className="border border-border-default bg-bg-surface shadow-lg rounded-lg">
                 <form onSubmit={handleSearchSubmit} className="flex flex-col lg:flex-row lg:items-stretch">
-                  <div className="flex items-center justify-between gap-3 border-b border-border-subtle px-5 py-3 lg:hidden">
-                    <span className="text-xs font-bold text-ink-secondary">{t('searchTabCars')}</span>
-                    <div className="flex gap-1">
-                      {(['cars', 'properties'] as const).map((tab) => (
-                        <button
-                          key={tab}
-                          type="button"
-                          role="tab"
-                          aria-selected={activeTab === tab}
-                          onClick={() => setActiveTab(tab)}
-                          className={`rounded-xs px-3 py-1.5 text-xs font-bold transition-colors ${
-                            activeTab === tab ? 'bg-accent-clay text-white' : 'text-ink-tertiary hover:text-ink-primary'
-                          }`}
-                        >
-                          {tab === 'cars' ? t('searchTabCars') : t('searchTabProperties')}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+                  <label className={fieldBase}>
+                    <MapPin className={fieldIconClass} strokeWidth={1.5} />
+                    <span className="flex min-w-0 flex-1 flex-col items-start text-right">
+                      <span className={fieldCaptionClass}>{t('searchCityOdgency')}</span>
+                      <select
+                        value={carCity}
+                        onChange={(e) => setCarCity(e.target.value)}
+                        className={fieldControlClass}
+                      >
+                        <option value="casablanca">{t('cityCasablanca')}</option>
+                        <option value="marrakech">{t('cityMarrakech')}</option>
+                        <option value="agadir">{t('cityAgadir')}</option>
+                        <option value="tangier">{t('cityTangier')}</option>
+                        <option value="rabat">{t('cityRabat')}</option>
+                      </select>
+                    </span>
+                  </label>
 
-                  <div className="hidden lg:flex min-w-0 flex-1">
-                    <div role="tablist" aria-label={t('searchTabCars')} className="flex items-center gap-1 border-e border-border-subtle px-4">
-                      {(['cars', 'properties'] as const).map((tab) => (
-                        <button
-                          key={tab}
-                          type="button"
-                          role="tab"
-                          aria-selected={activeTab === tab}
-                          onClick={() => setActiveTab(tab)}
-                          className={`inline-flex items-center gap-2 rounded-sm px-4 py-2 text-xs sm:text-sm font-bold transition-colors ${
-                            activeTab === tab ? 'bg-accent-clay-soft text-accent-clay' : 'text-ink-tertiary hover:text-ink-primary'
-                          }`}
-                        >
-                          {tab === 'cars' ? <Car className="w-4 h-4" strokeWidth={2} /> : <Building2 className="w-4 h-4" strokeWidth={2} />}
-                          <span>{tab === 'cars' ? t('searchTabCars') : t('searchTabProperties')}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+                  <label className={`${fieldBase} ${fieldDivider}`}>
+                    <span className="flex min-w-0 flex-1 flex-col items-start text-right">
+                      <span className={fieldCaptionClass}>{t('searchPickupDate')}</span>
+                      <input
+                        type="date"
+                        value={pickupDate}
+                        onChange={(e) => setPickupDate(e.target.value)}
+                        className={fieldControlClass}
+                      />
+                    </span>
+                  </label>
 
-                  {activeTab === 'cars' ? (
-                    <>
-                      <label className={fieldBase}>
-                        <MapPin className={fieldIconClass} strokeWidth={1.5} />
-                        <span className="flex min-w-0 flex-1 flex-col items-start text-right">
-                          <span className={fieldCaptionClass}>{t('searchCityOdgency')}</span>
-                          <select
-                            value={carCity}
-                            onChange={(e) => setCarCity(e.target.value)}
-                            className={fieldControlClass}
-                          >
-                            <option value="casablanca">{t('cityCasablanca')}</option>
-                            <option value="marrakech">{t('cityMarrakech')}</option>
-                            <option value="agadir">{t('cityAgadir')}</option>
-                            <option value="tangier">{t('cityTangier')}</option>
-                            <option value="rabat">{t('cityRabat')}</option>
-                          </select>
-                        </span>
-                      </label>
-
-                      <label className={`${fieldBase} ${fieldDivider}`}>
-                        <span className="flex min-w-0 flex-1 flex-col items-start text-right">
-                          <span className={fieldCaptionClass}>{t('searchPickupDate')}</span>
-                          <input
-                            type="date"
-                            value={pickupDate}
-                            onChange={(e) => setPickupDate(e.target.value)}
-                            className={fieldControlClass}
-                          />
-                        </span>
-                      </label>
-
-                      <label className={`${fieldBase} ${fieldDivider}`}>
-                        <span className="flex min-w-0 flex-1 flex-col items-start text-right">
-                          <span className={fieldCaptionClass}>{t('searchDropoffDate')}</span>
-                          <input
-                            type="date"
-                            value={dropoffDate}
-                            onChange={(e) => setDropoffDate(e.target.value)}
-                            className={fieldControlClass}
-                          />
-                        </span>
-                      </label>
-                    </>
-                  ) : (
-                    <>
-                      <label className={fieldBase}>
-                        <MapPin className={fieldIconClass} strokeWidth={1.5} />
-                        <span className="flex min-w-0 flex-1 flex-col items-start text-right">
-                          <span className={fieldCaptionClass}>{t('searchPropertyLocation')}</span>
-                          <select
-                            value={propLocation}
-                            onChange={(e) => setPropLocation(e.target.value)}
-                            className={fieldControlClass}
-                          >
-                            <option value="marrakech">{t('marrakechDistricts')}</option>
-                            <option value="casablanca">{t('casablancaDistricts')}</option>
-                            <option value="tangier">{t('tangierDistricts')}</option>
-                            <option value="rabat">{t('rabatDistricts')}</option>
-                          </select>
-                        </span>
-                      </label>
-
-                      <label className={`${fieldBase} ${fieldDivider}`}>
-                        <Building2 className={fieldIconClass} strokeWidth={1.5} />
-                        <span className="flex min-w-0 flex-1 flex-col items-start text-right">
-                          <span className={fieldCaptionClass}>{t('searchPropertyType')}</span>
-                          <select
-                            value={propType}
-                            onChange={(e) => setPropType(e.target.value)}
-                            className={fieldControlClass}
-                          >
-                            <option value="apartment">{t('propTypeApartment')}</option>
-                            <option value="villa">{t('propTypeVilla')}</option>
-                            <option value="studio">{t('propTypeStudio')}</option>
-                          </select>
-                        </span>
-                      </label>
-
-                      <label className={`${fieldBase} ${fieldDivider}`}>
-                        <span className="flex min-w-0 flex-1 flex-col items-start text-right">
-                          <span className={fieldCaptionClass}>{t('searchMaxPrice')}</span>
-                          <select
-                            value={maxPrice}
-                            onChange={(e) => setMaxPrice(e.target.value)}
-                            className={fieldControlClass}
-                          >
-                            <option value="1000">{t('maxPriceUnder1000')}</option>
-                            <option value="2500">{t('maxPriceUnder2500')}</option>
-                            <option value="5000">{t('maxPriceUnder5000')}</option>
-                            <option value="10000">{t('maxPriceOver5000')}</option>
-                          </select>
-                        </span>
-                      </label>
-                    </>
-                  )}
+                  <label className={`${fieldBase} ${fieldDivider}`}>
+                    <span className="flex min-w-0 flex-1 flex-col items-start text-right">
+                      <span className={fieldCaptionClass}>{t('searchDropoffDate')}</span>
+                      <input
+                        type="date"
+                        value={dropoffDate}
+                        onChange={(e) => setDropoffDate(e.target.value)}
+                        className={fieldControlClass}
+                      />
+                    </span>
+                  </label>
 
                   <div className="flex items-stretch lg:items-center lg:border-s lg:border-border-subtle px-4 py-3 lg:py-0">
                     <button
@@ -297,9 +191,9 @@ export default function Home() {
           <p className="mt-2 text-ink-secondary text-sm leading-relaxed">{t('bentoSubtitle')}</p>
         </div>
 
-        {/* Asymmetric bento: wide charcoal panel, tall paper panel */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          <Link href="/search?type=car" className="md:col-span-2 group relative flex flex-col justify-between overflow-hidden bg-ink-primary text-white p-6 md:p-9 rounded-lg shadow-lg min-h-[26rem]">
+        {/* Asymmetric bento: full-width fleet panel */}
+        <div className="grid grid-cols-1 gap-5">
+          <Link href="/search?type=car" className="md:col-span-3 group relative flex flex-col justify-between overflow-hidden bg-ink-primary text-white p-6 md:p-9 rounded-lg shadow-lg min-h-[26rem]">
             <div className="absolute -right-16 -top-16 h-56 w-56 rotate-12 corner-cut-sm bg-accent-clay/15" aria-hidden="true" />
             <div className="relative z-10 space-y-5 max-w-lg">
               <div className="w-12 h-12 corner-cut-sm bg-accent-clay flex items-center justify-center text-white shadow-[var(--shadow-clay)]">
@@ -324,34 +218,6 @@ export default function Home() {
               />
             </div>
           </Link>
-
-          <Link href="/search?type=property" className="group relative flex flex-col justify-between overflow-hidden bg-bg-surface border border-border-subtle p-6 md:p-8 rounded-lg shadow-md hover:shadow-lg transition-shadow min-h-[26rem]">
-            <div className="absolute -left-10 -bottom-14 h-48 w-48 -rotate-6 corner-cut-sm bg-bg-muted" aria-hidden="true" />
-            <div className="relative z-10 space-y-5">
-              <div className="w-12 h-12 corner-cut-sm bg-ink-primary flex items-center justify-center text-accent-clay shadow-md">
-                <Building2 className="w-6 h-6" />
-              </div>
-              <h3 className="text-xl md:text-2xl font-bold text-ink-primary leading-tight">{t('bentoRealEstateTitle')}</h3>
-              <p className="text-ink-secondary text-sm leading-relaxed">{t('bentoRealEstateDescription')}</p>
-              <span className="b2-press inline-flex items-center gap-2 rounded-sm border border-border-default bg-bg-surface px-5 py-2.5 text-xs font-extrabold text-ink-primary transition-colors group-hover:border-accent-clay group-hover:text-accent-clay shadow-xs">
-                {t('browsePropertiesAvailable')}
-                <ArrowRight className="w-4 h-4" />
-              </span>
-            </div>
-            <div className="relative z-10 mt-6">
-              <OptimizedImage
-                src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=70&w=800"
-                srcSet="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=65&w=480 480w, https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=70&w=800 800w"
-                sizes="(max-width: 768px) 100vw, 33vw"
-                alt={t('bentoRealEstateTitle')}
-                loading="lazy"
-                decoding="async"
-                width={800}
-                height={600}
-                className="corner-cut-sm object-cover h-32 sm:h-40 w-full shadow-sm group-hover:-translate-y-1 transition-transform duration-500"
-              />
-            </div>
-          </Link>
         </div>
       </section>
 
@@ -373,12 +239,11 @@ export default function Home() {
               city={item.city}
               pricePerDay={item.pricePerUnit}
               images={item.image ? [item.image] : []}
-              type={item.type === 'car' ? 'car' : 'property'}
+              type="car"
               specs={{
                 transmission: item.specs?.transmission,
                 fuel: item.specs?.fuel,
                 seats: item.specs?.seats ? Number(item.specs.seats) : undefined,
-                rooms: (item.specs as any)?.rooms ? Number((item.specs as any).rooms) : undefined,
               }}
               className={`stagger-${Math.min(index + 1, 8)} animate-fade-up`}
             />
@@ -402,7 +267,7 @@ export default function Home() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {[
               {
                 img: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=800',
@@ -412,21 +277,14 @@ export default function Home() {
                 desc: t('blogCard1Description'),
               },
               {
-                img: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=800',
-                alt: t('blogCard2Title'),
-                tag: t('blogPropInvestmentTag'),
-                title: t('blogCard2Title'),
-                desc: t('blogCard2Description'),
-              },
-              {
                 img: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=800',
                 alt: t('blogCard3Title'),
                 tag: t('blogDrivingTipsTag'),
                 title: t('blogCard3Title'),
                 desc: t('blogCard3Description'),
               },
-            ].map((post, i) => (
-              <Link href="/blog" key={post.title} className={`bg-bg-surface rounded-lg overflow-hidden shadow-xs border border-border-subtle hover:-translate-y-1.5 hover:shadow-lg hover:border-border-default transition-all duration-300 flex flex-col group ${i === 1 ? 'md:translate-y-6' : ''}`}>
+            ].map((post) => (
+              <Link href="/blog" key={post.title} className={`bg-bg-surface rounded-lg overflow-hidden shadow-xs border border-border-subtle hover:-translate-y-1.5 hover:shadow-lg hover:border-border-default transition-all duration-300 flex flex-col group`}>
                 <div className="h-40 sm:h-48 overflow-hidden relative">
                   <OptimizedImage src={post.img} alt={post.alt} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                   <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-ink-primary/25 to-transparent" aria-hidden="true" />

@@ -6,15 +6,14 @@ const project = resolve(import.meta.dirname, "..");
 const read = (file: string) => readFileSync(resolve(project, file), "utf8");
 
 describe("professional marketplace audit", () => {
-  it("uses server listings for Search and exposes office filters", () => {
+  it("uses server listings for Search and focuses exclusively on car rentals", () => {
     const search = read("client/src/pages/Search.tsx");
     expect(search).toMatch(/trpc\.listings\.list\.useQuery/);
-    expect(search).toMatch(/officeTypeFilter/);
-    expect(search).toMatch(/rentalTermFilter/);
-    expect(search).toMatch(/amenityFilters/);
-    expect(search).toMatch(/Fiber|fiber|فايبر/);
-    expect(search).toMatch(/Coworking|coworking|مشترك/);
+    expect(search).not.toMatch(/officeTypeFilter/);
+    expect(search).not.toMatch(/rentalTermFilter/);
+    expect(search).not.toMatch(/amenityFilters/);
     expect(search).not.toMatch(/LISTINGS\.filter/);
+    expect(search).toMatch(/type: 'car'/);
   });
 
   it("keeps recommendations and property detail database-backed", () => {

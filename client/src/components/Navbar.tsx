@@ -6,7 +6,6 @@ import { readBrandPreference, writeBrandPreference } from "@/config/brand";
 import {
   Bell,
   BookOpen,
-  Building2,
   Car,
   Check,
   ChevronDown,
@@ -45,7 +44,6 @@ type NavLink = {
 const navLinks: NavLink[] = [
   { href: "/", label: "الرئيسية", labelKey: "home" },
   { href: "/search?type=car", label: "تأجير السيارات", labelKey: "cars", icon: Car },
-  { href: "/search?type=property", label: "العقارات الفاخرة", labelKey: "properties", icon: Building2 },
   { href: "/admin", label: "لوحة الإدارة", labelKey: "admin", icon: ShieldAlert },
   { href: "/host", label: "لوحة المالك", labelKey: "dashboard", icon: LayoutDashboard },
   { href: "/my-bookings", label: "حجوزاتي", labelKey: "myBookings", icon: BookmarkCheck },

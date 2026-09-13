@@ -8,6 +8,12 @@ import { createPaymentsWebhookHandler, paymentStrictLimiter, registerSecurity } 
 import { createVerificationWebhookHandler } from "../verification/webhook";
 import { configureProviderSecrets } from "../verification/provider";
 import { createEscrowWebhookHandler } from "../escrow";
+import {
+  handleLocalCashWebhook,
+  handlePaytabsWebhook,
+  handlePayzoneWebhook,
+  webhookResponder,
+} from "../payments/webhooks";
 import { ENV } from "./env";
 import { registerStorageProxy } from "./storageProxy";
 import { appRouter } from "../routers";
@@ -107,6 +113,28 @@ async function startServer() {
     createEscrowWebhookHandler({
       getSecret: () => ENV.stripeWebhookSecret,
     })
+  );
+  // Moroccan gateway webhooks (PayZone / PayTabs / Cash Plus / Wafacash).
+  // MUST stay before express.json() so req.body is the raw Buffer the provider
+  // (or agency) signed. Every handler verifies then idempotently settles the
+  // transaction, updating payment, invoice, booking and the escrow ledger.
+  app.post(
+    "/api/webhooks/payzone",
+    paymentStrictLimiter,
+    express.raw({ type: "*/*", limit: "1mb" }),
+    webhookResponder(handlePayzoneWebhook)
+  );
+  app.post(
+    "/api/webhooks/paytabs",
+    paymentStrictLimiter,
+    express.raw({ type: "*/*", limit: "1mb" }),
+    webhookResponder(handlePaytabsWebhook)
+  );
+  app.post(
+    "/api/webhooks/local-cash",
+    paymentStrictLimiter,
+    express.raw({ type: "*/*", limit: "1mb" }),
+    webhookResponder(handleLocalCashWebhook)
   );
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));

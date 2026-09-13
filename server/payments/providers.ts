@@ -10,8 +10,11 @@ import { isStripeConfigured, createCheckoutCharge } from "../stripe";
 import type { CheckoutCurrency } from "./types";
 
 // ── Types ────────────────────────────────────────────────────────────────────
-export type GatewayCode = "cmi_card" | "stripe_card" | "paypal" | "bank_transfer";
-export const GATEWAY_CODES: readonly GatewayCode[] = ["cmi_card", "stripe_card", "paypal", "bank_transfer"] as const;
+export type GatewayCode = "cmi_card" | "stripe_card" | "paypal" | "bank_transfer" | "payzone" | "paytabs" | "cashplus" | "wafacash" | "arrival";
+export const GATEWAY_CODES: readonly GatewayCode[] = [
+  "cmi_card", "stripe_card", "paypal", "bank_transfer",
+  "payzone", "paytabs", "cashplus", "wafacash", "arrival",
+] as const;
 
 export type GatewayDefinition = {
   code: GatewayCode;
@@ -61,6 +64,51 @@ export const GATEWAYS: Record<GatewayCode, GatewayDefinition> = {
     labelAr: "تحويل بنكي (RIB)",
     labelFr: "Virement bancaire (RIB)",
     labelEn: "Bank Transfer (RIB)",
+  },
+  payzone: {
+    code: "payzone",
+    supportedCurrencies: ["MAD", "EUR", "USD"],
+    instant: true,
+    international: false,
+    labelAr: "البطاقة البنكية السريعة (PayZone)",
+    labelFr: "Carte bancaire rapide (PayZone)",
+    labelEn: "Fast Bank Card (PayZone)",
+  },
+  paytabs: {
+    code: "paytabs",
+    supportedCurrencies: ["MAD"],
+    instant: true,
+    international: false,
+    labelAr: "بطاقات PayTabs المحلية",
+    labelFr: "Cartes PayTabs locales",
+    labelEn: "Local Cards via PayTabs",
+  },
+  cashplus: {
+    code: "cashplus",
+    supportedCurrencies: ["MAD"],
+    instant: false,
+    international: false,
+    labelAr: "الأداء نقداً عبر Cash Plus",
+    labelFr: "Paiement en espèces via Cash Plus",
+    labelEn: "Cash at Cash Plus",
+  },
+  wafacash: {
+    code: "wafacash",
+    supportedCurrencies: ["MAD"],
+    instant: false,
+    international: false,
+    labelAr: "الأداء نقداً عبر Wafacash",
+    labelFr: "Paiement en espèces via Wafacash",
+    labelEn: "Cash at Wafacash",
+  },
+  arrival: {
+    code: "arrival",
+    supportedCurrencies: ["MAD"],
+    instant: false,
+    international: false,
+    labelAr: "الدفع عند الاستلام (Pay on Arrival)",
+    labelFr: "Paiement à la réception",
+    labelEn: "Pay on Arrival",
   },
 };
 
@@ -124,12 +172,22 @@ export async function createProviderCharge(input: ChargeInput): Promise<ChargeRe
     stripe_card: "STRIPE-SIM",
     paypal: "PAYPAL-SIM",
     bank_transfer: "BANK-SIM",
+    payzone: "PAYZONE-SIM",
+    paytabs: "PAYTABS-SIM",
+    cashplus: "CASHPLUS-SIM",
+    wafacash: "WAFACASH-SIM",
+    arrival: "ARRIVAL-SIM",
   };
   const statuses: Record<GatewayCode, ChargeResult["status"]> = {
     cmi_card: "Succeeded",
     stripe_card: "Succeeded",
     paypal: "Succeeded",
     bank_transfer: "Pending",
+    payzone: "Succeeded",
+    paytabs: "Succeeded",
+    cashplus: "Pending",
+    wafacash: "Pending",
+    arrival: "Pending",
   };
   return {
     status: statuses[gateway],
