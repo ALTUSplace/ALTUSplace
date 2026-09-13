@@ -43,11 +43,6 @@ const routeNames: Record<string, Record<string, string>> = {
     fr: "Profil",
     en: "Profile"
   },
-  "/renter-dashboard": {
-    ar: "حجوزاتي وفواتيري",
-    fr: "Mes réservations et factures",
-    en: "My bookings and invoices"
-  },
   "/add-car": {
     ar: "إضافة إعلان جديد",
     fr: "Ajouter une annonce",

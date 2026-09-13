@@ -375,7 +375,7 @@ export default function Success() {
             {invoiceQuery.isLoading ? <p className="text-xs text-slate-400">جاري التحقق من الفاتورة المحفوظة...</p> : invoice ? (
               <>
                 <div className="grid grid-cols-2 gap-3 text-xs"><div><span className="text-slate-400 block">رقم الفاتورة</span><strong className="text-white">{invoice.invoiceNumber}</strong></div><div><span className="text-slate-400 block">حالة الدفع</span><strong className="text-white">{invoice.paymentStatus}</strong></div><div><span className="text-slate-400 block">TVA</span><strong className="text-white">{invoice.vatAmount} {invoice.currency}</strong></div><div><span className="text-slate-400 block">الإجمالي الخادمي</span><strong className="text-amber-300">{invoice.total} {invoice.currency}</strong></div></div>
-                <Button type="button" onClick={handleInvoiceDownload} className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold"><Download className="w-4 h-4 ml-2" /> تنزيل الفاتورة PDF</Button>
+                <Button type="button" onClick={handleInvoiceDownload} disabled={isGeneratingPDF} className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold disabled:opacity-50 disabled:cursor-not-allowed">{isGeneratingPDF ? <><div className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin ml-2" /> جاري إنشاء الفاتورة...</> : <><Download className="w-4 h-4 ml-2" /> تنزيل الفاتورة PDF</>}</Button>
               </>
             ) : <p className="text-xs text-slate-400">{invoiceQuery.isError ? 'تعذر التحقق من الفاتورة لهذا الحجز. يمكنك مراجعة صفحة حجوزاتك.' : `تم تسجيل الدفع، رقم المبلغ المرجعي ${booking?.totalPrice ?? 0} درهم، وسيظهر المستند بعد اكتمال الحفظ.`}</p>}
           </div>

@@ -109,6 +109,7 @@ export function PaymentCheckoutModal({
   const [transactionId, setTransactionId] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [processingProgress, setProcessingProgress] = useState(0);
+  const [selectedWallet, setSelectedWallet] = useState<string | null>(null);
   const cvvInputRef = useRef<HTMLInputElement>(null);
   const processingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -123,6 +124,7 @@ export function PaymentCheckoutModal({
       setTransactionId('');
       setErrorMessage('');
       setProcessingProgress(0);
+      setSelectedWallet(null);
     }
     return () => {
       if (processingIntervalRef.current) {
@@ -222,6 +224,7 @@ export function PaymentCheckoutModal({
   const handleSuccessClose = () => {
     onSuccess({ transactionId, method: paymentMethod, amount });
     resetForm();
+    onClose();
   };
 
   const resetForm = () => {
@@ -237,6 +240,12 @@ export function PaymentCheckoutModal({
 
   const handleClose = () => {
     if (step === 'processing') return;
+    if (step === 'success') {
+      onSuccess({ transactionId, method: paymentMethod, amount });
+      resetForm();
+      onClose();
+      return;
+    }
     resetForm();
     onClose();
   };
@@ -398,7 +407,7 @@ export function PaymentCheckoutModal({
                 <div className="flex items-center gap-3"><Smartphone className="w-5 h-5 text-purple-400" /><p className="font-bold text-sm text-purple-300">الدفع عبر المحفظة الإلكترونية</p></div>
                 <div className="grid grid-cols-3 gap-3">
                   {['Himti', 'Jumia Pay', 'Barid Cash'].map((wallet) => (
-                    <button key={wallet} className="p-4 rounded-xl border border-slate-700 bg-slate-900 hover:border-purple-500/50 transition-all text-center">
+                    <button key={wallet} onClick={() => setSelectedWallet(wallet)} className={`p-4 rounded-xl border transition-all text-center ${selectedWallet === wallet ? 'border-purple-500 bg-purple-500/10' : 'border-slate-700 bg-slate-900 hover:border-purple-500/50'}`}>
                       <Smartphone className="w-5 h-5 text-purple-400 mx-auto mb-2" /><p className="text-[11px] font-bold text-slate-300">{wallet}</p>
                     </button>
                   ))}
@@ -407,7 +416,7 @@ export function PaymentCheckoutModal({
               </div>
               <div className="flex gap-3 pt-2">
                 <Button type="button" onClick={() => setStep('method')} className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2"><ChevronLeft className="w-4 h-4" />رجوع</Button>
-                <Button onClick={handleSubmit} className="flex-[2] bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-bold py-3 rounded-xl text-sm shadow-lg shadow-purple-500/20 flex items-center justify-center gap-2"><Smartphone className="w-4 h-4" />متابعة الدفع</Button>
+                <Button onClick={handleSubmit} disabled={!selectedWallet} className="flex-[2] bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-bold py-3 rounded-xl text-sm shadow-lg shadow-purple-500/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"><Smartphone className="w-4 h-4" />متابعة الدفع</Button>
               </div>
             </div>
           )}

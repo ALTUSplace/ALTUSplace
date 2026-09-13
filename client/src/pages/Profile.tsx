@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Calendar, Download, FileText, Mail, Moon, Receipt, Save, ShieldCheck, Sun, UserRound } from "lucide-react";
+import { Calendar, Download, FileText, LockKeyhole, Mail, Moon, Receipt, Save, ShieldCheck, Sun, UserRound } from "lucide-react";
 import { toast } from "sonner";
+import { startLogin } from "@/const";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -68,7 +69,18 @@ export default function Profile() {
     return <div className="min-h-screen bg-background flex items-center justify-center text-muted-foreground">جاري تحميل بيانات الحساب...</div>;
   }
 
-  if (!isAuthenticated || !user) return null;
+  if (!isAuthenticated || !user) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 p-6 text-center" dir={direction}>
+        <div className="w-16 h-16 rounded-2xl bg-amber-500/15 flex items-center justify-center text-amber-600"><LockKeyhole className="w-8 h-8" /></div>
+        <div className="space-y-1">
+          <h1 className="text-xl font-black text-foreground">تسجيل الدخول مطلوب</h1>
+          <p className="text-sm text-muted-foreground">سجّل دخولك لعرض ملفك الشخصي وحجوزاتك وفواتيرك.</p>
+        </div>
+        <Button type="button" onClick={startLogin} className="bg-amber-500 text-slate-950 hover:bg-amber-400 font-bold">تسجيل الدخول</Button>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground py-8 px-4" dir={direction}>

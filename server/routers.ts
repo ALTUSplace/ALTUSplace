@@ -574,15 +574,27 @@ export const appRouter = router({
         db.select({ value: count() }).from(listings),
         db.select({ value: count() }).from(listings).where(eq(listings.status, 'Published')),
         db.select({ value: count() }).from(bookings),
-        db.select({ gross: bookings.totalPrice, fees: bookings.commissionFee }).from(bookings).where(eq(bookings.status, 'Confirmed')),
+        db.select({ gross: bookings.totalPrice, fees: bookings.commissionFee, createdAt: bookings.createdAt }).from(bookings).where(eq(bookings.status, 'Confirmed')),
         db.select({ createdAt: users.createdAt }).from(users).orderBy(desc(users.createdAt)).limit(100),
       ]);
+      const monthKey = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      const now = new Date();
+      const months: Array<{ key: string; label: string; revenue: number }> = [];
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        months.push({ key: monthKey(d), label: d.toLocaleDateString('fr-MA', { month: 'short' }), revenue: 0 });
+      }
+      for (const row of revenueRows) {
+        if (!row.createdAt) continue;
+        const bucket = months.find((month) => month.key === monthKey(new Date(row.createdAt)));
+        if (bucket) bucket.revenue += row.gross;
+      }
       return {
         users: Number(userRows[0]?.value ?? 0), owners: Number(ownerRows[0]?.value ?? 0), renters: Number(renterRows[0]?.value ?? 0), activeAgencies: Number(activeAgencyRows[0]?.value ?? 0),
         listings: Number(listingRows[0]?.value ?? 0), pendingListings: Number(pendingRows[0]?.value ?? 0), bookings: Number(bookingRows[0]?.value ?? 0),
         grossRevenue: revenueRows.reduce((sum, row) => sum + row.gross, 0), platformFees: revenueRows.reduce((sum, row) => sum + row.fees, 0),
         userGrowth: recentUsers.filter(user => user.createdAt && user.createdAt >= new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)).length,
-        monthlyRevenue: [],
+        monthlyRevenue: months,
       };
     }),
     users: adminProcedure.query(async () => {
@@ -604,11 +616,17 @@ export const appRouter = router({
       }),
     updateUserRole: adminProcedure
       .input(z.object({ userId: z.number().int().positive(), role: z.enum(['renter', 'owner', 'admin', 'user', 'SUPER_ADMIN']) }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ ctx, input }) => {
         const db = await getDb();
         if (!db) throw new Error('Database unavailable');
+        if (input.userId === ctx.user.id) throw new TRPCError({ code: 'BAD_REQUEST', message: 'لا يمكنك تغيير دور حسابك الإداري بنفسك.' });
+        const [before] = await db.select({ role: users.role }).from(users).where(eq(users.id, input.userId)).limit(1);
+        if (!before) throw new TRPCError({ code: 'NOT_FOUND', message: 'المستخدم غير موجود.' });
+        if (before.role === 'SUPER_ADMIN' && ctx.user.role !== 'SUPER_ADMIN') throw new TRPCError({ code: 'FORBIDDEN', message: 'حسابات الإدارة العليا محمية ولا يمكن تعديل دورها إلا من إدارة عليا.' });
+        if (input.role === 'SUPER_ADMIN' && ctx.user.role !== 'SUPER_ADMIN') throw new TRPCError({ code: 'FORBIDDEN', message: 'ترقية حساب إلى إدارة عليا متاحة فقط لحسابات الإدارة العليا.' });
         await db.update(users).set({ role: input.role }).where(eq(users.id, input.userId));
-        return { success: true };
+        await writeAuditLog({ actorId: ctx.user.id, action: 'user.role_updated', entityType: 'user', entityId: input.userId, beforeData: before, afterData: { role: input.role } });
+        return { success: true as const };
       }),
     bookings: adminProcedure.query(async () => {
       const db = await getDb();

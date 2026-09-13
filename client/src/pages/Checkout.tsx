@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useLocation, useSearch } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CreditCard, ShieldAlert } from 'lucide-react';
+import { CreditCard, Loader2, ShieldAlert } from 'lucide-react';
 import { toast } from 'sonner';
 import { trpc } from '@/lib/trpc';
 import { LoadingAnimation } from '@/components/LoadingAnimation';
@@ -167,6 +167,11 @@ export default function CheckoutPage() {
                     <Button type="button" onClick={() => setLocation('/kyc')} className="mt-2 w-full bg-amber-500 font-bold text-slate-950 hover:bg-amber-600">
                       إكمال التحقق من الهوية
                     </Button>
+                  </div>
+                ) : creatingBooking ? (
+                  <div className="flex items-center justify-center gap-2 rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs font-bold text-amber-700 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-400" role="status">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    جاري تأكيد الحجز وإنشاء رقم المرجع...
                   </div>
                 ) : (
                   <Button type="submit" className="w-full bg-amber-500 hover:bg-amber-600 text-white">

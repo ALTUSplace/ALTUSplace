@@ -46,7 +46,7 @@ export default function SuperDashboard() {
   }
 
   const waiting = overview.isPending || series.isPending;
-  const overviewData = overview.data!;
+  const overviewData = overview.data;
   const seriesData = series.data ?? [];
 
   return (
@@ -71,6 +71,8 @@ export default function SuperDashboard() {
 
         {waiting ? (
           <DashboardSkeleton />
+        ) : !overviewData ? (
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-10 text-center text-sm text-slate-400">تعذر تحميل البيانات المالية حالياً. حاول التحديث لاحقاً.</div>
         ) : (
           <>
             <MetricCards data={overviewData} />
@@ -91,7 +93,7 @@ export default function SuperDashboard() {
                     global={commission.data!.global}
                     tiers={commission.data!.tiers}
                     tierDistribution={commission.data!.tierDistribution}
-                    vendors={(users.data ?? []).map((user) => ({ id: user.id, name: user.name, agencyName: user.agencyName, vendorTier: user.vendorTier ?? "bronze" }))}
+                    vendors={(users.data ?? []).filter((user) => user.role === "owner" || user.role === "admin").map((user) => ({ id: user.id, name: user.name, agencyName: user.agencyName, vendorTier: user.vendorTier ?? "bronze" }))}
                     onChanged={refresh}
                   />
                 )}
