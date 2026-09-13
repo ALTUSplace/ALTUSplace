@@ -1,4 +1,4 @@
-import { boolean, doublePrecision, index, integer, pgEnum, pgTable, text, timestamp, uniqueIndex, varchar } from "drizzle-orm/pg-core";
+import { boolean, doublePrecision, index, integer, jsonb, pgEnum, pgTable, text, timestamp, uniqueIndex, varchar } from "drizzle-orm/pg-core";
 
 export const userRoleEnum = pgEnum("user_role", ["renter", "owner", "admin", "user", "SUPER_ADMIN"]);
 export const vendorTierEnum = pgEnum("vendor_tier", ["bronze", "silver", "gold"]);
@@ -117,6 +117,7 @@ export const bookings = pgTable("bookings", {
   totalPrice: integer("total_price").notNull(),
   commissionFee: integer("commission_fee").notNull(), // 10% عمولة المنصة
   netProfit: integer("net_profit").notNull(), // صافي ربح الشريك
+  addOns: jsonb("add_ons"), // [{ id: 'insurance', amount: 500, perDay: true }, ...] priced at create time
   status: bookingStatusEnum("status").default("Pending").notNull(),
   cancellationPolicyVersion: varchar("cancellation_policy_version", { length: 80 }),
   cancellationPolicySnapshot: text("cancellation_policy_snapshot"),

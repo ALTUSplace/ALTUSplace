@@ -2,13 +2,13 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
-const root = resolve(import.meta.dirname, "..", "..");
+const root = resolve(import.meta.dirname, "..");
 const read = (relativePath: string) => readFileSync(resolve(root, relativePath), "utf8");
 
 describe("automated identity verification (kyc) audit", () => {
   it("tracks the provider, session and document metadata in the drizzle schema", () => {
     const schema = read("drizzle/schema.ts");
-    expect(schema).toMatch(/mysqlTable\("kyc_submissions"/);
+    expect(schema).toMatch(/pgTable\("kyc_submissions"/);
     expect(schema).toContain('provider: varchar("provider"');
     expect(schema).toContain('providerSessionId: varchar("provider_session_id"');
     expect(schema).toContain('documentNumberMasked: varchar("document_number_masked"');

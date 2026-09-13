@@ -143,6 +143,10 @@ export default function CarDetails() {
       toast.error('يرجى تحديد تاريخ الاستلام والإرجاع');
       return;
     }
+    const addOnsParam = [
+      includeInsurance ? 'insurance' : null,
+      includeBabySeat ? 'baby_seat' : null,
+    ].filter((value): value is string => Boolean(value)).join(',');
     const checkoutParams = new URLSearchParams({
       listingId: String(car.id),
       title: car.name,
@@ -151,6 +155,7 @@ export default function CarDetails() {
       startDate: start,
       endDate: end,
     });
+    if (addOnsParam) checkoutParams.set('addOns', addOnsParam);
     setLocation(`/checkout?${checkoutParams.toString()}`);
   };
 
@@ -349,7 +354,7 @@ export default function CarDetails() {
           </div>
 
           {/* Booking Card Sidebar */}
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 space-y-4">
             <BookingWidget
               pricePerDay={car.pricePerDay}
               currency="MAD"
@@ -357,6 +362,50 @@ export default function CarDetails() {
                 handleProceedBooking({ checkIn, checkOut });
               }}
             />
+
+            {/* Add-on options — flow through to the secure checkout */}
+            <div className="bg-[#15120D] border border-slate-800 rounded-3xl p-5 space-y-3">
+              <h4 className="text-sm font-bold text-white">إضافات الحجز</h4>
+              <button
+                type="button"
+                onClick={() => setIncludeInsurance((prev) => !prev)}
+                className={`w-full flex items-center justify-between gap-3 p-3.5 rounded-2xl border transition-all text-right ${
+                  includeInsurance ? 'border-amber-500/70 bg-amber-500/10' : 'border-slate-800 hover:border-slate-700'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 ${includeInsurance ? 'border-amber-500 bg-amber-500' : 'border-slate-600'}`}>
+                    {includeInsurance && <Check className="w-3.5 h-3.5 text-white" />}
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-white">تأمين شامل كل يوم</p>
+                    <p className="text-[10px] text-slate-400 flex items-center gap-1"><ShieldCheck className="w-3 h-3 text-amber-400" /> تغطية كاملة {INSURANCE_FEE_PER_DAY} درهم/يوم</p>
+                  </div>
+                </div>
+                <span className="text-xs font-black text-amber-400">{insurancePrice} درهم</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setIncludeBabySeat((prev) => !prev)}
+                className={`w-full flex items-center justify-between gap-3 p-3.5 rounded-2xl border transition-all text-right ${
+                  includeBabySeat ? 'border-amber-500/70 bg-amber-500/10' : 'border-slate-800 hover:border-slate-700'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 ${includeBabySeat ? 'border-amber-500 bg-amber-500' : 'border-slate-600'}`}>
+                    {includeBabySeat && <Check className="w-3.5 h-3.5 text-white" />}
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-white">كرسي أطفال</p>
+                    <p className="text-[10px] text-slate-400">{BABY_SEAT_FEE_PER_DAY} درهم/يوم</p>
+                  </div>
+                </div>
+                <span className="text-xs font-black text-amber-400">{babySeatPrice} درهم</span>
+              </button>
+              <p className="text-[10px] text-slate-500 text-center pt-1 border-t border-slate-800/80">
+                تُضاف الاختيارات تلقائياً إلى ملخص الدفع الآمن
+              </p>
+            </div>
           </div>
 
         </div>

@@ -25,7 +25,9 @@ import { isRangeAvailable, overlaps, parseBlockedRanges, parseDateRange } from "
 import { getTranslatedListing, getTranslationStats, invalidateTranslationCache, isTranslationAvailable, SUPPORTED_LANGUAGES, translateWithAws } from "./_core/translation";
 import { ENV } from "./_core/env";
 import { getKycStatusPayload } from "./verification/eligibility";
+import { assertKycEligibleToBook } from "./verification/eligibility";
 import { maskDocumentNumber } from "./verification/requirements";
+import { ADDONS_CATALOG, calculateAddOnsTotal, isAddOnId } from "./addons";
 import { createEscrowEntry, freezeEscrowEntry, getGlobalCommission, getTierCommission, mediateEscrowEntry, releaseEscrowEntry, resolveEffectiveCommission, upsertGlobalCommission, upsertTierCommission, VENDOR_TIERS } from "./escrow";
 
 function haversineKm(aLat: number, aLng: number, bLat: number, bLng: number): number {
@@ -1573,10 +1575,15 @@ export const appRouter = router({
     list: protectedProcedure.query(async ({ ctx }) => {
       const db = await getDb();
       if (!db) return [];
-      if (ctx.user!.role === 'admin') {
-        return await db.select().from(bookings).orderBy(desc(bookings.createdAt));
+      try {
+        if (ctx.user!.role === 'admin') {
+          return await db.select().from(bookings).orderBy(desc(bookings.createdAt));
+        }
+        return await db.select().from(bookings).where(eq(bookings.renterId, ctx.user!.id));
+      } catch (error) {
+        console.error("[bookings.list] Failed to load bookings:", error);
+        return [];
       }
-      return await db.select().from(bookings).where(eq(bookings.renterId, ctx.user!.id));
     }),
 
     getById: protectedProcedure
@@ -1617,6 +1624,11 @@ export const appRouter = router({
           listingId: z.number().int().positive(),
           startDate: z.string(),
           endDate: z.string(),
+          // Optional checkout add-ons. The server re-prices these from the
+          // canonical catalog — client-sent amounts are never trusted.
+          addOns: z
+            .array(z.enum(["insurance", "baby_seat", "delivery", "additional_driver"]))
+            .optional(),
         })
       )
       .mutation(async ({ ctx, input }) => {
@@ -1649,11 +1661,25 @@ export const appRouter = router({
         const durationDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
         if (!Number.isInteger(durationDays) || durationDays <= 0) throw new Error("مدة الحجز غير صالحة.");
         const subtotal = listing[0].pricePerDay * durationDays;
+
+        // Identity gate — the platform only accepts renters whose identity has
+        // been verified with the document required for the listing category.
+        await assertKycEligibleToBook({ db, user: ctx.user!, category: listing[0].category ?? null });
+
+        // Add-ons are re-priced server-side from the canonical catalog so the
+        // stored total always reconciles with the checkout preview.
+        const selectedAddOns = (input.addOns ?? []).filter(isAddOnId);
+        const addOnsTotal = calculateAddOnsTotal(selectedAddOns, durationDays);
+        const addOnsSnapshot = selectedAddOns.map((id) => {
+          const def = ADDONS_CATALOG[id];
+          return { id, perDay: def.perDay, amount: def.perDay ? def.fee * durationDays : def.fee };
+        });
+
         // Tier-aware, live commission split: recomputed from the database on
         // every booking so Commission Controller changes apply instantly.
         const commissionPolicy = await resolveEffectiveCommission(db, listing[0].ownerId, subtotal);
         const commissionFee = commissionPolicy.fee;
-        const netProfit = subtotal - commissionFee;
+        const netProfit = (subtotal + addOnsTotal) - commissionFee;
 
         // Pending requests may overlap while awaiting approval. The owner/admin confirmation path below
         // takes the same row lock and performs the authoritative confirmed-overlap check.
@@ -1663,9 +1689,10 @@ export const appRouter = router({
           listingId: input.listingId,
           startDate: start,
           endDate: end,
-          totalPrice: subtotal,
+          totalPrice: subtotal + addOnsTotal,
           commissionFee,
           netProfit,
+          addOns: addOnsSnapshot.length > 0 ? addOnsSnapshot : null,
           status: "Pending",
           cancellationPolicyVersion: CANCELLATION_POLICY_VERSION,
           cancellationPolicySnapshot: CANCELLATION_POLICY_TEXT,
@@ -1688,7 +1715,7 @@ export const appRouter = router({
           email: owner[0]?.email ? { to: owner[0].email, subject: ownerTitle, ...buildEmailContent(ownerTitle, ownerMessage, "/host") } : undefined,
         });
 
-        return { success: true, bookingId, subtotal, durationDays, commissionFee, netProfit };
+        return { success: true, bookingId, subtotal, addOnsTotal, durationDays, commissionFee, netProfit };
       }),
 
     updateStatus: protectedProcedure
@@ -1704,10 +1731,26 @@ export const appRouter = router({
         if (!['admin', 'SUPER_ADMIN'].includes(ctx.user!.role)) {
           throw new Error("عذراً، هذه العملية مخصصة لمدير المنصة والمشرفين فقط.");
         }
+        const bookingRow = (await db.select({ listingId: bookings.listingId }).from(bookings).where(eq(bookings.id, input.bookingId)).limit(1))[0];
+        if (!bookingRow) throw new Error("الحجز غير موجود.");
         await db
           .update(bookings)
           .set({ status: input.status })
           .where(eq(bookings.id, input.bookingId));
+        // Availability is derived from bookings: Confirming rents the listing
+        // while Cancelling frees it — unless another confirmed booking exists.
+        if (input.status === "Confirmed") {
+          await db.update(listings).set({ status: "Rented" }).where(eq(listings.id, bookingRow.listingId));
+        } else if (input.status === "Cancelled") {
+          const otherActive = await db.select({ id: bookings.id }).from(bookings).where(and(
+            eq(bookings.listingId, bookingRow.listingId),
+            eq(bookings.status, "Confirmed"),
+            ne(bookings.id, input.bookingId),
+          )).limit(1);
+          if (otherActive.length === 0) {
+            await db.update(listings).set({ status: "Available" }).where(eq(listings.id, bookingRow.listingId));
+          }
+        }
         return { success: true };
       }),
 
@@ -1842,6 +1885,16 @@ export const appRouter = router({
           throw new Error("لا يمكنك الدفع لحجز لا يخص حسابك.");
         }
         if (booking.status === "Cancelled") throw new Error("لا يمكن دفع حجز ملغى.");
+
+        // Identity gate: a verified identity with the document required for the
+        // listing category is mandatory before any money moves.
+        const paymentListing = await db.select({ category: listings.category }).from(listings)
+          .where(eq(listings.id, booking.listingId)).limit(1);
+        await assertKycEligibleToBook({
+          db,
+          user: ctx.user!,
+          category: paymentListing[0]?.category ?? null,
+        });
 
         const existingPaymentRows = await db.select().from(payments)
           .where(and(eq(payments.bookingId, input.bookingId), eq(payments.payerId, booking.renterId)))
@@ -2025,7 +2078,8 @@ export const appRouter = router({
     list: protectedProcedure.query(async ({ ctx }) => {
       const db = await getDb();
       if (!db) return [];
-      const query = db.select({
+      try {
+        const query = db.select({
         id: invoices.id,
         invoiceNumber: invoices.invoiceNumber,
         bookingId: invoices.bookingId,
@@ -2056,6 +2110,10 @@ export const appRouter = router({
         .leftJoin(listings, eq(bookings.listingId, listings.id));
       if (ctx.user!.role === "admin") return query.orderBy(desc(invoices.issuedAt));
       return query.where(eq(invoices.payerId, ctx.user!.id)).orderBy(desc(invoices.issuedAt));
+      } catch (error) {
+        console.error("[invoices.list] Failed to load invoices:", error);
+        return [];
+      }
     }),
 
     getByBooking: protectedProcedure

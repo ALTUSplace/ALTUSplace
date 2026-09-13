@@ -1,0 +1,1 @@
+ALTER TABLE "bookings" ADD COLUMN "add_ons" jsonb;--> statement-breakpoint

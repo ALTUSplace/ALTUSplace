@@ -1,11 +1,29 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'wouter';
 import { BookOpen, Calendar, User, ArrowRight, Sparkles, Tag, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from "@/contexts/LanguageContext";
+import { renderJsonLd, useSEO } from '@/lib/seo';
+
+const SEO_BLOG = {
+  ar: {
+    title: 'مدونة ALTUSplace | دليل كراء السيارات والاستثمار العقاري في المغرب',
+    description: 'أدلة وافية حول كراء السيارات في الدار البيضاء ومراكش وأكادير، نصائح القيادة الآمنة، وفرص الاستثمار العقاري في طنجة.',
+  },
+  fr: {
+    title: 'Blog ALTUSplace | Guide location de voitures et immobilier au Maroc',
+    description: 'Dossiers complets sur la location de voitures à Casablanca, Marrakech et Agadir, conseils de conduite et opportunités immobilières.',
+  },
+  en: {
+    title: 'ALTUSplace Blog | Car rental & property guide in Morocco',
+    description: 'In-depth guides on car rental in Casablanca, Marrakech and Agadir, safe driving tips, and property investment opportunities.',
+  },
+} as const;
 
 export default function BlogPage() {
-  const { direction } = useLanguage();
+  const { direction, language } = useLanguage();
+  const lang = language && language in SEO_BLOG ? language : 'ar';
+  useSEO({ ...SEO_BLOG[lang], path: '/blog', language: lang });
   const articles = [
     {
       id: 1,
@@ -38,6 +56,24 @@ export default function BlogPage() {
       readTime: '4 دقائق قراءة'
     }
   ];
+
+  useEffect(() => {
+    renderJsonLd('blog-jsonld', {
+      "@context": "https://schema.org",
+      "@type": "Blog",
+      "@id": "https://altusplace.vercel.app/blog",
+      "name": "ALTUSplace Blog",
+      "description": SEO_BLOG[lang].description,
+      "inLanguage": lang === "ar" ? "ar-MA" : lang === "fr" ? "fr" : "en",
+      "blogPost": articles.map((article) => ({
+        "@type": "BlogPosting",
+        "headline": article.title,
+        "datePublished": article.date,
+        "author": { "@type": "Person", "name": article.author },
+        "image": article.image,
+      })),
+    });
+  }, [lang]);
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 py-12 px-4" dir={direction}>

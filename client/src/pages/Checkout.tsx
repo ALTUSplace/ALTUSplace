@@ -2,16 +2,23 @@ import { useState } from 'react';
 import { useLocation, useSearch } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CreditCard, Loader2, ShieldAlert } from 'lucide-react';
+import { CreditCard, Loader2, ShieldAlert, ShieldCheck, Check, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { trpc } from '@/lib/trpc';
 import { LoadingAnimation } from '@/components/LoadingAnimation';
-import { calculateRentalDays, calculateRentalSubtotal } from '@/lib/pricing';
+import {
+  ADDON_CATALOG,
+  calculateCheckoutTotal,
+  calculateRentalDays,
+  isAddOnId,
+  type AddOnId,
+} from '@/lib/pricing';
 import { useAuth } from '@/_core/hooks/useAuth';
 import { isKycSatisfiedFor, KYC_STATUS_CONFIG, type KycStatus } from '@/lib/kyc';
 import PaymentCheckoutModal from '@/components/PaymentCheckoutModal';
 import { LISTINGS } from '@/data/altusplace';
-import { calculateRentalDays as calcDays } from '@/lib/pricing';
+
+const ALL_ADDON_IDS = Object.keys(ADDON_CATALOG) as AddOnId[];
 
 export default function CheckoutPage() {
   const [, setLocation] = useLocation();
@@ -22,10 +29,15 @@ export default function CheckoutPage() {
   const parsedListingId = Number(rawListingId);
   const startDateParam = searchParams.get('startDate') || '';
   const endDateParam = searchParams.get('endDate') || '';
+  const addOnsFromUrl = (searchParams.get('addOns') || '')
+    .split(',')
+    .map((id) => id.trim())
+    .filter(isAddOnId);
 
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'cmi_card' | 'cash'>('cmi_card');
   const [creatingBooking, setCreatingBooking] = useState(false);
+  const [selectedAddOns, setSelectedAddOns] = useState<AddOnId[]>(addOnsFromUrl);
 
   const { data: listing, isLoading, error } = trpc.listings.getById.useQuery(
     { id: parsedListingId },
@@ -55,6 +67,13 @@ export default function CheckoutPage() {
     ? KYC_STATUS_CONFIG[kycStatusQuery.data.status as KycStatus]?.label.ar
     : '';
 
+  const toggleAddOn = (id: AddOnId) => {
+    setSelectedAddOns((prev) => {
+      if (prev.includes(id)) return prev.filter((item) => item !== id);
+      return [...prev, id];
+    });
+  };
+
   const handleCheckout = (e: React.FormEvent) => {
     e.preventDefault();
     const bookingDays = calcDays(startDateParam, endDateParam);
@@ -79,7 +98,12 @@ export default function CheckoutPage() {
     }
     setCreatingBooking(true);
     bookingMutation.mutate(
-      { listingId: parsedListingId, startDate: startDateParam, endDate: endDateParam },
+      {
+        listingId: parsedListingId,
+        startDate: startDateParam,
+        endDate: endDateParam,
+        addOns: selectedAddOns,
+      },
       {
         onSuccess: (result) => {
           toast.success('تم تأكيد الحجز بنجاح! رقم الحجز: ALT-' + result.bookingId);
@@ -109,7 +133,8 @@ export default function CheckoutPage() {
   const bookingStart = startDateParam || new Date().toISOString().slice(0, 10);
   const bookingEnd = endDateParam || new Date().toISOString().slice(0, 10);
   const days = calculateRentalDays(bookingStart, bookingEnd);
-  const subtotal = calculateRentalSubtotal(resPricePerDay > 0 ? resPricePerDay : (listing?.pricePerDay || 0), days);
+  const pricePerDay = resPricePerDay > 0 ? resPricePerDay : (listing?.pricePerDay || 0);
+  const totals = calculateCheckoutTotal(pricePerDay, days, selectedAddOns);
 
   return (
     <>
@@ -122,7 +147,48 @@ export default function CheckoutPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="font-semibold">{resTitle}</p>
-                <p className="text-sm text-slate-500">المدة: {days} أيام</p>
+                <p className="text-sm text-slate-500">المدة: {days} أيام × {pricePerDay} درهم / يوم</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-xl flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-amber-500" />
+                  إضافات اختيارية لتجربة أعلى
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {ALL_ADDON_IDS.map((id) => {
+                  const def = ADDON_CATALOG[id];
+                  const selected = selectedAddOns.includes(id);
+                  const addOnPrice = def.perDay ? def.fee * days : def.fee;
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => toggleAddOn(id)}
+                      className={`w-full flex items-center gap-3 p-4 rounded-xl border-2 text-right transition-all ${
+                        selected
+                          ? 'border-amber-500 bg-amber-50 shadow-sm dark:bg-amber-950/20'
+                          : 'border-slate-200 hover:border-slate-300'
+                      }`}
+                    >
+                      <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors ${
+                        selected ? 'border-amber-500 bg-amber-500' : 'border-slate-300'
+                      }`}>
+                        {selected && <Check className="w-4 h-4 text-white" />}
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-semibold">{def.labelAr}</p>
+                        <p className="text-xs text-slate-500">
+                          {def.perDay ? `${def.fee} درهم / يوم (${def.fee * days} درهم)` : `${def.fee} درهم (مرة واحدة)`}
+                        </p>
+                      </div>
+                      <span className="font-bold text-slate-700">{addOnPrice} درهم</span>
+                    </button>
+                  );
+                })}
               </CardContent>
             </Card>
 
@@ -153,10 +219,31 @@ export default function CheckoutPage() {
                 <CardTitle className="text-lg">ملخص الطلب</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4 text-sm">
-                <div className="flex justify-between">
-                  <span>المجموع</span>
-                  <span className="font-semibold">{subtotal} درهم</span>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span>قيمة الاشتراك ({days} أيام)</span>
+                    <span>{totals.subtotal} درهم</span>
+                  </div>
+                  {selectedAddOns.map((id) => {
+                    const def = ADDON_CATALOG[id];
+                    const amount = def.perDay ? def.fee * days : def.fee;
+                    return (
+                      <div key={id} className="flex justify-between text-slate-500">
+                        <span>{def.labelAr}</span>
+                        <span>+{amount} درهم</span>
+                      </div>
+                    );
+                  })}
+                  <div className="border-t border-slate-200 pt-2 flex justify-between font-bold text-base">
+                    <span>المجموع</span>
+                    <span>{totals.total} درهم</span>
+                  </div>
                 </div>
+                {selectedAddOns.length > 0 && (
+                  <div className="rounded-lg bg-emerald-50 border border-emerald-200 p-2 text-[11px] text-emerald-700 dark:bg-emerald-950/30 dark:border-emerald-800 dark:text-emerald-400">
+                    <span className="flex items-center gap-1"><ShieldCheck className="w-3.5 h-3.5" />تأمين وحماية مشمولة في الإضافات المختارة</span>
+                  </div>
+                )}
                 {kycBlocked ? (
                   <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-700 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-400" role="alert">
                     <p className="flex items-center gap-1.5 font-bold">
@@ -175,7 +262,7 @@ export default function CheckoutPage() {
                   </div>
                 ) : (
                   <Button type="submit" className="w-full bg-amber-500 hover:bg-amber-600 text-white">
-                    تأكيد الدفع
+                    تأكيد الدفع ({totals.total} درهم)
                   </Button>
                 )}
               </CardContent>
@@ -188,9 +275,13 @@ export default function CheckoutPage() {
         isOpen={showPaymentModal}
         onClose={() => setShowPaymentModal(false)}
         onSuccess={handlePaymentSuccess}
-        amount={subtotal}
+        amount={totals.total}
         currency="درهم"
       />
     </>
   );
+}
+
+function calcDays(startDate: string, endDate: string): number {
+  return calculateRentalDays(startDate, endDate);
 }

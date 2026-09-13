@@ -43,3 +43,44 @@ export function calculateRentalSubtotal(pricePerDay: number, days: number): numb
   if (!Number.isInteger(days) || days <= 0) return 0;
   return pricePerDay * days;
 }
+
+/**
+ * Checkout add-ons (server/Addons.ts is the authoritative source of these
+ * fees — this client mirror keeps the preview totals in lockstep with it).
+ */
+export type AddOnId = "insurance" | "baby_seat" | "delivery" | "additional_driver";
+
+export const ADDON_CATALOG: Record<AddOnId, { fee: number; perDay: boolean; labelAr: string; labelFr: string; labelEn: string }> = {
+  insurance: { fee: 100, perDay: true, labelAr: "تأمين شامل (تغطية كاملة)", labelFr: "Assurance tous risques", labelEn: "Full coverage insurance" },
+  baby_seat: { fee: 50, perDay: true, labelAr: "كرسي أطفال", labelFr: "Siège bébé", labelEn: "Baby seat" },
+  delivery: { fee: 200, perDay: false, labelAr: "توصيل إلى مطار محمد الخامس أو عنوانك", labelFr: "Livraison aéroport Mohammed V ou adresse", labelEn: "Delivery to Mohammed V airport or your address" },
+  additional_driver: { fee: 75, perDay: true, labelAr: "سائق إضافي", labelFr: "Conducteur additionnel", labelEn: "Additional driver" },
+};
+
+export function isAddOnId(value: unknown): value is AddOnId {
+  return typeof value === "string" && Object.prototype.hasOwnProperty.call(ADDON_CATALOG, value);
+}
+
+/** Total price for the selected add-ons across a rental duration. */
+export function calculateAddOnsTotal(selected: readonly AddOnId[], days: number): number {
+  if (!selected || selected.length === 0) return 0;
+  if (!Number.isInteger(days) || days <= 0) return 0;
+  return selected.reduce((sum, id) => {
+    const def = ADDON_CATALOG[id];
+    if (!def) return sum;
+    return sum + (def.perDay ? def.fee * days : def.fee);
+  }, 0);
+}
+
+export type CheckoutTotals = {
+  subtotal: number;
+  addOnsTotal: number;
+  total: number;
+};
+
+/** Full checkout preview: base rental + add-ons + grand total. */
+export function calculateCheckoutTotal(pricePerDay: number, days: number, selected: readonly AddOnId[]): CheckoutTotals {
+  const subtotal = calculateRentalSubtotal(pricePerDay, days);
+  const addOnsTotal = calculateAddOnsTotal(selected ?? [], days);
+  return { subtotal, addOnsTotal, total: subtotal + addOnsTotal };
+}
