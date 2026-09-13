@@ -9,12 +9,15 @@ import { toast } from 'sonner';
 import type { InvoicePdfInput } from '@/lib/invoicePdf';
 import { SUPPORT_EMAIL } from '@/config/brand';
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/_core/hooks/useAuth";
 
 export default function RenterDashboard() {
   const { direction } = useLanguage();
+  const { isAuthenticated, loading: authLoading } = useAuth();
   const { data: user } = trpc.auth.me.useQuery();
-  const { data: bookings = [], isLoading } = trpc.bookings.list.useQuery();
-  const { data: invoices = [], isLoading: invoicesLoading } = trpc.invoices.list.useQuery();
+  const enabled = isAuthenticated && !authLoading;
+  const { data: bookings = [], isLoading } = trpc.bookings.list.useQuery(undefined, { enabled, retry: 1, refetchOnWindowFocus: false });
+  const { data: invoices = [], isLoading: invoicesLoading } = trpc.invoices.list.useQuery(undefined, { enabled, retry: 1, refetchOnWindowFocus: false });
   const [supportMessage, setSupportMessage] = useState('');
 
   const handleSendSupport = (e: React.FormEvent) => {

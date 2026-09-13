@@ -21,7 +21,7 @@ describe("LanguageContext i18n helpers", () => {
   });
 
   it("falls back to English, then Arabic, then the key", () => {
-    expect(getTranslation("en", "heroTitle")).toBe("Your trusted gateway to car and property rentals in Morocco");
+    expect(getTranslation("en", "heroTitle")).toBe("Your trusted gateway to car rentals in Morocco");
     expect(getTranslation("en", "missing.key")).toBe("missing.key");
   });
 

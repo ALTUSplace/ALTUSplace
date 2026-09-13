@@ -3,20 +3,31 @@ import { Link, useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { trpc } from '@/lib/trpc';
 import { toast } from 'sonner';
-import { BookmarkCheck, Calendar, FileText, CheckCircle, Clock, Phone, Download, Receipt, MessageCircle } from 'lucide-react';
+import { BookmarkCheck, Calendar, FileText, CheckCircle, Clock, Phone, Download, Receipt, MessageCircle, Loader2, AlertTriangle } from 'lucide-react';
 import type { InvoicePdfInput } from '@/lib/invoicePdf';
 import { OptimizedImage } from '@/components/OptimizedImage';
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/_core/hooks/useAuth";
 
 const formatDate = (value: string | Date) => new Date(value).toLocaleDateString('fr-MA');
 const formatMoney = (value: number) => new Intl.NumberFormat('fr-MA').format(value);
 
 export default function MyBookings() {
   const { direction } = useLanguage();
+  const { isAuthenticated, loading: authLoading } = useAuth();
   const [, setLocation] = useLocation();
-  const { data: dbBookings = [], isLoading: bookingsLoading } = trpc.bookings.list.useQuery();
+  const bookingsEnabled = isAuthenticated && !authLoading;
+  const { data: dbBookings = [], isLoading: bookingsLoading, isError: bookingsError, refetch: refetchBookings } = trpc.bookings.list.useQuery(undefined, {
+    enabled: bookingsEnabled,
+    retry: 1,
+    refetchOnWindowFocus: false,
+  });
   const { data: listings = [] } = trpc.listings.list.useQuery();
-  const { data: invoices = [], isLoading: invoicesLoading, isError: invoicesError } = trpc.invoices.list.useQuery();
+  const { data: invoices = [], isLoading: invoicesLoading, isError: invoicesError } = trpc.invoices.list.useQuery(undefined, {
+    enabled: bookingsEnabled,
+    retry: 1,
+    refetchOnWindowFocus: false,
+  });
   const [contractBookingId, setContractBookingId] = useState<number | null>(null);
   const contractQuery = trpc.commercialLeaseContracts.getByBooking.useQuery(
     { bookingId: contractBookingId ?? 0 },
@@ -65,8 +76,28 @@ export default function MyBookings() {
           </Button>
         </div>
 
-        {bookingsLoading ? (
-          <div className="bg-[#15120D] border border-slate-800 rounded-3xl p-10 text-center text-slate-400">جاري تحميل الحجوزات...</div>
+        {authLoading ? (
+          <div className="bg-[#15120D] border border-slate-800 rounded-3xl p-10 text-center text-slate-400 flex items-center justify-center gap-2"><Loader2 className="w-4 h-4 animate-spin text-amber-400" /> جاري التحقق من الجلسة...</div>
+        ) : !isAuthenticated ? (
+          <div className="bg-[#15120D] border border-slate-800 rounded-3xl p-10 text-center space-y-4">
+            <div className="mx-auto w-12 h-12 bg-amber-500/15 border border-amber-500/30 rounded-2xl flex items-center justify-center text-amber-400"><AlertTriangle className="w-6 h-6" /></div>
+            <p className="text-slate-300 font-bold">تسجيل الدخول مطلوب لعرض حجوزاتك</p>
+            <p className="text-slate-500 text-sm">قم بتسجيل الدخول أولاً للاطلاع على سجل حجوزاتك السابقة والحالية.</p>
+            <Button onClick={() => setLocation('/search')} className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-6 py-3 rounded-xl">
+              العودة إلى صفحة البحث
+            </Button>
+          </div>
+        ) : bookingsLoading ? (
+          <div className="bg-[#15120D] border border-slate-800 rounded-3xl p-10 text-center text-slate-400 flex items-center justify-center gap-2"><Loader2 className="w-4 h-4 animate-spin text-amber-400" /> جاري تحميل الحجوزات...</div>
+        ) : bookingsError ? (
+          <div className="bg-[#15120D] border border-slate-800 rounded-3xl p-10 text-center space-y-4">
+            <div className="mx-auto w-12 h-12 bg-rose-500/15 border border-rose-500/30 rounded-2xl flex items-center justify-center text-rose-400"><AlertTriangle className="w-6 h-6" /></div>
+            <p className="text-slate-300 font-bold">تعذر تحميل الحجوزات</p>
+            <p className="text-slate-500 text-sm">حدث خلل أثناء جلب حجوزاتك. حاول مرة أخرى في بضع ثوانٍ.</p>
+            <Button onClick={() => refetchBookings()} className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-6 py-3 rounded-xl">
+              إعادة المحاولة
+            </Button>
+          </div>
         ) : dbBookings.length === 0 ? (
           <div className="bg-[#15120D] border border-slate-800 rounded-3xl p-10 text-center text-slate-400">لا توجد حجوزات مرتبطة بحسابك حالياً.</div>
         ) : (

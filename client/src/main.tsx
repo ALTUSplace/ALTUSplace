@@ -10,15 +10,26 @@ import "./index.css";
 
 const queryClient = new QueryClient();
 
+let redirectingToLogin = false;
+
 const redirectToLoginIfUnauthorized = (error: unknown) => {
-  if (!(error instanceof TRPCClientError)) return;
-  if (typeof window === "undefined") return;
+  try {
+    if (!(error instanceof TRPCClientError)) return;
+    if (typeof window === "undefined") return;
 
-  const isUnauthorized = error.message === UNAUTHED_ERR_MSG;
+    const isUnauthorized = error.message === UNAUTHED_ERR_MSG;
+    if (!isUnauthorized) return;
 
-  if (!isUnauthorized) return;
-
-  startLogin();
+    // Only attempt navigation once, so a stream of UNAUTHORIZED errors (protected
+    // queries firing without a session) can't turn into a redirect loop.
+    if (redirectingToLogin) return;
+    redirectingToLogin = true;
+    startLogin();
+  } catch (redirectError) {
+    // startLogin() must never crash react-query's cache/mutation update loop: a
+    // throwing navigator left queries stuck in isPending (infinite spinners).
+    console.error("[Auth] Failed to start login redirect:", redirectError);
+  }
 };
 
 queryClient.getQueryCache().subscribe(event => {
