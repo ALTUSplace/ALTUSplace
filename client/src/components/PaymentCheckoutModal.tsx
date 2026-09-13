@@ -29,9 +29,11 @@ interface PaymentCheckoutModalProps {
     endDate: string;
     days: number;
   };
+  initialMethod?: PaymentMethod;
+  supportedMethods?: PaymentMethod[];
 }
 
-export type PaymentMethod = 'cmi_card' | 'bank_transfer' | 'mobile_wallet';
+export type PaymentMethod = 'cmi_card' | 'bank_transfer' | 'mobile_wallet' | 'stripe_card' | 'paypal';
 type CheckoutStep = 'method' | 'details' | 'processing' | 'success' | 'error';
 
 // Card formatting helpers
@@ -99,8 +101,10 @@ export function PaymentCheckoutModal({
   currency = 'درهم',
   description,
   bookingDetails,
+  initialMethod = 'cmi_card',
+  supportedMethods = ['cmi_card', 'bank_transfer', 'mobile_wallet', 'stripe_card', 'paypal'],
 }: PaymentCheckoutModalProps) {
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cmi_card');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(initialMethod);
   const [cardNumber, setCardNumber] = useState('');
   const [cardHolder, setCardHolder] = useState('');
   const [expiry, setExpiry] = useState('');
@@ -115,7 +119,7 @@ export function PaymentCheckoutModal({
 
   useEffect(() => {
     if (isOpen) {
-      setPaymentMethod('cmi_card');
+      setPaymentMethod(initialMethod in supportedMethods ? initialMethod : 'cmi_card');
       setCardNumber('');
       setCardHolder('');
       setExpiry('');
@@ -202,12 +206,19 @@ export function PaymentCheckoutModal({
     const isSuccess = Math.random() > 0.05;
     setTimeout(() => {
       if (isSuccess) {
-        const txnId = 'CMI-MA-' + Math.floor(100000 + Math.random() * 900000);
+        const txnPrefixes: Record<PaymentMethod, string> = {
+          cmi_card: 'CMI-MA',
+          stripe_card: 'STRIPE',
+          paypal: 'PAYPAL',
+          bank_transfer: 'BANK',
+          mobile_wallet: 'WALLET',
+        };
+        const txnId = txnPrefixes[paymentMethod] + '-' + Math.floor(100000 + Math.random() * 900000);
         setTransactionId(txnId);
         setStep('success');
         toast.success('تمت عملية الدفع بنجاح! رقم المعاملة: ' + txnId);
       } else {
-        setErrorMessage('تعذرت معالجة الدفع. يرجى التحقق من بيانات البطاقة والمحاولة مرة أخرى.');
+        setErrorMessage('تعذرت معالجة الدفع. يرجى التحقق من بيانات الدفع والمحاولة مرة أخرى.');
         setStep('error');
         if (onError) onError('Payment processing failed');
       }
@@ -216,7 +227,7 @@ export function PaymentCheckoutModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (paymentMethod === 'cmi_card' && !validateCardForm()) return;
+    if ((paymentMethod === 'cmi_card' || paymentMethod === 'stripe_card') && !validateCardForm()) return;
     simulatePaymentProcessing();
     setTimeout(completePayment, 2500);
   };
@@ -319,30 +330,50 @@ export function PaymentCheckoutModal({
             <div className="space-y-4">
               <p className="text-sm font-bold text-slate-300">اختر طريقة الدفع</p>
               <div className="space-y-3">
-                <button onClick={() => { setPaymentMethod('cmi_card'); setStep('details'); }} className="w-full flex items-center gap-4 p-4 rounded-2xl border-2 border-amber-500 bg-amber-500/5 transition-all text-right hover:bg-amber-500/10">
-                  <div className="bg-accent-clay-soft p-2.5 rounded-xl border border-accent-clay/30"><CreditCard className="w-5 h-5 text-accent-clay" /></div>
-                  <div className="flex-1"><p className="font-bold text-sm">بطاقة بنكية (CMI)</p><p className="text-[11px] text-slate-400">Visa, Mastercard - فوري وآمن</p></div>
-                  <div className="flex gap-1"><div className="px-1.5 py-0.5 bg-accent-clay rounded text-[8px] font-bold text-white">VISA</div></div>
-                </button>
-                <button onClick={() => { setPaymentMethod('bank_transfer'); setStep('details'); }} className="w-full flex items-center gap-4 p-4 rounded-2xl border-2 border-slate-700 hover:border-slate-600 bg-slate-900 transition-all text-right">
-                  <div className="bg-emerald-500/10 p-2.5 rounded-xl border border-emerald-500/20"><Building2 className="w-5 h-5 text-emerald-400" /></div>
-                  <div className="flex-1"><p className="font-bold text-sm">تحويل بنكي</p><p className="text-[11px] text-slate-400">تحويل مباشر إلى حساب الوكالة</p></div>
-                  <span className="text-[10px] text-amber-400 bg-amber-500/10 px-2 py-1 rounded">24-48 ساعة</span>
-                </button>
-                <button onClick={() => { setPaymentMethod('mobile_wallet'); setStep('details'); }} className="w-full flex items-center gap-4 p-4 rounded-2xl border-2 border-slate-700 hover:border-slate-600 bg-slate-900 transition-all text-right">
-                  <div className="bg-purple-500/10 p-2.5 rounded-xl border border-purple-500/20"><Smartphone className="w-5 h-5 text-purple-400" /></div>
-                  <div className="flex-1"><p className="font-bold text-sm">محفظة إلكترونية</p><p className="text-[11px] text-slate-400">Himti, Jumia Pay, Barid Cash</p></div>
-                </button>
+                {supportedMethods.includes('cmi_card') && (
+                  <button onClick={() => { setPaymentMethod('cmi_card'); setStep('details'); }} className="w-full flex items-center gap-4 p-4 rounded-2xl border-2 border-amber-500 bg-amber-500/5 transition-all text-right hover:bg-amber-500/10">
+                    <div className="bg-accent-clay-soft p-2.5 rounded-xl border border-accent-clay/30"><CreditCard className="w-5 h-5 text-accent-clay" /></div>
+                    <div className="flex-1"><p className="font-bold text-sm">بطاقة بنكية (CMI)</p><p className="text-[11px] text-slate-400">Visa, Mastercard - فوري وآمن</p></div>
+                    <div className="flex gap-1"><div className="px-1.5 py-0.5 bg-accent-clay rounded text-[8px] font-bold text-white">VISA</div></div>
+                  </button>
+                )}
+                {supportedMethods.includes('stripe_card') && (
+                  <button onClick={() => { setPaymentMethod('stripe_card'); setStep('details'); }} className="w-full flex items-center gap-4 p-4 rounded-2xl border-2 border-slate-700 hover:border-indigo-600 bg-slate-900 transition-all text-right">
+                    <div className="bg-indigo-500/10 p-2.5 rounded-xl border border-indigo-500/20"><CreditCard className="w-5 h-5 text-indigo-400" /></div>
+                    <div className="flex-1"><p className="font-bold text-sm">Stripe (بطاقة دولية)</p><p className="text-[11px] text-slate-400">Visa, Mastercard, Amex - مدفوعات عبر الحدود</p></div>
+                    <span className="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded">عالمي</span>
+                  </button>
+                )}
+                {supportedMethods.includes('paypal') && (
+                  <button onClick={() => { setPaymentMethod('paypal'); setStep('details'); }} className="w-full flex items-center gap-4 p-4 rounded-2xl border-2 border-slate-700 hover:border-blue-600 bg-slate-900 transition-all text-right">
+                    <div className="bg-blue-500/10 p-2.5 rounded-xl border border-blue-500/20"><Fingerprint className="w-5 h-5 text-blue-400" /></div>
+                    <div className="flex-1"><p className="font-bold text-sm">PayPal</p><p className="text-[11px] text-slate-400">آمن وسريع عبر حساب PayPal</p></div>
+                    <span className="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded">عالمي</span>
+                  </button>
+                )}
+                {supportedMethods.includes('bank_transfer') && (
+                  <button onClick={() => { setPaymentMethod('bank_transfer'); setStep('details'); }} className="w-full flex items-center gap-4 p-4 rounded-2xl border-2 border-slate-700 hover:border-slate-600 bg-slate-900 transition-all text-right">
+                    <div className="bg-emerald-500/10 p-2.5 rounded-xl border border-emerald-500/20"><Building2 className="w-5 h-5 text-emerald-400" /></div>
+                    <div className="flex-1"><p className="font-bold text-sm">تحويل بنكي</p><p className="text-[11px] text-slate-400">تحويل مباشر إلى حساب الوكالة</p></div>
+                    <span className="text-[10px] text-amber-400 bg-amber-500/10 px-2 py-1 rounded">24-48 ساعة</span>
+                  </button>
+                )}
+                {supportedMethods.includes('mobile_wallet') && (
+                  <button onClick={() => { setPaymentMethod('mobile_wallet'); setStep('details'); }} className="w-full flex items-center gap-4 p-4 rounded-2xl border-2 border-slate-700 hover:border-slate-600 bg-slate-900 transition-all text-right">
+                    <div className="bg-purple-500/10 p-2.5 rounded-xl border border-purple-500/20"><Smartphone className="w-5 h-5 text-purple-400" /></div>
+                    <div className="flex-1"><p className="font-bold text-sm">محفظة إلكترونية</p><p className="text-[11px] text-slate-400">Himti, Jumia Pay, Barid Cash</p></div>
+                  </button>
+                )}
               </div>
             </div>
           )}
 
-          {step === 'details' && paymentMethod === 'cmi_card' && (
+          {step === 'details' && (paymentMethod === 'cmi_card' || paymentMethod === 'stripe_card') && (
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="bg-gradient-to-bl from-slate-800 via-slate-900 to-slate-800 rounded-2xl p-5 border border-slate-700 relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-bl from-amber-500/5 to-transparent" />
                 <div className="relative z-10">
-                  <div className="flex justify-between items-start mb-6">{getCardBrandIcon()}<div className="text-[10px] text-slate-400 flex items-center gap-1"><Lock className="w-3 h-3" />CMI Secure 3D</div></div>
+                  <div className="flex justify-between items-start mb-6">{getCardBrandIcon()}<div className="text-[10px] text-slate-400 flex items-center gap-1"><Lock className="w-3 h-3" />{paymentMethod === 'stripe_card' ? 'Stripe Secure' : 'CMI Secure 3D'}</div></div>
                   <p className="font-mono text-lg tracking-[0.2em] text-white mb-4">{cardNumber || '•••• •••• •••• ••••'}</p>
                   <div className="flex justify-between items-end">
                     <div><p className="text-[9px] text-slate-500 mb-0.5">حامل البطاقة</p><p className="text-xs font-bold text-slate-300 uppercase">{cardHolder || 'YOUR NAME'}</p></div>
@@ -417,6 +448,23 @@ export function PaymentCheckoutModal({
               <div className="flex gap-3 pt-2">
                 <Button type="button" onClick={() => setStep('method')} className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2"><ChevronLeft className="w-4 h-4" />رجوع</Button>
                 <Button onClick={handleSubmit} disabled={!selectedWallet} className="flex-[2] bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-bold py-3 rounded-xl text-sm shadow-lg shadow-purple-500/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"><Smartphone className="w-4 h-4" />متابعة الدفع</Button>
+              </div>
+            </div>
+          )}
+
+          {step === 'details' && paymentMethod === 'paypal' && (
+            <div className="space-y-5">
+              <div className="bg-blue-500/5 border border-blue-500/20 rounded-2xl p-5 space-y-4">
+                <div className="flex items-center gap-3"><Fingerprint className="w-5 h-5 text-blue-400" /><p className="font-bold text-sm text-blue-300">الدفع عبر PayPal</p></div>
+                <p className="text-sm text-slate-400 leading-relaxed">سيتم تحويلك إلى بوابة PayPal الآمنة لإتمام الدفع بحسابك. سيتم احتساب المبلغ بالعملة المختارة مع التحويل التلقائي.</p>
+                <div className="flex justify-between py-2 border-t border-slate-800 text-sm"><span className="text-slate-400">المبلغ:</span><span className="font-bold text-amber-400">{amount.toLocaleString()} {currency}</span></div>
+              </div>
+              <div className="flex items-center gap-2 text-[11px] text-emerald-400 bg-emerald-500/10 p-3 rounded-xl border border-emerald-500/20">
+                <Lock className="w-4 h-4 shrink-0" /><span>معاملة مشفرة ومحمية بسياسة حماية المشتري من PayPal</span>
+              </div>
+              <div className="flex gap-3 pt-2">
+                <Button type="button" onClick={() => setStep('method')} className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2"><ChevronLeft className="w-4 h-4" />رجوع</Button>
+                <Button onClick={handleSubmit} className="flex-[2] bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-3 rounded-xl text-sm shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2"><Fingerprint className="w-4 h-4" />متابعة إلى PayPal</Button>
               </div>
             </div>
           )}

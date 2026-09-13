@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation, useSearch } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CreditCard, Loader2, ShieldAlert, ShieldCheck, Check, Sparkles } from 'lucide-react';
+import { CreditCard, Loader2, ShieldAlert, ShieldCheck, Check, Sparkles, Building2, Fingerprint } from 'lucide-react';
 import { toast } from 'sonner';
 import { trpc } from '@/lib/trpc';
 import { LoadingAnimation } from '@/components/LoadingAnimation';
@@ -15,10 +15,26 @@ import {
 } from '@/lib/pricing';
 import { useAuth } from '@/_core/hooks/useAuth';
 import { isKycSatisfiedFor, KYC_STATUS_CONFIG, type KycStatus } from '@/lib/kyc';
-import PaymentCheckoutModal from '@/components/PaymentCheckoutModal';
+import PaymentCheckoutModal, { type PaymentMethod } from '@/components/PaymentCheckoutModal';
 import { LISTINGS } from '@/data/altusplace';
+import { useCurrency } from '@/contexts/CurrencyContext';
+import {
+  CHECKOUT_CURRENCIES,
+  GATEWAYS,
+  gatewaysForCurrency,
+  gatewaySupportsCurrency,
+  type CheckoutCurrency,
+  type GatewayCode,
+} from '@/lib/payments';
 
 const ALL_ADDON_IDS = Object.keys(ADDON_CATALOG) as AddOnId[];
+
+const GATEWAY_ICONS: Record<GatewayCode, typeof CreditCard> = {
+  cmi_card: CreditCard,
+  stripe_card: CreditCard,
+  paypal: Fingerprint,
+  bank_transfer: Building2,
+};
 
 export default function CheckoutPage() {
   const [, setLocation] = useLocation();
@@ -35,9 +51,11 @@ export default function CheckoutPage() {
     .filter(isAddOnId);
 
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<'cmi_card' | 'cash'>('cmi_card');
+  const [selectedGateway, setSelectedGateway] = useState<GatewayCode>('cmi_card');
   const [creatingBooking, setCreatingBooking] = useState(false);
   const [selectedAddOns, setSelectedAddOns] = useState<AddOnId[]>(addOnsFromUrl);
+
+  const { currency, setCurrency, formatPrice, convertPrice } = useCurrency();
 
   const { data: listing, isLoading, error } = trpc.listings.getById.useQuery(
     { id: parsedListingId },
@@ -53,6 +71,13 @@ export default function CheckoutPage() {
     : Number(searchParams.get('pricePerDay') ?? 0);
 
   const bookingMutation = trpc.bookings.create.useMutation();
+  const paymentMutation = trpc.payments.create.useMutation();
+
+  // Every gateway supports MAD; switching to a currency the selected gateway
+  // cannot charge in falls back to the first gateway valid for that currency.
+  useEffect(() => {
+    setSelectedGateway((prev) => (gatewaySupportsCurrency(prev, currency) ? prev : (gatewaysForCurrency(currency)[0] ?? 'cmi_card')));
+  }, [currency]);
 
   // KYC gate — mirrors the server-side enforcement in payments.create:
   // unverified/pending/rejected profiles cannot open the payment flow.
@@ -89,7 +114,7 @@ export default function CheckoutPage() {
     setShowPaymentModal(true);
   };
 
-  const handlePaymentSuccess = (payload: { transactionId: string }) => {
+  const handlePaymentSuccess = (_payload: { transactionId: string }) => {
     if (creatingBooking) return;
     const bookingDays = calcDays(startDateParam, endDateParam);
     if (isNaN(parsedListingId) || parsedListingId <= 0 || bookingDays <= 0) {
@@ -106,8 +131,26 @@ export default function CheckoutPage() {
       },
       {
         onSuccess: (result) => {
-          toast.success('تم تأكيد الحجز بنجاح! رقم الحجز: ALT-' + result.bookingId);
-          setLocation(`/success?bookingId=${result.bookingId}&language=ar`);
+          // Charge the booking through the selected gateway/currency, then the
+          // server issues the invoice (converted amount), escrow and voucher.
+          paymentMutation.mutate(
+            { bookingId: result.bookingId, method: selectedGateway, currency },
+            {
+              onSuccess: (payResult) => {
+                if (payResult.payment.status === 'Succeeded') {
+                  toast.success('تم تأكيد الحجز والدفع بنجاح! رقم الحجز: ALT-' + result.bookingId);
+                  setLocation(`/success?bookingId=${result.bookingId}&language=ar`);
+                } else {
+                  toast.info('تم إنشاء طلب الدفع والحجز. الرجاء إتمام التحويل لتأكيد الحجز.');
+                  setLocation(`/my-bookings`);
+                }
+              },
+              onError: (err) => {
+                toast.error('تم تأكيد الحجز لكن تعذر تسجيل الدفع: ' + (err.message ?? 'خطأ غير متوقع.'));
+                setLocation(`/my-bookings`);
+              },
+            },
+          );
         },
         onError: (err) => {
           toast.error('تعذر حفظ الحجز في قاعدة البيانات: ' + (err.message ?? 'خطأ غير متوقع.'));
@@ -135,6 +178,8 @@ export default function CheckoutPage() {
   const days = calculateRentalDays(bookingStart, bookingEnd);
   const pricePerDay = resPricePerDay > 0 ? resPricePerDay : (listing?.pricePerDay || 0);
   const totals = calculateCheckoutTotal(pricePerDay, days, selectedAddOns);
+  const availableGateways = gatewaysForCurrency(currency);
+  const showTotalDisplay = formatPrice(totals.total);
 
   return (
     <>
@@ -147,7 +192,7 @@ export default function CheckoutPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="font-semibold">{resTitle}</p>
-                <p className="text-sm text-slate-500">المدة: {days} أيام × {pricePerDay} درهم / يوم</p>
+                <p className="text-sm text-slate-500">المدة: {days} أيام × {formatPrice(pricePerDay)} / يوم</p>
               </CardContent>
             </Card>
 
@@ -182,10 +227,10 @@ export default function CheckoutPage() {
                       <div className="flex-1">
                         <p className="font-semibold">{def.labelAr}</p>
                         <p className="text-xs text-slate-500">
-                          {def.perDay ? `${def.fee} درهم / يوم (${def.fee * days} درهم)` : `${def.fee} درهم (مرة واحدة)`}
+                          {def.perDay ? `${formatPrice(def.fee)} / يوم (${formatPrice(def.fee * days)})` : `${formatPrice(def.fee)} (مرة واحدة)`}
                         </p>
                       </div>
-                      <span className="font-bold text-slate-700">{addOnPrice} درهم</span>
+                      <span className="font-bold text-slate-700">{formatPrice(addOnPrice)}</span>
                     </button>
                   );
                 })}
@@ -194,27 +239,62 @@ export default function CheckoutPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-xl">طريقة الدفع</CardTitle>
+                <CardTitle className="text-xl flex items-center justify-between">
+                  <span>طريقة الدفع</span>
+                  <span className="text-xs font-normal text-slate-400">ALTUSplace Secure Checkout</span>
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div 
-                  onClick={() => setPaymentMethod('cmi_card')}
-                  className={`p-4 rounded-xl border-2 cursor-pointer flex items-center gap-3 transition-all ${
-                    paymentMethod === 'cmi_card' ? 'border-amber-500 bg-amber-50 shadow-sm' : 'border-slate-200'
-                  }`}
-                >
-                  <CreditCard className="w-6 h-6 text-amber-600" />
-                  <div>
-                    <p className="font-semibold">بطاقة بانكية (CMI)</p>
-                    <p className="text-xs text-slate-500">دفع آمن ومباشر عبر البطاقة</p>
+                <div className="space-y-2">
+                  <p className="text-sm font-bold text-slate-600">عملة الدفع</p>
+                  <div className="flex rounded-xl overflow-hidden border-2 border-slate-200">
+                    {CHECKOUT_CURRENCIES.map((code: CheckoutCurrency) => (
+                      <button
+                        key={code}
+                        type="button"
+                        onClick={() => setCurrency(code)}
+                        className={`flex-1 py-2.5 text-sm font-black transition-colors ${
+                          currency === code ? 'bg-amber-500 text-slate-950' : 'bg-white text-slate-500 hover:bg-amber-50'
+                        }`}
+                      >
+                        {code}
+                      </button>
+                    ))}
                   </div>
+                </div>
+                <div className="space-y-3">
+                  {availableGateways.map((code: GatewayCode) => {
+                    const def = GATEWAYS[code];
+                    const Icon = GATEWAY_ICONS[code];
+                    const selected = selectedGateway === code;
+                    return (
+                      <div
+                        key={code}
+                        onClick={() => setSelectedGateway(code)}
+                        role="button"
+                        className={`p-4 rounded-xl border-2 cursor-pointer flex items-center gap-3 transition-all ${
+                          selected ? 'border-amber-500 bg-amber-50 shadow-sm dark:bg-amber-950/20' : 'border-slate-200 hover:border-slate-300'
+                        }`}
+                      >
+                        <Icon className="w-6 h-6 text-amber-600" />
+                        <div className="flex-1">
+                          <p className="font-semibold">{def.labelAr}</p>
+                          <p className="text-xs text-slate-500">
+                            {def.international ? 'مدفوعات دولية آمنة' : 'دفع محلي ومباشر'}
+                            {def.instant ? ' — فوري' : ' — 24 إلى 48 ساعة'}
+                          </p>
+                        </div>
+                        <span className={`w-4 h-4 rounded-full border-2 ${selected ? 'border-amber-500 bg-amber-500' : 'border-slate-300'}`} />
+                      </div>
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>
           </div>
 
           <div>
-            <Card className="sticky top-6">
+            <Card className="md:sticky md:top-6">
               <CardHeader>
                 <CardTitle className="text-lg">ملخص الطلب</CardTitle>
               </CardHeader>
@@ -222,7 +302,7 @@ export default function CheckoutPage() {
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span>قيمة الاشتراك ({days} أيام)</span>
-                    <span>{totals.subtotal} درهم</span>
+                    <span>{formatPrice(totals.subtotal)}</span>
                   </div>
                   {selectedAddOns.map((id) => {
                     const def = ADDON_CATALOG[id];
@@ -230,13 +310,13 @@ export default function CheckoutPage() {
                     return (
                       <div key={id} className="flex justify-between text-slate-500">
                         <span>{def.labelAr}</span>
-                        <span>+{amount} درهم</span>
+                        <span>+{formatPrice(amount)}</span>
                       </div>
                     );
                   })}
                   <div className="border-t border-slate-200 pt-2 flex justify-between font-bold text-base">
                     <span>المجموع</span>
-                    <span>{totals.total} درهم</span>
+                    <span>{showTotalDisplay}</span>
                   </div>
                 </div>
                 {selectedAddOns.length > 0 && (
@@ -262,7 +342,7 @@ export default function CheckoutPage() {
                   </div>
                 ) : (
                   <Button type="submit" className="w-full bg-amber-500 hover:bg-amber-600 text-white">
-                    تأكيد الدفع ({totals.total} درهم)
+                    تأكيد الدفع ({showTotalDisplay})
                   </Button>
                 )}
               </CardContent>
@@ -275,8 +355,17 @@ export default function CheckoutPage() {
         isOpen={showPaymentModal}
         onClose={() => setShowPaymentModal(false)}
         onSuccess={handlePaymentSuccess}
-        amount={totals.total}
-        currency="درهم"
+        amount={convertPrice(totals.total)}
+        currency={currency}
+        description={resTitle}
+        bookingDetails={{
+          title: resTitle,
+          startDate: bookingStart,
+          endDate: bookingEnd,
+          days,
+        }}
+        initialMethod={selectedGateway as PaymentMethod}
+        supportedMethods={availableGateways as PaymentMethod[]}
       />
     </>
   );

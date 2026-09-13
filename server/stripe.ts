@@ -70,6 +70,19 @@ export async function createTransfer(amount: number, currency: string, destinati
   return transfer.id;
 }
 
+export async function createCheckoutCharge({ amount, currency, applicationFee, transferAccountId, metadata }: { amount: number; currency: string; applicationFee: number; transferAccountId: string; metadata: Record<string, string> }): Promise<{ id: string; clientSecret: string }> {
+  const stripe = getStripe();
+  const intent = await stripe.paymentIntents.create({
+    amount: Math.round(amount * 100),
+    currency: currency.toLowerCase(),
+    application_fee_amount: Math.round(applicationFee * 100),
+    transfer_data: { destination: transferAccountId },
+    automatic_payment_methods: { enabled: true },
+    metadata,
+  });
+  return { id: intent.id, clientSecret: intent.client_secret ?? "" };
+}
+
 export function verifyWebhookEvent(payload: string | Buffer, signature: string, secret: string): any {
   const stripe = getStripe();
   return stripe.webhooks.constructEvent(payload, signature, secret);

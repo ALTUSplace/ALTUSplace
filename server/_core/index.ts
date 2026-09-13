@@ -117,7 +117,10 @@ async function startServer() {
 
   // Seed the demo catalog once when the database is empty so the marketplace
   // and bookings work end-to-end out of the box. Non-fatal when unavailable.
-  await ensureDemoData();
+  // Set DEMO_SEED=0 on production hosts to skip demo data entirely.
+  if (process.env.DEMO_SEED !== "0") {
+    await ensureDemoData();
+  }
 
   const preferredPort = parseInt(process.env.PORT || "3000");
   const port = await findAvailablePort(preferredPort);

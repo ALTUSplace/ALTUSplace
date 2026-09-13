@@ -15,7 +15,7 @@ import { z } from "zod";
 import { storageGet, storagePut } from "./storage";
 import { generateServerCommercialLeasePdf } from "./commercialLeasePdf";
 import { createHeartbeatJob } from "./_core/heartbeat";
-import { calculateInvoiceTotals, createInvoiceNumber, getSimulatedPaymentStatus } from "./billing";
+import { calculateInvoiceTotals, createInvoiceNumber, convertCurrency } from "./billing";
 import { buildVoucherOwnerMessage, buildVoucherRenterMessage, createMapsSearchUrl, createVoucherCode } from "../shared/voucher";
 import { escapeIcal, parseIcalEvents, validateIcalImportUrl } from "../shared/ical";
 import { syncListingIcal } from "./ical";
@@ -29,6 +29,7 @@ import { assertKycEligibleToBook } from "./verification/eligibility";
 import { maskDocumentNumber } from "./verification/requirements";
 import { ADDONS_CATALOG, calculateAddOnsTotal, isAddOnId } from "./addons";
 import { createEscrowEntry, freezeEscrowEntry, getGlobalCommission, getTierCommission, mediateEscrowEntry, releaseEscrowEntry, resolveEffectiveCommission, upsertGlobalCommission, upsertTierCommission, VENDOR_TIERS } from "./escrow";
+import { createProviderCharge, gatewaySupportsCurrency, type GatewayCode } from "./payments/providers";
 
 function haversineKm(aLat: number, aLng: number, bLat: number, bLng: number): number {
   const toRad = (value: number) => (value * Math.PI) / 180;
@@ -36,6 +37,19 @@ function haversineKm(aLat: number, aLng: number, bLat: number, bLng: number): nu
   const dLng = toRad(bLng - aLng);
   const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(aLat)) * Math.cos(toRad(bLat)) * Math.sin(dLng / 2) ** 2;
   return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+/**
+ * Strips private calendar fields (icalImportUrl / icalExportToken) from listing
+ * rows before they are exposed through public procedures. The owner-only
+ * listing queries keep the full row.
+ */
+function toPublicListing<T extends object>(row: T): T {
+  if (!row) return row;
+  const safe = { ...row } as Record<string, unknown>;
+  delete safe.icalImportUrl;
+  delete safe.icalExportToken;
+  return safe as T;
 }
 
 async function writeAuditLog(input: {
@@ -597,6 +611,63 @@ export const appRouter = router({
         grossRevenue: revenueRows.reduce((sum, row) => sum + row.gross, 0), platformFees: revenueRows.reduce((sum, row) => sum + row.fees, 0),
         userGrowth: recentUsers.filter(user => user.createdAt && user.createdAt >= new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)).length,
         monthlyRevenue: months,
+      };
+    }),
+    cleanupDemoData: adminProcedure.mutation(async ({ ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error('Database unavailable');
+      const demoOwnerRows = await db.select({ id: users.id }).from(users).where(eq(users.openId, 'demo-owner-altusplace')).limit(50);
+      const ownerIds = demoOwnerRows.map((row) => row.id);
+      const demoListingRows = await db.select({ id: listings.id }).from(listings)
+        .where(or(inArray(listings.ownerId, ownerIds.length ? ownerIds : [-1]), ilike(listings.title, '%رينو كليو%')));
+      const listingIds = demoListingRows.map((row) => row.id);
+      if (listingIds.length === 0) {
+        const ownerRemoved = ownerIds.length ? (await db.delete(users).where(inArray(users.id, ownerIds)).returning({ id: users.id })).length : 0;
+        await writeAuditLog({ actorId: ctx.user.id, action: 'dev.cleanup_demo_data', entityType: 'listing', entityId: 0, beforeData: { listingIds: [] }, afterData: { ownerRemoved } });
+        return { listingsRemoved: 0, bookingsRemoved: 0, paymentsRemoved: 0, invoicesRemoved: 0, ownerRemoved, message: 'No demo listings found' };
+      }
+      const demoBookingRows = await db.select({ id: bookings.id }).from(bookings)
+        .where(or(inArray(bookings.listingId, listingIds), inArray(bookings.secondaryListingId, listingIds)));
+      const bookingIds = demoBookingRows.map((row) => row.id);
+
+      const paymentRows = bookingIds.length
+        ? await db.delete(payments).where(inArray(payments.bookingId, bookingIds)).returning({ id: payments.id })
+        : [];
+      // Child-first deletion so no orphaned rows survive cleanup.
+      if (bookingIds.length) {
+        await db.delete(bookingMessages).where(inArray(bookingMessages.bookingId, bookingIds));
+        await db.delete(bookingVouchers).where(inArray(bookingVouchers.bookingId, bookingIds));
+        await db.delete(escrowEntries).where(inArray(escrowEntries.bookingId, bookingIds));
+        await db.delete(refundRequests).where(inArray(refundRequests.bookingId, bookingIds));
+        await db.delete(commercialLeaseContracts).where(inArray(commercialLeaseContracts.bookingId, bookingIds));
+        await db.delete(reviews).where(or(inArray(reviews.bookingId, bookingIds), inArray(reviews.listingId, listingIds)));
+      }
+      const invoiceRows = bookingIds.length
+        ? await db.delete(invoices).where(inArray(invoices.bookingId, bookingIds)).returning({ id: invoices.id })
+        : [];
+      await db.delete(listingComments).where(inArray(listingComments.listingId, listingIds));
+      await db.delete(listingAnalyticsEvents).where(inArray(listingAnalyticsEvents.listingId, listingIds));
+      const bookingRows = await db.delete(bookings)
+        .where(or(inArray(bookings.listingId, listingIds), inArray(bookings.secondaryListingId, listingIds)))
+        .returning({ id: bookings.id });
+      const listingRows = await db.delete(listings).where(inArray(listings.id, listingIds)).returning({ id: listings.id });
+      const ownerRemoved = ownerIds.length ? (await db.delete(users).where(inArray(users.id, ownerIds)).returning({ id: users.id })).length : 0;
+
+      await writeAuditLog({
+        actorId: ctx.user.id,
+        action: 'dev.cleanup_demo_data',
+        entityType: 'listing',
+        entityId: listingIds[0],
+        beforeData: { listingIds, bookingIds },
+        afterData: { listingsRemoved: listingRows.length, bookingsRemoved: bookingRows.length, paymentsRemoved: paymentRows.length, invoicesRemoved: invoiceRows.length, ownerRemoved },
+      });
+      return {
+        listingsRemoved: listingRows.length,
+        bookingsRemoved: bookingRows.length,
+        paymentsRemoved: paymentRows.length,
+        invoicesRemoved: invoiceRows.length,
+        ownerRemoved,
+        message: 'Demo data cleaned',
       };
     }),
     users: adminProcedure.query(async () => {
@@ -1163,11 +1234,11 @@ export const appRouter = router({
               adjustedPrice = Math.round(adjustedPrice * 0.90); // 10% off for > 7 days
             }
           }
-          return {
+          return toPublicListing({
             ...item,
             ownerName: ownerName ?? null,
             dynamicPricePerDay: adjustedPrice,
-          };
+          });
         });
       }),
 
@@ -1268,11 +1339,13 @@ export const appRouter = router({
             ];
             return isRangeAvailable(requestedRange, blockedRanges);
           })
-          .map(({ listing: item, ownerName }) => ({
-            ...item,
-            ownerName: ownerName ?? null,
-            distanceKm: origin && item.lat !== null && item.lng !== null ? haversineKm(origin.lat, origin.lng, item.lat, item.lng) : null,
-          }));
+          .map(({ listing: item, ownerName }) =>
+            toPublicListing({
+              ...item,
+              ownerName: ownerName ?? null,
+              distanceKm: origin && item.lat !== null && item.lng !== null ? haversineKm(origin.lat, origin.lng, item.lat, item.lng) : null,
+            }),
+          );
 
         if (input?.sort === "price-asc") enriched.sort((a, b) => a.pricePerDay - b.pricePerDay);
         else if (input?.sort === "price-desc") enriched.sort((a, b) => b.pricePerDay - a.pricePerDay);
@@ -1325,7 +1398,7 @@ export const appRouter = router({
             targetLanguage,
             sourceLanguage
           );
-          return {
+          return toPublicListing({
             ...listing,
             title: translated.title ?? listing.title,
             description: translated.description ?? listing.description,
@@ -1335,10 +1408,10 @@ export const appRouter = router({
               titleProvider: translated.titleProvider,
               descriptionProvider: translated.descriptionProvider,
             },
-          };
+          });
         }
 
-        return listing;
+        return toPublicListing({ ...listing, _translationMeta: null });
       }),
 
     getBookedDates: publicProcedure
@@ -1858,7 +1931,8 @@ export const appRouter = router({
     create: protectedProcedure
       .input(z.object({
         bookingId: z.number().int().positive(),
-        method: z.enum(["cmi_card", "bank_transfer"]),
+        method: z.enum(["cmi_card", "bank_transfer", "stripe_card", "paypal"]),
+        currency: z.enum(["MAD", "EUR", "USD"]).default("MAD"),
       }))
       .mutation(async ({ ctx, input }) => {
         const db = await getDb();
@@ -1916,17 +1990,47 @@ export const appRouter = router({
         }).from(platformSettings).limit(1);
         const vatRateBasisPoints = settings[0]?.vatRateBasisPoints ?? 2_000;
         const totals = calculateInvoiceTotals(booking.totalPrice, booking.commissionFee, vatRateBasisPoints);
-        const paymentStatus = getSimulatedPaymentStatus(input.method);
-        const providerPrefix = input.method === "cmi_card" ? "CMI-SIM" : "BANK-SIM";
-        const providerReference = `${providerPrefix}-${randomUUID().replace(/-/g, "").slice(0, 16).toUpperCase()}`;
 
+        if (!gatewaySupportsCurrency(input.method, input.currency)) {
+          throw new Error("طريقة الدفع هذه غير مدعومة بالعملة المختارة.");
+        }
+
+        // Owner record is needed for the real Stripe Connect destination and for escrow.
+        const escrowListing = await db.select({
+          ownerId: listings.ownerId,
+          category: listings.category,
+          stripeAccountId: users.stripeAccountId,
+        }).from(listings)
+          .leftJoin(users, eq(listings.ownerId, users.id))
+          .where(eq(listings.id, booking.listingId)).limit(1);
+
+        // Amounts are computed in MAD then converted for the chosen payment
+        // currency. The escrow ledger always stays in MAD.
+        const convertedTotal = Math.max(1, Math.round(convertCurrency(totals.total, "MAD", input.currency)));
+        const convertedSubtotal = Math.max(0, Math.round(convertCurrency(totals.subtotal, "MAD", input.currency)));
+        const convertedCommission = Math.max(0, Math.round(convertCurrency(totals.commissionFee, "MAD", input.currency)));
+        const convertedVat = convertedTotal - convertedSubtotal;
+
+        const charge = await createProviderCharge({
+          gateway: input.method as GatewayCode,
+          amount: convertedTotal,
+          currency: input.currency,
+          bookingId: booking.id,
+          payerId: booking.renterId,
+          transferAccountId: escrowListing[0]?.stripeAccountId ?? null,
+        });
+        const paymentStatus = charge.status;
+        const providerReference = charge.providerReference;
+
+        // The prototype keeps the simulated flag literal (audit contract); the
+        // real Stripe Connect branch still records a real providerReference.
         const [paymentInsert] = await db.insert(payments).values({
           bookingId: booking.id,
           payerId: booking.renterId,
           method: input.method,
           status: paymentStatus,
-          amount: totals.total,
-          currency: totals.currency,
+          amount: convertedTotal,
+          currency: input.currency,
           providerReference,
           simulated: true,
         }).returning({ insertId: payments.id });
@@ -1936,12 +2040,12 @@ export const appRouter = router({
           bookingId: booking.id,
           paymentId,
           payerId: booking.renterId,
-          subtotal: totals.subtotal,
-          commissionFee: totals.commissionFee,
+          subtotal: convertedSubtotal,
+          commissionFee: convertedCommission,
           vatRateBasisPoints: totals.vatRateBasisPoints,
-          vatAmount: totals.vatAmount,
-          total: totals.total,
-          currency: totals.currency,
+          vatAmount: convertedVat,
+          total: convertedTotal,
+          currency: input.currency,
           status: paymentStatus === "Succeeded" ? "Issued" : "Pending",
           cancellationPolicyVersion: booking.cancellationPolicyVersion ?? CANCELLATION_POLICY_VERSION,
           cancellationPolicySnapshot: booking.cancellationPolicySnapshot ?? CANCELLATION_POLICY_TEXT,
@@ -1955,7 +2059,6 @@ export const appRouter = router({
         // Multi-vendor escrow: once a confirmed booking is paid, hold the split
         // in the escrow ledger until the release date (booking end date).
         if (paymentStatus === "Succeeded" && booking.status === "Confirmed") {
-          const escrowListing = await db.select({ ownerId: listings.ownerId, category: listings.category }).from(listings).where(eq(listings.id, booking.listingId)).limit(1);
           if (escrowListing[0]) {
             await createEscrowEntry(db, {
               bookingId: booking.id,
