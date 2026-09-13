@@ -175,7 +175,7 @@ export default function CheckoutPage() {
   const identityLabel = residencyOption.sublabel;
   const identityShortLabel = residency === 'resident' ? 'البطاقة الوطنية CIN' : 'جواز السفر';
   const residencyLabel = residency === 'resident' ? 'مقيم بالمغرب (Resident)' : 'أجنبي (Foreigner)';
-  const documentsComplete = driverLicenseFile !== null && identityFile !== null;
+  const isFormValid = driverLicenseFile !== null && identityFile !== null;
 
   const whatsappMessage = buildWhatsAppBookingMessage({
     carTitle: resTitle,
@@ -218,8 +218,8 @@ export default function CheckoutPage() {
       toast.error('يرجى تحديد تواريخ استلام وإرجاع صحيحة قبل تأكيد الحجز.');
       return;
     }
-    if (!documentsComplete) {
-      toast.error('يرجى إرفاق البيرمي ووثيقة الهوية قبل تأكيد الحجز عبر الواتساب.');
+    if (!isFormValid) {
+      alert(`المرجو رفع رخصة السياقة (البيرمي) و${identityLabel} أولاً لتمكين الحجز عبر الواتساب.`);
       return;
     }
     if (isAuthenticated && !kycVerified) {
@@ -350,7 +350,7 @@ export default function CheckoutPage() {
                   onFileChange={setIdentityFile}
                 />
 
-                {!documentsComplete && (
+                {!isFormValid && (
                   <div className="rounded-xl border border-amber-300/40 bg-amber-50 p-3 text-xs text-amber-700 leading-relaxed dark:bg-amber-950/20 dark:text-amber-400" role="alert">
                     <p className="flex items-center gap-1.5 font-bold">
                       <ShieldAlert className="h-4 w-4" />
@@ -387,13 +387,13 @@ export default function CheckoutPage() {
                 <Button
                   type="submit"
                   size="lg"
-                  disabled={!documentsComplete}
-                  className="w-full bg-[#25D366] text-white hover:bg-[#1ebe5d]"
+                  disabled={!isFormValid}
+                  className="w-full bg-[#25D366] text-white hover:bg-[#1ebe5d] disabled:pointer-events-auto disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 disabled:opacity-100 disabled:hover:bg-slate-300 dark:disabled:bg-slate-700 dark:disabled:text-slate-500 dark:disabled:hover:bg-slate-700"
                 >
                   <MessageCircle className="mr-2 h-5 w-5" />
                   تأكيد الحجز عبر الواتساب
                 </Button>
-                {!documentsComplete && (
+                {!isFormValid && (
                   <p className="rounded-lg border border-amber-300/40 bg-amber-50 p-2 text-[11px] text-amber-700 leading-relaxed dark:bg-amber-950/20 dark:text-amber-400" role="alert">
                     أرفق البيرمي ووثيقة الهوية في قسم «التحقق الإلزامي من الوثائق» أعلاه لتفعيل زر التأكيد.
                   </p>
@@ -452,7 +452,7 @@ export default function CheckoutPage() {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {!documentsComplete && (
+                    {!isFormValid && (
                       <div className="rounded-lg border border-amber-300/40 bg-amber-50 p-2 text-[11px] text-amber-700 leading-relaxed dark:bg-amber-950/20 dark:text-amber-400" role="alert">
                         <p className="flex items-center gap-1 font-bold">
                           <ShieldAlert className="h-3.5 w-3.5" />
@@ -461,7 +461,7 @@ export default function CheckoutPage() {
                         <p className="mt-0.5">أرفق البيرمي ووثيقة الهوية (CIN أو جواز السفر) في قسم «التحقق الإلزامي من الوثائق» لتفعيل الزر.</p>
                       </div>
                     )}
-                    <Button type="submit" size="lg" disabled={!documentsComplete} className="w-full bg-[#25D366] text-white hover:bg-[#1ebe5d]">
+                    <Button type="submit" size="lg" disabled={!isFormValid} className="w-full bg-[#25D366] text-white hover:bg-[#1ebe5d] disabled:pointer-events-auto disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 disabled:opacity-100 disabled:hover:bg-slate-300 dark:disabled:bg-slate-700 dark:disabled:text-slate-500 dark:disabled:hover:bg-slate-700">
                       <MessageCircle className="mr-2 h-5 w-5" />
                       تأكيد الحجز عبر الواتساب ({showTotalDisplay})
                     </Button>
