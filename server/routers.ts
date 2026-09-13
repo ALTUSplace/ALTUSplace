@@ -15,7 +15,7 @@ import { z } from "zod";
 import { storageGet, storagePut } from "./storage";
 import { generateServerCommercialLeasePdf } from "./commercialLeasePdf";
 import { createHeartbeatJob } from "./_core/heartbeat";
-import { calculateInvoiceTotals, createInvoiceNumber, convertCurrency } from "./billing";
+import { calculateInvoiceTotals, createInvoiceNumber } from "./billing";
 import { buildVoucherOwnerMessage, buildVoucherRenterMessage, createMapsSearchUrl, createVoucherCode } from "../shared/voucher";
 import { escapeIcal, parseIcalEvents, validateIcalImportUrl } from "../shared/ical";
 import { syncListingIcal } from "./ical";
@@ -30,6 +30,7 @@ import { maskDocumentNumber } from "./verification/requirements";
 import { ADDONS_CATALOG, calculateAddOnsTotal, isAddOnId } from "./addons";
 import { createEscrowEntry, freezeEscrowEntry, getGlobalCommission, getTierCommission, mediateEscrowEntry, releaseEscrowEntry, resolveEffectiveCommission, upsertGlobalCommission, upsertTierCommission, VENDOR_TIERS } from "./escrow";
 import { createProviderCharge, gatewaySupportsCurrency, type GatewayCode } from "./payments/providers";
+import { convertFromMAD, resolveExchangeRates } from "./payments/exchangeRates";
 
 function haversineKm(aLat: number, aLng: number, bLat: number, bLng: number): number {
   const toRad = (value: number) => (value * Math.PI) / 180;
@@ -1928,6 +1929,7 @@ export const appRouter = router({
   }),
 
   payments: router({
+    exchangeRates: publicProcedure.query(async () => resolveExchangeRates()),
     create: protectedProcedure
       .input(z.object({
         bookingId: z.number().int().positive(),
@@ -2004,11 +2006,13 @@ export const appRouter = router({
           .leftJoin(users, eq(listings.ownerId, users.id))
           .where(eq(listings.id, booking.listingId)).limit(1);
 
-        // Amounts are computed in MAD then converted for the chosen payment
-        // currency. The escrow ledger always stays in MAD.
-        const convertedTotal = Math.max(1, Math.round(convertCurrency(totals.total, "MAD", input.currency)));
-        const convertedSubtotal = Math.max(0, Math.round(convertCurrency(totals.subtotal, "MAD", input.currency)));
-        const convertedCommission = Math.max(0, Math.round(convertCurrency(totals.commissionFee, "MAD", input.currency)));
+        // Amounts are computed in MAD then converted with the server-authoritative
+        // rate snapshot (same 10-min TTL + endpoint contract as the client's
+        // VITE_CURRENCY_API_URL). The escrow ledger always stays in MAD.
+        const exchangeRates = await resolveExchangeRates();
+        const convertedTotal = Math.max(1, convertFromMAD(totals.total, input.currency, exchangeRates));
+        const convertedSubtotal = Math.max(0, convertFromMAD(totals.subtotal, input.currency, exchangeRates));
+        const convertedCommission = Math.max(0, convertFromMAD(totals.commissionFee, input.currency, exchangeRates));
         const convertedVat = convertedTotal - convertedSubtotal;
 
         const charge = await createProviderCharge({

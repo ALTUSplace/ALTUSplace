@@ -55,7 +55,7 @@ export default function CheckoutPage() {
   const [creatingBooking, setCreatingBooking] = useState(false);
   const [selectedAddOns, setSelectedAddOns] = useState<AddOnId[]>(addOnsFromUrl);
 
-  const { currency, setCurrency, formatPrice, convertPrice } = useCurrency();
+  const { currency, setCurrency, formatPrice, convertPrice, symbol } = useCurrency();
 
   const { data: listing, isLoading, error } = trpc.listings.getById.useQuery(
     { id: parsedListingId },
@@ -356,7 +356,7 @@ export default function CheckoutPage() {
         onClose={() => setShowPaymentModal(false)}
         onSuccess={handlePaymentSuccess}
         amount={convertPrice(totals.total)}
-        currency={currency}
+        currency={symbol}
         description={resTitle}
         bookingDetails={{
           title: resTitle,
