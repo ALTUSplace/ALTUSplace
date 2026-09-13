@@ -1,61 +1,72 @@
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Link } from "wouter";
-import { MapPin } from "lucide-react";
+import { MapPin, ShieldCheck } from "lucide-react";
 
 export default function Footer() {
   const { t } = useLanguage();
 
   return (
-    <footer className="bg-slate-900 text-slate-300 pt-12 pb-8 border-t border-slate-800">
+    <footer className="bg-ink-primary text-white/75 pt-14 pb-8">
       <div className="container mx-auto px-4">
-        <div className="mb-12 grid grid-cols-1 gap-10">
-          <div>
-            <h3 className="mb-4 border-l-2 border-blue-600 pl-3 text-base font-bold text-white">
+        <div className="grid grid-cols-1 gap-10 md:grid-cols-12">
+          <div className="md:col-span-5">
+            <div className="flex items-center gap-3">
+              <img
+                src="/assets/images/logo.png"
+                alt="ALTUSplace"
+                className="brand-logo h-11 w-auto object-contain"
+                loading="lazy"
+              />
+              <div className="flex flex-col">
+                <span className="font-display font-bold text-lg leading-none text-white">
+                  ALTUS<span className="font-medium text-accent-clay">place</span>
+                </span>
+                <span className="text-[9px] tracking-[0.18em] text-white/40 uppercase -mt-1 font-semibold">
+                  Rent. Drive. Live.
+                </span>
+              </div>
+            </div>
+            <p className="mt-5 max-w-xs text-xs leading-relaxed text-white/55">
+              {t("heroDescription")}
+            </p>
+            <p className="mt-5 inline-flex items-center gap-2 text-xs font-bold text-white/70">
+              <ShieldCheck className="h-4 w-4 text-accent-clay" />
+              {t("trustTitle1")}
+            </p>
+          </div>
+
+          <div className="md:col-span-7">
+            <h3 className="mb-5 border-s-2 border-accent-clay ps-3 text-sm font-bold text-white">
               {t("searchCityOdgency")}
             </h3>
-            <ul className="space-y-3 text-sm">
-              <li>
-                <Link href="/search?city=agadir" className="flex items-center gap-2 hover:text-white">
-                  <MapPin className="h-4 w-4 text-blue-600" />
-                  <span>{t("cityAgadir")}</span>
-                </Link>
-              </li>
-              <li>
-                <Link href="/search?city=marrakech" className="flex items-center gap-2 hover:text-white">
-                  <MapPin className="h-4 w-4 text-blue-600" />
-                  <span>{t("cityMarrakech")}</span>
-                </Link>
-              </li>
-              <li>
-                <Link href="/search?city=casablanca" className="flex items-center gap-2 hover:text-white">
-                  <MapPin className="h-4 w-4 text-blue-600" />
-                  <span>{t("cityCasablancaFooter")}</span>
-                </Link>
-              </li>
-              <li>
-                <Link href="/search?city=tangier" className="flex items-center gap-2 hover:text-white">
-                  <MapPin className="h-4 w-4 text-blue-600" />
-                  <span>{t("cityTangier")}</span>
-                </Link>
-              </li>
-              <li>
-                <Link href="/search?city=rabat" className="flex items-center gap-2 hover:text-white">
-                  <MapPin className="h-4 w-4 text-blue-600" />
-                  <span>{t("cityRabat")}</span>
-                </Link>
-              </li>
+            <ul className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
+              {[
+                { href: "/search?city=agadir", label: t("cityAgadir") },
+                { href: "/search?city=marrakech", label: t("cityMarrakech") },
+                { href: "/search?city=casablanca", label: t("cityCasablancaFooter") },
+                { href: "/search?city=tangier", label: t("cityTangier") },
+                { href: "/search?city=rabat", label: t("cityRabat") },
+                { href: "/search", label: t("viewAllListings") },
+              ].map((item) => (
+                <li key={item.href + item.label}>
+                  <Link
+                    href={item.href}
+                    className="group flex items-center gap-2 text-xs font-semibold text-white/65 transition-colors hover:text-white"
+                  >
+                    <span className="grid h-7 w-7 place-items-center corner-cut-sm bg-white/5 text-accent-clay transition-colors group-hover:bg-accent-clay group-hover:text-white">
+                      <MapPin className="h-3.5 w-3.5" />
+                    </span>
+                    <span className="link-underline">{item.label}</span>
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
         </div>
 
-        <div className="border-t border-slate-800 pt-6 text-center text-xs text-slate-500">
-          <div className="mb-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
-            <Link href="/terms" className="hover:text-white">{t("termsOfService")}</Link>
-            <span className="opacity-40">•</span>
-            <Link href="/privacy" className="hover:text-white">{t("privacyPolicy")}</Link>
-          </div>
+        <div className="mt-12 border-t border-white/10 pt-6 flex flex-col items-center gap-2 text-center text-xs text-white/40">
           <p>{t("footerNoticeText")}</p>
-          <p className="mt-1">{t("footerAddress")}</p>
+          <p>{t("footerAddress")}</p>
         </div>
       </div>
     </footer>

@@ -24,7 +24,7 @@ export function EmptyState({ title, description, icon = "inbox", action, classNa
       {action && (
         <button
           onClick={action.onClick}
-          className="mt-5 inline-flex items-center gap-2 rounded-xl bg-accent-indigo px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-accent-indigo-hover hover:shadow-md active:scale-[0.98]"
+          className="mt-5 inline-flex items-center gap-2 rounded-xl bg-accent-clay px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-accent-clay-hover hover:shadow-md active:scale-[0.98]"
         >
           {action.label}
         </button>

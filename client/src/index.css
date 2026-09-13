@@ -2,18 +2,20 @@
 @import "tw-animate-css";
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   ALTUSplace — "Midnight Velvet & Electric Indigo" Design System (Tailwind v4)
+   ALTUSplace — "Tanger Clay" Editorial Design System (Tailwind v4)
    ─────────────────────────────────────────────────────────────────────────────
-   Premium marketplace palette: Deep Charcoal surfaces, Warm Alabaster light
-   surfaces, Electric Indigo primary accent (#4F46E5), Warm Brass secondary
-   accent (#C9A96E) for premium badges & price highlights.
+   A bespoke, warm editorial identity: matte paper neutrals, a single clay
+   terracotta accent, and ink typography built on El Messiri (display) with
+   Cairo (UI) and Fraunces (editorial serif accents).
 
-   Typography: Satoshi/Inter/Playfair Display
-   Animation: custom bezier curves, staggered entrances, spring micro-interactions,
-              shimmer skeletons, map-marker elastic pop, card-lift hover.
-
-   All hex values in CSS custom properties. JSX uses Tailwind utilities or var().
-   Zero hardcoded hex literals in component files.
+   Principles
+   · One accent colour, used deliberately — clay. Everything else is a warm
+     neutral or a muted semantic status colour.
+   · Architectural, slightly sharp corners with a signature "cut corner" detail
+     — no generic pill-everything UI.
+   · Layered, matte shadows with a warm tint instead of single heavy drops.
+   · Motion is restrained, tactile and interruptible; never bouncy clutter.
+   · Arabic-first: zero negative letter-spacing on Arabic type.
    ───────────────────────────────────────────────────────────────────────────── */
 
 @custom-variant dark (&:where(.dark, .dark *));
@@ -21,70 +23,80 @@
 /* ── 1. Design Tokens: Light Theme ──────────────────────────────────────────── */
 @layer base {
   :root {
-    /* Surface Tokens */
-    --bg-base:        #FAFBFC;
-    --bg-surface:     #FFFFFF;
-    --bg-muted:       #F4F5F7;
-    --bg-elevated:    #FFFFFF;
+    color-scheme: light;
 
-    /* Ink Tokens */
-    --ink-primary:    #0D1117;
-    --ink-secondary:  #4A5568;
-    --ink-tertiary:   #8896A7;
+    /* Surface Tokens — warm matte paper */
+    --bg-base:        #F3EFE6; /* stone paper        */
+    --bg-surface:     #FCFAF5; /* warm white         */
+    --bg-muted:       #EAE4D6; /* oat                */
+    --bg-elevated:    #FFFDF8;
 
-    /* Accent Tokens */
-    --accent-primary:   #4F46E5;
-    --accent-primary-h: #4338CA;
-    --accent-primary-s: rgba(79, 70, 229, 0.12);
-    --accent-warm:   #C9A96E;
-    --accent-warm-h: #B8955A;
-    --accent-warm-s: rgba(201, 169, 110, 0.15);
-    --accent-green:   #10B981;
-    --accent-green-s: rgba(16, 185, 129, 0.12);
-    /* Border Tokens */
-    --border-subtle:  #E4E7EB;
-    --border-default: #D1D5DB;
-    --border-strong:  #A1A8B3;
+    /* Ink Tokens — warm charcoal scale */
+    --ink-primary:    #1E1B14;
+    --ink-secondary:  #5D574A;
+    --ink-tertiary:   #948B79;
+
+    /* Accent Tokens — a single clay terracotta */
+    --accent-primary:   #A63A20;
+    --accent-primary-h: #8B2F18;
+    --accent-primary-s: rgba(166, 58, 32, 0.11);
+
+    /* Warm secondary tone (premium hints, gold ink on matte) */
+    --accent-warm:   #97703A;
+    --accent-warm-h: #7C5A2C;
+    --accent-warm-s: rgba(151, 112, 58, 0.14);
+
+    /* Muted semantic status colours */
+    --accent-green:  #3E7C59;
+    --accent-green-s: rgba(62, 124, 89, 0.12);
+    --accent-red:    #AE4A3B;
+    --accent-red-s:  rgba(174, 74, 59, 0.12);
+    --accent-amber:  #A8792E;
+    --accent-amber-s: rgba(168, 121, 46, 0.14);
+
+    /* Border Tokens — hairlines, not boxes */
+    --border-subtle:  #E5DECE;
+    --border-default: #D6CDB9;
+    --border-strong:  #B3A78C;
 
     /* Skeleton Tokens */
-    --skeleton-from:  #F4F5F7;
-    --skeleton-to:    #E8EBEF;
+    --skeleton-from:  #EDE7D8;
+    --skeleton-to:    #E3DBC8;
 
-    /* Shadow Tokens */
-    --shadow-xs:  0 1px 3px rgba(13, 17, 23, 0.06);
-    --shadow-sm:  0 2px 8px rgba(13, 17, 23, 0.08);
-    --shadow-md:  0 6px 20px rgba(13, 17, 23, 0.10);
-    --shadow-lg:  0 12px 32px rgba(13, 17, 23, 0.14);
-    --shadow-xl:  0 20px 48px rgba(13, 17, 23, 0.18);
-    --shadow-indigo: 0 8px 24px rgba(79, 70, 229, 0.24);
-    --shadow-brass:  0 8px 24px rgba(201, 169, 110, 0.22);
-    --shadow-card-hover: 0 16px 40px rgba(13, 17, 23, 0.18);
+    /* Shadow Tokens — layered, matte, warm-tinted */
+    --shadow-xs:  0 1px 2px rgba(52, 40, 23, 0.05), 0 1px 3px rgba(52, 40, 23, 0.04);
+    --shadow-sm:  0 1px 2px rgba(52, 40, 23, 0.06), 0 2px 6px rgba(52, 40, 23, 0.05);
+    --shadow-md:  0 2px 4px rgba(52, 40, 23, 0.06), 0 8px 20px rgba(52, 40, 23, 0.07);
+    --shadow-lg:  0 2px 5px rgba(52, 40, 23, 0.08), 0 14px 34px rgba(52, 40, 23, 0.10);
+    --shadow-xl:  0 4px 8px rgba(52, 40, 23, 0.09), 0 24px 52px rgba(52, 40, 23, 0.13);
+    --shadow-clay:    0 2px 4px rgba(166, 58, 32, 0.14), 0 10px 24px rgba(166, 58, 32, 0.18);
+    --shadow-card-hover: 0 2px 5px rgba(52, 40, 23, 0.08), 0 18px 44px rgba(52, 40, 23, 0.13);
 
-    /* Radius Tokens */
-    --radius-xs:   0.375rem;
-    --radius-sm:   0.5rem;
-    --radius-md:   0.75rem;
-    --radius-lg:   1rem;
-    --radius-xl:   1.25rem;
-    --radius-2xl:  1.75rem;
-    --radius-3xl:  2.25rem;
+    /* Radius Tokens — architectural, slightly sharp */
+    --radius-xs:   0.125rem;
+    --radius-sm:   0.25rem;
+    --radius-md:   0.375rem;
+    --radius-lg:   0.5rem;
+    --radius-xl:   0.75rem;
+    --radius-2xl:  1rem;
+    --radius-3xl:  1.375rem;
     --radius-full: 9999px;
 
     /* Component Tokens */
-    --header-height: 5.5rem;
+    --header-height: 4.75rem;
     --tap-target:    2.75rem;
     --content-max-width: 1200px;
 
-    /* Animation Tokens */
+    /* Motion Tokens — calm, smooth, tactile */
     --ease-smooth:   cubic-bezier(0.22, 1, 0.36, 1);
-    --ease-snap:     cubic-bezier(0.34, 1.56, 0.64, 1);
+    --ease-snap:     cubic-bezier(0.2, 0.9, 0.28, 1.12);
     --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
     --ease-in-out:   cubic-bezier(0.65, 0, 0.35, 1);
-    --dur-micro:    120ms;
-    --dur-fast:     180ms;
-    --dur-standard: 250ms;
-    --dur-emphasis: 350ms;
-    --dur-slow:     500ms;
+    --dur-micro:    100ms;
+    --dur-fast:     150ms;
+    --dur-standard: 220ms;
+    --dur-emphasis: 320ms;
+    --dur-slow:     480ms;
 
     --transition-interactive: transform var(--dur-fast) var(--ease-smooth),
                               opacity   var(--dur-fast) var(--ease-smooth),
@@ -94,14 +106,14 @@
                               color var(--dur-fast) var(--ease-smooth);
 
     /* Typography Tokens */
-    --font-display: 'Cairo', 'Satoshi', 'Inter', system-ui, -apple-system, sans-serif;
-    --font-body:    'Cairo', 'Inter', system-ui, -apple-system, sans-serif;
-    --font-serif:   'Playfair Display', Georgia, 'Times New Roman', serif;
+    --font-display: 'El Messiri', 'Cairo', 'Fraunces', system-ui, -apple-system, sans-serif;
+    --font-body:    'Cairo', 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-serif:   'Fraunces', 'Cairo', Georgia, 'Times New Roman', serif;
 
-    --text-display: clamp(2.75rem, 6vw, 5.5rem);
-    --text-h1:      clamp(2rem, 4vw, 3.5rem);
+    --text-display: clamp(2.5rem, 5.5vw, 4.5rem);
+    --text-h1:      clamp(2rem, 3.75vw, 3.25rem);
     --text-h2:      clamp(1.5rem, 2.5vw, 2.25rem);
-    --text-h3:      clamp(1.25rem, 1.8vw, 1.5rem);
+    --text-h3:      clamp(1.25rem, 1.9vw, 1.625rem);
     --text-h4:      1.125rem;
     --text-body-lg: 1.0625rem;
     --text-body:    0.9375rem;
@@ -112,58 +124,63 @@
     --space-section: clamp(3rem, 8vw, 6rem);
   }
 
-  /* ── Dark Theme ──────────────────────────────────────────────────────────── */
+  /* ── Dark Theme — warm charcoal night ────────────────────────────────────── */
   .dark {
-    --bg-base:        #0A0C10;
-    --bg-surface:     #12141A;
-    --bg-muted:       #1A1D24;
-    --bg-elevated:    #1E2129;
+    color-scheme: dark;
 
-    --ink-primary:    #F0F2F5;
-    --ink-secondary:  #9BA4B5;
-    --ink-tertiary:   #5C6573;
+    --bg-base:        #15120D;
+    --bg-surface:     #1C1812;
+    --bg-muted:       #262116;
+    --bg-elevated:    #2C261A;
 
-    --accent-primary:   #6366F1;
-    --accent-primary-h: #818CF8;
-    --accent-primary-s: rgba(99, 102, 241, 0.22);
-    --accent-warm:   #D4B87A;
-    --accent-warm-h: #E4CA8C;
-    --accent-warm-s: rgba(212, 184, 122, 0.18);
-    --accent-green:   #34D399;
-    --accent-green-s: rgba(52, 211, 153, 0.18);
-    --accent-red:     #F87171;
-    --accent-red-s:   rgba(248, 113, 113, 0.18);
-    --accent-amber:   #FBBF24;
-    --accent-amber-s: rgba(251, 191, 36, 0.18);
+    --ink-primary:    #F2EDE2;
+    --ink-secondary:  #B9B0A0;
+    --ink-tertiary:   #80775F;
 
-    --border-subtle:  rgba(255, 255, 255, 0.06);
-    --border-default: rgba(255, 255, 255, 0.12);
-    --border-strong:  rgba(255, 255, 255, 0.22);
+    --accent-primary:   #E27752;
+    --accent-primary-h: #EF9A7C;
+    --accent-primary-s: rgba(226, 119, 82, 0.16);
 
-    --skeleton-from:  rgba(255, 255, 255, 0.06);
-    --skeleton-to:    rgba(255, 255, 255, 0.02);
+    --accent-warm:   #C89B5E;
+    --accent-warm-h: #D9B374;
+    --accent-warm-s: rgba(200, 155, 94, 0.18);
 
-    --shadow-xs:  0 1px 3px rgba(0, 0, 0, 0.3);
-    --shadow-sm:  0 2px 8px rgba(0, 0, 0, 0.4);
-    --shadow-md:  0 6px 20px rgba(0, 0, 0, 0.5);
-    --shadow-lg:  0 12px 32px rgba(0, 0, 0, 0.6);
-    --shadow-xl:  0 20px 48px rgba(0, 0, 0, 0.7);
-    --shadow-indigo: 0 8px 24px rgba(99, 102, 241, 0.35);
-    --shadow-brass:  0 8px 24px rgba(212, 184, 122, 0.28);
-    --shadow-card-hover: 0 16px 40px rgba(0, 0, 0, 0.6);
+    --accent-green:  #7FBF9B;
+    --accent-green-s: rgba(127, 191, 155, 0.16);
+    --accent-red:    #E08A7A;
+    --accent-red-s:  rgba(224, 138, 122, 0.16);
+    --accent-amber:  #DFB681;
+    --accent-amber-h: #EBC684;
+    --accent-amber-s: rgba(223, 182, 129, 0.16);
+
+    --border-subtle:  rgba(242, 237, 226, 0.08);
+    --border-default: rgba(242, 237, 226, 0.14);
+    --border-strong:  rgba(242, 237, 226, 0.24);
+
+    --skeleton-from:  rgba(242, 237, 226, 0.08);
+    --skeleton-to:    rgba(242, 237, 226, 0.03);
+
+    --shadow-xs:  0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.35);
+    --shadow-sm:  0 1px 2px rgba(0, 0, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.4);
+    --shadow-md:  0 2px 4px rgba(0, 0, 0, 0.5), 0 8px 20px rgba(0, 0, 0, 0.45);
+    --shadow-lg:  0 2px 5px rgba(0, 0, 0, 0.55), 0 14px 34px rgba(0, 0, 0, 0.5);
+    --shadow-xl:  0 4px 8px rgba(0, 0, 0, 0.6), 0 24px 52px rgba(0, 0, 0, 0.55);
+    --shadow-clay:    0 2px 6px rgba(0, 0, 0, 0.45), 0 12px 28px rgba(226, 119, 82, 0.16);
+    --shadow-card-hover: 0 2px 5px rgba(0, 0, 0, 0.5), 0 18px 44px rgba(0, 0, 0, 0.55);
   }
 }
 
 /* ── 2. Tailwind v4 Semantic Token Mapping ─────────────────────────────────── */
 @theme inline {
+  /* shadcn/ui semantic aliases */
   --color-background:       hsl(from var(--bg-base) h s l);
   --color-foreground:       hsl(from var(--ink-primary) h s l);
   --color-card:             hsl(from var(--bg-surface) h s l);
   --color-card-foreground:  hsl(from var(--ink-primary) h s l);
-  --color-popover:          hsl(from var(--bg-muted) h s l);
+  --color-popover:          hsl(from var(--bg-elevated) h s l);
   --color-popover-foreground: hsl(from var(--ink-primary) h s l);
   --color-primary:          hsl(from var(--accent-primary) h s l);
-  --color-primary-foreground: hsl(from var(--bg-surface) h s l);
+  --color-primary-foreground: #FFF8F0;
   --color-secondary:        hsl(from var(--bg-muted) h s l);
   --color-secondary-foreground: hsl(from var(--ink-secondary) h s l);
   --color-muted:            hsl(from var(--bg-muted) h s l);
@@ -171,11 +188,12 @@
   --color-accent:           hsl(from var(--accent-primary-s) h s l);
   --color-accent-foreground: hsl(from var(--accent-primary) h s l);
   --color-destructive:      hsl(from var(--accent-red) h s l);
-  --color-destructive-foreground: #fff;
+  --color-destructive-foreground: #FFF8F0;
   --color-border:           hsl(from var(--border-subtle) h s l);
   --color-input:            hsl(from var(--border-default) h s l);
   --color-ring:             hsl(from var(--accent-primary) h s l);
 
+  /* bespoke surface + ink tokens */
   --color-bg-base:          hsl(from var(--bg-base) h s l);
   --color-bg-surface:       hsl(from var(--bg-surface) h s l);
   --color-bg-muted:         hsl(from var(--bg-muted) h s l);
@@ -183,12 +201,12 @@
   --color-ink-primary:      hsl(from var(--ink-primary) h s l);
   --color-ink-secondary:    hsl(from var(--ink-secondary) h s l);
   --color-ink-tertiary:     hsl(from var(--ink-tertiary) h s l);
-  --color-accent-indigo:    hsl(from var(--accent-primary) h s l);
-  --color-accent-indigo-hover: hsl(from var(--accent-primary-h) h s l);
-  --color-accent-indigo-soft:  hsl(from var(--accent-primary-s) h s l);
-  --color-accent-brass:     hsl(from var(--accent-warm) h s l);
-  --color-accent-brass-hover: hsl(from var(--accent-warm-h) h s l);
-  --color-accent-brass-soft:  hsl(from var(--accent-warm-s) h s l);
+  --color-accent-clay:      hsl(from var(--accent-primary) h s l);
+  --color-accent-clay-hover: hsl(from var(--accent-primary-h) h s l);
+  --color-accent-clay-soft:  hsl(from var(--accent-primary-s) h s l);
+  --color-accent-warm:      hsl(from var(--accent-warm) h s l);
+  --color-accent-warm-hover: hsl(from var(--accent-warm-h) h s l);
+  --color-accent-warm-soft:  hsl(from var(--accent-warm-s) h s l);
   --color-accent-green:     hsl(from var(--accent-green) h s l);
   --color-accent-green-soft:  hsl(from var(--accent-green-s) h s l);
   --color-accent-red:       hsl(from var(--accent-red) h s l);
@@ -201,17 +219,33 @@
   --color-skeleton-from:    hsl(from var(--skeleton-from) h s l);
   --color-skeleton-to:      hsl(from var(--skeleton-to) h s l);
 
-  --radius-sm:  calc(var(--radius) - 4px);
-  --radius-md:  calc(var(--radius) - 2px);
-  --radius-lg:  var(--radius);
-  --radius-xl:  calc(var(--radius) + 4px);
-  --radius-2xl: calc(var(--radius) + 8px);
-  --radius-3xl: calc(var(--radius) + 14px);
+  /* backward-compatible accent aliases consumed by existing components */
+  --color-accent-indigo:     hsl(from var(--accent-primary) h s l);
+  --color-accent-indigo-hover: hsl(from var(--accent-primary-h) h s l);
+  --color-accent-indigo-soft:  hsl(from var(--accent-primary-s) h s l);
+  --color-accent-brass:      hsl(from var(--accent-warm) h s l);
+  --color-accent-brass-hover: hsl(from var(--accent-warm-h) h s l);
+  --color-accent-brass-soft:  hsl(from var(--accent-warm-s) h s l);
 
-  --color-sidebar:                 hsl(from var(--bg-surface) h s l);
+  /* radius scale — sharp, architectural */
+  --radius-sm:  var(--radius-sm);
+  --radius-md:  var(--radius-md);
+  --radius-lg:  var(--radius-lg);
+  --radius-xl:  var(--radius-xl);
+  --radius-2xl: var(--radius-2xl);
+  --radius-3xl: var(--radius-3xl);
+
+  /* fonts */
+  --font-sans:    var(--font-body);
+  --font-display: var(--font-display);
+  --font-serif:   var(--font-serif);
+  --font-mono:    'Fraunces', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* sidebar */
+  --color-sidebar:                 hsl(from var(--bg-muted) h s l);
   --color-sidebar-foreground:      hsl(from var(--ink-primary) h s l);
   --color-sidebar-primary:         hsl(from var(--accent-primary) h s l);
-  --color-sidebar-primary-foreground: hsl(from var(--bg-surface) h s l);
+  --color-sidebar-primary-foreground: #FFF8F0;
   --color-sidebar-accent:          hsl(from var(--accent-primary-s) h s l);
   --color-sidebar-accent-foreground: hsl(from var(--ink-primary) h s l);
   --color-sidebar-border:          hsl(from var(--border-subtle) h s l);
@@ -225,6 +259,7 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+    font-size: 16px;
   }
 
   body {
@@ -232,24 +267,31 @@
     color: var(--ink-primary);
     font-family: var(--font-body);
     font-size: var(--text-body);
-    line-height: 1.65;
+    line-height: 1.7;
+    letter-spacing: 0.002em;
     transition: background-color var(--dur-standard) var(--ease-smooth),
                 color var(--dur-standard) var(--ease-smooth);
   }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
-    font-weight: 600;
-    line-height: 1.15;
-    letter-spacing: -0.02em;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: 0;
     color: var(--ink-primary);
     transition: color var(--dur-fast) var(--ease-smooth);
+    text-wrap: balance;
   }
 
-  h1 { font-size: var(--text-h1);   letter-spacing: -0.025em; }
-  h2 { font-size: var(--text-h2);   letter-spacing: -0.02em;  }
-  h3 { font-size: var(--text-h3);   letter-spacing: -0.015em; }
-  h4 { font-size: var(--text-h4);   letter-spacing: -0.01em;  }
+  h1 { font-size: var(--text-h1); }
+  h2 { font-size: var(--text-h2); }
+  h3 { font-size: var(--text-h3); }
+  h4 { font-size: var(--text-h4); line-height: 1.4; }
+
+  /* Light optical tightening for Latin (fr/en) — never for Arabic, whose
+     glyphs and diacritics must keep natural spacing. */
+  html:not([lang="ar"]) h1 { letter-spacing: -0.015em; }
+  html:not([lang="ar"]) :is(h2, h3) { letter-spacing: -0.01em; }
 
   a {
     color: var(--accent-primary);
@@ -257,7 +299,17 @@
     transition: color var(--dur-fast) var(--ease-smooth),
                 opacity var(--dur-fast) var(--ease-smooth);
   }
-  a:hover { opacity: 0.8; }
+  a:hover { opacity: 0.85; }
+
+  ::selection {
+    background-color: var(--accent-primary-s);
+    color: var(--ink-primary);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent-primary);
+    outline-offset: 2px;
+  }
 
   .focus-ring,
   button:focus-visible,
@@ -266,24 +318,25 @@
   select:focus-visible,
   textarea:focus-visible,
   [tabindex]:focus-visible {
-    outline: 3px solid var(--accent-primary-s);
+    outline: 2px solid var(--accent-primary);
     outline-offset: 2px;
     border-color: var(--accent-primary);
   }
 
-  ::selection {
-    background-color: var(--accent-primary-s);
-    color: var(--ink-primary);
+  button, [role="button"] {
+    -webkit-tap-highlight-color: transparent;
   }
 
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: var(--bg-muted); }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb {
     background: var(--border-default);
     border-radius: var(--radius-full);
+    border: 2px solid transparent;
+    background-clip: padding-box;
     transition: background var(--dur-fast) var(--ease-smooth);
   }
-  ::-webkit-scrollbar-thumb:hover { background: var(--border-strong); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--border-strong); background-clip: padding-box; }
 
   .skip-link {
     position: absolute;
@@ -292,7 +345,7 @@
     padding: 0.5rem 1rem;
     background: var(--ink-primary);
     color: var(--bg-surface);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-sm);
     font-weight: 600;
     font-size: var(--text-body-sm);
     transition: transform var(--dur-fast) var(--ease-smooth);
@@ -306,6 +359,7 @@
   }
   .no-scrollbar::-webkit-scrollbar { display: none; }
 
+  /* Leaflet chrome follows the theme */
   .leaflet-control-zoom a {
     background: hsl(from var(--bg-surface) h s l) !important;
     color: hsl(from var(--ink-primary) h s l) !important;
@@ -322,7 +376,6 @@
   .leaflet-control-attribution {
     background: hsl(from var(--bg-base) / 0.8) !important;
     color: hsl(from var(--ink-tertiary) h s l) !important;
-    border-radius: 0.5rem 0 0 0 !important;
     padding: 0.25rem 0.5rem !important;
     font-size: 10px !important;
   }
@@ -337,7 +390,7 @@
     background: hsl(from var(--bg-surface) h s l);
   }
   .map-marker {
-    transition: transform var(--dur-standard) var(--ease-snap);
+    transition: transform var(--dur-standard) var(--ease-smooth);
     will-change: transform;
   }
   .map-marker:hover { z-index: 10000 !important; }
@@ -345,11 +398,35 @@
     transform: scale(1.15);
     z-index: 10001 !important;
   }
+
+  /* Legacy brand-logo container (kept for existing markup) */
+  .brand-logo { display: block; }
+}
+
+/* Paper grain — a fixed, barely-there film that keeps every matte surface
+   feeling printed rather than flat. Pure decoration; ignored by AT. */
+@media screen {
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 9990;
+    pointer-events: none;
+    opacity: 0.045;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/></svg>");
+    background-repeat: repeat;
+  }
+  .dark body::after {
+    opacity: 0.06;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    body::after { content: none; }
+  }
 }
 
 /* ── 4. Keyframe Animations ─────────────────────────────────────────────────── */
 @keyframes fade-up {
-  from { opacity: 0; transform: translateY(12px); }
+  from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 @keyframes fade-in {
@@ -357,21 +434,21 @@
   to   { opacity: 1; }
 }
 @keyframes badge-pop {
-  0%   { transform: scale(0.85); opacity: 0; }
-  60%  { transform: scale(1.12); opacity: 1; }
+  0%   { transform: scale(0.92); opacity: 0; }
+  60%  { transform: scale(1.06); opacity: 1; }
   100% { transform: scale(1);    opacity: 1; }
 }
 @keyframes card-lift {
   from { transform: translateY(0); box-shadow: var(--shadow-md); }
-  to   { transform: translateY(-4px); box-shadow: var(--shadow-card-hover); }
+  to   { transform: translateY(-3px); box-shadow: var(--shadow-card-hover); }
 }
 @keyframes float-slow {
   0%, 100% { transform: translateY(0px); }
-  50%       { transform: translateY(-6px); }
+  50%       { transform: translateY(-5px); }
 }
 @keyframes map-marker-pop {
   0%   { transform: scale(0);   opacity: 0; }
-  50%  { transform: scale(1.2); opacity: 1; }
+  50%  { transform: scale(1.15); opacity: 1; }
   100% { transform: scale(1);   opacity: 1; }
 }
 @keyframes skeleton-shimmer {
@@ -382,20 +459,24 @@
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }
 }
+@keyframes indent-rule {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
 
-/* ── 5. Animation Utility Classes ───────────────────────────────────────────── */
+/* ── 5. Bespoke Utility Classes ─────────────────────────────────────────────── */
 @layer utilities {
   .animate-fade-up { animation: fade-up var(--dur-emphasis) var(--ease-smooth) both; }
   .animate-fade-in { animation: fade-in var(--dur-standard) var(--ease-smooth) both; }
-  .stagger-1 { animation-delay: 50ms; }
-  .stagger-2 { animation-delay: 100ms; }
-  .stagger-3 { animation-delay: 150ms; }
-  .stagger-4 { animation-delay: 200ms; }
-  .stagger-5 { animation-delay: 250ms; }
-  .stagger-6 { animation-delay: 300ms; }
-  .stagger-7 { animation-delay: 350ms; }
-  .stagger-8 { animation-delay: 400ms; }
-  .animate-badge-pop { animation: badge-pop 350ms var(--ease-snap) both; }
+  .stagger-1 { animation-delay: 40ms; }
+  .stagger-2 { animation-delay: 80ms; }
+  .stagger-3 { animation-delay: 120ms; }
+  .stagger-4 { animation-delay: 160ms; }
+  .stagger-5 { animation-delay: 200ms; }
+  .stagger-6 { animation-delay: 240ms; }
+  .stagger-7 { animation-delay: 280ms; }
+  .stagger-8 { animation-delay: 320ms; }
+  .animate-badge-pop { animation: badge-pop 340ms var(--ease-snap) both; }
   .animate-map-marker-pop { animation: map-marker-pop 400ms var(--ease-snap) both; }
   .animate-float-slow { animation: float-slow 4s ease-in-out infinite; }
   .animate-shimmer {
@@ -405,6 +486,86 @@
   }
   .card-hover { transition: var(--transition-interactive); }
   .card-hover:hover { animation: card-lift var(--dur-standard) var(--ease-smooth) forwards; }
+
+  /* Signature "cut corner" detail — a sheared paper corner instead of a round one */
+  .corner-cut {
+    clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%);
+  }
+  .corner-cut-sm {
+    clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%);
+  }
+
+  /* Tactile press feedback — a quiet 1px settle, no bounce */
+  .b2-press {
+    transition: transform var(--dur-micro) var(--ease-smooth),
+                box-shadow var(--dur-micro) var(--ease-smooth);
+  }
+  .b2-press:active {
+    transform: translateY(1px) scale(0.995);
+    box-shadow: var(--shadow-xs);
+  }
+
+  /* Editorial animated underline — grows from the inline side */
+  .link-underline {
+    background: linear-gradient(currentColor, currentColor) right bottom / 0% 1px no-repeat;
+    transition: background-size var(--dur-standard) var(--ease-smooth);
+  }
+  .link-underline:hover {
+    background-size: 100% 1px;
+  }
+
+  /* Editorial section index label, e.g. "٠١ — قسم" or "01 — Section" */
+  .section-index {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.625rem;
+    font-size: var(--text-label);
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent-primary);
+  }
+  .section-index::after {
+    content: "";
+    width: 2rem;
+    height: 1px;
+    background: var(--accent-primary);
+  }
+
+  .b2-icon-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    border: 1px solid transparent;
+    min-width: var(--tap-target);
+    min-height: var(--tap-target);
+    outline: none;
+    transition: var(--transition-interactive);
+  }
+  .b2-icon-button:hover { transform: translateY(-1px); }
+  .b2-icon-button:active { transform: translateY(0); }
+
+  .b2-segmented-control {
+    display: flex;
+    border-radius: var(--radius-sm);
+    background: hsl(from var(--bg-muted) h s l);
+    padding: 0.175rem;
+    gap: 0.175rem;
+  }
+  .b2-segmented-control > button {
+    flex: 1;
+    min-height: 2.25rem;
+    border-radius: var(--radius-xs);
+    font-size: var(--text-body-sm);
+    font-weight: 700;
+    outline: none;
+    transition: background-color var(--dur-fast) var(--ease-smooth), color var(--dur-fast) var(--ease-smooth);
+  }
+  .b2-segmented-control > button:focus-visible { outline: 2px solid var(--accent-primary); }
+
+  .b2-main-content { min-width: 0; }
+
   @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
     *, *::before, *::after {
@@ -412,25 +573,26 @@
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
     }
+    .b2-press:active { transform: none; }
   }
 }
 
-/* ── 6. Responsive Overrides ─────────────────────────────────────────────────── */
+/* ── 6. Responsive Overrides ────────────────────────────────────────────────── */
 @media (max-width: 640px) {
   :root {
-    --header-height: 4.5rem;
-    --space-section: clamp(2.5rem, 12vw, 4rem);
+    --header-height: 4.25rem;
+    --space-section: clamp(2.5rem, 11vw, 4rem);
   }
 }
 
 /* ── 7. Legacy Brand Token Aliases ────────────────────────────────────────────
    Keeps existing consumers (Footer, HostDashboard, AgencySettings, etc.)
-   working while markup migrates to new tokens. --brand-amber = primary action.
-   ───────────────────────────────────────────────────────────────────────────── */
+   working while markup migrates to the semantic tokens. --brand-amber is the
+   primary clay action colour. */
 @layer base {
   :root {
     --brand-navy:         var(--bg-base);
-    --brand-navy-deep:    var(--bg-muted);
+    --brand-navy-deep:    var(--bg-surface);
     --brand-blue:         var(--accent-primary);
     --brand-blue-dark:    var(--accent-primary-h);
     --brand-blue-soft:    var(--accent-primary-s);
@@ -472,13 +634,13 @@
     --radius-3xl:         var(--radius-3xl);
     --shadow-soft:        var(--shadow-sm);
     --shadow-card:        var(--shadow-md);
-    --shadow-blue:        var(--shadow-indigo);
-    --shadow-gold:        var(--shadow-brass);
+    --shadow-blue:        var(--shadow-clay);
+    --shadow-gold:        var(--shadow-clay);
     --ease-out:           var(--ease-smooth);
   }
   .dark {
     --brand-navy:         var(--bg-base);
-    --brand-navy-deep:    var(--bg-muted);
+    --brand-navy-deep:    var(--bg-surface);
     --brand-blue:         var(--accent-primary);
     --brand-blue-dark:    var(--accent-primary-h);
     --brand-blue-soft:    var(--accent-primary-s);

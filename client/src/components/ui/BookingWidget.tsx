@@ -43,7 +43,7 @@ export function BookingWidget(props: BookingWidgetProps) {
         </div>
         <div className="border-t border-border-default px-3 py-2.5"><label className="block text-[10px] font-bold uppercase tracking-wider text-ink-tertiary">Guests</label><div className="mt-1 flex items-center justify-between"><span className="text-sm font-medium text-ink-primary">{guests} guest{guests > 1 ? "s" : ""}</span><div className="flex items-center gap-2"><button onClick={() => setGuests(Math.max(1, guests - 1))} className="flex h-7 w-7 items-center justify-center rounded-full border border-border-default text-ink-secondary transition-colors hover:bg-bg-muted" aria-label="Decrease guests">−</button><button onClick={() => setGuests(Math.min(maxGuests, guests + 1))} className="flex h-7 w-7 items-center justify-center rounded-full border border-border-default text-ink-secondary transition-colors hover:bg-bg-muted" aria-label="Increase guests">+</button></div></div></div>
       </div>
-      <Button onClick={handleReserve} disabled={!checkIn || !checkOut} className="w-full rounded-xl bg-accent-indigo py-3.5 text-sm font-bold text-white shadow-md transition-all duration-200 hover:bg-accent-indigo-hover hover:shadow-lg disabled:opacity-50">Reserve</Button>
+      <Button onClick={handleReserve} disabled={!checkIn || !checkOut} className="w-full rounded-xl bg-accent-clay py-3.5 text-sm font-bold text-white shadow-md transition-all duration-200 hover:bg-accent-clay-hover hover:shadow-lg disabled:opacity-50">Reserve</Button>
       <p className="text-center text-xs text-ink-tertiary">You won't be charged yet</p>
       <div className="flex flex-col gap-3 border-t border-border-subtle pt-4">
         <div className="flex justify-between text-sm"><span className="text-ink-secondary underline decoration-dotted">{pricePerDay.toLocaleString()} × {nights} night{nights > 1 ? "s" : ""}</span><span className="font-medium text-ink-primary">{subtotal.toLocaleString()} {currency}</span></div>
@@ -59,7 +59,7 @@ export function BookingWidget(props: BookingWidgetProps) {
       <div className={cn("fixed bottom-0 left-0 right-0 z-50 border-t border-border-subtle bg-bg-surface px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]", className)}>
         <div className="flex items-center justify-between">
           <div className="flex items-baseline gap-1"><span className="text-lg font-bold text-ink-primary">{pricePerDay.toLocaleString()}</span><span className="text-xs font-medium text-ink-secondary">{currency}/night</span></div>
-          <Sheet><SheetTrigger asChild><Button className="rounded-xl bg-accent-indigo px-6 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:bg-accent-indigo-hover">Reserve</Button></SheetTrigger><SheetContent side="bottom" className="rounded-t-2xl px-5 pb-8 pt-4"><SheetHeader className="mb-4"><SheetTitle className="text-right text-lg font-bold text-ink-primary">Booking details</SheetTitle></SheetHeader>{widgetContent}</SheetContent></Sheet>
+          <Sheet><SheetTrigger asChild><Button className="rounded-xl bg-accent-clay px-6 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:bg-accent-clay-hover">Reserve</Button></SheetTrigger><SheetContent side="bottom" className="rounded-t-2xl px-5 pb-8 pt-4"><SheetHeader className="mb-4"><SheetTitle className="text-right text-lg font-bold text-ink-primary">Booking details</SheetTitle></SheetHeader>{widgetContent}</SheetContent></Sheet>
         </div>
       </div>
     );

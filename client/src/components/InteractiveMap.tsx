@@ -153,7 +153,7 @@ export function InteractiveMap({
   const getTypeBadgeColor = (type: 'car' | 'property' | 'office') => {
     switch (type) {
       case 'car':
-        return 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20';
+        return 'bg-accent-clay-soft text-accent-clay border-accent-clay/30';
       case 'property':
         return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20';
       case 'office':
@@ -286,7 +286,7 @@ export function InteractiveMap({
         <p className="text-[10px] font-bold text-muted-foreground mb-2">دليل الرموز</p>
         <div className="space-y-1.5">
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-blue-500 border border-white shadow" />
+            <div className="w-3 h-3 rounded-full bg-accent-clay border border-white shadow" />
             <span className="text-[10px] font-medium">سيارة</span>
           </div>
           <div className="flex items-center gap-2">

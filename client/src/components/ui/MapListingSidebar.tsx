@@ -66,7 +66,7 @@ export function MapListingSidebar({ listings, selectedId, onSelectListing, class
                   onClick={() => onSelectListing?.(listing.id)}
                   className={cn(
                     "transition-all duration-200",
-                    selectedId === listing.id && "scale-[0.98] rounded-2xl ring-2 ring-accent-indigo",
+                    selectedId === listing.id && "scale-[0.98] rounded-2xl ring-2 ring-accent-clay",
                   )}
                 >
                   <ListingCard {...listing} />

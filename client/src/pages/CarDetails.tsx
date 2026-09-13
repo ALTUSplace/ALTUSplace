@@ -83,7 +83,7 @@ export default function CarDetails() {
   const reviews = reviewsQuery.data ?? [];
 
   if (listingQuery.isLoading) {
-    return <div className="min-h-screen flex items-center justify-center bg-slate-950 text-slate-200">جاري تحميل تفاصيل الإعلان...</div>;
+    return <div className="min-h-screen flex items-center justify-center bg-[#15120D] text-slate-200">جاري تحميل تفاصيل الإعلان...</div>;
   }
   
   // Log error details for debugging
@@ -95,7 +95,7 @@ export default function CarDetails() {
   // Missing or invalid listing ID — show friendly message before query
   if (numericListingId === null && !staticCar) {
     return (
-      <div className="min-h-screen flex flex-col gap-4 items-center justify-center bg-slate-950 text-slate-200">
+      <div className="min-h-screen flex flex-col gap-4 items-center justify-center bg-[#15120D] text-slate-200">
         <p>معرّف الإعلان غير صالح أو مفقود من الرابط.</p>
         <p className="text-sm text-slate-400">يرجى اختيار إعلان من صفحة البحث.</p>
         <Button onClick={() => setLocation('/search')}>{t("back")}</Button>
@@ -105,7 +105,7 @@ export default function CarDetails() {
 
   if (!car) {
     return (
-      <div className="min-h-screen flex flex-col gap-4 items-center justify-center bg-slate-950 text-slate-200">
+      <div className="min-h-screen flex flex-col gap-4 items-center justify-center bg-[#15120D] text-slate-200">
         <p>{t("listingsLoadError")}</p>
         <p className="text-sm text-slate-400">الإعلان المطلوب غير متاح حالياً.</p>
         <Button onClick={() => setLocation('/search')}>{t("back")}</Button>
@@ -197,7 +197,7 @@ export default function CarDetails() {
             <button onClick={() => handleShare('whatsapp')} className="bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600 hover:text-white px-3 py-1 rounded-xl text-xs font-bold transition-all border border-emerald-500/30">
               واتساب
             </button>
-            <button onClick={() => handleShare('facebook')} className="bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white px-3 py-1 rounded-xl text-xs font-bold transition-all border border-blue-500/30">
+            <button onClick={() => handleShare('facebook')} className="bg-accent-clay-soft text-accent-clay hover:bg-accent-clay hover:text-white px-3 py-1 rounded-xl text-xs font-bold transition-all border border-accent-clay/30">
               فيسبوك
             </button>
             <button onClick={() => handleShare('copy')} className="bg-slate-800 text-slate-300 hover:bg-slate-700 px-3 py-1 rounded-xl text-xs font-bold transition-all border border-slate-700 flex items-center gap-1">
@@ -211,14 +211,14 @@ export default function CarDetails() {
           
           {/* Main Info */}
           <div className="lg:col-span-2 space-y-8">
-            <div className="bg-slate-950 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
+            <div className="bg-[#15120D] border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
               <div className="relative h-96">
                 <OptimizedImage src={car.image} alt={car.name} width={1200} height={675} widthHint={1200} sizes="(max-width: 1024px) 100vw, 66vw" className="w-full h-full object-cover" />
-                <div className="absolute top-4 right-4 bg-slate-900/90 backdrop-blur-md text-amber-400 font-bold px-4 py-1.5 rounded-2xl text-xs border border-amber-500/30">
+                <div className="absolute top-4 right-4 bg-[#15120D]/90 backdrop-blur-md text-amber-400 font-bold px-4 py-1.5 rounded-2xl text-xs border border-amber-500/30">
                   {car.cityName}
                 </div>
                 {reviews.length > 0 && (
-                  <div className="absolute top-4 left-4 bg-slate-950/95 backdrop-blur-md text-white px-3 py-1.5 rounded-2xl text-xs flex items-center gap-1.5 font-bold shadow-lg">
+                  <div className="absolute top-4 left-4 bg-[#15120D]/95 backdrop-blur-md text-white px-3 py-1.5 rounded-2xl text-xs flex items-center gap-1.5 font-bold shadow-lg">
                     <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
                     <span>{reviews.length} مراجعة موثقة</span>
                   </div>
@@ -236,22 +236,22 @@ export default function CarDetails() {
 
                 {/* Specs Grid */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="bg-slate-900 border border-slate-800 p-4 rounded-2xl text-center space-y-1">
+                  <div className="bg-[#15120D] border border-slate-800 p-4 rounded-2xl text-center space-y-1">
                     <CarIcon className="w-5 h-5 text-amber-400 mx-auto" />
                     <div className="text-[10px] text-slate-400">ناقل الحركة</div>
                     <div className="text-xs font-bold text-white">{car.transmission}</div>
                   </div>
-                  <div className="bg-slate-900 border border-slate-800 p-4 rounded-2xl text-center space-y-1">
+                  <div className="bg-[#15120D] border border-slate-800 p-4 rounded-2xl text-center space-y-1">
                     <Users className="w-5 h-5 text-amber-400 mx-auto" />
                     <div className="text-[10px] text-slate-400">المقاعد</div>
                     <div className="text-xs font-bold text-white">{car.seats} مقاعد</div>
                   </div>
-                  <div className="bg-slate-900 border border-slate-800 p-4 rounded-2xl text-center space-y-1">
+                  <div className="bg-[#15120D] border border-slate-800 p-4 rounded-2xl text-center space-y-1">
                     <Fuel className="w-5 h-5 text-amber-400 mx-auto" />
                     <div className="text-[10px] text-slate-400">نوع الوقود</div>
                     <div className="text-xs font-bold text-white">{car.fuel}</div>
                   </div>
-                  <div className="bg-slate-900 border border-slate-800 p-4 rounded-2xl text-center space-y-1">
+                  <div className="bg-[#15120D] border border-slate-800 p-4 rounded-2xl text-center space-y-1">
                     <MapPin className="w-5 h-5 text-amber-400 mx-auto" />
                     <div className="text-[10px] text-slate-400">المدينة</div>
                     <div className="text-xs font-bold text-white">{car.cityName}</div>
@@ -263,7 +263,7 @@ export default function CarDetails() {
                   <h3 className="text-base font-bold text-white">مميزات السيارة والرفاهية</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {car.features.map((feat, idx) => (
-                      <div key={idx} className="flex items-center gap-2.5 bg-slate-900/60 border border-slate-800/80 px-4 py-3 rounded-2xl text-xs text-slate-200">
+                      <div key={idx} className="flex items-center gap-2.5 bg-[#15120D]/60 border border-slate-800/80 px-4 py-3 rounded-2xl text-xs text-slate-200">
                         <CheckCircle2 className="w-4 h-4 text-amber-400 shrink-0" />
                         <span>{feat}</span>
                       </div>
@@ -272,7 +272,7 @@ export default function CarDetails() {
                 </div>
 
                 {/* Agency Info Box */}
-                <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="bg-[#15120D] border border-slate-800 p-6 rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-4">
                   <div className="flex items-center gap-4">
                     <div className="w-14 h-14 bg-amber-500/20 border border-amber-500/30 rounded-2xl flex items-center justify-center text-amber-400 font-black text-xl">
                       {car.agency.name.charAt(0)}
@@ -319,13 +319,13 @@ export default function CarDetails() {
 
                   <div className="space-y-4">
                     {reviewsQuery.isLoading ? (
-                      <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl text-sm text-slate-400">جاري تحميل المراجعات...</div>
+                      <div className="bg-[#15120D] border border-slate-800 p-6 rounded-3xl text-sm text-slate-400">جاري تحميل المراجعات...</div>
                     ) : reviewsQuery.isError ? (
                       <div className="bg-rose-950/30 border border-rose-800/60 p-6 rounded-3xl text-sm text-rose-200">تعذر تحميل المراجعات حالياً.</div>
                     ) : reviews.length === 0 ? (
-                      <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl text-sm text-slate-400">لا توجد مراجعات موثقة لهذا العرض بعد.</div>
+                      <div className="bg-[#15120D] border border-slate-800 p-6 rounded-3xl text-sm text-slate-400">لا توجد مراجعات موثقة لهذا العرض بعد.</div>
                     ) : reviews.map((rev) => (
-                      <div key={rev.id} className="bg-slate-900 border border-slate-800 p-6 rounded-3xl space-y-2">
+                      <div key={rev.id} className="bg-[#15120D] border border-slate-800 p-6 rounded-3xl space-y-2">
                         <div className="flex items-center justify-between">
                           <span className="font-bold text-white text-sm">{rev.userName || 'مستخدم ALTUSplace'}</span>
                           <span className="text-xs text-slate-500">{new Date(rev.createdAt).toLocaleDateString('ar-MA')}</span>

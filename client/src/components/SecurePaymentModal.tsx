@@ -207,7 +207,7 @@ export function SecurePaymentModal({
               <p className="text-sm font-bold text-slate-300">اختر طريقة الدفع</p>
               <div className="space-y-3">
                 <button onClick={() => { setPaymentMethod('cmi_card'); setStep('details'); }} className="w-full flex items-center gap-4 p-4 rounded-2xl border-2 border-amber-500 bg-amber-500/5 transition-all text-right">
-                  <div className="bg-blue-500/10 p-2.5 rounded-xl border border-blue-500/20"><CreditCard className="w-5 h-5 text-blue-400" /></div>
+                  <div className="bg-accent-clay-soft p-2.5 rounded-xl border border-accent-clay/30"><CreditCard className="w-5 h-5 text-accent-clay" /></div>
                   <div className="flex-1"><p className="font-bold text-sm">بطاقة بنكية (CMI)</p><p className="text-[11px] text-slate-400">Visa, Mastercard, CMI</p></div>
                 </button>
                 <button onClick={() => { setPaymentMethod('bank_transfer'); setStep('details'); }} className="w-full flex items-center gap-4 p-4 rounded-2xl border-2 border-slate-700 hover:border-slate-600 bg-slate-900 transition-all text-right">

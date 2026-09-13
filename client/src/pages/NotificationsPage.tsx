@@ -76,7 +76,7 @@ export default function NotificationsPage() {
   return (
     <main className="min-h-screen bg-background px-4 py-8 text-foreground sm:py-12" dir={direction}>
       <div className="mx-auto max-w-5xl space-y-6">
-        <section className="relative overflow-hidden rounded-3xl bg-[#0B0F19] p-6 text-white shadow-xl sm:p-8">
+        <section className="relative overflow-hidden rounded-3xl bg-[#15120D] p-6 text-white shadow-xl sm:p-8">
           <div className="absolute -left-16 -top-20 h-48 w-48 rounded-full bg-amber-500/20 blur-3xl" aria-hidden="true" />
           <div className="relative flex flex-col justify-between gap-6 md:flex-row md:items-center">
             <div>
@@ -104,7 +104,7 @@ export default function NotificationsPage() {
             <p className="text-xs leading-6 text-muted-foreground">{language === "ar" ? "مفعّلة فورياً للحجوزات والعقود." : "Activées instantanément pour réservations et baux."}</p>
           </div>
           <div className="rounded-2xl border border-border bg-card p-5">
-            <div className="mb-3 flex items-center gap-2 text-sm font-black"><Mail className="h-5 w-5 text-blue-600" />{language === "ar" ? "البريد الإلكتروني" : "E-mail"}</div>
+            <div className="mb-3 flex items-center gap-2 text-sm font-black"><Mail className="h-5 w-5 text-accent-clay" />{language === "ar" ? "البريد الإلكتروني" : "E-mail"}</div>
             <p className="text-xs leading-6 text-muted-foreground">{language === "ar" ? "جاهز للتفعيل عند إضافة مفتاح مزود البريد." : "Prêt à être activé après l’ajout de la clé du fournisseur."}</p>
           </div>
           <div className="rounded-2xl border border-border bg-card p-5">

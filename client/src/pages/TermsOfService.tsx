@@ -26,7 +26,7 @@ export default function TermsOfService() {
             <Button 
               size="sm" 
               variant={lang === 'ar' ? 'default' : 'ghost'} 
-              className={lang === 'ar' ? 'bg-[#0B0F19] text-white' : 'text-muted-foreground'}
+              className={lang === 'ar' ? 'bg-[#15120D] text-white' : 'text-muted-foreground'}
               onClick={() => setLang('ar')}
             >
               العربية
@@ -34,7 +34,7 @@ export default function TermsOfService() {
             <Button 
               size="sm" 
               variant={lang === 'fr' ? 'default' : 'ghost'} 
-              className={lang === 'fr' ? 'bg-[#0B0F19] text-white' : 'text-muted-foreground'}
+              className={lang === 'fr' ? 'bg-[#15120D] text-white' : 'text-muted-foreground'}
               onClick={() => setLang('fr')}
             >
               Français
@@ -60,7 +60,7 @@ export default function TermsOfService() {
 
             <section className="space-y-3">
               <h2 className="text-xl font-bold text-foreground flex items-center gap-2 border-b pb-2">
-                <FileText className="w-5 h-5 text-blue-600" />
+                <FileText className="w-5 h-5 text-accent-clay" />
                 2. عمولة المنصة ورسوم الوساطة (Platform Commission)
               </h2>
               <p>
@@ -105,7 +105,7 @@ export default function TermsOfService() {
 
             <section className="space-y-3">
               <h2 className="text-xl font-bold text-foreground flex items-center gap-2 border-b pb-2">
-                <FileText className="w-5 h-5 text-blue-600" />
+                <FileText className="w-5 h-5 text-accent-clay" />
                 2. Commission de la Plateforme
               </h2>
               <p>

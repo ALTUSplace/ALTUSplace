@@ -75,8 +75,8 @@ type SelectorOption = {
 };
 
 /**
- * Compact, modern dropdown selector (language / currency) for the glass header.
- * Renders a small pill button that expands into a clean floating menu.
+ * Compact editorial dropdown selector (language / currency) for the paper
+ * header. A sharp pill-to-square trigger that opens a matte floating menu.
  */
 function NavSelector({
   icon: Icon,
@@ -120,18 +120,18 @@ function NavSelector({
         aria-expanded={open}
         aria-haspopup="listbox"
         title={title}
-        className="inline-flex min-h-10 items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 text-xs font-bold text-slate-200 shadow-sm transition-all duration-200 hover:border-white/20 hover:bg-white/10 hover:text-white hover:shadow-blue-500/10 focus-visible:border-blue-400/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/50 active:scale-[0.97]"
+        className="b2-press inline-flex min-h-10 items-center gap-1.5 rounded-sm border border-border-subtle bg-bg-surface px-3 text-xs font-bold text-ink-primary shadow-xs transition-colors hover:border-border-default hover:bg-bg-muted"
       >
-        <Icon className="h-4 w-4 text-blue-300" aria-hidden="true" />
+        <Icon className="h-4 w-4 text-accent-clay" aria-hidden="true" />
         <span>{value}</span>
-        <ChevronDown className={`h-3.5 w-3.5 text-slate-400 transition-transform duration-200 ${open ? "rotate-180" : ""}`} aria-hidden="true" />
+        <ChevronDown className={`h-3.5 w-3.5 text-ink-tertiary transition-transform duration-200 ${open ? "rotate-180" : ""}`} aria-hidden="true" />
       </button>
 
       {open && (
         <div
           role="listbox"
           aria-label={title}
-          className="absolute left-0 top-full z-50 mt-2 w-44 origin-top animate-in fade-in-0 zoom-in-95 slide-in-from-top-1 overflow-hidden rounded-xl border border-slate-200/80 bg-white p-1 shadow-2xl shadow-slate-950/25 ring-1 ring-slate-900/5 duration-150"
+          className="absolute left-0 top-full z-50 mt-2 w-44 origin-top animate-fade-in overflow-hidden rounded-md border border-border-subtle bg-bg-elevated p-1 shadow-lg shadow-[var(--shadow-lg)]"
         >
           {options.map((option) => (
             <button
@@ -143,10 +143,10 @@ function NavSelector({
                 onSelect(option.value);
                 setOpen(false);
               }}
-              className={`flex min-h-9 w-full items-center justify-between gap-2 rounded-lg px-3 text-xs font-bold transition-colors duration-150 ${
+              className={`flex min-h-9 w-full items-center justify-between gap-2 rounded-sm px-3 text-xs font-bold transition-colors duration-150 ${
                 option.current
-                  ? "bg-blue-50 text-blue-700"
-                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                  ? "bg-accent-clay-soft text-accent-clay"
+                  : "text-ink-secondary hover:bg-bg-muted hover:text-ink-primary"
               }`}
             >
               <span>{option.label}</span>
@@ -365,15 +365,15 @@ export default function Navbar() {
           onClick={() => setMobileMenuOpen(false)}
           className={
             mobile
-              ? `flex min-h-11 items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold transition-colors ${
+              ? `flex min-h-11 items-center gap-3 rounded-sm px-4 py-3 text-sm font-bold transition-colors ${
                   active
-                    ? "bg-blue-600 text-white shadow-sm shadow-blue-500/25"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    ? "bg-accent-clay text-white"
+                    : "text-ink-secondary hover:bg-bg-muted hover:text-ink-primary"
                 }`
-              : `flex items-center gap-1.5 rounded-xl border px-2.5 py-2 text-xs font-bold transition-colors ${
+              : `flex items-center gap-1.5 rounded-sm border px-2.5 py-2 text-xs font-bold transition-colors ${
                   active
-                    ? "border-blue-500/30 bg-blue-500/15 text-blue-300"
-                    : "border-transparent text-slate-300 hover:bg-white/10 hover:text-white"
+                    ? "border-border-default bg-accent-clay-soft text-accent-clay"
+                    : "border-transparent text-ink-secondary hover:bg-bg-muted hover:text-ink-primary"
                 }`
           }
           aria-current={active ? "page" : undefined}
@@ -387,7 +387,7 @@ export default function Navbar() {
   return (
     <>
       <header
-        className="sticky top-0 z-50 border-b border-white/10 bg-slate-900/75 bg-[linear-gradient(to_bottom,rgba(255,255,255,0.05),transparent_60%)] text-white shadow-xl shadow-slate-950/25 backdrop-blur-xl supports-[backdrop-filter]:bg-slate-900/60"
+        className="sticky top-0 z-50 border-b border-border-subtle bg-bg-base/85 text-ink-primary shadow-xs backdrop-blur-xl supports-[backdrop-filter]:bg-bg-base/75"
         dir={direction}
       >
         <div className="container mx-auto flex h-16 sm:h-20 items-center justify-between gap-2 sm:gap-4 px-3 sm:px-4">
@@ -396,15 +396,15 @@ export default function Navbar() {
     <img
       src="/assets/images/logo.png"
       alt="ALTUSplace"
-      className="brand-logo h-12 sm:h-12 w-auto object-contain"
-      style={{ height: '48px', maxWidth: '100%', objectFit: 'contain' }}
+      className="brand-logo h-11 sm:h-12 w-auto object-contain"
+      style={{ height: '44px', maxWidth: '100%', objectFit: 'contain' }}
     />
   </div>
   <div className="flex flex-col">
-    <span className="font-bold text-lg sm:text-xl tracking-tight text-white">
-      ALTUS<span className="font-normal text-blue-400">place</span>
+    <span className="font-display font-bold text-lg sm:text-xl leading-none text-ink-primary">
+      ALTUS<span className="font-medium text-accent-clay">place</span>
     </span>
-    <span className="text-[9px] sm:text-[10px] tracking-wider text-slate-400 uppercase -mt-1 font-medium">
+    <span className="text-[9px] sm:text-[10px] tracking-[0.18em] text-ink-tertiary uppercase -mt-1 font-semibold">
       Rent. Drive. Live.
     </span>
   </div>
@@ -441,25 +441,25 @@ export default function Navbar() {
 
             <button
               type="button"
-              className="b2-icon-button border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10 hover:text-white"
+              className="b2-icon-button border border-border-subtle bg-bg-surface text-ink-secondary hover:bg-bg-muted hover:text-ink-primary"
               onClick={() => setTwoFaModalOpen(true)}
               title={t("securityTwoFactor")}
               aria-label={t("securityTwoFactor")}
             >
-              <Shield className="h-4 w-4 text-blue-300" />
+              <Shield className="h-4 w-4 text-accent-clay" />
             </button>
             <button
               type="button"
-              className="b2-icon-button border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10 hover:text-white"
+              className="b2-icon-button border border-border-subtle bg-bg-surface text-ink-secondary hover:bg-bg-muted hover:text-ink-primary"
               onClick={() => setCmiModalOpen(true)}
               title={t("cmiPayment")}
               aria-label={t("cmiPortal")}
             >
-              <CreditCard className="h-4 w-4 text-blue-300" />
+              <CreditCard className="h-4 w-4 text-accent-clay" />
             </button>
             <button
               type="button"
-              className="b2-icon-button border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20"
+              className="b2-icon-button border border-accent-green/30 bg-accent-green-s text-accent-green hover:bg-accent-green/15"
               onClick={() => setWhatsappModalOpen(true)}
               title={t("whatsappNotify")}
               aria-label={t("whatsappNotify")}
@@ -470,7 +470,7 @@ export default function Navbar() {
             <div className="relative" ref={notificationRef}>
               <button
                 type="button"
-                className={`b2-icon-button relative border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10 hover:text-white ${notificationPulse ? "ring-2 ring-rose-400/70 ring-offset-2 ring-offset-slate-900 motion-safe:animate-pulse" : ""}`}
+                className={`b2-icon-button relative border border-border-subtle bg-bg-surface text-ink-secondary hover:bg-bg-muted hover:text-ink-primary ${notificationPulse ? "ring-2 ring-accent-red/50 ring-offset-2 ring-offset-bg-base motion-safe:animate-pulse" : ""}`}
                 onClick={() => {
                   setNotificationsOpen((open) => !open);
                   setNotificationPulse(false);
@@ -480,26 +480,26 @@ export default function Navbar() {
                 aria-label={unreadCount ? t("notificationsWithUnread") : t("notifications")}
                 title={t("notifications")}
               >
-                <Bell className="h-4 w-4 text-blue-300" />
+                <Bell className="h-4 w-4 text-accent-clay" />
                 {unreadCount > 0 && (
-                  <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-black text-white">
+                  <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent-red px-1 text-[9px] font-black text-white">
                     {unreadCount}
                   </span>
                 )}
               </button>
 
               {notificationsOpen && (
-                <div className="absolute left-0 mt-3 w-[min(20rem,calc(100vw-2rem))] rounded-2xl border border-border bg-popover p-4 text-right text-popover-foreground shadow-xl" role="dialog" aria-label={t("notificationsPanelLabel")}>
-                  <div className="flex items-center justify-between border-b border-border pb-3">
+                <div className="absolute left-0 mt-3 w-[min(20rem,calc(100vw-2rem))] rounded-md border border-border-subtle bg-bg-elevated p-4 text-right text-ink-primary shadow-lg" role="dialog" aria-label={t("notificationsPanelLabel")}>
+                  <div className="flex items-center justify-between border-b border-border-subtle pb-3">
                     <h2 className="flex items-center gap-1.5 text-xs font-bold">
-                      <Bell className="h-4 w-4 text-amber-600 dark:text-amber-300" />
+                      <Bell className="h-4 w-4 text-accent-clay" />
                       {t("notificationsTitle")}
                     </h2>
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
                         onClick={toggleNotificationSound}
-                        className="inline-flex items-center gap-1 text-[10px] font-bold text-muted-foreground hover:text-foreground"
+                        className="inline-flex items-center gap-1 text-[10px] font-bold text-ink-tertiary hover:text-ink-primary"
                         aria-pressed={notificationSoundEnabled}
                         title={notificationSoundEnabled ? t("soundOffLabel") : t("soundOnLabel")}
                       >
@@ -512,7 +512,7 @@ export default function Navbar() {
                         onClick={markAllAsRead}
                         disabled={markAllMutation.isPending}
                         aria-busy={markAllMutation.isPending}
-                        className="text-[10px] font-bold text-amber-700 hover:underline disabled:cursor-not-allowed disabled:opacity-50 dark:text-amber-300"
+                        className="text-[10px] font-bold text-accent-clay hover:underline disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         {markAllMutation.isPending ? t("markingAllRead") : t("markAllRead")}
                       </button>
@@ -521,9 +521,9 @@ export default function Navbar() {
                   </div>
                   <div className="max-h-64 space-y-2.5 overflow-y-auto py-3">
                     {!isAuthenticated ? (
-                      <p className="py-5 text-center text-xs text-muted-foreground">{t("loginToFollowNotifications")}</p>
+                      <p className="py-5 text-center text-xs text-ink-tertiary">{t("loginToFollowNotifications")}</p>
                     ) : notifications.length === 0 ? (
-                      <p className="py-5 text-center text-xs text-muted-foreground">{t("noNotifications")}</p>
+                      <p className="py-5 text-center text-xs text-ink-tertiary">{t("noNotifications")}</p>
                     ) : notifications.map((item) => {
                       const unread = item.readAt === null;
                       return (
@@ -533,18 +533,18 @@ export default function Navbar() {
                           tabIndex={0}
                           onClick={() => unread && markReadMutation.mutate({ notificationId: item.id }, { onSuccess: () => { void notificationQuery.refetch(); void unreadQuery.refetch(); } })}
                           onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); if (unread) markReadMutation.mutate({ notificationId: item.id }, { onSuccess: () => { void notificationQuery.refetch(); void unreadQuery.refetch(); } }); } }}
-                          className={`space-y-1 rounded-xl border p-3 text-xs outline-none focus-visible:ring-2 focus-visible:ring-amber-500 ${unread ? "border-amber-500/30 bg-amber-500/10" : "border-border bg-muted"}`}
+                          className={`space-y-1 rounded-sm border p-3 text-xs outline-none focus-visible:ring-2 focus-visible:ring-accent-clay ${unread ? "border-accent-warm/40 bg-accent-warm-s" : "border-border-subtle bg-bg-muted"}`}
                         >
                           <div className="flex items-center justify-between gap-2 font-bold">
                             <span>{item.title}</span>
-                            <span className="shrink-0 text-[10px] text-muted-foreground">{new Date(item.createdAt).toLocaleString(language === "ar" ? "ar-MA" : language === "fr" ? "fr-MA" : "en-GB", { dateStyle: "short", timeStyle: "short" })}</span>
+                            <span className="shrink-0 text-[10px] text-ink-tertiary">{new Date(item.createdAt).toLocaleString(language === "ar" ? "ar-MA" : language === "fr" ? "fr-MA" : "en-GB", { dateStyle: "short", timeStyle: "short" })}</span>
                           </div>
-                          <p className="whitespace-pre-line text-[11px] text-muted-foreground">{item.message}</p>
+                          <p className="whitespace-pre-line text-[11px] text-ink-tertiary">{item.message}</p>
                         </div>
                       );
                     })}
                   </div>
-                  <Link href="/notifications" className="block border-t border-border pt-3 text-center text-xs font-bold text-amber-700 hover:underline dark:text-amber-300">
+                  <Link href="/notifications" className="block border-t border-border-subtle pt-3 text-center text-xs font-bold text-accent-clay hover:underline">
                     {t("viewAllNotifications")}
                   </Link>
                 </div>
@@ -554,7 +554,7 @@ export default function Navbar() {
             {toggleTheme && (
               <button
                 type="button"
-                className="b2-icon-button border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10 hover:text-white"
+                className="b2-icon-button border border-border-subtle bg-bg-surface text-ink-secondary hover:bg-bg-muted hover:text-ink-primary"
                 onClick={() => {
                   toggleTheme();
                   toast.success(theme === "dark" ? t("themeToLightToast") : t("themeToDarkToast"));
@@ -562,23 +562,23 @@ export default function Navbar() {
                 aria-label={t("toggleThemeLabel")}
                 title={t("toggleThemeLabel")}
               >
-                {theme === "dark" ? <Sun className="h-4 w-4 text-blue-300" /> : <Moon className="h-4 w-4 text-blue-300" />}
+                {theme === "dark" ? <Sun className="h-4 w-4 text-accent-warm" /> : <Moon className="h-4 w-4 text-accent-clay" />}
               </button>
             )}
 
-            <Link href="/add-car" className="inline-flex min-h-11 items-center rounded-xl bg-gradient-to-l from-blue-600 to-indigo-600 border border-blue-400/30 px-4 py-2 text-xs font-extrabold text-white shadow-lg shadow-blue-600/30 transition-all duration-200 hover:-translate-y-0.5 hover:from-blue-500 hover:to-indigo-500 hover:shadow-xl hover:shadow-blue-500/50">
+            <Link href="/add-car" className="b2-press corner-cut-sm inline-flex min-h-11 items-center rounded-sm bg-accent-clay px-4 py-2 text-xs font-extrabold text-white shadow-[var(--shadow-clay)] transition-colors hover:bg-accent-clay-hover">
               {t("addCar")}
             </Link>
           </div>
 
           <div className="flex items-center gap-1.5 sm:gap-2 2xl:hidden">
-            <Link href="/search" className={`b2-icon-button border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10 hover:text-white ${currentSection === "search" ? "text-blue-300" : ""}`} aria-label={t("openSearchLabel")} title={t("searchTitleLabel")}>
+            <Link href="/search" className={`b2-icon-button border border-border-subtle bg-bg-surface text-ink-secondary hover:bg-bg-muted hover:text-ink-primary ${currentSection === "search" ? "text-accent-clay" : ""}`} aria-label={t("openSearchLabel")} title={t("searchTitleLabel")}>
               <Car className="h-4 w-4" />
             </Link>
             <button
               type="button"
               onClick={() => setMobileMenuOpen((open) => !open)}
-              className="b2-icon-button border border-white/10 bg-white/5 text-white hover:bg-white/10"
+              className="b2-icon-button border border-border-subtle bg-bg-surface text-ink-primary hover:bg-bg-muted"
               aria-expanded={mobileMenuOpen}
               aria-controls="mobile-navigation"
               aria-label={mobileMenuOpen ? t("closeMenuLabel") : t("openMenuLabel")}
@@ -616,41 +616,41 @@ export default function Navbar() {
 
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-[60] 2xl:hidden" role="presentation">
-          <button type="button" className="absolute inset-0 bg-slate-950/40 backdrop-blur-[2px]" aria-label={t("close")} onClick={() => setMobileMenuOpen(false)} />
-          <aside ref={mobileMenuRef} id="mobile-navigation" className={`absolute top-0 flex h-full w-[min(88vw,22rem)] flex-col overflow-y-auto bg-background p-4 shadow-2xl ${direction === "rtl" ? "right-0" : "left-0"}`} dir={direction} aria-label={t("search")} aria-modal="true" role="dialog" tabIndex={-1}>
-          <div className="flex items-center justify-between border-b border-border pb-4">
+          <button type="button" className="absolute inset-0 bg-ink-primary/40 backdrop-blur-[2px]" aria-label={t("close")} onClick={() => setMobileMenuOpen(false)} />
+          <aside ref={mobileMenuRef} id="mobile-navigation" className={`absolute top-0 flex h-full w-[min(88vw,22rem)] flex-col overflow-y-auto bg-bg-surface p-4 shadow-xl ${direction === "rtl" ? "right-0" : "left-0"}`} dir={direction} aria-label={t("search")} aria-modal="true" role="dialog" tabIndex={-1}>
+          <div className="flex items-center justify-between border-b border-border-subtle pb-4">
             <Link href="/" onClick={() => setMobileMenuOpen(false)} className="flex h-10 w-32 items-center justify-start" aria-label="ALTUSplace">
-              <img src="/assets/images/logo.png" alt="ALTUSplace" className="brand-logo max-h-full w-auto object-contain" style={{ height: '48px', maxWidth: '100%', objectFit: 'contain' }} />
+              <img src="/assets/images/logo.png" alt="ALTUSplace" className="brand-logo max-h-full w-auto object-contain" style={{ height: '44px', maxWidth: '100%', objectFit: 'contain' }} />
             </Link>
-            <button type="button" onClick={() => setMobileMenuOpen(false)} className="b2-icon-button border border-border bg-muted" aria-label={t("close")}><X className="h-5 w-5" /></button>
+            <button type="button" onClick={() => setMobileMenuOpen(false)} className="b2-icon-button border border-border-subtle bg-bg-muted" aria-label={t("close")}><X className="h-5 w-5" /></button>
           </div>
           <div className="mx-auto flex w-full flex-1 flex-col gap-2 pt-4">
             <nav className="space-y-1" aria-label={t("mobileNavLabel")}>
               {renderNavLinks(true)}
             </nav>
 
-            <div className="mt-3 space-y-4 border-t border-border pt-4">
+            <div className="mt-3 space-y-4 border-t border-border-subtle pt-4">
               <div>
-                <p className="mb-2 flex items-center gap-1.5 text-xs font-bold text-muted-foreground"><Coins className="h-3.5 w-3.5 text-[#2563EB] dark:text-[#2563EB]" /> {t("currency")}</p>
+                <p className="mb-2 flex items-center gap-1.5 text-xs font-bold text-ink-secondary"><Coins className="h-3.5 w-3.5 text-accent-clay" /> {t("currency")}</p>
                 <div className="b2-segmented-control w-full">
                   {(["MAD", "EUR", "USD"] as Currency[]).map((item) => (
-                    <button key={item} type="button" aria-pressed={currency === item} onClick={() => selectCurrency(item)} className={currency === item ? "bg-[#2563EB] text-white" : "text-muted-foreground hover:bg-background hover:text-foreground"}>{item}</button>
+                    <button key={item} type="button" aria-pressed={currency === item} onClick={() => selectCurrency(item)} className={currency === item ? "bg-accent-clay text-white" : "text-ink-secondary hover:bg-bg-muted hover:text-ink-primary"}>{item}</button>
                   ))}
                 </div>
               </div>
 
               <div>
-                <p className="mb-2 flex items-center gap-1.5 text-xs font-bold text-muted-foreground"><Globe className="h-3.5 w-3.5 text-[#2563EB] dark:text-[#2563EB]" /> {t("language")}</p>
+                <p className="mb-2 flex items-center gap-1.5 text-xs font-bold text-ink-secondary"><Globe className="h-3.5 w-3.5 text-accent-clay" /> {t("language")}</p>
                 <div className="b2-segmented-control w-full">
                   {(["ar", "fr", "en"] as const).map((item) => (
-                    <button key={item} type="button" aria-pressed={language === item} onClick={() => selectLanguage(item)} className={language === item ? "bg-[#2563EB] text-white" : "text-muted-foreground hover:bg-background hover:text-foreground"}>{item === "ar" ? t("arabic") : item === "fr" ? t("french") : t("english")}</button>
+                    <button key={item} type="button" aria-pressed={language === item} onClick={() => selectLanguage(item)} className={language === item ? "bg-accent-clay text-white" : "text-ink-secondary hover:bg-bg-muted hover:text-ink-primary"}>{item === "ar" ? t("arabic") : item === "fr" ? t("french") : t("english")}</button>
                   ))}
                 </div>
               </div>
 
               <div className="flex items-center gap-2">
-                <button type="button" onClick={() => { setTwoFaModalOpen(true); setMobileMenuOpen(false); }} className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-muted px-3 py-2 text-xs font-bold text-foreground hover:bg-background"><Shield className="h-3.5 w-3.5 text-[#2563EB] dark:text-[#2563EB]" /> {t("accountSecurity")}</button>
-                <button type="button" onClick={() => { setCmiModalOpen(true); setMobileMenuOpen(false); }} className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-muted px-3 py-2 text-xs font-bold text-foreground hover:bg-background"><CreditCard className="h-3.5 w-3.5 text-[#2563EB] dark:text-[#2563EB]" /> {t("cmiPaymentMobile")}</button>
+                <button type="button" onClick={() => { setTwoFaModalOpen(true); setMobileMenuOpen(false); }} className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-sm border border-border-subtle bg-bg-muted px-3 py-2 text-xs font-bold text-ink-primary hover:bg-bg-base"><Shield className="h-3.5 w-3.5 text-accent-clay" /> {t("accountSecurity")}</button>
+                <button type="button" onClick={() => { setCmiModalOpen(true); setMobileMenuOpen(false); }} className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-sm border border-border-subtle bg-bg-muted px-3 py-2 text-xs font-bold text-ink-primary hover:bg-bg-base"><CreditCard className="h-3.5 w-3.5 text-accent-clay" /> {t("cmiPaymentMobile")}</button>
               </div>
 
               {toggleTheme && (
@@ -660,15 +660,15 @@ export default function Navbar() {
                     toggleTheme();
                     toast.success(theme === "dark" ? t("themeToLightToast") : t("themeToDarkToast"));
                   }}
-                  className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-border bg-muted px-3 py-2 text-xs font-bold text-foreground hover:bg-background"
+                  className="flex min-h-11 w-full items-center justify-center gap-2 rounded-sm border border-border-subtle bg-bg-muted px-3 py-2 text-xs font-bold text-ink-primary hover:bg-bg-base"
                   aria-label={t("toggleThemeLabel")}
                 >
-                  {theme === "dark" ? <Sun className="h-3.5 w-3.5 text-amber-400" /> : <Moon className="h-3.5 w-3.5 text-[#2563EB]" />}
+                  {theme === "dark" ? <Sun className="h-3.5 w-3.5 text-accent-warm" /> : <Moon className="h-3.5 w-3.5 text-accent-clay" />}
                   {t("toggleThemeLabel")}
                 </button>
               )}
 
-              <Link href="/add-car" onClick={() => setMobileMenuOpen(false)} className="flex min-h-11 items-center justify-center rounded-xl bg-gradient-to-l from-blue-600 to-indigo-600 px-4 py-3 text-sm font-extrabold text-white shadow-lg shadow-blue-600/25 transition-all hover:from-blue-500 hover:to-indigo-500 hover:shadow-xl hover:shadow-blue-500/40">
+              <Link href="/add-car" onClick={() => setMobileMenuOpen(false)} className="b2-press corner-cut-sm flex min-h-11 items-center justify-center rounded-sm bg-accent-clay px-4 py-3 text-sm font-extrabold text-white shadow-[var(--shadow-clay)] transition-colors hover:bg-accent-clay-hover">
                 {t("addCar")}
               </Link>
             </div>

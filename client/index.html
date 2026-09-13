@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#0B0F19" />
+    <meta name="theme-color" content="#15120D" />
     <meta name="description" content="ALTUSplace: منصة الوساطة الأولى لتأجير السيارات والعقارات في المغرب. La première plateforme de location de voitures et de biens immobiliers au Maroc." />
     <link rel="icon" href="/favicon.ico" sizes="48x48" />
     <link rel="icon" type="image/png" sizes="192x192" href="/images/icon-192.png" />
@@ -33,9 +33,9 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@200..900&family=El+Messiri:wght@400;500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&display=swap" rel="stylesheet">
     <style>
-      body { font-family: 'Cairo', sans-serif; }
+      body { font-family: 'Cairo', 'Inter', system-ui, sans-serif; }
     </style>
     <script>
       // Anti-FOUC: apply the persisted (or OS-preferred) theme before first
@@ -55,14 +55,14 @@
             root.style.colorScheme = "light";
           }
           var meta = document.querySelector('meta[name="theme-color"]');
-          if (meta) meta.setAttribute("content", theme === "dark" ? "#0B0F19" : "#F8FAFC");
+          if (meta) meta.setAttribute("content", theme === "dark" ? "#15120D" : "#F3EFE6");
         } catch (e) {
           /* ignore — storage unavailable */
         }
       })();
     </script>
   </head>
-  <body class="bg-[#F8FAFC] text-[#0F172A] antialiased">
+  <body class="bg-[#F3EFE6] text-[#1E1B14] antialiased">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

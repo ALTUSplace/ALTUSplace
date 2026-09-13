@@ -11,20 +11,20 @@ interface PageHeaderProps {
 
 export function PageHeader({ title, subtitle, eyebrow, action, className }: PageHeaderProps) {
   return (
-    <div className={cn("flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between", className)}>
-      <div className="flex flex-col gap-1">
-        {eyebrow && <span className="text-xs font-bold uppercase tracking-widest text-accent-indigo">{eyebrow}</span>}
-        <h1 className="text-2xl font-bold tracking-tight text-ink-primary sm:text-3xl lg:text-4xl">{title}</h1>
-        {subtitle && <p className="max-w-xl text-sm text-ink-secondary sm:text-base">{subtitle}</p>}
+    <div className={cn("flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between", className)}>
+      <div className="flex flex-col gap-3 max-w-2xl">
+        {eyebrow && <span className="section-index">{eyebrow}</span>}
+        <h1 className="font-display text-2xl font-bold tracking-tight text-ink-primary sm:text-3xl lg:text-4xl">{title}</h1>
+        {subtitle && <p className="text-sm text-ink-secondary sm:text-base">{subtitle}</p>}
       </div>
       {action && (
         <a
           href={action.href}
           onClick={action.onClick}
-          className="inline-flex shrink-0 items-center gap-1.5 text-sm font-semibold text-accent-indigo transition-colors hover:text-accent-indigo-hover"
+          className="group inline-flex shrink-0 items-center gap-1.5 text-sm font-bold text-accent-clay transition-colors hover:text-accent-clay-hover"
         >
-          {action.label}
-          <ArrowRight className="h-4 w-4" />
+          <span className="link-underline">{action.label}</span>
+          <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
         </a>
       )}
     </div>

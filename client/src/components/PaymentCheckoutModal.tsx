@@ -84,7 +84,7 @@ const luhnCheck = (cardNumber: string): boolean => {
 
 // Card type display config
 const cardTypeConfig: Record<string, { label: string; color: string; bg: string; border: string }> = {
-  visa: { label: 'VISA', color: 'text-blue-400', bg: 'bg-blue-400/10', border: 'border-blue-400/30' },
+  visa: { label: 'VISA', color: 'text-accent-clay', bg: 'bg-accent-clay-soft', border: 'border-accent-clay/30' },
   mastercard: { label: 'MC', color: 'text-orange-400', bg: 'bg-orange-400/10', border: 'border-orange-400/30' },
   amex: { label: 'AMEX', color: 'text-emerald-400', bg: 'bg-emerald-400/10', border: 'border-emerald-400/30' },
   unknown: { label: '', color: '', bg: '', border: '' },
@@ -249,7 +249,7 @@ export function PaymentCheckoutModal({
   const getCardBrandIcon = () => {
     switch (cardType) {
       case 'visa':
-        return <div className="px-2 py-1 bg-blue-600 rounded text-white text-xs font-bold">VISA</div>;
+        return <div className="px-2 py-1 bg-accent-clay rounded text-white text-xs font-bold">VISA</div>;
       case 'mastercard':
         return (
           <div className="flex items-center">
@@ -258,7 +258,7 @@ export function PaymentCheckoutModal({
           </div>
         );
       case 'amex':
-        return <div className="px-2 py-1 bg-blue-400 rounded text-white text-xs font-bold">AMEX</div>;
+        return <div className="px-2 py-1 bg-accent-clay rounded text-white text-xs font-bold">AMEX</div>;
       default:
         return <CreditCard className="w-5 h-5 text-slate-400" />;
     }
@@ -311,9 +311,9 @@ export function PaymentCheckoutModal({
               <p className="text-sm font-bold text-slate-300">اختر طريقة الدفع</p>
               <div className="space-y-3">
                 <button onClick={() => { setPaymentMethod('cmi_card'); setStep('details'); }} className="w-full flex items-center gap-4 p-4 rounded-2xl border-2 border-amber-500 bg-amber-500/5 transition-all text-right hover:bg-amber-500/10">
-                  <div className="bg-blue-500/10 p-2.5 rounded-xl border border-blue-500/20"><CreditCard className="w-5 h-5 text-blue-400" /></div>
+                  <div className="bg-accent-clay-soft p-2.5 rounded-xl border border-accent-clay/30"><CreditCard className="w-5 h-5 text-accent-clay" /></div>
                   <div className="flex-1"><p className="font-bold text-sm">بطاقة بنكية (CMI)</p><p className="text-[11px] text-slate-400">Visa, Mastercard - فوري وآمن</p></div>
-                  <div className="flex gap-1"><div className="px-1.5 py-0.5 bg-blue-600 rounded text-[8px] font-bold text-white">VISA</div></div>
+                  <div className="flex gap-1"><div className="px-1.5 py-0.5 bg-accent-clay rounded text-[8px] font-bold text-white">VISA</div></div>
                 </button>
                 <button onClick={() => { setPaymentMethod('bank_transfer'); setStep('details'); }} className="w-full flex items-center gap-4 p-4 rounded-2xl border-2 border-slate-700 hover:border-slate-600 bg-slate-900 transition-all text-right">
                   <div className="bg-emerald-500/10 p-2.5 rounded-xl border border-emerald-500/20"><Building2 className="w-5 h-5 text-emerald-400" /></div>

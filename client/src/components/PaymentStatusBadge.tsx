@@ -41,9 +41,9 @@ const statusConfig: Record<string, { label: string; color: string; bgColor: stri
   },
   Processing: {
     label: 'جاري المعالجة',
-    color: 'text-blue-700',
-    bgColor: 'bg-blue-50',
-    borderColor: 'border-blue-200',
+    color: 'text-ink-secondary',
+    bgColor: 'bg-bg-muted',
+    borderColor: 'border-border-subtle',
     icon: Loader2,
   },
   Failed: {
@@ -120,7 +120,7 @@ interface PaymentMethodBadgeProps {
 }
 
 const methodConfig: Record<string, { label: string; icon: typeof CreditCard; color: string }> = {
-  cmi_card: { label: 'بطاقة بنكية', icon: CreditCard, color: 'text-blue-600' },
+  cmi_card: { label: 'بطاقة بنكية', icon: CreditCard, color: 'text-accent-clay' },
   bank_transfer: { label: 'تحويل بنكي', icon: Building2, color: 'text-emerald-600' },
   mobile_wallet: { label: 'محفظة إلكترونية', icon: CreditCard, color: 'text-purple-600' },
 };
