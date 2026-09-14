@@ -10,6 +10,7 @@ import { SmartRecommendations } from '@/components/SmartRecommendations';
 import { FAQSection } from '@/components/FAQSection';
 import { ListingCard } from '@/components/ui/ListingCard';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { isCarCategory, isPropertyCategory } from '@/lib/categories';
 import { toast } from 'sonner';
 
 export default function Home() {
@@ -23,9 +24,6 @@ export default function Home() {
 
   // Database listings formatted as unified car items
   const { data: dbListings = [] } = trpc.listings.list.useQuery();
-  const isCarCategory = (category: string) =>
-    category === 'car' ||
-    !/real_estate|property|office|coworking|شقة|فيلا|مكتب|villa|apartment|bureau|siège|salle\s*de\s*réunion/i.test(category);
   const activeListings = dbListings.length > 0 ? dbListings
     .filter(item => isCarCategory(item.category))
     .map(item => ({
@@ -43,6 +41,22 @@ export default function Home() {
       seats: '5'
     }
   })) : LISTINGS;
+
+  const activeProperties = dbListings.length > 0 ? dbListings
+    .filter(item => isPropertyCategory(item.category))
+    .map(item => ({
+      id: String(item.id),
+      title: item.title,
+      category: item.category,
+      type: 'property' as const,
+      pricePerUnit: item.pricePerDay,
+      image: item.imageUrl || 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=800',
+      city: item.city || 'الدار البيضاء',
+      providerName: item.ownerName || 'وكالة عقارية',
+      specs: {
+        rooms: item.rooms && item.rooms > 0 ? String(item.rooms) : undefined,
+      }
+    })) : [];
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -249,6 +263,39 @@ export default function Home() {
             />
           ))}
         </div>
+      </section>
+
+      {/* Featured Properties Section */}
+      <section className="py-10 md:py-16 px-4 container mx-auto max-w-6xl border-t border-border-subtle">
+        <PageHeader
+          eyebrow="عقارات للكراء"
+          title="شقق، فيلات ومكاتب معتمدة"
+          action={{ label: 'استعرض العقارات', href: '/search?type=property' }}
+        />
+
+        {activeProperties.length > 0 ? (
+          <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {activeProperties.slice(0, 6).map((item, index) => (
+              <ListingCard
+                key={item.id}
+                id={item.id}
+                title={item.title}
+                city={item.city}
+                pricePerDay={item.pricePerUnit}
+                images={item.image ? [item.image] : []}
+                type="property"
+                specs={{
+                  rooms: item.specs.rooms ? Number(item.specs.rooms) : undefined,
+                }}
+                className={`stagger-${Math.min(index + 1, 8)} animate-fade-up`}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="mt-8 rounded-2xl border border-dashed border-border-default bg-bg-surface p-10 text-center text-sm text-ink-secondary">
+            لا توجد عقارات معتمدة حالياً — أضف شقتك أو مكتبك من لوحة الوكالة لتظهر هنا.
+          </div>
+        )}
       </section>
 
       {/* Featured Blog Section */}

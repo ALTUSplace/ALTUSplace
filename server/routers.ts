@@ -27,7 +27,7 @@ import { getTranslatedListing, getTranslationStats, invalidateTranslationCache, 
 import { ENV } from "./_core/env";
 import { getKycStatusPayload } from "./verification/eligibility";
 import { assertKycEligibleToBook } from "./verification/eligibility";
-import { maskDocumentNumber } from "./verification/requirements";
+import { maskDocumentNumber, normalizeBookingCategory } from "./verification/requirements";
 import { ADDONS_CATALOG, calculateAddOnsTotal, isAddOnId } from "./addons";
 import { createEscrowEntry, freezeEscrowEntry, getGlobalCommission, getTierCommission, mediateEscrowEntry, releaseEscrowEntry, resolveEffectiveCommission, upsertGlobalCommission, upsertTierCommission, VENDOR_TIERS } from "./escrow";
 import { createProviderCharge, gatewaySupportsCurrency, type GatewayCode } from "./payments/providers";
@@ -783,7 +783,7 @@ export const appRouter = router({
     listings: adminProcedure.query(async () => {
       const db = await getDb();
       if (!db) return [];
-      return db.select({ id: listings.id, title: listings.title, description: listings.description, category: listings.category, status: listings.status, isFeatured: listings.isFeatured, pricePerDay: listings.pricePerDay, city: listings.city, imageUrl: listings.imageUrl, lat: listings.lat, lng: listings.lng, fuelType: listings.fuelType, transmission: listings.transmission, rooms: listings.rooms, officeType: listings.officeType, rentalPeriod: listings.rentalPeriod, amenities: listings.amenities, ownerId: listings.ownerId, ownerName: users.name, createdAt: listings.createdAt })
+      return db.select({ id: listings.id, title: listings.title, description: listings.description, category: listings.category, status: listings.status, isFeatured: listings.isFeatured, pricePerDay: listings.pricePerDay, city: listings.city, imageUrl: listings.imageUrl, lat: listings.lat, lng: listings.lng, fuelType: listings.fuelType, transmission: listings.transmission, rooms: listings.rooms, officeType: listings.officeType, rentalPeriod: listings.rentalPeriod, amenities: listings.amenities, propertyType: listings.propertyType, pricePerMonth: listings.pricePerMonth, ownerId: listings.ownerId, ownerName: users.name, createdAt: listings.createdAt })
         .from(listings).leftJoin(users, eq(listings.ownerId, users.id)).orderBy(desc(listings.createdAt)).limit(200);
     }),
     moderateListing: adminProcedure
@@ -1600,6 +1600,9 @@ export const appRouter = router({
           officeType: z.string().optional(),
           rentalPeriod: z.enum(['daily', 'monthly', 'yearly']).optional(),
           amenities: z.array(z.string()).optional(),
+          rooms: z.number().int().nonnegative().optional(),
+          propertyType: z.string().trim().max(32).optional(),
+          pricePerMonth: z.number().int().nonnegative().optional(),
           fuelType: z.string().trim().max(32).optional(),
           transmission: z.string().trim().max(32).optional(),
         })
@@ -1635,6 +1638,9 @@ export const appRouter = router({
           officeType: input.officeType,
           rentalPeriod: input.rentalPeriod,
           amenities: input.amenities?.join(',') || null,
+          rooms: input.rooms ?? 0,
+          propertyType: input.propertyType,
+          pricePerMonth: input.pricePerMonth,
           fuelType: input.fuelType ?? undefined,
           transmission: input.transmission ?? undefined,
           status: "Published",
@@ -1670,6 +1676,9 @@ export const appRouter = router({
         officeType: z.string().optional(),
         rentalPeriod: z.enum(['daily', 'monthly', 'yearly']).optional(),
         amenities: z.array(z.string()).optional(),
+        rooms: z.number().int().nonnegative().optional(),
+        propertyType: z.string().trim().max(32).nullable().optional(),
+        pricePerMonth: z.number().int().nonnegative().nullable().optional(),
         fuelType: z.string().trim().max(32).nullable().optional(),
         transmission: z.string().trim().max(32).nullable().optional(),
       }))
@@ -1890,9 +1899,17 @@ export const appRouter = router({
         const netProfit = (subtotal + addOnsTotal) - commissionFee;
 
         // Residency and documents are mandatory together: if the renter states
-        // residency, both checkout documents must be attached and uploaded.
-        if (input.residency && (!input.drivingLicense || !input.identityDocument)) {
-          throw new TRPCError({ code: "BAD_REQUEST", message: "المرجو إرفاق رخصة السياقة ووثيقة الهوية مع حالة الإقامة." });
+        // residency, the documents required for that listing category must be
+        // attached and uploaded. Car bookings need the driving licence + ID,
+        // while property (real estate/office) bookings only need the ID.
+        const bookingCategory = normalizeBookingCategory(listing[0].category ?? null);
+        if (input.residency) {
+          if (bookingCategory === "car" && (!input.drivingLicense || !input.identityDocument)) {
+            throw new TRPCError({ code: "BAD_REQUEST", message: "المرجو إرفاق رخصة السياقة ووثيقة الهوية مع حالة الإقامة." });
+          }
+          if (bookingCategory !== "car" && !input.identityDocument) {
+            throw new TRPCError({ code: "BAD_REQUEST", message: "المرجو إرفاق وثيقة الهوية مع حالة الإقامة." });
+          }
         }
         const uploadCheckoutDocument = async (kind: "driving-license" | "identity", doc: { fileName: string; mimeType: string; contentBase64: string }) => {
           const bytes = Buffer.from(doc.contentBase64, "base64");
@@ -1954,7 +1971,7 @@ export const appRouter = router({
         void sendWhatsAppText(owner[0]?.whatsappPhone ?? owner[0]?.agencyPhone, [
           "ALTUSplace — حجز جديد / Nouvelle réservation",
           `رقم الحجز / Réservation: #${bookingId}`,
-          `السيارة / Véhicule: ${listing[0].title}`,
+          `${bookingCategory === "car" ? "السيارة / Véhicule" : "العقار / Bien"}: ${listing[0].title}`,
           `الفترة / Période: ${dateLabel}`,
           `الإجمالي / Total: ${(subtotal + addOnsTotal).toLocaleString("fr-MA")} MAD`,
           `المستأجر / Client: ${ctx.user!.name ?? "عميل ALTUSplace"}`,
@@ -2025,6 +2042,7 @@ export const appRouter = router({
         flightNumber: bookings.flightNumber,
         arrivalTime: bookings.arrivalTime,
         listingTitle: listings.title,
+        category: listings.category,
         renterName: users.name,
         renterEmail: users.email,
       }).from(bookings)

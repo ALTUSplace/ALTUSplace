@@ -16,6 +16,8 @@ import {
   FileText,
   Fuel,
   Gauge,
+  Home,
+  BedDouble,
   Pencil,
   Plane,
   Plus,
@@ -42,6 +44,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { AdvancedMediaUpload } from "@/components/AdvancedMediaUpload";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { isPropertyCategory } from "@/lib/categories";
 
 const money = (value: number | string) => `${Number(value).toLocaleString("fr-MA")} درهم`;
 
@@ -136,6 +139,9 @@ type FleetCar = {
   fuelType: string | null;
   transmission: string | null;
   description: string | null;
+  propertyType?: string | null;
+  pricePerMonth?: number | null;
+  rooms?: number | null;
   createdAt: string | Date | null;
 };
 
@@ -154,6 +160,28 @@ const emptyCarForm: CarForm = {
   price: "",
   transmission: "أوتوماتيك",
   fuelType: "ديزل",
+  description: "",
+};
+
+const PROPERTY_TYPE_OPTIONS = ["شقة", "فيلا", "منزل", "مكتب", "محل تجاري", "أرض"] as const;
+
+type PropertyForm = {
+  title: string;
+  city: string;
+  price: string;
+  monthlyPrice: string;
+  propertyType: string;
+  rooms: string;
+  description: string;
+};
+
+const emptyPropertyForm: PropertyForm = {
+  title: "",
+  city: "مراكش",
+  price: "",
+  monthlyPrice: "",
+  propertyType: "شقة",
+  rooms: "",
   description: "",
 };
 
@@ -588,23 +616,23 @@ export default function AgencyDashboard() {
   const createCar = trpc.listings.create.useMutation({
     onSuccess: () => {
       fleet.refetch();
-      closeCarForm();
-      toast.success("تمت إضافة السيارة إلى الأسطول ونشرها بعد اجتياز فحص الصور.");
+      closeActiveForm();
+      toast.success("تم نشر الإعلان بعد اجتياز فحص الصور.");
     },
     onError: (error) => toast.error(error.message),
   });
   const updateCar = trpc.listings.update.useMutation({
     onSuccess: () => {
       fleet.refetch();
-      closeCarForm();
-      toast.success("تم تحديث بيانات السيارة.");
+      closeActiveForm();
+      toast.success("تم تحديث بيانات الإعلان.");
     },
     onError: (error) => toast.error(error.message),
   });
   const setFleetStatus = trpc.listings.setFleetStatus.useMutation({
     onSuccess: () => {
       fleet.refetch();
-      toast.success("تم تحديث حالة السيارة.");
+      toast.success("تم تحديث حالة الإعلان.");
     },
     onError: (error) => toast.error(error.message),
   });
@@ -625,12 +653,31 @@ export default function AgencyDashboard() {
   const [carImageUrl, setCarImageUrl] = useState("");
   const [carImageProof, setCarImageProof] = useState("");
 
+  const [propertyFormOpen, setPropertyFormOpen] = useState(false);
+  const [editingProperty, setEditingProperty] = useState<FleetCar | null>(null);
+  const [propertyForm, setPropertyForm] = useState<PropertyForm>(emptyPropertyForm);
+  const [propertyImageUrl, setPropertyImageUrl] = useState("");
+  const [propertyImageProof, setPropertyImageProof] = useState("");
+
   const closeCarForm = () => {
     setCarFormOpen(false);
     setEditingCar(null);
     setCarForm(emptyCarForm);
     setCarImageUrl("");
     setCarImageProof("");
+  };
+
+  const closePropertyForm = () => {
+    setPropertyFormOpen(false);
+    setEditingProperty(null);
+    setPropertyForm(emptyPropertyForm);
+    setPropertyImageUrl("");
+    setPropertyImageProof("");
+  };
+
+  const closeActiveForm = () => {
+    closeCarForm();
+    closePropertyForm();
   };
 
   const rows: OwnerBookingRow[] = useMemo(() => bookings.data ?? [], [bookings.data]);
@@ -649,6 +696,30 @@ export default function AgencyDashboard() {
   const cars: FleetCar[] = useMemo(
     () => (fleet.data ?? []).filter((car) => car.category === "car" || car.category.includes("سيارة")).map((car) => ({ ...car })),
     [fleet.data],
+  );
+  const properties: FleetCar[] = useMemo(
+    () => (fleet.data ?? []).filter((item) => isPropertyCategory(item.category)).map((item) => ({ ...item })),
+    [fleet.data],
+  );
+  const propertyCounts = useMemo(() => {
+    const counts = { available: 0, rented: 0, maintenance: 0 };
+    for (const property of properties) {
+      if (property.status === "Maintenance") counts.maintenance += 1;
+      else if (property.status === "Rented") counts.rented += 1;
+      else counts.available += 1;
+    }
+    return counts;
+  }, [properties]);
+  const propertyAvgDaily = useMemo(
+    () => (properties.length ? Math.round(properties.reduce((sum, property) => sum + Number(property.pricePerDay ?? 0), 0) / properties.length) : 0),
+    [properties],
+  );
+  const propertyAvgMonthly = useMemo(
+    () => {
+      const withMonthly = properties.filter((property) => Number(property.pricePerMonth) > 0);
+      return withMonthly.length ? Math.round(withMonthly.reduce((sum, property) => sum + Number(property.pricePerMonth), 0) / withMonthly.length) : 0;
+    },
+    [properties],
   );
   const fleetCounts = useMemo(() => {
     const counts = { available: 0, booked: 0, maintenance: 0 };
@@ -758,6 +829,89 @@ export default function AgencyDashboard() {
     setFleetStatus.mutate({ listingId: car.id, status: toServerStatus(next) });
   };
 
+  const openAddProperty = () => {
+    setEditingProperty(null);
+    setPropertyForm(emptyPropertyForm);
+    setPropertyImageUrl("");
+    setPropertyImageProof("");
+    setPropertyFormOpen(true);
+  };
+
+  const openEditProperty = (property: FleetCar) => {
+    setEditingProperty(property);
+    setPropertyForm({
+      title: property.title ?? "",
+      city: (CITIES as readonly string[]).includes(property.city ?? "") ? (property.city as string) : "مراكش",
+      price: String(property.pricePerDay ?? ""),
+      monthlyPrice: String(property.pricePerMonth ?? ""),
+      propertyType: property.propertyType ?? "شقة",
+      rooms: String(property.rooms ?? ""),
+      description: property.description ?? "",
+    });
+    setPropertyImageUrl("");
+    setPropertyImageProof("");
+    setPropertyFormOpen(true);
+  };
+
+  const submitProperty = (event: React.FormEvent) => {
+    event.preventDefault();
+    const numericPrice = Number(propertyForm.price);
+    const numericMonthly = propertyForm.monthlyPrice.trim() ? Number(propertyForm.monthlyPrice) : 0;
+    if (!propertyForm.title.trim()) {
+      toast.error("يرجى إدخال عنوان العقار (مثال: شقة فاخرة بحي المعاريف).");
+      return;
+    }
+    if (!Number.isFinite(numericPrice) || numericPrice <= 0) {
+      toast.error("يرجى إدخال سعر يومي بالدرهم أكبر من صفر.");
+      return;
+    }
+    if (propertyForm.monthlyPrice.trim() && (!Number.isFinite(numericMonthly) || numericMonthly <= 0)) {
+      toast.error("يرجى إدخال سعر شهري صحيح بالدرهم.");
+      return;
+    }
+    const roomsCount = Number(propertyForm.rooms) || 0;
+    if (propertyForm.rooms.trim() && (!Number.isInteger(roomsCount) || roomsCount < 0)) {
+      toast.error("يرجى إدخال عدد غرف صحيح.");
+      return;
+    }
+    if (editingProperty) {
+      updateCar.mutate({
+        id: editingProperty.id,
+        title: propertyForm.title.trim(),
+        city: propertyForm.city,
+        pricePerDay: numericPrice,
+        pricePerMonth: numericMonthly > 0 ? numericMonthly : null,
+        propertyType: propertyForm.propertyType,
+        rooms: propertyForm.rooms.trim() ? roomsCount : undefined,
+        description: propertyForm.description.trim() || undefined,
+        ...(propertyImageUrl && propertyImageProof ? { imageUrl: propertyImageUrl, imageVerificationProof: propertyImageProof } : {}),
+      });
+      return;
+    }
+    if (!propertyImageUrl || !propertyImageProof) {
+      toast.error("يرجى رفع صورة أصلية للعقار واجتياز الفحص قبل إضافته.");
+      return;
+    }
+    createCar.mutate({
+      title: propertyForm.title.trim(),
+      category: "property",
+      city: propertyForm.city,
+      pricePerDay: numericPrice,
+      pricePerMonth: numericMonthly > 0 ? numericMonthly : undefined,
+      propertyType: propertyForm.propertyType,
+      rooms: propertyForm.rooms.trim() ? roomsCount : undefined,
+      description: propertyForm.description.trim() || undefined,
+      imageUrl: propertyImageUrl,
+      imageVerificationProof: propertyImageProof,
+    });
+  };
+
+  const changePropertyStatus = (property: FleetCar, next: FleetStatus) => {
+    if (next === toFleetStatus(property.status)) return;
+    setFleetStatus.mutate({ listingId: property.id, status: toServerStatus(next) });
+  };
+
+  const propertyBusy = createCar.isPending || updateCar.isPending;
   const carBusy = createCar.isPending || updateCar.isPending;
 
   return (
@@ -770,7 +924,7 @@ export default function AgencyDashboard() {
           </div>
           <h1 className="text-3xl font-black tracking-tight">لوحة وكالة التأجير</h1>
           <p className="mt-2 max-w-xl text-sm text-emerald-100/70">
-            تتبّع طلبات الحجز وراجع وثائق المستأجر (البيرمي وCIN/جواز السفر)، وأدر أسطول سياراتك وأسعارها اليومية.
+            تتبّع طلبات الحجز وراجع وثائق المستأجر (البيرمي وCIN/جواز السفر)، وأدر أسطول سياراتك وعقاراتك وأسعارها اليومية والشهرية.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -799,6 +953,7 @@ export default function AgencyDashboard() {
         <TabsList className="w-full justify-start rounded-2xl border bg-card p-1 sm:w-auto">
           <TabsTrigger value="bookings">الحجوزات والتحقق من الوثائق</TabsTrigger>
           <TabsTrigger value="fleet">الأسطول والأسعار</TabsTrigger>
+          <TabsTrigger value="properties">العقارات</TabsTrigger>
           <TabsTrigger value="insights">التحليلات والتقارير</TabsTrigger>
         </TabsList>
 
@@ -1065,6 +1220,133 @@ export default function AgencyDashboard() {
           </section>
         </TabsContent>
 
+        <TabsContent value="properties" className="space-y-6">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {[
+              { label: "إجمالي العقارات", value: String(properties.length), icon: Home, tone: "text-[#102d2b]" },
+              { label: "متاحة الآن", value: String(propertyCounts.available), icon: ShieldCheck, tone: "text-emerald-600" },
+              { label: "مؤجّرة", value: String(propertyCounts.rented), icon: CalendarDays, tone: "text-sky-600" },
+              { label: "في الصيانة", value: String(propertyCounts.maintenance), icon: Wrench, tone: "text-amber-600" },
+            ].map(({ label, value, icon: Icon, tone }) => (
+              <div key={label} className="rounded-2xl border bg-card p-4 shadow-sm">
+                <Icon className={`h-5 w-5 ${tone}`} />
+                <p className="mt-2 truncate text-sm font-semibold text-muted-foreground">{label}</p>
+                <p className="truncate font-black text-lg">{value}</p>
+              </div>
+            ))}
+          </div>
+
+          <section className="rounded-3xl border bg-card p-5 shadow-sm">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-bold">العقارات وأسعار الكراء</h2>
+                <p className="text-sm text-muted-foreground">
+                  {properties.length} عقار · متوسط السعر اليومي {money(propertyAvgDaily)}
+                  {propertyAvgMonthly > 0 ? ` · متوسط شهري ${money(propertyAvgMonthly)}` : ""}
+                </p>
+              </div>
+              <Button type="button" onClick={openAddProperty}>
+                <Plus className="ml-1 h-4 w-4" />
+                إضافة عقار
+              </Button>
+            </div>
+
+            {fleet.isLoading ? (
+              <div className="p-8 text-center text-sm text-muted-foreground">جاري تحميل العقارات...</div>
+            ) : properties.length === 0 ? (
+              <div className="rounded-2xl border border-dashed p-10 text-center text-muted-foreground">
+                أضف أول عقار (شقة في مراكش، فيلا في الرباط، مكتب في كازابلانكا، ...) ليظهر في إعلانات العقارات.
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[820px] text-right text-sm">
+                  <thead>
+                    <tr className="border-b text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                      <th className="px-3 py-2.5">العقار</th>
+                      <th className="px-3 py-2.5">النوع</th>
+                      <th className="px-3 py-2.5">المدينة</th>
+                      <th className="px-3 py-2.5">الغرف</th>
+                      <th className="px-3 py-2.5">السعر / يوم</th>
+                      <th className="px-3 py-2.5">السعر / شهر</th>
+                      <th className="px-3 py-2.5">الحالة</th>
+                      <th className="px-3 py-2.5">إجراءات</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {properties.map((property) => {
+                      const status = toFleetStatus(property.status);
+                      return (
+                        <tr key={property.id} className="align-middle hover:bg-slate-50 dark:hover:bg-slate-900/40">
+                          <td className="px-3 py-3">
+                            <div className="flex items-center gap-3">
+                              {property.imageUrl ? (
+                                <img
+                                  src={property.imageUrl}
+                                  alt={property.title ?? `عقار ${property.id}`}
+                                  className="h-12 w-16 rounded-lg border border-slate-200 object-cover dark:border-slate-700"
+                                />
+                              ) : (
+                                <div className="flex h-12 w-16 items-center justify-center rounded-lg border border-dashed text-slate-300">
+                                  <Home className="h-5 w-5" />
+                                </div>
+                              )}
+                              <p className="max-w-56 truncate font-bold">{property.title}</p>
+                            </div>
+                          </td>
+                          <td className="px-3 py-3 text-muted-foreground">{property.propertyType ?? property.category}</td>
+                          <td className="px-3 py-3 text-muted-foreground">{property.city}</td>
+                          <td className="px-3 py-3">
+                            {property.rooms && property.rooms > 0 ? (
+                              <span className="inline-flex items-center gap-1 text-muted-foreground">
+                                <BedDouble className="h-3.5 w-3.5" />
+                                {property.rooms}
+                              </span>
+                            ) : (
+                              <span className="text-slate-400">—</span>
+                            )}
+                          </td>
+                          <td className="px-3 py-3 font-bold">{money(property.pricePerDay)}</td>
+                          <td className="px-3 py-3 font-bold">{Number(property.pricePerMonth) > 0 ? money(property.pricePerMonth ?? 0) : <span className="text-slate-400">—</span>}</td>
+                          <td className="px-3 py-3">
+                            {status === "Booked" ? (
+                              <Badge className="bg-sky-600">{property.status === "Rented" ? "مؤجَّر" : fleetStatusLabel[status]}</Badge>
+                            ) : status === "Maintenance" ? (
+                              <Badge className="bg-amber-500 text-white">في الصيانة</Badge>
+                            ) : (
+                              <Badge className="bg-emerald-600">متاح</Badge>
+                            )}
+                          </td>
+                          <td className="px-3 py-3">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <select
+                                aria-label="حالة العقار"
+                                value={status}
+                                onChange={(event) => changePropertyStatus(property, event.target.value as FleetStatus)}
+                                className="rounded-lg border bg-background px-2.5 py-1.5 text-xs font-semibold"
+                                disabled={setFleetStatus.isPending}
+                              >
+                                {(Object.keys(fleetStatusLabel) as FleetStatus[]).map((option) => (
+                                  <option key={option} value={option}>
+                                    {fleetStatusLabel[option]}
+                                  </option>
+                                ))}
+                              </select>
+                              <Button size="sm" variant="outline" onClick={() => openEditProperty(property)}>
+                                <Pencil className="ml-1 h-3.5 w-3.5" />
+                                تعديل
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+        </TabsContent>
+
         <TabsContent value="insights" className="space-y-6">
           <FinancialAnalytics bookings={rows} />
           <ScheduleCalendar bookings={rows} cars={cars} />
@@ -1287,6 +1569,149 @@ export default function AgencyDashboard() {
               </Button>
               <Button type="submit" disabled={carBusy} className="bg-emerald-600 hover:bg-emerald-700 text-white">
                 {carBusy ? "جارٍ الحفظ..." : editingCar ? "حفظ التعديلات" : "فحص الصور وإضافة السيارة"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={propertyFormOpen} onOpenChange={(open) => !open && closePropertyForm()}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Home className="h-5 w-5 text-amber-500" />
+              {editingProperty ? "تعديل العقار" : "إضافة عقار جديد"}
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={submitProperty} className="space-y-4">
+            <label className="space-y-1.5">
+              <span className="text-xs font-bold">عنوان العقار <span className="text-red-500">*</span></span>
+              <input
+                type="text"
+                required
+                placeholder="مثال: شقة فاخرة قرب جامع الفنا"
+                value={propertyForm.title}
+                onChange={(event) => setPropertyForm({ ...propertyForm, title: event.target.value })}
+                className="w-full rounded-xl border bg-background p-3 text-sm"
+              />
+            </label>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="space-y-1.5">
+                <span className="text-xs font-bold">المدينة</span>
+                <select
+                  value={propertyForm.city}
+                  onChange={(event) => setPropertyForm({ ...propertyForm, city: event.target.value })}
+                  className="w-full rounded-xl border bg-background p-3 text-sm"
+                >
+                  {CITIES.map((city) => (
+                    <option key={city} value={city}>
+                      {city}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="space-y-1.5">
+                <span className="text-xs font-bold">نوع العقار</span>
+                <select
+                  value={propertyForm.propertyType}
+                  onChange={(event) => setPropertyForm({ ...propertyForm, propertyType: event.target.value })}
+                  className="w-full rounded-xl border bg-background p-3 text-sm"
+                >
+                  {PROPERTY_TYPE_OPTIONS.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-3">
+              <label className="space-y-1.5">
+                <span className="text-xs font-bold">السعر اليومي (درهم) <span className="text-red-500">*</span></span>
+                <input
+                  type="number"
+                  required
+                  min="1"
+                  placeholder="مثال: 300"
+                  value={propertyForm.price}
+                  onChange={(event) => setPropertyForm({ ...propertyForm, price: event.target.value })}
+                  className="w-full rounded-xl border bg-background p-3 text-sm"
+                />
+              </label>
+              <label className="space-y-1.5">
+                <span className="text-xs font-bold">السعر الشهري (درهم)</span>
+                <input
+                  type="number"
+                  min="1"
+                  placeholder="مثال: 9000"
+                  value={propertyForm.monthlyPrice}
+                  onChange={(event) => setPropertyForm({ ...propertyForm, monthlyPrice: event.target.value })}
+                  className="w-full rounded-xl border bg-background p-3 text-sm"
+                />
+              </label>
+              <label className="space-y-1.5">
+                <span className="text-xs font-bold">عدد الغرف</span>
+                <input
+                  type="number"
+                  min="0"
+                  placeholder="مثال: 3"
+                  value={propertyForm.rooms}
+                  onChange={(event) => setPropertyForm({ ...propertyForm, rooms: event.target.value })}
+                  className="w-full rounded-xl border bg-background p-3 text-sm"
+                />
+              </label>
+            </div>
+
+            <label className="space-y-1.5">
+              <span className="text-xs font-bold">وصف قصير (اختياري)</span>
+              <textarea
+                rows={2}
+                placeholder="مثال: شقة مفروشة بتكييف وواي فاي، قريبة من المواصلات."
+                value={propertyForm.description}
+                onChange={(event) => setPropertyForm({ ...propertyForm, description: event.target.value })}
+                className="w-full rounded-xl border bg-background p-3 text-sm"
+              />
+            </label>
+
+            {editingProperty ? (
+              <div className="space-y-3">
+                <div className="flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-muted-foreground dark:border-slate-700 dark:bg-slate-900/40">
+                  <Home className="h-4 w-4" />
+                  الصورة الحالية: {editingProperty.imageUrl ? "مرفوعة سابقاً" : "بدون صورة"} — ارفع صورة جديدة فقط إذا أردت إعادة فحصها وتغييرها.
+                </div>
+                <AdvancedMediaUpload
+                  onImagesUploaded={(images) => {
+                    const first = images[0];
+                    if (first) {
+                      setPropertyImageUrl(first.url);
+                      setPropertyImageProof(first.verificationProof);
+                    }
+                  }}
+                />
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <span className="text-xs font-bold">صورة العقار الرئيسية <span className="text-red-500">*</span></span>
+                <AdvancedMediaUpload
+                  onImagesUploaded={(images) => {
+                    const first = images[0];
+                    if (first) {
+                      setPropertyImageUrl(first.url);
+                      setPropertyImageProof(first.verificationProof);
+                    }
+                  }}
+                />
+              </div>
+            )}
+
+            <DialogFooter className="flex-wrap gap-2 sm:justify-end">
+              <Button type="button" variant="outline" onClick={closePropertyForm}>
+                إلغاء
+              </Button>
+              <Button type="submit" disabled={propertyBusy} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+                {propertyBusy ? "جارٍ الحفظ..." : editingProperty ? "حفظ التعديلات" : "فحص الصور وإضافة العقار"}
               </Button>
             </DialogFooter>
           </form>

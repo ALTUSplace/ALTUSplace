@@ -17,6 +17,7 @@ import {
 } from '@/lib/pricing';
 import { LISTINGS, PARTNERS } from '@/data/altusplace';
 import { buildContactWhatsAppUrl } from '@/lib/whatsapp';
+import { isPropertyCategory } from '@/lib/categories';
 
 const ALL_ADDON_IDS = Object.keys(ADDON_CATALOG) as AddOnId[];
 
@@ -25,7 +26,8 @@ function formatMAD(amount: number): string {
 }
 
 interface WhatsAppBookingDetails {
-  carTitle: string;
+  entityTitle: string;
+  entityLabel: string;
   startDate: string;
   endDate: string;
   days: number;
@@ -33,6 +35,7 @@ interface WhatsAppBookingDetails {
   addOns: AddOnId[];
   residencyLabel: string;
   identityLabel: string;
+  requireLicense: boolean;
   licenseName: string;
   identityName: string;
 }
@@ -43,7 +46,7 @@ function buildWhatsAppBookingMessage(details: WhatsAppBookingDetails): string {
   const lines = [
     'السلام عليكم، أرغب في تأكيد حجز عبر منصة ALTUSplace، وإليكم تفاصيل الحجز:',
     '',
-    `- السيارة: ${details.carTitle}`,
+    `- ${details.entityLabel}: ${details.entityTitle}`,
     `- تاريخ الاستلام: ${details.startDate}`,
     `- تاريخ الإرجاع: ${details.endDate}`,
     `- المدة: ${details.days} ${details.days === 1 ? 'يوم' : 'أيام'}`,
@@ -54,7 +57,9 @@ function buildWhatsAppBookingMessage(details: WhatsAppBookingDetails): string {
     lines.push(`- إضافة: ${def.labelAr} (${formatMAD(amount)})`);
   });
   lines.push(`- حالة الإقامة: ${details.residencyLabel}`);
-  lines.push(`- رخصة السياقة (البيرمي): ${details.licenseName ? `${details.licenseName} — مرفقة` : 'غير مرفقة'} للفحص المسبق من الوكالة`);
+  if (details.requireLicense) {
+    lines.push(`- رخصة السياقة (البيرمي): ${details.licenseName ? `${details.licenseName} — مرفقة` : 'غير مرفقة'} للفحص المسبق من الوكالة`);
+  }
   lines.push(`- وثيقة الهوية (${details.identityLabel}): ${details.identityName ? `${details.identityName} — مرفقة` : 'غير مرفقة'} للفحص المسبق من الوكالة`);
   lines.push(`- الإجمالي: ${formatMAD(details.totalMAD)}`);
   lines.push('');
@@ -189,9 +194,11 @@ export default function CheckoutPage() {
   const agencyName = listing?.agencyName ?? listing?.ownerName ?? staticPartner?.name ?? 'الوكالة المؤجِرة';
 
   // Mohammed V (Nouaceur) is the Casablanca airport: offer flight pickup
-  // details only for Casablanca pickups so the agency can meet the arrivals.
+  // details only for Casablanca car pickups so the agency can meet the arrivals.
   const pickupCity = (resolvedListing as { city?: string } | null)?.city?.trim() ?? '';
-  const isAirportPickupMohammedV = pickupCity === 'الدار البيضاء';
+  const listingCategory = resolvedListing?.category ?? listing?.category ?? '';
+  const isPropertyBooking = isPropertyCategory(listingCategory);
+  const isAirportPickupMohammedV = !isPropertyBooking && pickupCity === 'الدار البيضاء';
 
   const bookingStart = startDateParam || new Date().toISOString().slice(0, 10);
   const bookingEnd = endDateParam || new Date().toISOString().slice(0, 10);
@@ -205,12 +212,13 @@ export default function CheckoutPage() {
   const identityShortLabel = residency === 'resident' ? 'البطاقة الوطنية CIN' : 'جواز السفر';
   const residencyLabel = residency === 'resident' ? 'مقيم بالمغرب (Resident)' : 'أجنبي (Foreigner)';
   const missingDocumentLabels: string[] = [];
-  if (!driverLicenseFile) missingDocumentLabels.push('رخصة السياقة (البيرمي)');
+  if (!isPropertyBooking && !driverLicenseFile) missingDocumentLabels.push('رخصة السياقة (البيرمي)');
   if (!identityFile) missingDocumentLabels.push(identityLabel);
   const isFormValid = missingDocumentLabels.length === 0;
 
   const whatsappMessage = buildWhatsAppBookingMessage({
-    carTitle: resTitle,
+    entityTitle: resTitle,
+    entityLabel: isPropertyBooking ? 'العقار' : 'السيارة',
     startDate: bookingStart,
     endDate: bookingEnd,
     days,
@@ -218,6 +226,7 @@ export default function CheckoutPage() {
     addOns: selectedAddOns,
     residencyLabel,
     identityLabel: identityShortLabel,
+    requireLicense: !isPropertyBooking,
     licenseName: driverLicenseFile?.name ?? '',
     identityName: identityFile?.name ?? '',
   });
@@ -251,7 +260,9 @@ export default function CheckoutPage() {
       return;
     }
     if (!isFormValid) {
-      alert(`المرجو رفع رخصة السياقة (البيرمي) و${identityLabel} أولاً لتمكين الحجز عبر الواتساب.`);
+      alert(isPropertyBooking
+        ? `المرجو رفع ${identityLabel} أولاً لتمكين الحجز عبر الواتساب.`
+        : `المرجو رفع رخصة السياقة (البيرمي) و${identityLabel} أولاً لتمكين الحجز عبر الواتساب.`);
       return;
     }
     if (isAuthenticated && !kycVerified) {
@@ -279,8 +290,10 @@ export default function CheckoutPage() {
 
     // Real platform listing: persist the booking and upload the mandatory
     // documents so the agency can review them before handover.
-    if (!driverLicenseFile || !identityFile) return;
-    if (!isDocumentMimeType(driverLicenseFile.type) || !isDocumentMimeType(identityFile.type)) {
+    const licenseFile = driverLicenseFile;
+    const idFile = identityFile;
+    if (!idFile || (!isPropertyBooking && !licenseFile)) return;
+    if (!isDocumentMimeType(idFile.type) || (!isPropertyBooking && !isDocumentMimeType(licenseFile!.type))) {
       toast.error('صيغة الملف غير مدعومة. المرجو رفع ملفات بصيغة JPG أو PNG أو PDF.');
       return;
     }
@@ -288,28 +301,30 @@ export default function CheckoutPage() {
     setIsSubmitting(true);
     try {
       const [licenseBase64, identityBase64] = await Promise.all([
-        readFileAsBase64(driverLicenseFile),
-        readFileAsBase64(identityFile),
+        isPropertyBooking ? Promise.resolve('') : readFileAsBase64(licenseFile!),
+        readFileAsBase64(idFile),
       ]);
-      const result = await createBooking.mutateAsync({
-        listingId: parsedListingId,
-        startDate: bookingStart,
-        endDate: bookingEnd,
-        addOns: selectedAddOns.length > 0 ? selectedAddOns : undefined,
-        residency,
-        drivingLicense: {
-          fileName: driverLicenseFile.name,
-          mimeType: driverLicenseFile.type,
-          contentBase64: licenseBase64,
-        },
-        identityDocument: {
-          fileName: identityFile.name,
-          mimeType: identityFile.type,
-          contentBase64: identityBase64,
-        },
-        flightNumber: isAirportPickupMohammedV ? (flightNumber.trim() || undefined) : undefined,
-        arrivalTime: isAirportPickupMohammedV ? (arrivalTime || undefined) : undefined,
-      });
+const result = await createBooking.mutateAsync({
+          listingId: parsedListingId,
+          startDate: bookingStart,
+          endDate: bookingEnd,
+          addOns: selectedAddOns.length > 0 ? selectedAddOns : undefined,
+          residency,
+          drivingLicense: isPropertyBooking
+            ? undefined
+            : {
+                fileName: licenseFile!.name,
+                mimeType: licenseFile!.type as DocumentMimeType,
+                contentBase64: licenseBase64,
+              },
+          identityDocument: {
+            fileName: idFile.name,
+            mimeType: idFile.type,
+            contentBase64: identityBase64,
+          },
+          flightNumber: isAirportPickupMohammedV ? (flightNumber.trim() || undefined) : undefined,
+          arrivalTime: isAirportPickupMohammedV ? (arrivalTime || undefined) : undefined,
+        });
       toast.success(`تم تسجيل طلب الحجز ورفع وثائقك. رقم الطلب: #${result.bookingId}`);
       openWhatsApp();
     } catch (err) {
@@ -465,12 +480,14 @@ export default function CheckoutPage() {
                   </div>
                 </div>
 
-                <DocumentUploadField
-                  label="رخصة السياقة (البيرمي)"
-                  hint="مطلوبة لجميع الحجوزات — صورة واضحة أو PDF"
-                  file={driverLicenseFile}
-                  onFileChange={setDriverLicenseFile}
-                />
+                {!isPropertyBooking && (
+                  <DocumentUploadField
+                    label="رخصة السياقة (البيرمي)"
+                    hint="مطلوبة لحجوزات السيارات — صورة واضحة أو PDF"
+                    file={driverLicenseFile}
+                    onFileChange={setDriverLicenseFile}
+                  />
+                )}
 
                 <DocumentUploadField
                   label={identityLabel}
@@ -482,8 +499,9 @@ export default function CheckoutPage() {
                 <div className="flex items-start gap-2.5 rounded-xl border border-sky-200 bg-sky-50 p-3 text-[11px] text-sky-800 leading-relaxed dark:border-sky-800 dark:bg-sky-950/30 dark:text-sky-300" role="note">
                   <Lock className="h-4 w-4 shrink-0 text-sky-600 mt-0.5" />
                   <p>
-                    وثائقك (البيرمي ووثيقة الهوية) محمية ومشفّرة، ولا تُستخدم إلا لأغراض التحقق من الحجز لدى {agencyName} —
-                    ولا نشارك بياناتك مع أي طرف ثالث.
+                    {isPropertyBooking
+                      ? `وثيقة الهوية محمية ومشفّرة، ولا تُستخدم إلا لأغراض التحقق من الحجز لدى ${agencyName} — ولا نشارك بياناتك مع أي طرف ثالث.`
+                      : `وثائقك (البيرمي ووثيقة الهوية) محمية ومشفّرة، ولا تُستخدم إلا لأغراض التحقق من الحجز لدى ${agencyName} — ولا نشارك بياناتك مع أي طرف ثالث.`}
                   </p>
                 </div>
 
@@ -496,7 +514,7 @@ export default function CheckoutPage() {
                     <ul className="mt-1 list-disc pr-4 space-y-0.5">
                       {missingDocumentLabels.map((label) => (
                         <li key={label}>
-                          {label} — {label === 'رخصة السياقة (البيرمي)' ? 'مطلوبة للجميع' : residency === 'resident' ? 'مطلوبة للمقيمين' : 'مطلوب للأجانب'}
+                          {label} — {!isPropertyBooking && label === 'رخصة السياقة (البيرمي)' ? 'مطلوبة لحجوزات السيارات' : residency === 'resident' ? 'مطلوبة للمقيمين' : 'مطلوب للأجانب'}
                         </li>
                       ))}
                     </ul>
@@ -540,7 +558,7 @@ export default function CheckoutPage() {
                       يرجى إرفاق: {missingDocumentLabels.join('، ')}
                     </p>
                     <p className="mt-1">
-                      لتأكيد الحجز الفوري مع الوكالة وضمان توفر السيارة، يرجى إرفاق الوثائق المطلوبة في قسم «التحقق الإلزامي من الوثائق» أعلاه — وسيُفعَّل الزر تلقائياً عند اكتمالها.
+                      لتأكيد الحجز الفوري مع الوكالة وضمان توفر {isPropertyBooking ? 'العقار' : 'السيارة'}، يرجى إرفاق الوثائق المطلوبة في قسم «التحقق الإلزامي من الوثائق» أعلاه — وسيُفعَّل الزر تلقائياً عند اكتمالها.
                     </p>
                   </div>
                 ) : (
@@ -609,7 +627,7 @@ export default function CheckoutPage() {
                           يمكنك الحجز بعد إرفاق: {missingDocumentLabels.join('، ')}
                         </p>
                         <p className="mt-0.5">
-                          لتأكيد الحجز الفوري مع الوكالة وضمان توفر السيارة، أرفق {missingDocumentLabels.join(' و')} في قسم «التحقق الإلزامي من الوثائق» أعلاه — وسيُفعَّل الزر تلقائياً.
+                          لتأكيد الحجز الفوري مع الوكالة وضمان توفر {isPropertyBooking ? 'العقار' : 'السيارة'}، أرفق {missingDocumentLabels.join(' و')} في قسم «التحقق الإلزامي من الوثائق» أعلاه — وسيُفعَّل الزر تلقائياً.
                         </p>
                       </div>
                     ) : (

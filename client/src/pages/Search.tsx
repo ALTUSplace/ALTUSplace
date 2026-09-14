@@ -12,6 +12,7 @@ import { OptimizedImage } from '@/components/OptimizedImage';
 import { ListingCard, ListingCardSkeleton } from '@/components/ui/ListingCard';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorState } from '@/components/ui/ErrorState';
+import { isCarCategory, isPropertyCategory } from '@/lib/categories';
 
 const CITIES = [
   { id: 'all', name: 'جميع المدن' },
@@ -22,11 +23,7 @@ const CITIES = [
   { id: 'الرباط', name: 'الرباط' },
 ];
 
-const isCarCategory = (category: string) =>
-  category === 'car' ||
-  !/real_estate|property|office|coworking|شقة|فيلا|مكتب|villa|apartment|bureau|siège|salle\s*de\s*réunion/i.test(category);
-
-const listingRoute = (item: ListingItem) => `/car/${item.id}`;
+const listingRoute = (item: ListingItem) => (item.type === 'property' ? `/property/${item.id}` : `/car/${item.id}`);
 
 const parseArrayField = (value: string | null | undefined): string[] => {
   if (!value) return [];
@@ -59,7 +56,7 @@ const toListingItem = (item: {
   ownerName?: string | null;
 }): ListingItem => {
   const amenities = parseArrayField(item.amenities);
-  const type: ListingItem['type'] = 'car';
+  const type: ListingItem['type'] = isCarCategory(item.category) ? 'car' : 'property';
   const unitLabel = 'درهم / يوم';
   return {
     id: String(item.id),
@@ -180,9 +177,8 @@ export default function Search() {
 
   const filteredListings = useMemo(() => {
     return serverListings.filter((item: ListingItem) => {
-      if (!isCarCategory(item.category)) return false;
-      if (cityFilter !== 'all' && item.city !== cityFilter) return false;
       if (typeFilter !== 'all' && item.type !== typeFilter) return false;
+      if (cityFilter !== 'all' && item.city !== cityFilter) return false;
       if (item.pricePerUnit > maxPrice) return false;
       if (brandParam) {
         const b = brandParam.toLowerCase();
@@ -258,7 +254,7 @@ export default function Search() {
               </h2>
               <button
                 onClick={() => {
-                  setCityFilter('all');
+setCityFilter('all');
                   setTypeFilter('all');
                   setMaxPrice(4000);
                   setExcellenceOnly(false);
@@ -293,6 +289,24 @@ export default function Search() {
                   </option>
                 ))}
               </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-semibold text-slate-300">النوع</label>
+              <div className="grid grid-cols-3 gap-1 bg-slate-900 border border-slate-700 rounded-xl p-1">
+                {([['all', 'الكل'], ['car', 'سيارات'], ['property', 'عقارات']] as const).map(([value, label]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setTypeFilter(value)}
+                    className={`px-3 py-2 rounded-lg text-xs font-bold transition-all ${
+                      typeFilter === value ? 'bg-amber-500 text-slate-950 shadow-lg' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div className="space-y-2">

@@ -77,7 +77,9 @@ export const listings = pgTable("listings", {
   fuelType: varchar("fuel_type", { length: 32 }).default("ديزل"),
   transmission: varchar("transmission", { length: 32 }).default("أوتوماتيك"),
   rooms: integer("rooms").default(0),
+  propertyType: varchar("property_type", { length: 32 }), // شقة، فيلا، مكتب، ...
   officeType: varchar("office_type", { length: 64 }),
+  pricePerMonth: integer("price_per_month"), // سعر الكراء الشهري بالدرهم (العقارات)
   rentalPeriod: rentalPeriodEnum("rental_period"),
   amenities: text("amenities"),
   availability: text("availability"), // JSON array of blocked date ranges managed by the owner

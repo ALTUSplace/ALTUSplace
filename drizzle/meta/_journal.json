@@ -57,6 +57,13 @@
       "when": 1789348679594,
       "tag": "0007_add_booking_airport_flight_fields",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1789350152959,
+      "tag": "0008_add_listing_property_monthly_pricing",
+      "breakpoints": true
     }
   ]
 }

@@ -32,7 +32,9 @@ type PropertyDetailShape = {
   city: string;
   status: string;
   pricePerDay: number;
+  pricePerMonth: number | null;
   officeType: string | null;
+  propertyType: string | null;
   category: string;
   rooms: number | null;
   rentalPeriod: "daily" | "monthly" | "yearly" | null;
@@ -56,7 +58,9 @@ function mapStaticToDetail(item: ListingItem): PropertyDetailShape {
     city: item.city,
     status: "متاح",
     pricePerDay: item.pricePerUnit,
+    pricePerMonth: null,
     officeType: item.officeType ?? null,
+    propertyType: null,
     category: item.category,
     rooms: Number.isNaN(roomsNumber) ? null : roomsNumber,
     rentalPeriod: item.rentalTerms?.[0] ?? null,
@@ -96,6 +100,7 @@ export default function PropertyDetailWithVideo() {
   const parsedId = Number(params.id);
   const listingId = Number.isInteger(parsedId) && parsedId > 0 ? parsedId : null;
   const listingQuery = trpc.listings.getById.useQuery({ id: listingId! }, { enabled: listingId !== null });
+  const bookedDatesQuery = trpc.listings.getBookedDates.useQuery({ listingId: listingId! }, { enabled: listingId !== null });
   const trackWhatsAppMutation = trpc.listings.trackEvent.useMutation();
   const staticItem = listingId === null ? LISTINGS.find((item) => item.id === params.id && item.type !== "car") : undefined;
   const listing = (listingQuery.data ?? (staticItem ? mapStaticToDetail(staticItem) : undefined)) as PropertyDetailShape | undefined;
@@ -114,18 +119,54 @@ export default function PropertyDetailWithVideo() {
     if (staticItem?.unitLabel) return staticItem.unitLabel;
     if (!listing) return language === "fr" ? "MAD / nuit" : "درهم / ليلة";
     if (language === "fr") {
-      if (listing.officeType) {
+      if (listing.officeType || listing.propertyType) {
         const map: Record<string, string> = { daily: "MAD / jour", monthly: "MAD / mois", yearly: "MAD / an" };
         return map[listing.rentalPeriod ?? "daily"] ?? "MAD / jour";
       }
       return "MAD / nuit";
     }
-    if (listing.officeType) {
+    if (listing.officeType || listing.propertyType) {
       const map: Record<string, string> = { daily: "درهم / يوم", monthly: "درهم / شهر", yearly: "درهم / سنة" };
       return map[listing.rentalPeriod ?? "daily"] ?? "درهم / يوم";
     }
     return "درهم / ليلة";
   }, [listing, staticItem, language]);
+
+  // Booking state
+  const [startDate, setStartDate] = useState(() => {
+    const date = new Date();
+    date.setDate(date.getDate() + 1);
+    return date.toISOString().slice(0, 10);
+  });
+  const [endDate, setEndDate] = useState(() => {
+    const date = new Date();
+    date.setDate(date.getDate() + 6);
+    return date.toISOString().slice(0, 10);
+  });
+
+  const daysCount = useMemo(
+    () => calculateRentalDays(startDate, endDate) || 1,
+    [startDate, endDate],
+  );
+
+  // Blocked date ranges from confirmed bookings, manual availability blocks
+  // and iCal imports — used to warn renters and stop checkout on overlaps.
+  const blockedRanges = useMemo(
+    () => (bookedDatesQuery.data ?? []).map((range) => ({ start: String(range.start).slice(0, 10), end: String(range.end).slice(0, 10) })),
+    [bookedDatesQuery.data],
+  );
+  const rangeBlocked = useMemo(() => {
+    if (!startDate || !endDate || new Date(endDate) <= new Date(startDate)) return false;
+    const s = new Date(`${startDate}T00:00:00`);
+    const e = new Date(`${endDate}T00:00:00`);
+    return blockedRanges.some((range) => {
+      const rs = new Date(`${range.start}T00:00:00`);
+      const re = new Date(`${range.end}T00:00:00`);
+      return s.getTime() < re.getTime() && e.getTime() > rs.getTime();
+    });
+  }, [blockedRanges, startDate, endDate]);
+
+  const monthlyPrice = Number(listing?.pricePerMonth) || 0;
 
   if (listingQuery.isLoading) {
     return <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-600">{t("loading")}</div>;
@@ -168,23 +209,6 @@ export default function PropertyDetailWithVideo() {
     offers: { "@type": "Offer", priceCurrency: "MAD", price: safePrice, availability: "https://schema.org/InStock" },
   };
 
-  // Booking state
-  const [startDate, setStartDate] = useState(() => {
-    const date = new Date();
-    date.setDate(date.getDate() + 1);
-    return date.toISOString().slice(0, 10);
-  });
-  const [endDate, setEndDate] = useState(() => {
-    const date = new Date();
-    date.setDate(date.getDate() + 6);
-    return date.toISOString().slice(0, 10);
-  });
-
-  const daysCount = useMemo(
-    () => calculateRentalDays(startDate, endDate) || 1,
-    [startDate, endDate],
-  );
-
   const totalPrice = calculateRentalSubtotal(safePrice, daysCount) || safePrice * daysCount;
 
   const trackWhatsAppClick = () => {
@@ -200,6 +224,10 @@ export default function PropertyDetailWithVideo() {
     }
     if (new Date(endDate) <= new Date(startDate)) {
       toast.error(language === "fr" ? "La date de fin doit être après la date de début" : "تاريخ النهاية يجب أن يكون بعد تاريخ البداية");
+      return;
+    }
+    if (rangeBlocked) {
+      toast.error(language === "fr" ? "Cette période est déjà réservée — veuillez en choisir une autre" : "هذه الفترة محجوزة أو محجوبة — المرجو اختيار فترة أخرى");
       return;
     }
     const checkoutParams = new URLSearchParams({
@@ -242,6 +270,11 @@ export default function PropertyDetailWithVideo() {
               <div>
                 <p className="text-xs text-slate-500">{t("price")}</p>
                 <p className="text-3xl font-bold text-slate-900">{safePrice.toLocaleString("fr-MA")} <span className="text-sm font-normal">{unitLabel}</span></p>
+                {monthlyPrice > 0 && (
+                  <p className="mt-1 text-sm font-bold text-amber-700">
+                    أو {monthlyPrice.toLocaleString("fr-MA")} {language === "fr" ? "MAD / mois" : "درهم / شهر"}
+                  </p>
+                )}
               </div>
               
               {/* Date Selection */}
@@ -274,9 +307,14 @@ export default function PropertyDetailWithVideo() {
                   <span className="text-slate-500">{daysCount} {language === "fr" ? "jours" : "أيام"}</span>
                   <span className="font-bold text-amber-600">{totalPrice.toLocaleString("fr-MA")} {language === "fr" ? "MAD" : "درهم"}</span>
                 </div>
+                {rangeBlocked && (
+                  <p className="rounded-lg bg-red-50 border border-red-200 p-2 text-[11px] font-bold text-red-700" role="alert">
+                    {language === "fr" ? "Période indisponible — déjà réservée." : "هذه الفترة محجوزة أو محجوبة — اختَر فترة أخرى."}
+                  </p>
+                )}
               </div>
 
-              <Button onClick={handleProceedToCheckout} className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold py-3.5 rounded-xl shadow-lg shadow-amber-200/50 flex items-center justify-center gap-2 transition-all hover:shadow-amber-300/50 hover:scale-[1.02] active:scale-[0.98]">
+              <Button onClick={handleProceedToCheckout} disabled={rangeBlocked} className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold py-3.5 rounded-xl shadow-lg shadow-amber-200/50 flex items-center justify-center gap-2 transition-all hover:shadow-amber-300/50 hover:scale-[1.02] active:scale-[0.98] disabled:hover:scale-100 disabled:opacity-50">
                 <ShieldCheck className="w-4 h-4" />
                 {t("bookNow")}
               </Button>
@@ -286,11 +324,12 @@ export default function PropertyDetailWithVideo() {
               </div>
               <Button
                 type="button"
+                disabled={rangeBlocked}
                 onClick={() => {
                   trackWhatsAppClick();
                   handleProceedToCheckout();
                 }}
-                className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 rounded-xl shadow-lg shadow-emerald-200/50 flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 rounded-xl shadow-lg shadow-emerald-200/50 flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:hover:scale-100 disabled:opacity-50"
               >
                 <MessageCircle className="w-4 h-4" />
                 {language === "fr" ? "Réserver via WhatsApp" : "تأكيد الحجز عبر الواتساب"}
