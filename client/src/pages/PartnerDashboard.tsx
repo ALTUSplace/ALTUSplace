@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, AreaChart, Area } from 'recharts';
 import { AdvancedMediaUpload } from '@/components/AdvancedMediaUpload';
 import { OptimizedImage } from '@/components/OptimizedImage';
-import { MOROCCAN_CITIES } from '@/data/moroccoCities';
+import { CitySelect } from '@/components/CitySelect';
 
 const monthlyPartnerData = [
   { name: 'يناير', الأرباح: 8400, الحجوزات: 6 },
@@ -290,11 +290,7 @@ export default function PartnerDashboard() {
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-1">المدينة</label>
-                      <select value={city} onChange={(e) => setCity(e.target.value)} className="w-full p-3 rounded-xl bg-background border border-border text-sm">
-                        {MOROCCAN_CITIES.map((cityOption) => (
-                          <option key={cityOption} value={cityOption}>{cityOption}</option>
-                        ))}
-                      </select>
+                      <CitySelect value={city} onChange={setCity} className="w-full p-3 rounded-xl bg-background border border-border text-sm" />
                     </div>
                   </div>
                   <div>

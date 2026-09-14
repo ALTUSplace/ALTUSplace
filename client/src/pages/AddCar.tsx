@@ -9,7 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { persistLegalConsent } from '@/lib/legalDisclosure';
 import { Link } from 'wouter';
 import { useLanguage } from "@/contexts/LanguageContext";
-import { MOROCCAN_CITIES } from '@/data/moroccoCities';
+import { CitySelect } from '@/components/CitySelect';
 
 export default function AddCar() {
   const { direction } = useLanguage();
@@ -156,17 +156,11 @@ export default function AddCar() {
 
                 <div className="space-y-2 text-right">
                   <label className="text-xs font-bold text-slate-300">المدينة</label>
-                  <select
+                  <CitySelect
                     value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-amber-500"
-                  >
-                    <optgroup label="مناطق المغرب (12 جهة)">
-                    {MOROCCAN_CITIES.map((city) => (
-                      <option key={city} value={city}>{city}</option>
-                    ))}
-                  </optgroup>
-                </select>
+                    onChange={setCity}
+                    className="w-full bg-slate-950 border-slate-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-amber-500"
+                  />
                 </div>
 
                 <div className="space-y-2 text-right">

@@ -11,12 +11,12 @@ import { FAQSection } from '@/components/FAQSection';
 import { ListingCard } from '@/components/ui/ListingCard';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { isCarCategory, isPropertyCategory } from '@/lib/categories';
-import { MOROCCAN_CITIES, cityLabelFr } from '@/data/moroccoCities';
+import { CitySelect } from '@/components/CitySelect';
 import { toast } from 'sonner';
 
 export default function Home() {
   const [, setLocation] = useLocation();
-  const { t, direction, language } = useLanguage();
+  const { t, direction } = useLanguage();
 
   // Search states for Cars
   const [carCity, setCarCity] = useState('الدار البيضاء');
@@ -143,17 +143,11 @@ export default function Home() {
                     <MapPin className={fieldIconClass} strokeWidth={1.5} />
                     <span className="flex min-w-0 flex-1 flex-col items-start text-right">
                       <span className={fieldCaptionClass}>{t('searchCityOdgency')}</span>
-                      <select
+                      <CitySelect
                         value={carCity}
-                        onChange={(e) => setCarCity(e.target.value)}
+                        onChange={setCarCity}
                         className={fieldControlClass}
-                      >
-                        {MOROCCAN_CITIES.map((city) => (
-                          <option key={city} value={city}>
-                            {language === 'fr' ? cityLabelFr(city) : city}
-                          </option>
-                        ))}
-                      </select>
+                      />
                     </span>
                   </label>
 

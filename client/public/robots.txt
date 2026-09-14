@@ -1,5 +1,7 @@
 User-agent: *
 Allow: /
+Allow: /search
+Allow: /locations
 Disallow: /admin
 Disallow: /host
 Disallow: /dashboard

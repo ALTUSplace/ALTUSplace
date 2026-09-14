@@ -21,22 +21,33 @@ describe("nationwide multi-region scope audit", () => {
     expect(cities).toContain("resolveCitySlug");
   });
 
-  it("points the search city filter at the nationwide list", () => {
+  it("points the search city filter at the shared nationwide dropdown", () => {
     const search = read("client/src/pages/Search.tsx");
-    expect(search).toContain("import { MOROCCAN_CITIES");
-    expect(search).toContain("MOROCCAN_CITIES.map((city) =>");
+    expect(search).toContain("CitySelect");
     expect(search).toContain("resolveCitySlug");
   });
 
-  it("uses the nationwide list in agency listing forms and home", () => {
+  it("uses the shared regional dropdown in agency forms, search and home", () => {
     const agency = read("client/src/pages/AgencyDashboard.tsx");
-    expect(agency).toContain('MOROCCAN_CITIES as CITIES');
+    expect(agency).toContain('import { CitySelect } from "@/components/CitySelect"');
+    expect(agency).toContain("CitySelect value={carForm.city}");
+    expect(agency).toContain("CitySelect value={propertyForm.city}");
     const home = read("client/src/pages/Home.tsx");
-    expect(home).toContain("import { MOROCCAN_CITIES");
+    expect(home).toContain("CitySelect");
     const addCar = read("client/src/pages/AddCar.tsx");
-    expect(addCar).toContain("import { MOROCCAN_CITIES");
+    expect(addCar).toContain("CitySelect");
     const bottomSheet = read("client/src/components/FilterBottomSheet.tsx");
     expect(bottomSheet).toContain("...MOROCCAN_CITIES");
+  });
+
+  it("defines the shared dropdown over the 12 administrative regions", () => {
+    const cities = read("client/src/data/moroccoCities.ts");
+    expect(cities).toContain("MOROCCO_REGIONS");
+    expect(cities).toContain("nameFr");
+    expect(cities).toContain("MOROCCO_REGIONS.flatMap((region) => region.cities)");
+    const component = read("client/src/components/CitySelect.tsx");
+    expect(component).toContain("MOROCCO_REGIONS.map((region) =>");
+    expect(component).toContain("<optgroup");
   });
 
   it("accepts any Moroccan city on the server (no restricted allow-list)", () => {

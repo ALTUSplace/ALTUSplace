@@ -45,7 +45,8 @@ import { AdvancedMediaUpload } from "@/components/AdvancedMediaUpload";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { isPropertyCategory } from "@/lib/categories";
-import { MOROCCAN_CITIES as CITIES } from "@/data/moroccoCities";
+import { CitySelect } from "@/components/CitySelect";
+import { cityFromSlug } from "@/data/moroccoCities";
 
 const money = (value: number | string) => `${Number(value).toLocaleString("fr-MA")} درهم`;
 
@@ -771,7 +772,7 @@ export default function AgencyDashboard() {
     setEditingCar(car);
     setCarForm({
       title: car.title ?? "",
-      city: (CITIES as readonly string[]).includes(car.city ?? "") ? (car.city as string) : "مراكش",
+      city: cityFromSlug(car.city ?? "") ?? "مراكش",
       price: String(car.pricePerDay ?? ""),
       transmission: car.transmission ?? "أوتوماتيك",
       fuelType: car.fuelType ?? "ديزل",
@@ -840,7 +841,7 @@ export default function AgencyDashboard() {
     setEditingProperty(property);
     setPropertyForm({
       title: property.title ?? "",
-      city: (CITIES as readonly string[]).includes(property.city ?? "") ? (property.city as string) : "مراكش",
+      city: cityFromSlug(property.city ?? "") ?? "مراكش",
       price: String(property.pricePerDay ?? ""),
       monthlyPrice: String(property.pricePerMonth ?? ""),
       propertyType: property.propertyType ?? "شقة",
@@ -1463,17 +1464,7 @@ export default function AgencyDashboard() {
               </label>
               <label className="space-y-1.5">
                 <span className="text-xs font-bold">المدينة</span>
-                <select
-                  value={carForm.city}
-                  onChange={(event) => setCarForm({ ...carForm, city: event.target.value })}
-                  className="w-full rounded-xl border bg-background p-3 text-sm"
-                >
-                  {CITIES.map((city) => (
-                    <option key={city} value={city}>
-                      {city}
-                    </option>
-                  ))}
-                </select>
+                <CitySelect value={carForm.city} onChange={(city) => setCarForm({ ...carForm, city })} />
               </label>
             </div>
 
@@ -1598,17 +1589,7 @@ export default function AgencyDashboard() {
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="space-y-1.5">
                 <span className="text-xs font-bold">المدينة</span>
-                <select
-                  value={propertyForm.city}
-                  onChange={(event) => setPropertyForm({ ...propertyForm, city: event.target.value })}
-                  className="w-full rounded-xl border bg-background p-3 text-sm"
-                >
-                  {CITIES.map((city) => (
-                    <option key={city} value={city}>
-                      {city}
-                    </option>
-                  ))}
-                </select>
+                <CitySelect value={propertyForm.city} onChange={(city) => setPropertyForm({ ...propertyForm, city })} />
               </label>
               <label className="space-y-1.5">
                 <span className="text-xs font-bold">نوع العقار</span>

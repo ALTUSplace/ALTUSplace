@@ -2,8 +2,70 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://altusplace.vercel.app/</loc></url>
   <url><loc>https://altusplace.vercel.app/search</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations</loc></url>
   <url><loc>https://altusplace.vercel.app/locations/marrakech-car-rental</loc></url>
   <url><loc>https://altusplace.vercel.app/locations/mohammed-v-airport-car-rental</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/tangier</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/tetouan</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/chefchaouen</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/larache</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/ouazzane</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/al-hoceima</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/mdiq</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/oujda</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/nador</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/berkane</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/taourirt</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/guercif</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/jerada</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/fez</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/meknes</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/sefrou</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/ifrane</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/taounate</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/el-hajeb</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/rabat</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/sale</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/temara</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/kenitra</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/khemisset</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/sidi-slimane</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/sidi-kacem</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/casablanca</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/mohammedia</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/el-jadida</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/berrechid</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/settat</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/sidi-bennour</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/benslimane</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/marrakech</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/safi</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/essaouira</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/youssoufia</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/chichaoua</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/beni-mellal</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/khouribga</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/khenifra</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/fquih-ben-salah</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/azilal</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/er-rachidia</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/ouarzazate</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/tinghir</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/zagora</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/midelt</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/agadir</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/inezgane</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/ait-melloul</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/taroudant</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/tiznit</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/guelmim</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/tan-tan</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/sidi-ifni</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/laayoune</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/es-semara</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/boujdour</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/tarfaya</loc></url>
+  <url><loc>https://altusplace.vercel.app/locations/dakhla</loc></url>
   <url><loc>https://altusplace.vercel.app/about</loc></url>
   <url><loc>https://altusplace.vercel.app/blog</loc></url>
   <url><loc>https://altusplace.vercel.app/help</loc></url>
@@ -13,4 +75,3 @@
   <url><loc>https://altusplace.vercel.app/terms</loc></url>
   <url><loc>https://altusplace.vercel.app/privacy</loc></url>
 </urlset>
-

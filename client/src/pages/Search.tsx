@@ -13,7 +13,8 @@ import { ListingCard, ListingCardSkeleton } from '@/components/ui/ListingCard';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { isCarCategory, isPropertyCategory } from '@/lib/categories';
-import { MOROCCAN_CITIES, resolveCitySlug, cityLabelFr } from '@/data/moroccoCities';
+import { CitySelect } from '@/components/CitySelect';
+import { resolveCitySlug } from '@/data/moroccoCities';
 
 const listingRoute = (item: ListingItem) => (item.type === 'property' ? `/property/${item.id}` : `/car/${item.id}`);
 
@@ -261,18 +262,12 @@ setCityFilter('all');
 
             <div className="space-y-2">
               <label className="text-xs font-semibold text-slate-300">{t('city')}</label>
-              <select
+              <CitySelect
                 value={cityFilter}
-                onChange={(e) => setCityFilter(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500"
-              >
-                <option value="all">{language === 'fr' ? 'Toutes les villes' : 'جميع المدن'}</option>
-                {MOROCCAN_CITIES.map((city) => (
-                  <option key={city} value={city}>
-                    {language === 'fr' ? cityLabelFr(city) : city}
-                  </option>
-                ))}
-              </select>
+                onChange={setCityFilter}
+                includeAll
+                className="w-full bg-slate-900 border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500"
+              />
             </div>
 
             <div className="space-y-2">

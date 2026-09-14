@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { MOROCCAN_CITIES, MOROCCO_CITY_LABELS_FR, resolveCitySlug } from "@/data/moroccoCities";
+import {
+  MOROCCAN_CITIES,
+  MOROCCO_REGIONS,
+  MOROCCO_CITY_LABELS_FR,
+  MOROCCO_CITY_SLUGS,
+  cityFromSlug,
+  slugForCity,
+  matchListingCity,
+  resolveCitySlug,
+} from "@/data/moroccoCities";
 
 describe("nationwide Moroccan cities module", () => {
   it("covers all major Moroccan cities across the twelve regions", () => {
@@ -41,6 +50,62 @@ describe("nationwide Moroccan cities module", () => {
     for (const city of MOROCCAN_CITIES) {
       expect(MOROCCO_CITY_LABELS_FR[city]).toBeTruthy();
     }
+  });
+
+  it("groups the nationwide list into the twelve administrative regions", () => {
+    expect(MOROCCO_REGIONS.length).toBe(12);
+    const flat = MOROCCO_REGIONS.flatMap((region) => region.cities);
+    expect(new Set(flat).size).toBe(flat.length);
+    expect(flat.length).toBe(MOROCCAN_CITIES.length);
+    for (const city of MOROCCAN_CITIES) {
+      expect(flat).toContain(city);
+    }
+  });
+
+  it("gives every city a unique canonical latin slug", () => {
+    const slugs = Object.values(MOROCCO_CITY_SLUGS);
+    expect(new Set(slugs).size).toBe(slugs.length);
+    expect(slugs.length).toBe(MOROCCAN_CITIES.length);
+    for (const city of MOROCCAN_CITIES) {
+      expect(MOROCCO_CITY_SLUGS[city]).toBeTruthy();
+    }
+  });
+
+  it("round-trips slug -> city -> slug for every canonical slug", () => {
+    for (const city of MOROCCAN_CITIES) {
+      const slug = slugForCity(city);
+      expect(slug).toBeTruthy();
+      expect(cityFromSlug(slug)).toBe(city);
+    }
+  });
+
+  it("resolves known latin, accent and french variants from landing slugs", () => {
+    expect(cityFromSlug("casablanca")).toBe("الدار البيضاء");
+    expect(cityFromSlug("agadir")).toBe("أغادير");
+    expect(cityFromSlug("laayoune")).toBe("العيون");
+    expect(cityFromSlug("fès")).toBe("فاس");
+    expect(cityFromSlug("oujda")).toBe("وجدة");
+    expect(cityFromSlug("الرباط")).toBe("الرباط");
+    expect(cityFromSlug("beni-mellal")).toBe("بني ملال");
+    expect(cityFromSlug("al-hoceima")).toBe("الحسيمة");
+  });
+
+  it("rejects unknown, empty and all-placeholder slugs", () => {
+    expect(cityFromSlug("")).toBeNull();
+    expect(cityFromSlug("all")).toBeNull();
+    expect(cityFromSlug("الكل")).toBeNull();
+    expect(cityFromSlug("somewhere-unknown")).toBeNull();
+  });
+
+  it("matches listing cities regardless of spelling variant", () => {
+    expect(matchListingCity("الدار البيضاء", "Casablanca")).toBe(true);
+    expect(matchListingCity("casablanca", "الدار البيضاء")).toBe(true);
+    expect(matchListingCity("أكادير", "أغادير")).toBe(true);
+    expect(matchListingCity("Fès", "فاس")).toBe(true);
+    expect(matchListingCity("مراكش", "marrakech")).toBe(true);
+    expect(matchListingCity("الرباط", "طنجة")).toBe(false);
+    expect(matchListingCity("", "الرباط")).toBe(false);
+    expect(matchListingCity(undefined, "الرباط")).toBe(false);
   });
 
   it("resolves latin slugs, french names, and arabic names to the canonical arabic city", () => {
