@@ -50,6 +50,13 @@
       "when": 1789346482897,
       "tag": "0006_add_listing_maintenance_status",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1789348679594,
+      "tag": "0007_add_booking_airport_flight_fields",
+      "breakpoints": true
     }
   ]
 }

@@ -16,7 +16,7 @@ const labels = {
 } as const;
 
 export default function HostDashboard() {
-  const { user, loading } = useAuth();
+  const { user, loading, refresh } = useAuth();
   const listings = trpc.agency.listings.useQuery(undefined, { enabled: !!user });
   const statusSummary = trpc.agency.statusSummary.useQuery(undefined, { enabled: !!user });
   const overview = trpc.agency.overview.useQuery(undefined, { enabled: !!user });
@@ -34,6 +34,8 @@ export default function HostDashboard() {
   const syncIcal = trpc.listings.syncIcalNow.useMutation({ onSuccess: async (result) => { await listings.refetch(); toast.success(result.synced ? `تم استيراد ${result.count ?? 0} فترة من التقويم` : "لا يوجد رابط iCal مضبوط"); }, onError: (error) => toast.error(error.message) });
   const financials = trpc.admin.ownerFinancials.useQuery(undefined, { enabled: !!user && (user.role === "owner" || user.role === "admin") });
   const requestPayout = trpc.payouts.request.useMutation({ onSuccess: async () => { toast.success("تم إرسال طلب السحب للمراجعة"); await financials.refetch(); setPayoutAmount(""); }, onError: (error) => toast.error(error.message) });
+  const becomeAgency = trpc.auth.becomeAgency.useMutation({ onSuccess: async () => { toast.success("تم التسجيل كوكالة تأجير — مرحباً بك!"); await refresh(); }, onError: (error) => toast.error(error.message) });
+  const [agencyNameOnboard, setAgencyNameOnboard] = useState("");
   const [form, setForm] = useState({ title: "", city: "الدار البيضاء", officeType: "office", rentalPeriod: "monthly", price: "", description: "", amenities: [] as string[], imageUrl: "", imageVerificationProof: "" });
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -90,7 +92,7 @@ export default function HostDashboard() {
 
   if (loading) return <div className="container py-24 text-center">جاري تحميل لوحة المالك...</div>;
   if (!user) return <div className="container py-24 text-center">يرجى تسجيل الدخول للوصول إلى لوحة المالك.</div>;
-  if (user.role !== "owner" && user.role !== "admin") return <div className="container py-24 text-center"><h1 className="text-2xl font-bold">هذه اللوحة مخصصة للملاك</h1><Link href="/my-bookings"><Button className="mt-6">الانتقال إلى حجوزاتي</Button></Link></div>;
+  if (user.role !== "owner" && user.role !== "admin") return <div className="container py-24 text-center"><h1 className="text-2xl font-bold">كن شريكاً في ALTUSplace</h1><p className="mx-auto mt-2 max-w-xl text-sm text-muted-foreground leading-relaxed">سجّل وكالتك الآن لإدارة سياراتك ومكاتبك حصرياً عبر حسابك الخاص — استقبل الحجوزات، راجع الوثائق، وحسّب أرباحك من لوحة تحكم مخصصة لوكالتك وحدها.</p><form className="mx-auto mt-6 max-w-md space-y-3 rounded-2xl border bg-card p-5" onSubmit={(event) => { event.preventDefault(); if (!agencyNameOnboard.trim()) return toast.error("أدخل اسم الوكالة"); becomeAgency.mutate({ agencyName: agencyNameOnboard.trim() }); }}><input className="w-full rounded-xl border bg-background p-3 text-center" placeholder="اسم الوكالة / الشركة" value={agencyNameOnboard} onChange={(event) => setAgencyNameOnboard(event.target.value)} /><Button type="submit" className="w-full" disabled={becomeAgency.isPending}>{becomeAgency.isPending ? "جاري التسجيل..." : "التسجيل كوكالة تأجير"}</Button><p className="text-xs text-muted-foreground">بعد التسجيل يتحول حسابك إلى حساب مالك: تظهر لك سياراتك وحجوزاتك فقط، ولا يطلع أي وكالة أخرى على بياناتك.</p></form><div className="mt-6 flex justify-center"><Link href="/my-bookings"><Button variant="outline">إلغاء — الانتقال إلى حجوزاتي</Button></Link></div></div>;
 
   const submit = (event: React.FormEvent) => {
     event.preventDefault();

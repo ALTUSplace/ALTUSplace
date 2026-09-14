@@ -17,6 +17,7 @@ import {
   Fuel,
   Gauge,
   Pencil,
+  Plane,
   Plus,
   RefreshCw,
   ShieldCheck,
@@ -88,6 +89,8 @@ type OwnerBookingRow = {
   identityDocumentKey: string | null;
   identityDocumentFileName: string | null;
   identityDocumentMimeType: string | null;
+  flightNumber: string | null;
+  arrivalTime: string | Date | null;
   listingTitle: string | null;
   renterName: string | null;
   renterEmail: string | null;
@@ -871,6 +874,15 @@ export default function AgencyDashboard() {
                               {booking.renterEmail}
                             </p>
                           )}
+                          {booking.flightNumber && (
+                            <p className="mt-1 inline-flex items-center gap-1 rounded-full border border-sky-300 bg-sky-50 px-2 py-0.5 text-[11px] font-semibold text-sky-800 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-300">
+                              <Plane className="h-3 w-3" />
+                              {booking.flightNumber}
+                              {booking.arrivalTime
+                                ? ` · ${new Date(booking.arrivalTime).toLocaleString("ar-MA", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}`
+                                : ""}
+                            </p>
+                          )}
                         </td>
                         <td className="px-3 py-3">
                           <p className="max-w-48 truncate font-semibold">{booking.listingTitle ?? `الإعلان #${booking.listingId}`}</p>
@@ -1082,6 +1094,19 @@ export default function AgencyDashboard() {
                 {new Date(docBooking.startDate).toLocaleDateString("ar-MA")} إلى{" "}
                 {new Date(docBooking.endDate).toLocaleDateString("ar-MA")} · {money(docBooking.totalPrice)}
               </p>
+
+              {docBooking.flightNumber && (
+                <div className="flex flex-wrap items-center gap-2 rounded-xl border border-sky-200 bg-sky-50 p-3 text-xs text-sky-800 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-300">
+                  <Plane className="h-4 w-4" />
+                  <span className="font-bold">استلام من المطار:</span>
+                  <span className="font-mono font-bold" dir="ltr">{docBooking.flightNumber}</span>
+                  {docBooking.arrivalTime && (
+                    <span>
+                      الوصول {new Date(docBooking.arrivalTime).toLocaleString("ar-MA", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
+                    </span>
+                  )}
+                </div>
+              )}
 
               {openDocsEnabled ? (
                 <>

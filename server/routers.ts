@@ -118,6 +118,33 @@ export const appRouter = router({
         }).where(eq(users.id, ctx.user!.id));
         return { success: true as const };
       }),
+    becomeAgency: protectedProcedure
+      .input(z.object({
+        agencyName: z.string().trim().min(2).max(80),
+        commercialRegister: z.string().trim().max(120).optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "قاعدة البيانات غير متاحة." });
+        if (['owner', 'admin', 'SUPER_ADMIN'].includes(ctx.user!.role)) {
+          throw new TRPCError({ code: "CONFLICT", message: "أنت مسجل بالفعل كوكالة تأجير أو مشرف." });
+        }
+        const beforeRole = ctx.user!.role;
+        await db.update(users).set({
+          role: 'owner',
+          agencyName: input.agencyName,
+          commercialRegister: input.commercialRegister?.trim() || null,
+        }).where(eq(users.id, ctx.user!.id));
+        await writeAuditLog({
+          actorId: ctx.user!.id,
+          action: "auth.become_agency",
+          entityType: "user",
+          entityId: ctx.user!.id,
+          beforeData: { role: beforeRole },
+          afterData: { role: 'owner', agencyName: input.agencyName },
+        });
+        return { success: true as const, role: 'owner' as const };
+      }),
     logout: publicProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
@@ -1794,6 +1821,10 @@ export const appRouter = router({
             mimeType: z.enum(["application/pdf", "image/jpeg", "image/png"]),
             contentBase64: z.string().min(1).max(12_000_000),
           }).optional(),
+          // Airport pickup logistics (Mohammed V / Nouaceur) so the agency can
+          // meet the renter at arrivals with the confirmed flight and time.
+          flightNumber: z.string().trim().max(24).optional(),
+          arrivalTime: z.string().optional(),
         })
       )
       .mutation(async ({ ctx, input }) => {
@@ -1805,6 +1836,10 @@ export const appRouter = router({
           throw new Error("تواريخ الحجز غير صالحة.");
         }
         const { start, end } = requestedRange;
+        const arrivalParsed = input.arrivalTime ? new Date(input.arrivalTime) : null;
+        if (input.arrivalTime && (!arrivalParsed || Number.isNaN(arrivalParsed.getTime()))) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "وقت وصول الرحلة غير صالح." });
+        }
         const listing = await db.select().from(listings).where(eq(listings.id, input.listingId)).limit(1);
         if (!listing[0]) throw new Error("الإعلان غير موجود.");
         // Maintenance mode blocks every overlapping date: a car in maintenance is
@@ -1889,6 +1924,8 @@ export const appRouter = router({
           identityDocumentKey: identityDocumentFile?.key ?? null,
           identityDocumentFileName: input.identityDocument?.fileName ?? null,
           identityDocumentMimeType: input.identityDocument?.mimeType ?? null,
+          flightNumber: input.flightNumber?.trim() || null,
+          arrivalTime: arrivalParsed,
           status: "Pending",
           cancellationPolicyVersion: CANCELLATION_POLICY_VERSION,
           cancellationPolicySnapshot: CANCELLATION_POLICY_TEXT,
@@ -1985,6 +2022,8 @@ export const appRouter = router({
         identityDocumentKey: bookings.identityDocumentKey,
         identityDocumentFileName: bookings.identityDocumentFileName,
         identityDocumentMimeType: bookings.identityDocumentMimeType,
+        flightNumber: bookings.flightNumber,
+        arrivalTime: bookings.arrivalTime,
         listingTitle: listings.title,
         renterName: users.name,
         renterEmail: users.email,

@@ -127,6 +127,10 @@ export const bookings = pgTable("bookings", {
   identityDocumentKey: varchar("identity_document_key", { length: 512 }),
   identityDocumentFileName: varchar("identity_document_file_name", { length: 255 }),
   identityDocumentMimeType: varchar("identity_document_mime_type", { length: 100 }),
+  // Airport pickup logistics (Mohammed V / Nouaceur): helps the agency meet
+  // the renter at the arrivals gate with the confirmed flight and arrival time.
+  flightNumber: varchar("flight_number", { length: 24 }),
+  arrivalTime: timestamp("arrival_time"),
   status: bookingStatusEnum("status").default("Pending").notNull(),
   cancellationPolicyVersion: varchar("cancellation_policy_version", { length: 80 }),
   cancellationPolicySnapshot: text("cancellation_policy_snapshot"),

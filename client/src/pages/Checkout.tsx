@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useLocation, useSearch } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Check, CheckCircle2, Loader2, Lock, MessageCircle, ShieldAlert, ShieldCheck, Sparkles, Upload } from 'lucide-react';
+import { Check, CheckCircle2, Loader2, Lock, MessageCircle, Plane, ShieldAlert, ShieldCheck, Sparkles, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { trpc } from '@/lib/trpc';
 import { LoadingAnimation } from '@/components/LoadingAnimation';
@@ -163,6 +163,8 @@ export default function CheckoutPage() {
   const [residency, setResidency] = useState<ResidencyStatus>('resident');
   const [driverLicenseFile, setDriverLicenseFile] = useState<File | null>(null);
   const [identityFile, setIdentityFile] = useState<File | null>(null);
+  const [flightNumber, setFlightNumber] = useState('');
+  const [arrivalTime, setArrivalTime] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const createBooking = trpc.bookings.create.useMutation();
 
@@ -185,6 +187,11 @@ export default function CheckoutPage() {
   const staticPartner = staticListing ? PARTNERS.find((partner) => partner.id === staticListing.providerId) : undefined;
   const agencyPhone = listing?.whatsappPhone ?? listing?.agencyPhone ?? staticPartner?.phone ?? '';
   const agencyName = listing?.agencyName ?? listing?.ownerName ?? staticPartner?.name ?? 'الوكالة المؤجِرة';
+
+  // Mohammed V (Nouaceur) is the Casablanca airport: offer flight pickup
+  // details only for Casablanca pickups so the agency can meet the arrivals.
+  const pickupCity = (resolvedListing as { city?: string } | null)?.city?.trim() ?? '';
+  const isAirportPickupMohammedV = pickupCity === 'الدار البيضاء';
 
   const bookingStart = startDateParam || new Date().toISOString().slice(0, 10);
   const bookingEnd = endDateParam || new Date().toISOString().slice(0, 10);
@@ -300,6 +307,8 @@ export default function CheckoutPage() {
           mimeType: identityFile.type,
           contentBase64: identityBase64,
         },
+        flightNumber: isAirportPickupMohammedV ? (flightNumber.trim() || undefined) : undefined,
+        arrivalTime: isAirportPickupMohammedV ? (arrivalTime || undefined) : undefined,
       });
       toast.success(`تم تسجيل طلب الحجز ورفع وثائقك. رقم الطلب: #${result.bookingId}`);
       openWhatsApp();
@@ -338,6 +347,48 @@ export default function CheckoutPage() {
                 <p className="text-sm text-slate-500">المدة: {days} أيام × {formatMAD(pricePerDay)} / يوم</p>
               </CardContent>
             </Card>
+
+            {isAirportPickupMohammedV && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-xl flex items-center gap-2">
+                    <Plane className="w-5 h-5 text-sky-600" />
+                    استلام من مطار محمد الخامس (النواصر)
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                    سيسلّمك ممثل {agencyName} عند بوابة الوصول بعد هبوط رحلتك. المرجو إدخال رقم الرحلة ووقت الوصول
+                    ليتمكنوا من الانتظار في الموعد المحدد.
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label htmlFor="flight-number" className="text-sm font-bold text-slate-600 dark:text-slate-300">رقم الرحلة</label>
+                      <input
+                        id="flight-number"
+                        dir="ltr"
+                        type="text"
+                        maxLength={24}
+                        placeholder="مثال: AT752"
+                        value={flightNumber}
+                        onChange={(e) => setFlightNumber(e.target.value)}
+                        className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-right placeholder:text-right dark:border-slate-700 dark:bg-slate-900"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label htmlFor="arrival-time" className="text-sm font-bold text-slate-600 dark:text-slate-300">وقت الوصول</label>
+                      <input
+                        id="arrival-time"
+                        type="datetime-local"
+                        value={arrivalTime}
+                        onChange={(e) => setArrivalTime(e.target.value)}
+                        className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm dark:border-slate-700 dark:bg-slate-900"
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             <Card>
               <CardHeader>
