@@ -43,6 +43,13 @@
       "when": 1789345794676,
       "tag": "0005_add_booking_verification_documents",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1789346482897,
+      "tag": "0006_add_listing_maintenance_status",
+      "breakpoints": true
     }
   ]
 }

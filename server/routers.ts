@@ -1466,6 +1466,18 @@ export const appRouter = router({
         return { success: true as const, status };
       }),
 
+    setFleetStatus: ownerProcedure
+      .input(z.object({ listingId: z.number().int().positive(), status: z.enum(['Available', 'Rented', 'Maintenance']) }))
+      .mutation(async ({ ctx, input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "قاعدة البيانات غير متاحة." });
+        const owned = await db.select({ id: listings.id, status: listings.status }).from(listings).where(and(eq(listings.id, input.listingId), eq(listings.ownerId, ctx.user!.id))).limit(1);
+        if (!owned[0]) throw new TRPCError({ code: "NOT_FOUND", message: "الإعلان غير موجود ضمن ممتلكاتك." });
+        await db.update(listings).set({ status: input.status }).where(and(eq(listings.id, input.listingId), eq(listings.ownerId, ctx.user!.id)));
+        await writeAuditLog({ actorId: ctx.user!.id, action: "listing.fleet_status.updated", entityType: "listing", entityId: input.listingId, beforeData: { status: owned[0].status }, afterData: { status: input.status } });
+        return { success: true as const, status: input.status };
+      }),
+
     setAvailability: ownerProcedure
       .input(z.object({ listingId: z.number().int().positive(), blockedRanges: z.array(z.object({ start: z.string(), end: z.string() })).max(100) }))
       .mutation(async ({ ctx, input }) => {
@@ -1531,6 +1543,8 @@ export const appRouter = router({
           officeType: z.string().optional(),
           rentalPeriod: z.enum(['daily', 'monthly', 'yearly']).optional(),
           amenities: z.array(z.string()).optional(),
+          fuelType: z.string().trim().max(32).optional(),
+          transmission: z.string().trim().max(32).optional(),
         })
       )
       .mutation(async ({ ctx, input }) => {
@@ -1564,6 +1578,8 @@ export const appRouter = router({
           officeType: input.officeType,
           rentalPeriod: input.rentalPeriod,
           amenities: input.amenities?.join(',') || null,
+          fuelType: input.fuelType ?? undefined,
+          transmission: input.transmission ?? undefined,
           status: "Published",
         }).returning({ insertId: listings.id });
         const listingId = Number(inserted.insertId);
@@ -1597,6 +1613,8 @@ export const appRouter = router({
         officeType: z.string().optional(),
         rentalPeriod: z.enum(['daily', 'monthly', 'yearly']).optional(),
         amenities: z.array(z.string()).optional(),
+        fuelType: z.string().trim().max(32).nullable().optional(),
+        transmission: z.string().trim().max(32).nullable().optional(),
       }))
       .mutation(async ({ ctx, input }) => {
         const db = await getDb();

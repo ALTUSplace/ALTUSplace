@@ -3,7 +3,7 @@ import { boolean, doublePrecision, index, integer, jsonb, pgEnum, pgTable, text,
 export const userRoleEnum = pgEnum("user_role", ["renter", "owner", "admin", "user", "SUPER_ADMIN"]);
 export const vendorTierEnum = pgEnum("vendor_tier", ["bronze", "silver", "gold"]);
 export const accountStatusEnum = pgEnum("account_status", ["active", "suspended", "banned"]);
-export const listingStatusEnum = pgEnum("listing_status", ["Pending", "Approved", "Available", "Rented", "Rejected", "Published"]);
+export const listingStatusEnum = pgEnum("listing_status", ["Pending", "Approved", "Available", "Rented", "Rejected", "Published", "Maintenance"]);
 export const rentalPeriodEnum = pgEnum("rental_period", ["daily", "monthly", "yearly"]);
 export const icalSyncStatusEnum = pgEnum("ical_sync_status", ["never", "ok", "error"]);
 export const analyticsEventTypeEnum = pgEnum("analytics_event_type", ["view", "whatsapp_click", "contact_click"]);
