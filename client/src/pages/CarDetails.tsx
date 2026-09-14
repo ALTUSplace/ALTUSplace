@@ -2,14 +2,13 @@ import { useState } from 'react';
 import { useRoute, useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import InteractiveCalendar from '@/components/InteractiveCalendar';
-import { Star, ShieldCheck, Users, Car as CarIcon, Fuel, MapPin, Phone, CheckCircle2, Award, Calendar, ChevronRight, Share2, Copy, Check } from 'lucide-react';
+import { Star, ShieldCheck, Users, Car as CarIcon, Fuel, MapPin, MessageCircle, CheckCircle2, Award, Calendar, ChevronRight, Share2, Copy, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { trpc } from '@/lib/trpc';
 import { LISTINGS } from '@/data/altusplace';
 import { OptimizedImage } from '@/components/OptimizedImage';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { BABY_SEAT_FEE_PER_DAY, calculateRentalDays, calculateRentalSubtotal, INSURANCE_FEE_PER_DAY } from '@/lib/pricing';
-import { buildContactWhatsAppUrl } from '@/lib/whatsapp';
 import { RENTAL_TERMS } from '@/lib/rentalTerms';
 import CommentSection from '@/components/CommentSection';
 import { BookingWidget } from '@/components/ui/BookingWidget';
@@ -118,8 +117,6 @@ export default function CarDetails() {
   const insurancePrice = includeInsurance ? INSURANCE_FEE_PER_DAY * daysCount : 0;
   const babySeatPrice = includeBabySeat ? BABY_SEAT_FEE_PER_DAY * daysCount : 0;
   const totalPrice = calculateRentalSubtotal(dailyPrice, daysCount) + insurancePrice + babySeatPrice;
-  const whatsappBookingMessage = `مرحباً، أرغب في حجز سيارة ${car.name} من ${startDate} إلى ${endDate} (${daysCount} ${daysCount === 1 ? 'يوم' : 'أيام'}) بمبلغ تقديري ${totalPrice} درهم عبر ALTUSplace.`;
-  const agencyWhatsAppUrl = buildContactWhatsAppUrl(car.agency.whatsapp, whatsappBookingMessage);
 
   const handleShare = (platform: string) => {
     const url = window.location.href;
@@ -290,25 +287,23 @@ export default function CarDetails() {
                       <p className="text-xs text-slate-400">{car.agency.address}</p>
                     </div>
                   </div>
-                  {agencyWhatsAppUrl ? (
-                    <a
-                      href={agencyWhatsAppUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                  <div className="w-full sm:w-auto flex flex-col items-center gap-2">
+                    <button
+                      type="button"
                       onClick={() => {
                         if (numericListingId !== null) {
                           trackWhatsAppMutation.mutate({ listingId: numericListingId, eventType: "whatsapp_click" });
                         }
+                        handleProceedBooking();
                       }}
-                      className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-3 rounded-2xl text-xs flex items-center justify-center gap-2 shadow-lg"
+                      className="w-full sm:w-64 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-3 rounded-2xl text-xs flex items-center justify-center gap-2 shadow-lg"
                     >
-                      <Phone className="w-4 h-4" /> {car.agency.whatsapp ? "مراسلة الوكالة عبر واتساب" : "تواصل معنا عبر الواتساب"}
-                    </a>
-                  ) : (
-                    <span className="w-full sm:w-auto bg-slate-800 text-slate-500 font-bold px-5 py-3 rounded-2xl text-xs flex items-center justify-center gap-2" aria-disabled="true">
-                      <Phone className="w-4 h-4" /> واتساب الوكالة غير متوفر
-                    </span>
-                  )}
+                      <MessageCircle className="w-4 h-4" /> تأكيد الحجز عبر الواتساب
+                    </button>
+                    <p className="text-[10px] text-slate-400 text-center leading-relaxed">
+                      يُوجَّه طلبك إلى صفحة التأكيد حيث يكون إرفاق البيرمي ووثيقة الهوية إلزامياً قبل الحجز.
+                    </p>
+                  </div>
                 </div>
 
                 {/* Reviews Section */}

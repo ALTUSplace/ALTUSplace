@@ -11,7 +11,6 @@ import { LISTINGS, type ListingItem } from "@/data/altusplace";
 import { toast } from "sonner";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import CommentSection from "@/components/CommentSection";
-import { buildContactWhatsAppUrl } from "@/lib/whatsapp";
 
 function parseAmenities(value: string | null | undefined): string[] {
   if (!value) return [];
@@ -188,10 +187,6 @@ export default function PropertyDetailWithVideo() {
 
   const totalPrice = calculateRentalSubtotal(safePrice, daysCount) || safePrice * daysCount;
 
-  const whatsappMessage = language === "fr"
-    ? `Bonjour, je souhaite des informations sur « ${title} » (${listing?.city ?? ""}) à ${safePrice} ${language === "fr" ? "MAD" : "MAD"} / unité via ALTUSplace.`
-    : `مرحباً، أود الاستفسار عن « ${arabicTitle || title} » في ${listing?.city ?? ""} بسعر ${safePrice} درهم عبر منصة ALTUSplace.`;
-  const whatsappUrl = buildContactWhatsAppUrl(undefined, whatsappMessage);
   const trackWhatsAppClick = () => {
     if (listingId !== null) {
       trackWhatsAppMutation.mutate({ listingId, eventType: "whatsapp_click" });
@@ -289,16 +284,20 @@ export default function PropertyDetailWithVideo() {
                 <Lock className="w-3 h-3 text-emerald-600" />
                 {language === "fr" ? "Paiement sécurisé via CMI (simulation)" : "دفع آمن عبر CMI (محاكاة)"}
               </div>
-              <a
-                href={whatsappUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => trackWhatsAppClick()}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-200/50 transition-all hover:bg-emerald-600 hover:scale-[1.02] active:scale-[0.98]"
+              <Button
+                type="button"
+                onClick={() => {
+                  trackWhatsAppClick();
+                  handleProceedToCheckout();
+                }}
+                className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 rounded-xl shadow-lg shadow-emerald-200/50 flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]"
               >
                 <MessageCircle className="w-4 h-4" />
-                {language === "fr" ? "Discuter sur WhatsApp" : t("whatsappChat")}
-              </a>
+                {language === "fr" ? "Réserver via WhatsApp" : "تأكيد الحجز عبر الواتساب"}
+              </Button>
+              <p className="text-[10px] text-slate-500 text-center leading-relaxed">
+                {language === "fr" ? "Identité et pièces obligatoires requises avant confirmation." : "التحقق من الهوية وإرفاق الوثائق الإلزامية مطلوب قبل تأكيد الحجز."}
+              </p>
               <p className="text-xs text-slate-500 text-center">{language === "fr" ? "Le prix final est calculé côté serveur lors de la réservation." : "يُحتسب السعر النهائي على الخادم أثناء الحجز."}</p>
             </CardContent>
           </Card>
