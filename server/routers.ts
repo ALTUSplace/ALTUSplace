@@ -8,7 +8,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { adminProcedure, ownerProcedure, publicProcedure, protectedProcedure, router, superAdminProcedure } from "./_core/trpc";
 import { getDb } from "./db";
 import { listings, listingAnalyticsEvents, listingComments, bookings, reviews, users, commercialLeaseContracts, notifications, platformSettings, commissionTiers, escrowEntries, payoutRequests, disputes, disputeAttachments, supportTickets, payments, invoices, kycSubmissions, bookingVouchers, bookingMessages, auditLogs, refundRequests, transactions } from "../drizzle/schema";
-import { eq, and, lte, gte, lt, gt, desc, count, isNull, inArray, ne, or, not, ilike, sql, type SQL } from "drizzle-orm";
+import { eq, and, lte, gte, lt, gt, asc, desc, count, isNull, inArray, ne, or, not, ilike, sql, type SQL } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { safeNotifyUser, buildEmailContent, sendWhatsAppText, normalizeWhatsAppNumber } from "./notificationService";
 import { generateCarRentalContractPdf } from "./carRentalPdf";
@@ -1145,6 +1145,165 @@ export const appRouter = router({
           await safeNotifyUser({ userId: entry.vendorId, type: "system", title: "نزاع محلول / Litige résolu", message: `تم حسم النزاع الخاص بالحجز #${entry.bookingId}: ${input.resolution === 'release_to_vendor' ? 'تسوية لصالح المزوّد' : 'تسوية لصالح الضيف'}.`, href: "/host", entityType: "escrow", entityId: input.escrowId });
           return { success: true as const, message: outcome.message };
         }),
+      overviewKpis: superAdminProcedure.query(async () => {
+        const db = await getDb();
+        if (!db) return { totalUsers: 0, activeCars: 0, activeRealEstate: 0, pendingQueue: 0 };
+        const activeStatuses = ['Published', 'Approved', 'Available'] as const satisfies readonly string[];
+        const activeStatusList = [...activeStatuses];
+        const [userRows, carRows, realEstateRows, pendingRows] = await Promise.all([
+          db.select({ value: count() }).from(users),
+          db.select({ value: count() }).from(listings).where(and(eq(listings.category, 'car'), inArray(listings.status, activeStatusList))),
+          db.select({ value: count() }).from(listings).where(and(eq(listings.category, 'real_estate'), inArray(listings.status, activeStatusList))),
+          db.select({ value: count() }).from(listings).where(eq(listings.status, 'Pending')),
+        ]);
+        return {
+          totalUsers: Number(userRows[0]?.value ?? 0),
+          activeCars: Number(carRows[0]?.value ?? 0),
+          activeRealEstate: Number(realEstateRows[0]?.value ?? 0),
+          pendingQueue: Number(pendingRows[0]?.value ?? 0),
+        };
+      }),
+      moderationQueue: superAdminProcedure.query(async () => {
+        const db = await getDb();
+        if (!db) return [];
+        return db.select({
+          id: listings.id, title: listings.title, category: listings.category,
+          status: listings.status, pricePerDay: listings.pricePerDay, pricePerMonth: listings.pricePerMonth,
+          imageUrl: listings.imageUrl, city: listings.city, isFeatured: listings.isFeatured, createdAt: listings.createdAt,
+          ownerId: listings.ownerId, ownerName: users.name, ownerEmail: users.email, ownerAgencyName: users.agencyName,
+        }).from(listings).leftJoin(users, eq(listings.ownerId, users.id))
+          .where(eq(listings.status, 'Pending')).orderBy(asc(listings.createdAt)).limit(100);
+      }),
+      moderate: superAdminProcedure
+        .input(z.object({
+          listingId: z.number().int().positive(),
+          action: z.enum(['approve', 'reject']),
+          reason: z.string().trim().max(500).optional(),
+        }))
+        .mutation(async ({ ctx, input }) => {
+          const db = await getDb();
+          if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'قاعدة البيانات غير متاحة.' });
+          const [before] = await db.select({ id: listings.id, ownerId: listings.ownerId, title: listings.title, status: listings.status, category: listings.category }).from(listings).where(eq(listings.id, input.listingId)).limit(1);
+          if (!before) throw new TRPCError({ code: 'NOT_FOUND', message: 'الإعلان غير موجود.' });
+          if (before.status === 'Rejected' || before.status === 'Published') {
+            throw new TRPCError({ code: 'CONFLICT', message: `الإعلان محسوم بالفعل (${before.status}).` });
+          }
+          const nextStatus = input.action === 'approve' ? 'Published' : 'Rejected';
+          await db.update(listings).set({ status: nextStatus }).where(eq(listings.id, input.listingId));
+          await writeAuditLog({
+            actorId: ctx.user!.id, action: `listing.${input.action === 'approve' ? 'approved' : 'rejected'}`,
+            entityType: 'listing', entityId: input.listingId,
+            beforeData: { status: before.status }, afterData: { status: nextStatus, reason: input.reason ?? null },
+          });
+          const reasonLabel = input.reason ? ` — ${input.reason}` : '';
+          await safeNotifyUser({
+            userId: before.ownerId,
+            type: input.action === 'approve' ? 'listing_approved' : 'listing_rejected',
+            title: input.action === 'approve' ? 'تم نشر إعلانك / Annonce publiée' : 'تم رفض إعلانك / Annonce refusée',
+            message: `${input.action === 'approve' ? 'تم نشر' : 'تم رفض'} الإعلان «${before.title}».${reasonLabel}`,
+            href: '/host', entityType: 'listing', entityId: input.listingId,
+          });
+          return { success: true as const, status: nextStatus };
+        }),
+      users: superAdminProcedure
+        .input(z.object({
+          q: z.string().trim().max(120).optional(),
+          role: z.enum(['renter', 'owner', 'admin', 'user', 'SUPER_ADMIN']).nullable().optional(),
+          status: z.enum(['active', 'suspended', 'banned']).nullable().optional(),
+          limit: z.number().int().min(1).max(500).optional(),
+        }))
+        .query(async ({ input }) => {
+          const db = await getDb();
+          if (!db) return [];
+          const conditions = [];
+          if (input.q?.trim()) {
+            const needle = `%${input.q.trim()}%`;
+            conditions.push(or(ilike(users.name, needle), ilike(users.email, needle), ilike(users.agencyName, needle), ilike(users.commercialRegister, needle)));
+          }
+          if (input.role) conditions.push(eq(users.role, input.role));
+          if (input.status) conditions.push(eq(users.accountStatus, input.status));
+          const limit = input.limit ?? 500;
+          return db.select({
+            id: users.id, name: users.name, email: users.email, whatsappPhone: users.whatsappPhone,
+            agencyPhone: users.agencyPhone, agencyEmail: users.agencyEmail, agencyName: users.agencyName,
+            commercialRegister: users.commercialRegister, role: users.role, accountStatus: users.accountStatus,
+            kycVerificationStatus: users.kycVerificationStatus, lastSignedIn: users.lastSignedIn, createdAt: users.createdAt,
+          }).from(users)
+            .where(conditions.length ? and(...conditions) : undefined)
+            .orderBy(desc(users.createdAt)).limit(limit);
+        }),
+      setUserRole: superAdminProcedure
+        .input(z.object({ userId: z.number().int().positive(), role: z.enum(['renter', 'owner', 'admin', 'user', 'SUPER_ADMIN']) }))
+        .mutation(async ({ ctx, input }) => {
+          const db = await getDb();
+          if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'قاعدة البيانات غير متاحة.' });
+          if (input.userId === ctx.user.id) throw new TRPCError({ code: 'BAD_REQUEST', message: 'لا يمكنك تغيير دور حسابك الإداري بنفسك.' });
+          const [before] = await db.select({ role: users.role }).from(users).where(eq(users.id, input.userId)).limit(1);
+          if (!before) throw new TRPCError({ code: 'NOT_FOUND', message: 'المستخدم غير موجود.' });
+          await db.update(users).set({ role: input.role }).where(eq(users.id, input.userId));
+          await writeAuditLog({ actorId: ctx.user.id, action: 'user.role_updated', entityType: 'user', entityId: input.userId, beforeData: before, afterData: { role: input.role } });
+          return { success: true as const, role: input.role };
+        }),
+      setUserStatus: superAdminProcedure
+        .input(z.object({ userId: z.number().int().positive(), status: z.enum(['active', 'suspended', 'banned']) }))
+        .mutation(async ({ ctx, input }) => {
+          const db = await getDb();
+          if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'قاعدة البيانات غير متاحة.' });
+          if (input.userId === ctx.user.id && input.status !== 'active') throw new TRPCError({ code: 'BAD_REQUEST', message: 'لا يمكنك تعطيل حسابك الإداري.' });
+          const [before] = await db.select({ accountStatus: users.accountStatus }).from(users).where(eq(users.id, input.userId)).limit(1);
+          if (!before) throw new TRPCError({ code: 'NOT_FOUND', message: 'المستخدم غير موجود.' });
+          await db.update(users).set({ accountStatus: input.status }).where(eq(users.id, input.userId));
+          await writeAuditLog({ actorId: ctx.user.id, action: `user.${input.status}`, entityType: 'user', entityId: input.userId, beforeData: before, afterData: { accountStatus: input.status } });
+          return { success: true as const, status: input.status };
+        }),
+      health: superAdminProcedure.query(async () => {
+        const started = performance.now();
+        let dbOk = false;
+        let dbLatencyMs = 0;
+        try {
+          const db = await getDb();
+          if (db) {
+            await db.execute(sql`select 1`);
+            dbOk = true;
+            dbLatencyMs = Math.round(performance.now() - started);
+          }
+        } catch {
+          dbOk = false;
+          dbLatencyMs = Math.round(performance.now() - started);
+        }
+        const token = process.env.WHATSAPP_ACCESS_TOKEN;
+        const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
+        let whatsapp: { status: 'not_configured' | 'connected' | 'error'; latencyMs: number; message: string } = { status: 'not_configured', latencyMs: 0, message: '' };
+        if (token && phoneNumberId) {
+          const version = process.env.WHATSAPP_API_VERSION || 'v20.0';
+          const waStarted = performance.now();
+          try {
+            const response = await fetch(`https://graph.facebook.com/${version}/${phoneNumberId}`, {
+              method: 'GET',
+              headers: { authorization: `Bearer ${token}` },
+              signal: AbortSignal.timeout(4000),
+            });
+            const latencyMs = Math.round(performance.now() - waStarted);
+            if (response.ok) {
+              whatsapp = { status: 'connected', latencyMs, message: `HTTP ${response.status}` };
+            } else {
+              whatsapp = { status: 'error', latencyMs, message: `HTTP ${response.status}` };
+            }
+          } catch (error) {
+            whatsapp = {
+              status: 'error',
+              latencyMs: Math.round(performance.now() - waStarted),
+              message: error instanceof Error ? error.message.slice(0, 200) : 'المزود غير متاح.',
+            };
+          }
+        }
+        return {
+          db: { ok: dbOk, latencyMs: dbOk ? dbLatencyMs : null },
+          whatsapp: { ...whatsapp, configured: Boolean(token && phoneNumberId), webhookConfigured: false },
+          timestamp: new Date().toISOString(),
+          uptimeSeconds: Math.round(process.uptime()),
+        };
+      }),
     }),
     ownerFinancials: ownerProcedure.query(async ({ ctx }) => {
       const db = await getDb();

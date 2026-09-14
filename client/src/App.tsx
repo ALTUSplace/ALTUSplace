@@ -41,6 +41,7 @@ const BookingPage = lazy(() => import("./pages/Booking"));
 const SuccessPage = lazy(() => import("./pages/Success"));
 const AdminDashboardPage = lazy(() => import("./pages/AdminDashboard"));
 const SuperDashboardPage = lazy(() => import("./pages/SuperDashboard"));
+const SuperAdminDashboardPage = lazy(() => import("./pages/SuperAdminDashboard"));
 const ProfilePage = lazy(() => import("./pages/Profile"));
 const CheckoutPage = lazy(() => import("./pages/Checkout"));
 const KycVerificationPage = lazy(() => import("./pages/KycVerification"));
@@ -120,6 +121,7 @@ function Router() {
       <Route path="/dashboard">{() => <AccessGuard area="host"><HostDashboard /></AccessGuard>}</Route>
       <Route path="/admin">{() => <AccessGuard area="admin"><Suspense fallback={<PageLoader />}><AdminDashboardPage /></Suspense></AccessGuard>}</Route>
       <Route path="/admin/super">{() => <AccessGuard area="superadmin"><Suspense fallback={<PageLoader />}><SuperDashboardPage /></Suspense></AccessGuard>}</Route>
+      <Route path="/admin/super/dashboard">{() => <AccessGuard area="superadmin"><Suspense fallback={<PageLoader />}><SuperAdminDashboardPage /></Suspense></AccessGuard>}</Route>
       <Route path="/dispute-resolution" component={DisputeResolutionPage} />
       <Route path="/terms" component={TermsPage} />
       <Route path="/register">{() => <Suspense fallback={<PageLoader />}><RegisterPage /></Suspense>}</Route>
