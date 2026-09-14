@@ -1,11 +1,15 @@
 import { useMemo, useState } from "react";
 import { Link } from "wouter";
 import {
+  Activity,
   ArrowRight,
+  BarChart3,
   Building2,
   CalendarDays,
+  CalendarRange,
   Car,
   Check,
+  CheckCircle2,
   Eye,
   FileBadge,
   FileCheck2,
@@ -16,10 +20,13 @@ import {
   Plus,
   RefreshCw,
   ShieldCheck,
+  TrendingUp,
   WalletCards,
   Wrench,
   X,
+  XCircle,
 } from "lucide-react";
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -70,6 +77,8 @@ type OwnerBookingRow = {
   startDate: string | Date;
   endDate: string | Date;
   totalPrice: number | string;
+  commissionFee: number | string | null;
+  netProfit: number | string | null;
   status: string;
   createdAt: string | Date | null;
   residency: string | null;
@@ -180,11 +189,376 @@ function DocumentPreview({ src, mime, fileName }: { src: string; mime: string; f
   );
 }
 
+function FinancialAnalytics({ bookings }: { bookings: OwnerBookingRow[] }) {
+  const confirmed = bookings.filter((booking) => booking.status === "Confirmed");
+  const pending = bookings.filter((booking) => booking.status === "Pending");
+  const grossRevenue = confirmed.reduce((sum, booking) => sum + Number(booking.totalPrice ?? 0), 0);
+  const netRevenue = confirmed.reduce((sum, booking) => sum + Number(booking.netProfit ?? 0), 0);
+  const platformFees = Math.max(0, grossRevenue - netRevenue);
+  const pendingEstimate = pending.reduce((sum, booking) => sum + Number(booking.totalPrice ?? 0), 0);
+
+  const monthly = useMemo(() => {
+    const now = new Date();
+    const series: { label: string; revenue: number; rentals: number }[] = [];
+    for (let offset = 5; offset >= 0; offset -= 1) {
+      const monthStart = new Date(now.getFullYear(), now.getMonth() - offset, 1);
+      const nextMonth = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 1);
+      const monthConfirmed = confirmed.filter((booking) => {
+        const start = new Date(booking.startDate);
+        return start >= monthStart && start < nextMonth;
+      });
+      series.push({
+        label: monthStart.toLocaleDateString("ar-MA", { month: "short", year: "2-digit" }),
+        revenue: monthConfirmed.reduce((sum, booking) => sum + Number(booking.totalPrice ?? 0), 0),
+        rentals: monthConfirmed.length,
+      });
+    }
+    return series;
+  }, [confirmed]);
+
+  const breakdown = useMemo(() => {
+    const total = bookings.length || 1;
+    return [
+      { key: "completed", label: "إيجارات مكتملة", count: confirmed.length, value: grossRevenue, pct: Math.round((confirmed.length / total) * 100), color: "bg-emerald-500" },
+      { key: "pending", label: "طلبات قيد الانتظار", count: pending.length, value: pendingEstimate, pct: Math.round((pending.length / total) * 100), color: "bg-amber-400" },
+    ];
+  }, [bookings.length, confirmed.length, pending.length, grossRevenue, pendingEstimate]);
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+        {[
+          { label: "إيرادات مؤكدة (إجمالي)", value: money(grossRevenue), icon: WalletCards, tone: "text-emerald-600" },
+          { label: "صافي الإيرادات", value: money(netRevenue), icon: TrendingUp, tone: "text-[#102d2b]" },
+          { label: "عمولات المنصة", value: money(platformFees), icon: BarChart3, tone: "text-sky-600" },
+          { label: "تقديرات قيد الانتظار", value: money(pendingEstimate), icon: CalendarDays, tone: "text-amber-600" },
+        ].map(({ label, value, icon: Icon, tone }) => (
+          <div key={label} className="rounded-2xl border bg-card p-4 shadow-sm">
+            <Icon className={`h-5 w-5 ${tone}`} />
+            <p className="mt-2 truncate text-sm font-semibold text-muted-foreground">{label}</p>
+            <p className="truncate font-black text-lg">{value}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <div className="rounded-3xl border bg-card p-5 shadow-sm">
+          <div className="mb-3 flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-[#0e5b52]" />
+            <div>
+              <h3 className="font-bold">الإيرادات الشهرية (درهم)</h3>
+              <p className="text-xs text-muted-foreground">آخر 6 أشهر حسب بداية فترة الحجز المؤكدة</p>
+            </div>
+          </div>
+          {monthly.length ? (
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={monthly} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                  <CartesianGrid vertical={false} strokeDasharray="3 3" className="stroke-border/60" />
+                  <XAxis dataKey="label" tickLine={false} axisLine={false} fontSize={11} />
+                  <YAxis tickLine={false} axisLine={false} tickFormatter={(value: number) => `${Math.round(Number(value) / 1000)}k`} width={40} />
+                  <Tooltip formatter={(value: number) => [money(Number(value)), "الإيرادات"]} cursor={{ fill: "rgba(16,45,43,0.06)" }} />
+                  <Bar dataKey="revenue" fill="#0e5b52" radius={[6, 6, 0, 0]} maxBarSize={38} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <div className="flex h-64 items-center justify-center rounded-2xl border border-dashed text-sm text-muted-foreground">
+              لا توجد إيرادات مؤكدة بعد.
+            </div>
+          )}
+        </div>
+
+        <div className="rounded-3xl border bg-card p-5 shadow-sm">
+          <div className="mb-3 flex items-center gap-2">
+            <BarChart3 className="h-5 w-5 text-[#0e5b52]" />
+            <div>
+              <h3 className="font-bold">مكتملة مقابل قيد الانتظار</h3>
+              <p className="text-xs text-muted-foreground">تفصيل حسب حالة الطلب</p>
+            </div>
+          </div>
+          <div className="space-y-4">
+            {breakdown.map((item) => (
+              <div key={item.key} className="rounded-2xl border border-slate-100 p-4 dark:border-slate-800">
+                <div className="flex items-center justify-between gap-2 text-sm">
+                  <span className="font-bold">{item.label}</span>
+                  <span className="text-muted-foreground">{money(item.value)}</span>
+                </div>
+                <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+                  <span>{item.count} حجز</span>
+                  <span>· {item.pct}%</span>
+                </div>
+                <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                  <div className={`h-full rounded-full ${item.color}`} style={{ width: `${item.pct}%` }} />
+                </div>
+              </div>
+            ))}
+            <div className="rounded-2xl border border-dashed p-4 text-xs leading-relaxed text-muted-foreground">
+              يؤكد فحص وثائق البيرمي وCIN قبل القبول، فيتقرر انتقال الحجز من «قيد الانتظار» إلى «مؤكد» وخضوعه لعمولة المنصة.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const dayKey = (date: Date) => `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+const midnight = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
+const WEEKDAY_SHORT = ["أح", "اث", "ثل", "أر", "خم", "جم", "سب"];
+
+function ScheduleCalendar({ bookings, cars }: { bookings: OwnerBookingRow[]; cars: FleetCar[] }) {
+  const [cursor, setCursor] = useState(() => new Date());
+  const year = cursor.getFullYear();
+  const month = cursor.getMonth();
+  const monthStart = new Date(year, month, 1);
+  const monthEnd = new Date(year, month + 1, 1);
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const days: Date[] = Array.from({ length: daysInMonth }, (_, index) => new Date(year, month, index + 1));
+
+  const carTitleById = useMemo(() => {
+    const map = new Map<number, string>();
+    cars.forEach((car) => map.set(car.id, car.title ?? `سيارة ${car.id}`));
+    return map;
+  }, [cars]);
+
+  const activeBookings = useMemo(
+    () => bookings.filter((booking) => booking.status === "Pending" || booking.status === "Confirmed"),
+    [bookings],
+  );
+
+  const coverage = useMemo(() => {
+    const map = new Map<number, Map<string, { count: number; confirmed: boolean }>>();
+    for (const booking of activeBookings) {
+      const listingId = booking.listingId;
+      const from = midnight(new Date(booking.startDate));
+      const to = midnight(new Date(booking.endDate));
+      if (to <= from) continue;
+      let day = from.getTime() > monthStart.getTime() ? from : monthStart;
+      while (day < monthEnd && day < to) {
+        const current = map.get(listingId);
+        const perDate = current ?? new Map<string, { count: number; confirmed: boolean }>();
+        const slot = perDate.get(dayKey(day)) ?? { count: 0, confirmed: false };
+        slot.count += 1;
+        if (booking.status === "Confirmed") slot.confirmed = true;
+        perDate.set(dayKey(day), slot);
+        map.set(listingId, perDate);
+        day = new Date(day.getTime() + 86400000);
+      }
+    }
+    return map;
+  }, [activeBookings, monthStart, monthEnd]);
+
+  const rows = useMemo(() => {
+    const listingIds = Array.from(coverage.keys());
+    return listingIds
+      .map((id) => ({ id, title: carTitleById.get(id) ?? `سيارة #${id}` }))
+      .sort((a, b) => a.title.localeCompare(b.title, "ar"));
+  }, [coverage, carTitleById]);
+
+  const today = midnight(new Date());
+  const monthLabel = cursor.toLocaleDateString("ar-MA", { month: "long", year: "numeric" });
+  const weekend = (date: Date) => date.getDay() === 5 || date.getDay() === 6;
+
+  return (
+    <div className="rounded-3xl border bg-card p-5 shadow-sm">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <CalendarRange className="h-5 w-5 text-[#0e5b52]" />
+          <div>
+            <h3 className="font-bold">جدول الحجوزات التفاعلي</h3>
+            <p className="text-xs text-muted-foreground">مؤكد (أخضر) · قيد الانتظار (كهرماني) · تعارض محتمل (أحمر)</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <Button size="sm" variant="outline" onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1))}>
+            السابق
+          </Button>
+          <Button size="sm" variant="ghost" onClick={() => setCursor(new Date())}>
+            {monthLabel}
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1))}>
+            التالي
+          </Button>
+        </div>
+      </div>
+
+      {rows.length === 0 ? (
+        <div className="rounded-2xl border border-dashed p-10 text-center text-sm text-muted-foreground">
+          لا توجد حجوزات نشطة في هذا الشهر.
+        </div>
+      ) : (
+        <div className="overflow-x-auto pb-2">
+          <div className="min-w-[1120px]">
+            <div className="flex">
+              <div className="w-40 shrink-0 px-2 pb-1 text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                السيارة / التاريخ
+              </div>
+              <div className="grid flex-1" style={{ gridTemplateColumns: `repeat(${daysInMonth}, minmax(0, 1fr))` }}>
+                {days.map((date) => {
+                  const isTodayHeader =
+                    date.getDate() === today.getDate() && date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear();
+                  return (
+                    <div key={`h-${dayKey(date)}`} className="py-0.5 text-center">
+                      <div className={`text-[11px] font-black ${weekend(date) ? "text-slate-400 dark:text-slate-600" : "text-slate-600 dark:text-slate-300"}`}>
+                        {date.getDate()}
+                      </div>
+                      <div className={`text-[8px] leading-tight ${isTodayHeader ? "font-bold text-[#0e5b52]" : "text-slate-300 dark:text-slate-600"}`}>
+                        {WEEKDAY_SHORT[date.getDay()]}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="mt-1 divide-y rounded-xl border">
+              {rows.map((row) => (
+                <div key={row.id} className="flex items-center">
+                  <div className="w-40 shrink-0 truncate px-2 py-2 text-xs font-bold">{row.title}</div>
+                  <div className="grid flex-1" style={{ gridTemplateColumns: `repeat(${daysInMonth}, minmax(0, 1fr))` }}>
+                    {days.map((date) => {
+                      const slot = coverage.get(row.id)?.get(dayKey(date));
+                      const isToday = dayKey(date) === dayKey(today);
+                      const isWeekend = weekend(date);
+                      let cellClass = "bg-slate-50 text-slate-500 dark:bg-slate-900/60 dark:text-slate-400";
+                      let titleText = "";
+                      if (slot) {
+                        const activeList = activeBookings.filter(
+                          (booking) =>
+                            booking.listingId === row.id &&
+                            date >= midnight(new Date(booking.startDate)) &&
+                            date < midnight(new Date(booking.endDate)),
+                        );
+                        titleText = activeList
+                          .map((booking) => `BK-${booking.id} · ${booking.status === "Confirmed" ? "مؤكد" : "قيد الانتظار"} · ${new Date(booking.startDate).toLocaleDateString("ar-MA")} → ${new Date(booking.endDate).toLocaleDateString("ar-MA")}`)
+                          .join("\n");
+                        if (slot.count >= 2) {
+                          cellClass = "bg-rose-500 text-white font-black ring-2 ring-rose-300";
+                        } else if (slot.confirmed) {
+                          cellClass = "bg-emerald-500 text-white";
+                        } else {
+                          cellClass = "bg-amber-400 text-white";
+                        }
+                      }
+                      if (isWeekend && !slot) cellClass = "bg-slate-100/60 text-slate-300 dark:bg-slate-800/60 dark:text-slate-600";
+                      if (isToday) cellClass += " ring-2 ring-inset ring-[#0e5b52]/60";
+                      return (
+                        <div
+                          key={dayKey(date)}
+                          title={titleText || undefined}
+                          className={`m-0.5 flex h-7 items-center justify-center rounded-md text-[10px] font-semibold transition ${cellClass}`}
+                        >
+                          {date.getDate()}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="mt-3 flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground">
+        <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded bg-emerald-500" /> مؤكد</span>
+        <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded bg-amber-400" /> قيد الانتظار</span>
+        <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded bg-rose-500" /> تعارض (تداخل)</span>
+        <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded border-2 border-[#0e5b52]/50" /> اليوم</span>
+      </div>
+    </div>
+  );
+}
+
+type ActivityItem = {
+  id: number;
+  actorName: string | null;
+  action: string;
+  entityType: string;
+  entityId: number | null;
+  beforeData: string | null;
+  afterData: string | null;
+  createdAt: string | Date | null;
+};
+
+const activityMeta: Record<string, { label: string; icon: typeof Activity; cls: string }> = {
+  "booking.approved": { label: "قبول الحجز", icon: CheckCircle2, cls: "bg-emerald-100 text-emerald-700" },
+  "booking.rejected": { label: "رفض الحجز", icon: XCircle, cls: "bg-red-100 text-red-700" },
+  "listing.price_changed": { label: "تغيير سعر السيارة", icon: TrendingUp, cls: "bg-amber-100 text-amber-700" },
+  "listing.updated": { label: "تحديث بيانات السيارة", icon: Pencil, cls: "bg-slate-100 text-slate-700" },
+  "listing.created": { label: "إضافة سيارة جديدة", icon: Car, cls: "bg-emerald-100 text-emerald-700" },
+  "listing.availability.updated": { label: "تحديث حالة التوفر", icon: Wrench, cls: "bg-sky-100 text-sky-700" },
+  "listing.fleet_status.updated": { label: "تحديث حالة السيارة", icon: Wrench, cls: "bg-violet-100 text-violet-700" },
+  "listing.resubmitted": { label: "إعادة إرسال إعلان", icon: RefreshCw, cls: "bg-amber-100 text-amber-700" },
+  "listing.moderated": { label: "مراجعة الإعلان", icon: ShieldCheck, cls: "bg-slate-100 text-slate-700" },
+  "agency.settings.updated": { label: "تحديث بيانات الوكالة", icon: Building2, cls: "bg-slate-100 text-slate-700" },
+};
+
+function ActivityLog({ items }: { items: ActivityItem[] }) {
+  const describe = (item: ActivityItem) => {
+    if (item.action === "booking.approved" || item.action === "booking.rejected") {
+      const after = item.afterData ? (() => { try { return JSON.parse(item.afterData) as { listingTitle?: string }; } catch { return {} as { listingTitle?: string }; } })() : null;
+      return `الحجز #${item.entityId ?? ""}${after?.listingTitle ? ` · ${after.listingTitle}` : ""}`;
+    }
+    if (item.action === "listing.price_changed") {
+      let before: number | undefined;
+      let after: number | undefined;
+      try { before = item.beforeData ? (JSON.parse(item.beforeData) as { pricePerDay?: number }).pricePerDay : undefined; } catch { /* ignore */ }
+      try { after = item.afterData ? (JSON.parse(item.afterData) as { pricePerDay?: number }).pricePerDay : undefined; } catch { /* ignore */ }
+      if (before !== undefined && after !== undefined && before !== after) {
+        return `الإعلان #${item.entityId ?? ""} · ${money(before)} → ${money(after)}`;
+      }
+      return `الإعلان #${item.entityId ?? ""}`;
+    }
+    return `${item.entityType}${item.entityId ? ` #${item.entityId}` : ""}`;
+  };
+
+  return (
+    <div className="rounded-3xl border bg-card p-5 shadow-sm">
+      <div className="mb-4 flex items-center gap-2">
+        <Activity className="h-5 w-5 text-[#0e5b52]" />
+        <div>
+          <h3 className="font-bold">سجل نشاط الوكالة</h3>
+          <p className="text-xs text-muted-foreground">قرارات الحجوزات وتغييرات الأسعار ومراجعات الوثائق</p>
+        </div>
+      </div>
+
+      {items.length === 0 ? (
+        <div className="rounded-2xl border border-dashed p-8 text-center text-sm text-muted-foreground">
+          لا توجد أحداث بعد — ستبدأ الأحداث بالظهور هنا عند قبول الحجوزات أو تعديل الأسعار.
+        </div>
+      ) : (
+        <ul className="max-h-[560px] space-y-2 overflow-y-auto pe-1">
+          {items.slice(0, 40).map((item) => {
+            const meta = activityMeta[item.action] ?? { label: item.action, icon: Activity, cls: "bg-slate-100 text-slate-700" };
+            const Icon = meta.icon;
+            return (
+              <li key={item.id} className="flex items-start gap-3 rounded-2xl border border-slate-100 p-3 dark:border-slate-800">
+                <span className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${meta.cls}`}>
+                  <Icon className="h-4 w-4" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="text-sm font-bold">{meta.label}</p>
+                    <time className="text-[11px] text-muted-foreground">{new Date(item.createdAt ?? 0).toLocaleString("ar-MA")}</time>
+                  </div>
+                  <p className="mt-0.5 truncate text-xs text-muted-foreground">{describe(item)}</p>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 export default function AgencyDashboard() {
   const { user } = useAuth();
   const bookings = trpc.bookings.ownerList.useQuery(undefined, { enabled: !!user });
   const overview = trpc.agency.overview.useQuery(undefined, { enabled: !!user });
   const fleet = trpc.listings.mine.useQuery(undefined, { enabled: !!user });
+  const activity = trpc.agency.recentActivity.useQuery(undefined, { enabled: !!user });
   const updateStatus = trpc.bookings.ownerUpdateStatus.useMutation({
     onSuccess: () => {
       bookings.refetch();
@@ -399,6 +773,7 @@ export default function AgencyDashboard() {
         <TabsList className="w-full justify-start rounded-2xl border bg-card p-1 sm:w-auto">
           <TabsTrigger value="bookings">الحجوزات والتحقق من الوثائق</TabsTrigger>
           <TabsTrigger value="fleet">الأسطول والأسعار</TabsTrigger>
+          <TabsTrigger value="insights">التحليلات والتقارير</TabsTrigger>
         </TabsList>
 
         <TabsContent value="bookings" className="space-y-6">
@@ -648,6 +1023,12 @@ export default function AgencyDashboard() {
               </div>
             )}
           </section>
+        </TabsContent>
+
+        <TabsContent value="insights" className="space-y-6">
+          <FinancialAnalytics bookings={rows} />
+          <ScheduleCalendar bookings={rows} cars={cars} />
+          <ActivityLog items={activity.data ?? []} />
         </TabsContent>
       </Tabs>
 

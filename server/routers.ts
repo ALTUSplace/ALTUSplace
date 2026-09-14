@@ -294,6 +294,35 @@ export const appRouter = router({
       const date = new Date().toISOString().slice(0, 10);
       return { filename: `altusplace-agency-analytics-${date}.csv`, csv: `\uFEFF${header.map(csvField).join(",")}\n${rows.join("\n")}` };
     }),
+    recentActivity: ownerProcedure.query(async ({ ctx }) => {
+      const db = await getDb();
+      if (!db) return [];
+      const listingIds = (await db.select({ id: listings.id }).from(listings).where(eq(listings.ownerId, ctx.user!.id))).map((row) => row.id);
+      if (listingIds.length === 0) return [];
+      const bookingRows = await db.select({ id: bookings.id }).from(bookings).where(inArray(bookings.listingId, listingIds));
+      const bookingIds = bookingRows.map((row) => row.id).filter((id) => id !== null) as number[];
+      const conds: SQL[] = [eq(auditLogs.actorId, ctx.user!.id)];
+      if (listingIds.length > 0) {
+        conds.push(and(inArray(auditLogs.entityType, ["listing", "user"]), inArray(auditLogs.entityId, [...listingIds, ctx.user!.id]))!);
+      }
+      if (bookingIds.length > 0) {
+        conds.push(and(eq(auditLogs.entityType, "booking"), inArray(auditLogs.entityId, bookingIds))!);
+      }
+      return db.select({
+        id: auditLogs.id,
+        actorId: auditLogs.actorId,
+        actorName: users.name,
+        action: auditLogs.action,
+        entityType: auditLogs.entityType,
+        entityId: auditLogs.entityId,
+        beforeData: auditLogs.beforeData,
+        afterData: auditLogs.afterData,
+        createdAt: auditLogs.createdAt,
+      }).from(auditLogs).leftJoin(users, eq(auditLogs.actorId, users.id))
+        .where(or(...conds))
+        .orderBy(desc(auditLogs.createdAt))
+        .limit(100);
+    }),
   }),
 
   notifications: router({
@@ -1620,7 +1649,7 @@ export const appRouter = router({
         const db = await getDb();
         if (!db) throw new Error('Database unavailable');
         const { id, amenities, imageVerificationProof, ...fields } = input;
-        const owned = await db.select({ id: listings.id, imageUrl: listings.imageUrl, status: listings.status }).from(listings)
+        const owned = await db.select({ id: listings.id, imageUrl: listings.imageUrl, status: listings.status, pricePerDay: listings.pricePerDay }).from(listings)
           .where(and(eq(listings.id, id), eq(listings.ownerId, ctx.user!.id))).limit(1);
         if (!owned[0]) throw new Error('الإعلان غير موجود ضمن ممتلكاتك.');
         if (fields.imageUrl !== undefined && (!imageVerificationProof || !verifyImageVerificationProof({ proof: imageVerificationProof, ownerId: ctx.user!.id, url: fields.imageUrl }))) {
@@ -1628,6 +1657,15 @@ export const appRouter = router({
         }
         const nextStatus = owned[0].status === "Rejected" ? "Rejected" : "Published";
         await db.update(listings).set({ ...fields, ...(amenities ? { amenities: amenities.join(',') } : {}), status: nextStatus }).where(eq(listings.id, id));
+        const priceChanged = fields.pricePerDay !== undefined && fields.pricePerDay !== owned[0].pricePerDay;
+        await writeAuditLog({
+          actorId: ctx.user!.id,
+          action: priceChanged ? "listing.price_changed" : "listing.updated",
+          entityType: "listing",
+          entityId: id,
+          beforeData: { pricePerDay: owned[0].pricePerDay },
+          afterData: { pricePerDay: fields.pricePerDay ?? owned[0].pricePerDay, title: fields.title ?? null, transmission: fields.transmission ?? null, fuelType: fields.fuelType ?? null },
+        });
         return { success: true, status: nextStatus };
       }),
 
@@ -2006,6 +2044,14 @@ export const appRouter = router({
           entityType: "booking",
           entityId: bookingDetails[0].bookingId,
           email: bookingDetails[0].renterEmail ? { to: bookingDetails[0].renterEmail, subject: title, ...buildEmailContent(title, message, "/my-bookings") } : undefined,
+        });
+        await writeAuditLog({
+          actorId: ctx.user!.id,
+          action: accepted ? "booking.approved" : "booking.rejected",
+          entityType: "booking",
+          entityId: bookingDetails[0].bookingId,
+          beforeData: { status: "Pending" },
+          afterData: { status: input.status, listingTitle: bookingDetails[0].listingTitle },
         });
         return { success: true };
       }),
