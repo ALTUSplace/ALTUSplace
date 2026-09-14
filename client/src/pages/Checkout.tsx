@@ -175,7 +175,10 @@ export default function CheckoutPage() {
   const identityLabel = residencyOption.sublabel;
   const identityShortLabel = residency === 'resident' ? 'البطاقة الوطنية CIN' : 'جواز السفر';
   const residencyLabel = residency === 'resident' ? 'مقيم بالمغرب (Resident)' : 'أجنبي (Foreigner)';
-  const isFormValid = driverLicenseFile !== null && identityFile !== null;
+  const missingDocumentLabels: string[] = [];
+  if (!driverLicenseFile) missingDocumentLabels.push('رخصة السياقة (البيرمي)');
+  if (!identityFile) missingDocumentLabels.push(identityLabel);
+  const isFormValid = missingDocumentLabels.length === 0;
 
   const whatsappMessage = buildWhatsAppBookingMessage({
     carTitle: resTitle,
@@ -354,13 +357,16 @@ export default function CheckoutPage() {
                   <div className="rounded-xl border border-amber-300/40 bg-amber-50 p-3 text-xs text-amber-700 leading-relaxed dark:bg-amber-950/20 dark:text-amber-400" role="alert">
                     <p className="flex items-center gap-1.5 font-bold">
                       <ShieldAlert className="h-4 w-4" />
-                      الوثائق المطلوبة غير مكتملة بعد
+                      لم تُرفق بعد: {missingDocumentLabels.join('، ')}
                     </p>
                     <ul className="mt-1 list-disc pr-4 space-y-0.5">
-                      <li>رخصة السياقة (البيرمي) — للجميع</li>
-                      <li>{identityLabel} — {residency === 'resident' ? 'للمقيمين' : 'للأجانب'}</li>
+                      {missingDocumentLabels.map((label) => (
+                        <li key={label}>
+                          {label} — {label === 'رخصة السياقة (البيرمي)' ? 'مطلوبة للجميع' : residency === 'resident' ? 'مطلوبة للمقيمين' : 'مطلوب للأجانب'}
+                        </li>
+                      ))}
                     </ul>
-                    <p className="mt-1">لن يُفتح زر تأكيد الحجز عبر الواتساب إلا بعد إرفاق الوثيقتين.</p>
+                    <p className="mt-1">لن يُفتح زر تأكيد الحجز عبر الواتساب إلا بعد إرفاق كامل الوثائق المطلوبة.</p>
                   </div>
                 )}
               </CardContent>
@@ -393,9 +399,19 @@ export default function CheckoutPage() {
                   <MessageCircle className="mr-2 h-5 w-5" />
                   تأكيد الحجز عبر الواتساب
                 </Button>
-                {!isFormValid && (
-                  <p className="rounded-lg border border-amber-300/40 bg-amber-50 p-2 text-[11px] text-amber-700 leading-relaxed dark:bg-amber-950/20 dark:text-amber-400" role="alert">
-                    أرفق البيرمي ووثيقة الهوية في قسم «التحقق الإلزامي من الوثائق» أعلاه لتفعيل زر التأكيد.
+                {!isFormValid ? (
+                  <div className="rounded-lg border border-amber-300/40 bg-amber-50 p-2.5 text-[11px] text-amber-700 leading-relaxed dark:bg-amber-950/20 dark:text-amber-400" role="alert">
+                    <p className="font-bold flex items-center gap-1">
+                      <ShieldAlert className="h-3.5 w-3.5" />
+                      يرجى إرفاق: {missingDocumentLabels.join('، ')}
+                    </p>
+                    <p className="mt-1">
+                      لتأكيد الحجز الفوري مع الوكالة وضمان توفر السيارة، يرجى إرفاق الوثائق المطلوبة في قسم «التحقق الإلزامي من الوثائق» أعلاه — وسيُفعَّل الزر تلقائياً عند اكتمالها.
+                    </p>
+                  </div>
+                ) : (
+                  <p className="rounded-lg bg-emerald-50 border border-emerald-200 p-2.5 text-[11px] text-emerald-700 leading-relaxed dark:bg-emerald-950/30 dark:border-emerald-800 dark:text-emerald-400">
+                    وثائقك مكتملة — وستؤكد رسالة الحجز إرفاقها للفحص المسبق من {agencyName} لضمان سرعة التأكيد.
                   </p>
                 )}
                 {!agencyPhone && (
@@ -452,14 +468,20 @@ export default function CheckoutPage() {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {!isFormValid && (
-                      <div className="rounded-lg border border-amber-300/40 bg-amber-50 p-2 text-[11px] text-amber-700 leading-relaxed dark:bg-amber-950/20 dark:text-amber-400" role="alert">
-                        <p className="flex items-center gap-1 font-bold">
+                    {!isFormValid ? (
+                      <div className="rounded-lg border border-amber-300/40 bg-amber-50 p-2.5 text-[11px] text-amber-700 leading-relaxed dark:bg-amber-950/20 dark:text-amber-400" role="alert">
+                        <p className="font-bold flex items-center gap-1">
                           <ShieldAlert className="h-3.5 w-3.5" />
-                          الوثائق الإلزامية غير مكتملة
+                          يمكنك الحجز بعد إرفاق: {missingDocumentLabels.join('، ')}
                         </p>
-                        <p className="mt-0.5">أرفق البيرمي ووثيقة الهوية (CIN أو جواز السفر) في قسم «التحقق الإلزامي من الوثائق» لتفعيل الزر.</p>
+                        <p className="mt-0.5">
+                          لتأكيد الحجز الفوري مع الوكالة وضمان توفر السيارة، أرفق {missingDocumentLabels.join(' و')} في قسم «التحقق الإلزامي من الوثائق» أعلاه — وسيُفعَّل الزر تلقائياً.
+                        </p>
                       </div>
+                    ) : (
+                      <p className="rounded-lg bg-emerald-50 border border-emerald-200 p-2.5 text-[11px] text-emerald-700 leading-relaxed dark:bg-emerald-950/30 dark:border-emerald-800 dark:text-emerald-400">
+                        الوثائق مكتملة — تُضمَّن في رسالة الحجز للفحص المسبق من الوكالة.
+                      </p>
                     )}
                     <Button type="submit" size="lg" disabled={!isFormValid} className="w-full bg-[#25D366] text-white hover:bg-[#1ebe5d] disabled:pointer-events-auto disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 disabled:opacity-100 disabled:hover:bg-slate-300 dark:disabled:bg-slate-700 dark:disabled:text-slate-500 dark:disabled:hover:bg-slate-700">
                       <MessageCircle className="mr-2 h-5 w-5" />
