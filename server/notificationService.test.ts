@@ -1,5 +1,28 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { buildEmailContent, sendTransactionalEmail } from "./notificationService";
+import { buildEmailContent, normalizeWhatsAppNumber, sendTransactionalEmail } from "./notificationService";
+
+describe("normalizeWhatsAppNumber", () => {
+  it("converts local Moroccan numbers to the international 212 format", () => {
+    expect(normalizeWhatsAppNumber("0612345678")).toBe("212612345678");
+    expect(normalizeWhatsAppNumber("612345678")).toBe("212612345678");
+  });
+
+  it("keeps formatted international numbers and strips separators", () => {
+    expect(normalizeWhatsAppNumber("+212 6 12 34 56 78")).toBe("212612345678");
+    expect(normalizeWhatsAppNumber("212612345678")).toBe("212612345678");
+  });
+
+  it("keeps foreign numbers as-is when they are a valid 10-15 digit E.164 value", () => {
+    expect(normalizeWhatsAppNumber("14155551234")).toBe("14155551234");
+  });
+
+  it("rejects empty or non-phone values", () => {
+    expect(normalizeWhatsAppNumber("")).toBeNull();
+    expect(normalizeWhatsAppNumber("  ")).toBeNull();
+    expect(normalizeWhatsAppNumber("abc")).toBeNull();
+    expect(normalizeWhatsAppNumber("1234567890123456")).toBeNull();
+  });
+});
 
 describe("notificationService", () => {
   afterEach(() => {

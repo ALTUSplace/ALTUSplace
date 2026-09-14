@@ -10,7 +10,7 @@ import { getDb } from "./db";
 import { listings, listingAnalyticsEvents, listingComments, bookings, reviews, users, commercialLeaseContracts, notifications, platformSettings, commissionTiers, escrowEntries, payoutRequests, disputes, disputeAttachments, supportTickets, payments, invoices, kycSubmissions, bookingVouchers, bookingMessages, auditLogs, refundRequests, transactions } from "../drizzle/schema";
 import { eq, and, lte, gte, lt, gt, desc, count, isNull, inArray, ne, or, not, ilike, sql, type SQL } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
-import { safeNotifyUser, buildEmailContent, sendWhatsAppText } from "./notificationService";
+import { safeNotifyUser, buildEmailContent, sendWhatsAppText, normalizeWhatsAppNumber } from "./notificationService";
 import { generateCarRentalContractPdf } from "./carRentalPdf";
 import { z } from "zod";
 import { storageGet, storagePut } from "./storage";
@@ -105,7 +105,7 @@ export const appRouter = router({
     }),
     updateProfile: protectedProcedure
       .input(z.object({
-        whatsappPhone: z.string().trim().max(32).optional().nullable(),
+        whatsappPhone: z.string().trim().max(32).refine((value) => !value || normalizeWhatsAppNumber(value) !== null, "رقم واتساب غير صالح - أدخل الرقم بالصيغة الدولية.").optional().nullable(),
         commercialRegister: z.string().trim().max(120).optional().nullable(),
       }))
       .mutation(async ({ ctx, input }) => {
@@ -113,7 +113,7 @@ export const appRouter = router({
         if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "قاعدة البيانات غير متاحة." });
         const normalize = (value?: string | null) => value?.trim() || null;
         await db.update(users).set({
-          whatsappPhone: normalize(input.whatsappPhone),
+          whatsappPhone: normalizeWhatsAppNumber(input.whatsappPhone ?? "") ?? null,
           commercialRegister: normalize(input.commercialRegister),
         }).where(eq(users.id, ctx.user!.id));
         return { success: true as const };
@@ -204,7 +204,7 @@ export const appRouter = router({
         agencyLongitude: z.string().trim().regex(/^-?\d{1,3}(?:\.\d{1,8})?$/).max(32).optional().nullable(),
         agencyHours: z.string().trim().max(2000).optional().nullable(),
         commercialRegister: z.string().trim().max(120).optional().nullable(),
-        whatsappPhone: z.string().trim().max(32).optional().nullable(),
+        whatsappPhone: z.string().trim().max(32).refine((value) => !value || normalizeWhatsAppNumber(value) !== null, "رقم واتساب غير صالح - أدخل الرقم بالصيغة الدولية.").optional().nullable(),
       }))
       .mutation(async ({ ctx, input }) => {
         const db = await getDb();
@@ -220,9 +220,9 @@ export const appRouter = router({
           agencyLongitude: normalize(input.agencyLongitude),
           agencyHours: normalize(input.agencyHours),
           commercialRegister: normalize(input.commercialRegister),
-          whatsappPhone: normalize(input.whatsappPhone),
+          whatsappPhone: normalizeWhatsAppNumber(input.whatsappPhone ?? "") ?? null,
         }).where(eq(users.id, ctx.user!.id));
-        await writeAuditLog({ actorId: ctx.user!.id, action: "agency.settings.updated", entityType: "user", entityId: ctx.user!.id, afterData: { agencyName: normalize(input.agencyName), agencyPhone: normalize(input.agencyPhone), agencyEmail: normalize(input.agencyEmail) } });
+        await writeAuditLog({ actorId: ctx.user!.id, action: "agency.settings.updated", entityType: "user", entityId: ctx.user!.id, afterData: { agencyName: normalize(input.agencyName), agencyPhone: normalize(input.agencyPhone), agencyEmail: normalize(input.agencyEmail), whatsappPhone: normalizeWhatsAppNumber(input.whatsappPhone ?? "") ?? null } });
         return { success: true as const };
       }),
     listings: ownerProcedure.query(async ({ ctx }) => {

@@ -82,6 +82,13 @@ export default function AgencySettings() {
   const updateField = (field: keyof AgencyForm, value: string) => setForm((current) => ({ ...current, [field]: value }));
   const submit = (event: React.FormEvent) => {
     event.preventDefault();
+    if (form.whatsappPhone.trim()) {
+      const digits = form.whatsappPhone.replace(/\D/g, "");
+      if (digits.length < 8 || digits.length > 15) {
+        toast.error("رقم الواتساب غير صالح - أدخل الرقم بالصيغة الدولية مثال +212 6XXXXXXXXX.");
+        return;
+      }
+    }
     updateSettings.mutate(Object.fromEntries(Object.entries(form).map(([key, value]) => [key, value.trim() || null])) as AgencyForm);
   };
   const handleLogo = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -127,9 +134,9 @@ export default function AgencySettings() {
       <div><h2 className="text-xl font-bold">بيانات الاتصال</h2><p className="mt-1 text-sm text-muted-foreground">يمكنك تعديل هذه البيانات في أي وقت من دون تغيير إعلاناتك.</p></div>
       <div className="grid gap-4 md:grid-cols-2">
         <Field label="اسم الوكالة" value={form.agencyName} onChange={(value) => updateField("agencyName", value)} placeholder="مثال: ALTUSplace Casablanca" />
-        <Field label="الهاتف" value={form.agencyPhone} onChange={(value) => updateField("agencyPhone", value)} placeholder="+212 6..." dir="ltr" />
+        <Field label="الهاتف" value={form.agencyPhone} onChange={(value) => updateField("agencyPhone", value)} placeholder="+212 6..." dir="ltr" inputMode="tel" />
         <Field label="البريد الإلكتروني" value={form.agencyEmail} onChange={(value) => updateField("agencyEmail", value)} placeholder="contact@agency.ma" type="email" dir="ltr" />
-        <Field label="واتساب" value={form.whatsappPhone} onChange={(value) => updateField("whatsappPhone", value)} placeholder="+212 6..." dir="ltr" />
+        <Field label="واتساب (إشعارات الحجز)" value={form.whatsappPhone} onChange={(value) => updateField("whatsappPhone", value)} placeholder="+212 6XXXXXXXXX" dir="ltr" inputMode="tel" hint="يُرسل تنبيه كل حجز جديد إلى هذا الرقم مباشرة — الصيغة الدولية مطلوبة، مثال +212 6XXXXXXXXX." />
         <Field label="السجل التجاري RC" value={form.commercialRegister} onChange={(value) => updateField("commercialRegister", value)} placeholder="رقم السجل التجاري" dir="ltr" />
         <Field label="الموقع الإلكتروني" value={form.agencyWebsite} onChange={(value) => updateField("agencyWebsite", value)} placeholder="https://..." dir="ltr" type="url" />
         <label className="grid gap-2 text-sm font-medium md:col-span-2">العنوان الكامل<textarea value={form.agencyAddress} onChange={(event) => updateField("agencyAddress", event.target.value)} placeholder="المدينة، الشارع، رقم المكتب" className="min-h-24 rounded-xl border bg-background p-3 text-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring" /></label>
@@ -140,6 +147,6 @@ export default function AgencySettings() {
   </div>;
 }
 
-function Field({ label, value, onChange, placeholder, type = "text", dir }: { label: string; value: string; onChange: (value: string) => void; placeholder: string; type?: string; dir?: "ltr" | "rtl" }) {
-  return <label className="grid gap-2 text-sm font-medium">{label}<input type={type} dir={dir} value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} className="rounded-xl border bg-background p-3 outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring" /></label>;
+function Field({ label, value, onChange, placeholder, type = "text", dir, inputMode, hint }: { label: string; value: string; onChange: (value: string) => void; placeholder: string; type?: string; dir?: "ltr" | "rtl"; inputMode?: "tel"; hint?: string }) {
+  return <label className="grid gap-2 text-sm font-medium">{label}<input type={type} dir={dir} inputMode={inputMode} value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} className="rounded-xl border bg-background p-3 outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring" />{hint ? <span className="text-xs leading-relaxed text-muted-foreground">{hint}</span> : null}</label>;
 }
