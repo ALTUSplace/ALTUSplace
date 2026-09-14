@@ -9,6 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { persistLegalConsent } from '@/lib/legalDisclosure';
 import { Link } from 'wouter';
 import { useLanguage } from "@/contexts/LanguageContext";
+import { MOROCCAN_CITIES } from '@/data/moroccoCities';
 
 export default function AddCar() {
   const { direction } = useLanguage();
@@ -160,12 +161,12 @@ export default function AddCar() {
                     onChange={(e) => setCity(e.target.value)}
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-amber-500"
                   >
-                    <option value="مراكش">مراكش</option>
-                    <option value="أغادير">أغادير</option>
-                    <option value="الدار البيضاء">الدار البيضاء</option>
-                    <option value="طنجة">طنجة</option>
-                    <option value="الرباط">الرباط</option>
-                  </select>
+                    <optgroup label="مناطق المغرب (12 جهة)">
+                    {MOROCCAN_CITIES.map((city) => (
+                      <option key={city} value={city}>{city}</option>
+                    ))}
+                  </optgroup>
+                </select>
                 </div>
 
                 <div className="space-y-2 text-right">

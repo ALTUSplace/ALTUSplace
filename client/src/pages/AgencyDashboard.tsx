@@ -45,6 +45,7 @@ import { AdvancedMediaUpload } from "@/components/AdvancedMediaUpload";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { isPropertyCategory } from "@/lib/categories";
+import { MOROCCAN_CITIES as CITIES } from "@/data/moroccoCities";
 
 const money = (value: number | string) => `${Number(value).toLocaleString("fr-MA")} درهم`;
 
@@ -103,8 +104,6 @@ const documentKindLabel = {
   drivingLicense: "رخصة السياقة (البيرمي)",
   identityDocument: "وثيقة الهوية",
 } as const;
-
-const CITIES = ["مراكش", "أغادير", "الدار البيضاء", "طنجة", "الرباط", "فاس"] as const;
 
 const TRANSMISSION_OPTIONS = ["أوتوماتيك", "يدوي (عادي)"] as const;
 

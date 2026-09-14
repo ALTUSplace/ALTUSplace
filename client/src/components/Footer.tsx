@@ -1,6 +1,7 @@
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Link } from "wouter";
 import { MapPin, ShieldCheck } from "lucide-react";
+import { cityLabelFr } from "@/data/moroccoCities";
 
 export default function Footer() {
   const { t, language } = useLanguage();
@@ -46,6 +47,11 @@ export default function Footer() {
                 { href: "/search?city=casablanca", label: t("cityCasablancaFooter") },
                 { href: "/search?city=tangier", label: t("cityTangier") },
                 { href: "/search?city=rabat", label: t("cityRabat") },
+                { href: "/search?city=fez", label: language === "fr" ? cityLabelFr("فاس") : "فاس" },
+                { href: "/search?city=meknes", label: language === "fr" ? cityLabelFr("مكناس") : "مكناس" },
+                { href: "/search?city=oujda", label: language === "fr" ? cityLabelFr("وجدة") : "وجدة" },
+                { href: "/search?city=kenitra", label: language === "fr" ? cityLabelFr("القنيطرة") : "القنيطرة" },
+                { href: "/search?city=laayoune", label: language === "fr" ? cityLabelFr("العيون") : "العيون" },
                 { href: "/search", label: t("viewAllListings") },
               ].map((item) => (
                 <li key={item.href + item.label}>

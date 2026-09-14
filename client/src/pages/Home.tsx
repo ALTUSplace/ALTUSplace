@@ -11,14 +11,15 @@ import { FAQSection } from '@/components/FAQSection';
 import { ListingCard } from '@/components/ui/ListingCard';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { isCarCategory, isPropertyCategory } from '@/lib/categories';
+import { MOROCCAN_CITIES, cityLabelFr } from '@/data/moroccoCities';
 import { toast } from 'sonner';
 
 export default function Home() {
   const [, setLocation] = useLocation();
-  const { t, direction } = useLanguage();
+  const { t, direction, language } = useLanguage();
 
   // Search states for Cars
-  const [carCity, setCarCity] = useState('casablanca');
+  const [carCity, setCarCity] = useState('الدار البيضاء');
   const [pickupDate, setPickupDate] = useState('');
   const [dropoffDate, setDropoffDate] = useState('');
 
@@ -147,11 +148,11 @@ export default function Home() {
                         onChange={(e) => setCarCity(e.target.value)}
                         className={fieldControlClass}
                       >
-                        <option value="casablanca">{t('cityCasablanca')}</option>
-                        <option value="marrakech">{t('cityMarrakech')}</option>
-                        <option value="agadir">{t('cityAgadir')}</option>
-                        <option value="tangier">{t('cityTangier')}</option>
-                        <option value="rabat">{t('cityRabat')}</option>
+                        {MOROCCAN_CITIES.map((city) => (
+                          <option key={city} value={city}>
+                            {language === 'fr' ? cityLabelFr(city) : city}
+                          </option>
+                        ))}
                       </select>
                     </span>
                   </label>

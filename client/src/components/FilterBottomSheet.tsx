@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { SlidersHorizontal, MapPin, Car, Building2, Check } from 'lucide-react';
 import { toast } from 'sonner';
+import { MOROCCAN_CITIES } from '@/data/moroccoCities';
 
 export default function FilterBottomSheet({ onApplyFilters }: { onApplyFilters?: (filters: any) => void }) {
   const [selectedCity, setSelectedCity] = useState('الكل');
@@ -10,7 +11,7 @@ export default function FilterBottomSheet({ onApplyFilters }: { onApplyFilters?:
   const [maxPrice, setMaxPrice] = useState(2000);
   const [isOpen, setIsOpen] = useState(false);
 
-  const cities = ['الكل', 'مراكش', 'الدار البيضاء', 'طنجة', 'أغادير', 'الرباط'];
+  const cities: string[] = ['الكل', ...MOROCCAN_CITIES];
   const categories = ['الكل', 'سيارات فاخرة', 'سيارات اقتصادية', 'شقق مفروشة', 'فلل'];
 
   const handleApply = () => {

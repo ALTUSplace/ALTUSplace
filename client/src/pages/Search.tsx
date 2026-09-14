@@ -13,15 +13,7 @@ import { ListingCard, ListingCardSkeleton } from '@/components/ui/ListingCard';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { isCarCategory, isPropertyCategory } from '@/lib/categories';
-
-const CITIES = [
-  { id: 'all', name: 'جميع المدن' },
-  { id: 'مراكش', name: 'مراكش' },
-  { id: 'أغادير', name: 'أغادير' },
-  { id: 'الدار البيضاء', name: 'الدار البيضاء' },
-  { id: 'طنجة', name: 'طنجة' },
-  { id: 'الرباط', name: 'الرباط' },
-];
+import { MOROCCAN_CITIES, resolveCitySlug, cityLabelFr } from '@/data/moroccoCities';
 
 const listingRoute = (item: ListingItem) => (item.type === 'property' ? `/property/${item.id}` : `/car/${item.id}`);
 
@@ -81,21 +73,13 @@ const toListingItem = (item: {
   };
 };
 
-const cityMap: Record<string, string> = {
-  agadir: 'أغادير',
-  marrakech: 'مراكش',
-  casablanca: 'الدار البيضاء',
-  tangier: 'طنجة',
-  rabat: 'الرباط',
-};
-
 export default function Search() {
   const [, setLocation] = useLocation();
   const { language, t } = useLanguage();
   const searchParams = new URLSearchParams(window.location.search);
 
   const rawCity = searchParams.get('city') || 'all';
-  const resolvedCity = cityMap[rawCity] || rawCity;
+  const resolvedCity = resolveCitySlug(rawCity);
 
   const naturalQuery = searchParams.get('q') || '';
   const brandParam = searchParams.get('brand') || '';
@@ -206,7 +190,6 @@ export default function Search() {
   }, [serverListings, cityFilter, typeFilter, maxPrice, sortBy, searchQuery, brandParam, categoryParam, excellenceOnly]);
 
   const [isSearching, setIsSearching] = useState(false);
-  const cityLabel = (city: string) => language === 'fr' ? ({ 'جميع المدن': 'Toutes les villes', 'مراكش': 'Marrakech', 'أغادير': 'Agadir', 'الدار البيضاء': 'Casablanca', 'طنجة': 'Tanger', 'الرباط': 'Rabat' }[city] ?? city) : city;
 
   return (
     <div className="min-h-screen bg-background text-foreground pb-20" dir="rtl">
@@ -283,9 +266,10 @@ setCityFilter('all');
                 onChange={(e) => setCityFilter(e.target.value)}
                 className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500"
               >
-                {CITIES.map((c) => (
-                  <option key={c.id} value={c.name}>
-                    {cityLabel(c.name)}
+                <option value="all">{language === 'fr' ? 'Toutes les villes' : 'جميع المدن'}</option>
+                {MOROCCAN_CITIES.map((city) => (
+                  <option key={city} value={city}>
+                    {language === 'fr' ? cityLabelFr(city) : city}
                   </option>
                 ))}
               </select>
