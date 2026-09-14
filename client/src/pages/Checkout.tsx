@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useLocation, useSearch } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Check, MessageCircle, ShieldAlert, ShieldCheck, Sparkles, Upload } from 'lucide-react';
+import { Check, CheckCircle2, Lock, MessageCircle, ShieldAlert, ShieldCheck, Sparkles, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { trpc } from '@/lib/trpc';
 import { LoadingAnimation } from '@/components/LoadingAnimation';
@@ -84,12 +84,13 @@ function DocumentUploadField({
     <div className="space-y-2">
       <p className="text-sm font-bold text-slate-600 dark:text-slate-300">{label}</p>
       {file ? (
-        <div className="flex items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-800 dark:bg-emerald-950/30">
-          <div className="flex min-w-0 items-center gap-2">
-            <ShieldCheck className="h-4 w-4 shrink-0 text-emerald-600" />
+        <div className="flex items-center justify-between gap-3 rounded-xl border-2 border-emerald-200 bg-emerald-50 p-3 animate-in fade-in duration-200 dark:border-emerald-800 dark:bg-emerald-950/30" role="status">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
             <div className="min-w-0">
+              <p className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400">تم إرفاقه بنجاح</p>
               <p className="truncate text-sm font-semibold text-emerald-800 dark:text-emerald-300" dir="ltr">{file.name}</p>
-              <p className="text-[11px] text-emerald-700 dark:text-emerald-400">{Math.max(1, Math.round(file.size / 1024))} KB — تم اختياره</p>
+              <p className="text-[11px] text-emerald-700 dark:text-emerald-400">{Math.max(1, Math.round(file.size / 1024))} KB — جاهز للفحص المسبق من الوكالة</p>
             </div>
           </div>
           <button
@@ -99,15 +100,16 @@ function DocumentUploadField({
               event.stopPropagation();
               onFileChange(null);
             }}
-            className="shrink-0 rounded-lg border border-emerald-300 px-2 py-1 text-[11px] font-bold text-emerald-700 hover:bg-emerald-100 dark:hover:bg-emerald-800"
+            className="shrink-0 rounded-lg border border-emerald-300 bg-white/60 px-3 py-1.5 text-[11px] font-bold text-emerald-700 hover:bg-emerald-100 dark:border-emerald-700 dark:bg-transparent dark:hover:bg-emerald-800"
           >
             إزالة
           </button>
         </div>
       ) : (
-        <label className="flex cursor-pointer items-center gap-3 rounded-xl border-2 border-dashed border-slate-300 p-3 text-sm text-slate-600 transition-all hover:border-amber-400 hover:bg-amber-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-amber-950/20">
-          <Upload className="h-5 w-5 text-amber-600" />
-          اضغط لاختيار الملف
+        <label className="flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border-2 border-dashed border-slate-300 p-4 text-sm font-medium text-slate-600 transition-all hover:border-amber-400 hover:bg-amber-50 active:scale-[0.99] dark:border-slate-600 dark:text-slate-300 dark:hover:bg-amber-950/20">
+          <Upload className="h-5 w-5 shrink-0 text-amber-600" />
+          <span className="flex-1">اضغط هنا لاختيار الملف</span>
+          <span className="shrink-0 rounded-lg bg-slate-100 px-2 py-1 text-[10px] font-bold text-slate-500 dark:bg-slate-800 dark:text-slate-400">JPG / PNG / PDF</span>
           <input
             type="file"
             accept="image/*,application/pdf"
@@ -324,8 +326,10 @@ export default function CheckoutPage() {
                         <button
                           key={option.value}
                           type="button"
+                          role="radio"
+                          aria-checked={selected}
                           onClick={() => setResidency(option.value)}
-                          className={`p-3 rounded-xl border-2 text-sm transition-all ${
+                          className={`min-h-14 p-3 rounded-2xl border-2 text-sm transition-all active:scale-[0.98] ${
                             selected
                               ? 'border-amber-500 bg-amber-50 shadow-sm dark:bg-amber-950/20'
                               : 'border-slate-200 hover:border-slate-300 dark:border-slate-700'
@@ -352,6 +356,14 @@ export default function CheckoutPage() {
                   file={identityFile}
                   onFileChange={setIdentityFile}
                 />
+
+                <div className="flex items-start gap-2.5 rounded-xl border border-sky-200 bg-sky-50 p-3 text-[11px] text-sky-800 leading-relaxed dark:border-sky-800 dark:bg-sky-950/30 dark:text-sky-300" role="note">
+                  <Lock className="h-4 w-4 shrink-0 text-sky-600 mt-0.5" />
+                  <p>
+                    وثائقك (البيرمي ووثيقة الهوية) محمية ومشفّرة، ولا تُستخدم إلا لأغراض التحقق من الحجز لدى {agencyName} —
+                    ولا نشارك بياناتك مع أي طرف ثالث.
+                  </p>
+                </div>
 
                 {!isFormValid && (
                   <div className="rounded-xl border border-amber-300/40 bg-amber-50 p-3 text-xs text-amber-700 leading-relaxed dark:bg-amber-950/20 dark:text-amber-400" role="alert">
