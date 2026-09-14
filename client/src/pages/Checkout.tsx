@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useLocation, useSearch } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Check, CheckCircle2, Lock, MessageCircle, ShieldAlert, ShieldCheck, Sparkles, Upload } from 'lucide-react';
+import { Check, CheckCircle2, Loader2, Lock, MessageCircle, ShieldAlert, ShieldCheck, Sparkles, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { trpc } from '@/lib/trpc';
 import { LoadingAnimation } from '@/components/LoadingAnimation';
@@ -127,6 +127,24 @@ function DocumentUploadField({
   );
 }
 
+const DOC_MIME_TYPES = ['image/jpeg', 'image/png', 'application/pdf'] as const;
+type DocumentMimeType = (typeof DOC_MIME_TYPES)[number];
+
+function isDocumentMimeType(value: string): value is DocumentMimeType {
+  return (DOC_MIME_TYPES as readonly string[]).includes(value);
+}
+
+// The server stores the documents server-side (Forge/S3) exactly like KYC
+// files, so the agency can review them before confirming the handover.
+function readFileAsBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result ?? '').split(',')[1] ?? '');
+    reader.onerror = () => reject(reader.error ?? new Error('تعذر قراءة الملف.'));
+    reader.readAsDataURL(file);
+  });
+}
+
 export default function CheckoutPage() {
   const [, setLocation] = useLocation();
   const searchString = useSearch();
@@ -145,6 +163,8 @@ export default function CheckoutPage() {
   const [residency, setResidency] = useState<ResidencyStatus>('resident');
   const [driverLicenseFile, setDriverLicenseFile] = useState<File | null>(null);
   const [identityFile, setIdentityFile] = useState<File | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const createBooking = trpc.bookings.create.useMutation();
 
   const { data: listing, isLoading, error } = trpc.listings.getById.useQuery(
     { id: parsedListingId },
@@ -216,7 +236,7 @@ export default function CheckoutPage() {
     });
   };
 
-  const handleWhatsAppConfirm = (e: React.FormEvent) => {
+  const handleWhatsAppConfirm = async (e: React.FormEvent) => {
     e.preventDefault();
     const bookingDays = calcDays(startDateParam, endDateParam);
     if (!startDateParam || !endDateParam || bookingDays <= 0) {
@@ -236,8 +256,59 @@ export default function CheckoutPage() {
       toast.error('لا يوجد رقم واتساب متاح لهذه الوكالة حالياً. يرجى المحاولة لاحقاً.');
       return;
     }
-    window.open(whatsappUrl, '_blank');
-    toast.success('تم تجهيز رسالة الحجز مع تفاصيله. أرسلها عبر الواتساب لتأكيد الحجز.');
+
+    const openWhatsApp = () => {
+      window.open(whatsappUrl, '_blank');
+      toast.success('تم تجهيز رسالة الحجز مع تفاصيله. أرسلها عبر الواتساب لتأكيد الحجز.');
+    };
+
+    // Static demo listings and guests have no server-side booking record yet —
+    // fall back to the WhatsApp handoff exactly as before.
+    const canPersistBooking = isAuthenticated && !!listing && !isNaN(parsedListingId) && parsedListingId > 0;
+    if (!canPersistBooking) {
+      openWhatsApp();
+      return;
+    }
+
+    // Real platform listing: persist the booking and upload the mandatory
+    // documents so the agency can review them before handover.
+    if (!driverLicenseFile || !identityFile) return;
+    if (!isDocumentMimeType(driverLicenseFile.type) || !isDocumentMimeType(identityFile.type)) {
+      toast.error('صيغة الملف غير مدعومة. المرجو رفع ملفات بصيغة JPG أو PNG أو PDF.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const [licenseBase64, identityBase64] = await Promise.all([
+        readFileAsBase64(driverLicenseFile),
+        readFileAsBase64(identityFile),
+      ]);
+      const result = await createBooking.mutateAsync({
+        listingId: parsedListingId,
+        startDate: bookingStart,
+        endDate: bookingEnd,
+        addOns: selectedAddOns.length > 0 ? selectedAddOns : undefined,
+        residency,
+        drivingLicense: {
+          fileName: driverLicenseFile.name,
+          mimeType: driverLicenseFile.type,
+          contentBase64: licenseBase64,
+        },
+        identityDocument: {
+          fileName: identityFile.name,
+          mimeType: identityFile.type,
+          contentBase64: identityBase64,
+        },
+      });
+      toast.success(`تم تسجيل طلب الحجز ورفع وثائقك. رقم الطلب: #${result.bookingId}`);
+      openWhatsApp();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'تعذر تسجيل الحجز. يرجى المحاولة مجدداً.';
+      toast.error(message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (isLoading) {
@@ -405,11 +476,11 @@ export default function CheckoutPage() {
                 <Button
                   type="submit"
                   size="lg"
-                  disabled={!isFormValid}
+                  disabled={!isFormValid || isSubmitting}
                   className="w-full bg-[#25D366] text-white hover:bg-[#1ebe5d] disabled:pointer-events-auto disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 disabled:opacity-100 disabled:hover:bg-slate-300 dark:disabled:bg-slate-700 dark:disabled:text-slate-500 dark:disabled:hover:bg-slate-700"
                 >
-                  <MessageCircle className="mr-2 h-5 w-5" />
-                  تأكيد الحجز عبر الواتساب
+                  {isSubmitting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <MessageCircle className="mr-2 h-5 w-5" />}
+                  {isSubmitting ? 'جارٍ تسجيل الحجز ورفع الوثائق...' : 'تأكيد الحجز عبر الواتساب'}
                 </Button>
                 {!isFormValid ? (
                   <div className="rounded-lg border border-amber-300/40 bg-amber-50 p-2.5 text-[11px] text-amber-700 leading-relaxed dark:bg-amber-950/20 dark:text-amber-400" role="alert">
@@ -495,9 +566,9 @@ export default function CheckoutPage() {
                         الوثائق مكتملة — تُضمَّن في رسالة الحجز للفحص المسبق من الوكالة.
                       </p>
                     )}
-                    <Button type="submit" size="lg" disabled={!isFormValid} className="w-full bg-[#25D366] text-white hover:bg-[#1ebe5d] disabled:pointer-events-auto disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 disabled:opacity-100 disabled:hover:bg-slate-300 dark:disabled:bg-slate-700 dark:disabled:text-slate-500 dark:disabled:hover:bg-slate-700">
-                      <MessageCircle className="mr-2 h-5 w-5" />
-                      تأكيد الحجز عبر الواتساب ({showTotalDisplay})
+                    <Button type="submit" size="lg" disabled={!isFormValid || isSubmitting} className="w-full bg-[#25D366] text-white hover:bg-[#1ebe5d] disabled:pointer-events-auto disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 disabled:opacity-100 disabled:hover:bg-slate-300 dark:disabled:bg-slate-700 dark:disabled:text-slate-500 dark:disabled:hover:bg-slate-700">
+                      {isSubmitting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <MessageCircle className="mr-2 h-5 w-5" />}
+                      {isSubmitting ? 'جارٍ تسجيل الحجز ورفع الوثائق...' : `تأكيد الحجز عبر الواتساب (${showTotalDisplay})`}
                     </Button>
                   </div>
                 )}

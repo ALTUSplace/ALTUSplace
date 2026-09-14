@@ -46,6 +46,7 @@ const CheckoutPage = lazy(() => import("./pages/Checkout"));
 const KycVerificationPage = lazy(() => import("./pages/KycVerification"));
 const VoucherPage = lazy(() => import("./pages/Voucher"));
 const BookingMessagesPage = lazy(() => import("./pages/BookingMessages"));
+const AgencyDashboardPage = lazy(() => import("./pages/AgencyDashboard"));
 const RegisterPage = lazy(() => import("./pages/Register"));
 const LocationLandingPage = lazy(() => import("./pages/LocationLanding"));
 
@@ -123,6 +124,7 @@ function Router() {
       <Route path="/privacy" component={PrivacyPage} />
       <Route path="/host">{() => <AccessGuard area="host"><HostDashboard /></AccessGuard>}</Route>
       <Route path="/host-dashboard">{() => <AccessGuard area="host"><HostDashboard /></AccessGuard>}</Route>
+      <Route path="/agency-dashboard">{() => <AccessGuard area="host"><Suspense fallback={<PageLoader />}><AgencyDashboardPage /></Suspense></AccessGuard>}</Route>
       <Route path="/host/settings">{() => <AccessGuard area="host"><Suspense fallback={<PageLoader />}><AgencySettingsPage /></Suspense></AccessGuard>}</Route>
       <Route path="/partner">{() => <AccessGuard area="host"><HostDashboard /></AccessGuard>}</Route>
       <Route path="/partner-dashboard">{() => <AccessGuard area="host"><HostDashboard /></AccessGuard>}</Route>

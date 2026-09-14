@@ -36,6 +36,13 @@
       "when": 1791500000000,
       "tag": "0004_add_moroccan_gateway_transactions",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1789345794676,
+      "tag": "0005_add_booking_verification_documents",
+      "breakpoints": true
     }
   ]
 }

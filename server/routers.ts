@@ -1723,6 +1723,20 @@ export const appRouter = router({
           addOns: z
             .array(z.enum(["insurance", "baby_seat", "delivery", "additional_driver"]))
             .optional(),
+          // Residency + the two mandatory checkout documents (driver's licence
+          // and CIN/Passport). Files are stored server-side (Forge/S3) exactly
+          // like KYC documents; the agency reviews them before handover.
+          residency: z.enum(["resident", "foreigner"]).optional(),
+          drivingLicense: z.object({
+            fileName: z.string().trim().min(1).max(255),
+            mimeType: z.enum(["application/pdf", "image/jpeg", "image/png"]),
+            contentBase64: z.string().min(1).max(12_000_000),
+          }).optional(),
+          identityDocument: z.object({
+            fileName: z.string().trim().min(1).max(255),
+            mimeType: z.enum(["application/pdf", "image/jpeg", "image/png"]),
+            contentBase64: z.string().min(1).max(12_000_000),
+          }).optional(),
         })
       )
       .mutation(async ({ ctx, input }) => {
@@ -1775,6 +1789,22 @@ export const appRouter = router({
         const commissionFee = commissionPolicy.fee;
         const netProfit = (subtotal + addOnsTotal) - commissionFee;
 
+        // Residency and documents are mandatory together: if the renter states
+        // residency, both checkout documents must be attached and uploaded.
+        if (input.residency && (!input.drivingLicense || !input.identityDocument)) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "المرجو إرفاق رخصة السياقة ووثيقة الهوية مع حالة الإقامة." });
+        }
+        const uploadCheckoutDocument = async (kind: "driving-license" | "identity", doc: { fileName: string; mimeType: string; contentBase64: string }) => {
+          const bytes = Buffer.from(doc.contentBase64, "base64");
+          if (!bytes.length || bytes.length > 8 * 1024 * 1024) {
+            throw new TRPCError({ code: "BAD_REQUEST", message: "حجم الوثيقة يجب ألا يتجاوز 8 ميجابايت." });
+          }
+          const safeName = doc.fileName.replace(/[^a-zA-Z0-9._-]/g, "-").slice(-180) || (kind === "driving-license" ? "driving-license" : "identity-document");
+          return storagePut(`users/${ctx.user!.id}/checkout/${kind}/${Date.now()}-${safeName}`, bytes, doc.mimeType);
+        };
+        const drivingLicenseFile = input.drivingLicense ? await uploadCheckoutDocument("driving-license", input.drivingLicense) : null;
+        const identityDocumentFile = input.identityDocument ? await uploadCheckoutDocument("identity", input.identityDocument) : null;
+
         // Pending requests may overlap while awaiting approval. The owner/admin confirmation path below
         // takes the same row lock and performs the authoritative confirmed-overlap check.
         const policyAcceptedAt = new Date();
@@ -1787,6 +1817,13 @@ export const appRouter = router({
           commissionFee,
           netProfit,
           addOns: addOnsSnapshot.length > 0 ? addOnsSnapshot : null,
+          residency: input.residency ?? null,
+          drivingLicenseKey: drivingLicenseFile?.key ?? null,
+          drivingLicenseFileName: input.drivingLicense?.fileName ?? null,
+          drivingLicenseMimeType: input.drivingLicense?.mimeType ?? null,
+          identityDocumentKey: identityDocumentFile?.key ?? null,
+          identityDocumentFileName: input.identityDocument?.fileName ?? null,
+          identityDocumentMimeType: input.identityDocument?.mimeType ?? null,
           status: "Pending",
           cancellationPolicyVersion: CANCELLATION_POLICY_VERSION,
           cancellationPolicySnapshot: CANCELLATION_POLICY_TEXT,
@@ -1863,8 +1900,16 @@ export const appRouter = router({
         netProfit: bookings.netProfit,
         status: bookings.status,
         createdAt: bookings.createdAt,
+        residency: bookings.residency,
+        drivingLicenseKey: bookings.drivingLicenseKey,
+        drivingLicenseFileName: bookings.drivingLicenseFileName,
+        drivingLicenseMimeType: bookings.drivingLicenseMimeType,
+        identityDocumentKey: bookings.identityDocumentKey,
+        identityDocumentFileName: bookings.identityDocumentFileName,
+        identityDocumentMimeType: bookings.identityDocumentMimeType,
         listingTitle: listings.title,
         renterName: users.name,
+        renterEmail: users.email,
       }).from(bookings)
         .innerJoin(listings, eq(bookings.listingId, listings.id))
         .leftJoin(users, eq(bookings.renterId, users.id))

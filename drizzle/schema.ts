@@ -120,6 +120,13 @@ export const bookings = pgTable("bookings", {
   commissionFee: integer("commission_fee").notNull(), // 10% عمولة المنصة
   netProfit: integer("net_profit").notNull(), // صافي ربح الشريك
   addOns: jsonb("add_ons"), // [{ id: 'insurance', amount: 500, perDay: true }, ...] priced at create time
+  residency: varchar("residency", { length: 16 }), // resident | foreigner — captured at checkout for agency pre-handover verification
+  drivingLicenseKey: varchar("driving_license_key", { length: 512 }),
+  drivingLicenseFileName: varchar("driving_license_file_name", { length: 255 }),
+  drivingLicenseMimeType: varchar("driving_license_mime_type", { length: 100 }),
+  identityDocumentKey: varchar("identity_document_key", { length: 512 }),
+  identityDocumentFileName: varchar("identity_document_file_name", { length: 255 }),
+  identityDocumentMimeType: varchar("identity_document_mime_type", { length: 100 }),
   status: bookingStatusEnum("status").default("Pending").notNull(),
   cancellationPolicyVersion: varchar("cancellation_policy_version", { length: 80 }),
   cancellationPolicySnapshot: text("cancellation_policy_snapshot"),
