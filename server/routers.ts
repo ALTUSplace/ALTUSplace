@@ -10,7 +10,8 @@ import { getDb } from "./db";
 import { listings, listingAnalyticsEvents, listingComments, bookings, reviews, users, commercialLeaseContracts, notifications, platformSettings, commissionTiers, escrowEntries, payoutRequests, disputes, disputeAttachments, supportTickets, payments, invoices, kycSubmissions, bookingVouchers, bookingMessages, auditLogs, refundRequests, transactions } from "../drizzle/schema";
 import { eq, and, lte, gte, lt, gt, desc, count, isNull, inArray, ne, or, not, ilike, sql, type SQL } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
-import { safeNotifyUser, buildEmailContent } from "./notificationService";
+import { safeNotifyUser, buildEmailContent, sendWhatsAppText } from "./notificationService";
+import { generateCarRentalContractPdf } from "./carRentalPdf";
 import { z } from "zod";
 import { storageGet, storagePut } from "./storage";
 import { generateServerCommercialLeasePdf } from "./commercialLeasePdf";
@@ -1827,7 +1828,7 @@ export const appRouter = router({
         if (!isRangeAvailable(requestedRange, blockedRanges) || confirmedRanges.length > 0) {
           throw new Error("الإعلان غير متاح خلال الفترة المحددة.");
         }
-        const owner = await db.select({ id: users.id, name: users.name, email: users.email })
+        const owner = await db.select({ id: users.id, name: users.name, email: users.email, whatsappPhone: users.whatsappPhone, agencyPhone: users.agencyPhone })
           .from(users).where(eq(users.id, listing[0].ownerId)).limit(1);
 
         const durationDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
@@ -1909,6 +1910,19 @@ export const appRouter = router({
           entityId: bookingId,
           email: owner[0]?.email ? { to: owner[0].email, subject: ownerTitle, ...buildEmailContent(ownerTitle, ownerMessage, "/host") } : undefined,
         });
+
+        // Instant WhatsApp alert to the agency when a booking is persisted with
+        // the renter's verified KYC and checkout documents. Fire-and-forget so
+        // a misconfigured provider never blocks the booking confirmation.
+        void sendWhatsAppText(owner[0]?.whatsappPhone ?? owner[0]?.agencyPhone, [
+          "ALTUSplace — حجز جديد / Nouvelle réservation",
+          `رقم الحجز / Réservation: #${bookingId}`,
+          `السيارة / Véhicule: ${listing[0].title}`,
+          `الفترة / Période: ${dateLabel}`,
+          `الإجمالي / Total: ${(subtotal + addOnsTotal).toLocaleString("fr-MA")} MAD`,
+          `المستأجر / Client: ${ctx.user!.name ?? "عميل ALTUSplace"}`,
+          "الوثائق مرفوعة والهوية محققة / Documents soumis, identité vérifiée",
+        ].join("\n"));
 
         return { success: true, bookingId, subtotal, addOnsTotal, durationDays, commissionFee, netProfit };
       }),
@@ -2612,6 +2626,123 @@ export const appRouter = router({
         if (!result[0]) return null;
         const stored = result[0].pdfKey ? await storageGet(result[0].pdfKey) : null;
         return { ...result[0], pdfUrl: stored?.url || null };
+      }),
+  }),
+
+  rentalContracts: router({
+    // Generates the standard Moroccan car rental contract ("Contrat de Location
+    // de Véhicule") pre-filled with the confirmed booking and the renter's
+    // verified KYC identity. PDFs are stored securely and surfaced via the
+    // /manus-storage proxy; the agency downloads it from its dashboard.
+    createForBooking: ownerProcedure
+      .input(z.object({
+        bookingId: z.number().int().positive(),
+        language: z.enum(["ar", "fr"]).default("ar"),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "قاعدة البيانات غير متاحة." });
+        const rows = await db.select({
+          id: bookings.id,
+          bookingStatus: bookings.status,
+          renterId: bookings.renterId,
+          startDate: bookings.startDate,
+          endDate: bookings.endDate,
+          totalPrice: bookings.totalPrice,
+          commissionFee: bookings.commissionFee,
+          netProfit: bookings.netProfit,
+          addOns: bookings.addOns,
+          residency: bookings.residency,
+          listingId: listings.id,
+          listingTitle: listings.title,
+          category: listings.category,
+          pricePerDay: listings.pricePerDay,
+          fuelType: listings.fuelType,
+          transmission: listings.transmission,
+          city: listings.city,
+          ownerId: listings.ownerId,
+        }).from(bookings)
+          .innerJoin(listings, eq(bookings.listingId, listings.id))
+          .where(and(eq(bookings.id, input.bookingId), eq(listings.ownerId, ctx.user!.id)))
+          .limit(1);
+        const booking = rows[0];
+        if (!booking) throw new TRPCError({ code: "NOT_FOUND", message: "الحجز غير موجود ضمن إعلاناتك." });
+        if (booking.bookingStatus !== "Confirmed") {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "لا يمكن توليد عقد الكراء قبل اعتماد الحجز." });
+        }
+        const [agencyRow, renterRow, kycRows] = await Promise.all([
+          db.select({
+            agencyName: users.agencyName,
+            agencyPhone: users.agencyPhone,
+            agencyAddress: users.agencyAddress,
+            commercialRegister: users.commercialRegister,
+            whatsappPhone: users.whatsappPhone,
+          }).from(users).where(eq(users.id, booking.ownerId)).limit(1),
+          db.select({ name: users.name, email: users.email, whatsappPhone: users.whatsappPhone }).from(users).where(eq(users.id, booking.renterId)).limit(1),
+          db.select({
+            documentType: kycSubmissions.documentType,
+            documentNumberMasked: kycSubmissions.documentNumberMasked,
+            status: kycSubmissions.status,
+          }).from(kycSubmissions).where(eq(kycSubmissions.userId, booking.renterId)).limit(3),
+        ]);
+        const agency = agencyRow[0];
+        const renter = renterRow[0];
+        const verifiedIdentity = (kycRows ?? []).find(
+          (row) => row.status === "Approved" && ["cni", "national_id", "passport"].includes(row.documentType),
+        ) ?? (kycRows ?? []).find((row) => row.status === "Approved");
+        const start = new Date(booking.startDate);
+        const end = new Date(booking.endDate);
+        const durationDays = Math.max(1, Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
+        const addOnsTotal = Array.isArray(booking.addOns)
+          ? (booking.addOns as Array<{ amount?: number | string }>).reduce((sum, item) => sum + Number(item?.amount ?? 0), 0)
+          : 0;
+        const subtotal = Number(booking.pricePerDay ?? 0) * durationDays;
+        const totalPrice = Number(booking.totalPrice ?? (subtotal + addOnsTotal));
+        const reference = `ALT-CAR-${booking.id}-${start.toISOString().slice(0, 10)}`;
+        const legalNotice = input.language === "ar"
+          ? "تنبيه قانوني: هذا عقد نموذجي تم توليده بعد اعتماد الحجز والتحقق من هوية المستأجر عبر منصة ALTUSplace، ويستحسن مراجعته من طرف محامٍ أو موثق مغربي قبل الاستعمال الفعلي."
+          : "Avertissement légal : ce contrat type est généré après confirmation de la réservation et vérification de l'identité du locataire via ALTUSplace. Il convient de le faire valider par un avocat ou un notaire au Maroc avant toute utilisation réelle.";
+        const pdfBuffer = generateCarRentalContractPdf({
+          reference,
+          language: input.language,
+          agencyName: agency?.agencyName || "وكالة التأجير / Agence de location",
+          agencyCommercialRegister: agency?.commercialRegister ?? null,
+          agencyAddress: agency?.agencyAddress ?? null,
+          agencyPhone: agency?.agencyPhone ?? agency?.whatsappPhone ?? null,
+          renterName: renter?.name || `مستأجر #${booking.renterId}`,
+          renterEmail: renter?.email ?? null,
+          renterPhone: renter?.whatsappPhone ?? null,
+          renterIdType: verifiedIdentity?.documentType ?? null,
+          renterIdNumber: verifiedIdentity?.documentNumberMasked ?? null,
+          residency: booking.residency ?? null,
+          vehicle: booking.listingTitle ?? `الإعلان #${booking.listingId}`,
+          vehicleCategory: booking.category,
+          fuelType: booking.fuelType ?? null,
+          transmission: booking.transmission ?? null,
+          city: booking.city ?? null,
+          startDate: start.toISOString(),
+          endDate: end.toISOString(),
+          durationDays,
+          pricePerDay: Number(booking.pricePerDay ?? 0),
+          addOnsTotal,
+          subtotal,
+          commissionFee: Number(booking.commissionFee ?? 0),
+          netProfit: Number(booking.netProfit ?? 0),
+          totalPrice,
+          deposit: 0,
+          cancelPolicyText: CANCELLATION_POLICY_TEXT,
+          legalNotice,
+          issuedAt: new Date().toISOString(),
+        });
+        const stored = await storagePut(`contracts/car-rental/${reference}.pdf`, pdfBuffer, "application/pdf");
+        await writeAuditLog({
+          actorId: ctx.user!.id,
+          action: "rental_contract.generated",
+          entityType: "booking",
+          entityId: booking.id,
+          afterData: { reference, pdfUrl: stored.url },
+        });
+        return { success: true as const, reference, pdfUrl: stored.url };
       }),
   }),
 

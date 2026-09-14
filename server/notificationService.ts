@@ -142,6 +142,69 @@ export async function safeNotifyUser(input: NotificationInput): Promise<number |
   }
 }
 
+export type WhatsAppDeliveryResult =
+  | { status: "sent"; messageId?: string }
+  | { status: "skipped"; reason: string }
+  | { status: "failed"; reason: string };
+
+/**
+ * Best-effort normalizer for Moroccan phone numbers:
+ * 0612345678 -> 212612345678, +212612345678 -> 212612345678.
+ * Returns null when the value cannot be safely interpreted.
+ */
+export function normalizeWhatsAppNumber(value: string): string | null {
+  const digits = value.replace(/\D/g, "");
+  if (!digits.length) return null;
+  if (digits.startsWith("212")) return digits;
+  if (digits.startsWith("0")) return `212${digits.slice(1)}`;
+  if (digits.length <= 9) return `212${digits}`;
+  if (digits.length >= 10 && digits.length <= 15) return digits;
+  return null;
+}
+
+/**
+ * Sends an instant WhatsApp Business Cloud API text message to a Moroccan
+ * number. Skips cleanly when the provider is not configured so the booking
+ * flow is never blocked.
+ */
+export async function sendWhatsAppText(to: string | null | undefined, body: string): Promise<WhatsAppDeliveryResult> {
+  const token = process.env.WHATSAPP_ACCESS_TOKEN;
+  const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
+  const normalized = to ? normalizeWhatsAppNumber(to) : null;
+  if (!token || !phoneNumberId) {
+    return { status: "skipped", reason: "whatsapp_provider_not_configured" };
+  }
+  if (!normalized) {
+    return { status: "skipped", reason: "invalid_recipient_number" };
+  }
+  try {
+    const version = process.env.WHATSAPP_API_VERSION || "v20.0";
+    const response = await fetch(`https://graph.facebook.com/${version}/${phoneNumberId}/messages`, {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${token}`,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        messaging_product: "whatsapp",
+        to: normalized,
+        type: "text",
+        text: { body },
+      }),
+    });
+    if (!response.ok) {
+      const detail = await response.text().catch(() => "");
+      console.warn(`[WhatsApp] Provider rejected message (${response.status})${detail ? `: ${detail.slice(0, 300)}` : ""}`);
+      return { status: "failed", reason: `provider_${response.status}` };
+    }
+    const json = (await response.json().catch(() => null)) as { messages?: Array<{ id?: string }> } | null;
+    return { status: "sent", messageId: json?.messages?.[0]?.id };
+  } catch (error) {
+    console.warn("[WhatsApp] Provider request failed:", error instanceof Error ? error.message : String(error));
+    return { status: "failed", reason: "provider_network_error" };
+  }
+}
+
 export function buildEmailContent(title: string, message: string, actionUrl?: string) {
   const safeTitle = escapeHtml(title);
   const safeMessage = escapeHtml(message).replaceAll("\n", "<br />");

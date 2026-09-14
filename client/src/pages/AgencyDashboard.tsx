@@ -605,6 +605,13 @@ export default function AgencyDashboard() {
     },
     onError: (error) => toast.error(error.message),
   });
+  const generateContract = trpc.rentalContracts.createForBooking.useMutation({
+    onSuccess: (result) => {
+      if (result.pdfUrl) window.open(result.pdfUrl, "_blank", "noopener,noreferrer");
+      toast.success("تم توليد عقد كراء السيارة (Contrat de Location) وحفظه في التخزين الآمن.");
+    },
+    onError: (error) => toast.error(error.message),
+  });
 
   const [docBooking, setDocBooking] = useState<OwnerBookingRow | null>(null);
   const [statusFilter, setStatusFilter] = useState<"all" | "Pending" | "Confirmed" | "Cancelled">("all");
@@ -902,6 +909,11 @@ export default function AgencyDashboard() {
                                 رفض
                               </Button>
                             </div>
+                          ) : booking.status === "Confirmed" ? (
+                            <Button size="sm" variant="outline" onClick={() => generateContract.mutate({ bookingId: booking.id })} disabled={generateContract.isPending}>
+                              <FileText className="ml-1 h-3.5 w-3.5" />
+                              عقد PDF
+                            </Button>
                           ) : (
                             <span className="text-xs text-slate-400">—</span>
                           )}
