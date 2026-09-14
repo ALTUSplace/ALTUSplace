@@ -1804,8 +1804,16 @@ export const appRouter = router({
           throw new Error("تواريخ الحجز غير صالحة.");
         }
         const { start, end } = requestedRange;
-        const listing = await db.select().from(listings).where(and(eq(listings.id, input.listingId), inArray(listings.status, ["Published", "Available", "Approved"]))).limit(1);
+        const listing = await db.select().from(listings).where(eq(listings.id, input.listingId)).limit(1);
         if (!listing[0]) throw new Error("الإعلان غير موجود.");
+        // Maintenance mode blocks every overlapping date: a car in maintenance is
+        // off the market until it returns to Available, so requests are rejected.
+        if (listing[0].status === "Maintenance") {
+          throw new TRPCError({ code: "CONFLICT", message: "السيارة في وضع الصيانة — الفترة محجوبة تلقائياً ولا يمكن حجزها." });
+        }
+        if (!["Published", "Available", "Approved"].includes(listing[0].status)) {
+          throw new TRPCError({ code: "CONFLICT", message: "الإعلان غير متاح للحجز حالياً." });
+        }
         const blockedRanges = [
           ...parseBlockedRanges(listing[0].availability),
           ...parseBlockedRanges(listing[0].icalImportedRanges),
@@ -2012,6 +2020,9 @@ export const appRouter = router({
             // Row lock (SELECT ... FOR UPDATE) serializes confirmations for the same listing.
             await tx.execute(sql`SELECT listing_id FROM listings WHERE listing_id = ${booking.listingId} FOR UPDATE`);
             const currentListing = await tx.select({ status: listings.status, availability: listings.availability, icalImportedRanges: listings.icalImportedRanges }).from(listings).where(eq(listings.id, booking.listingId)).limit(1);
+            if (currentListing[0]?.status === "Maintenance") {
+              throw new Error("لا يمكن قبول الحجز لأن السيارة في وضع الصيانة — الفترة محجوبة تلقائياً.");
+            }
             if (!currentListing[0] || !["Published", "Available", "Approved"].includes(currentListing[0].status)) {
               throw new Error("لا يمكن قبول الحجز لأن الإعلان لم يعد متاحاً.");
             }

@@ -196,6 +196,10 @@ function FinancialAnalytics({ bookings }: { bookings: OwnerBookingRow[] }) {
   const netRevenue = confirmed.reduce((sum, booking) => sum + Number(booking.netProfit ?? 0), 0);
   const platformFees = Math.max(0, grossRevenue - netRevenue);
   const pendingEstimate = pending.reduce((sum, booking) => sum + Number(booking.totalPrice ?? 0), 0);
+  const activeRentals = confirmed.filter((booking) => {
+    const now = Date.now();
+    return new Date(booking.startDate).getTime() <= now && now < new Date(booking.endDate).getTime();
+  }).length;
 
   const monthly = useMemo(() => {
     const now = new Date();
@@ -226,11 +230,12 @@ function FinancialAnalytics({ bookings }: { bookings: OwnerBookingRow[] }) {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
         {[
           { label: "إيرادات مؤكدة (إجمالي)", value: money(grossRevenue), icon: WalletCards, tone: "text-emerald-600" },
           { label: "صافي الإيرادات", value: money(netRevenue), icon: TrendingUp, tone: "text-[#102d2b]" },
           { label: "عمولات المنصة", value: money(platformFees), icon: BarChart3, tone: "text-sky-600" },
+          { label: "حجوزات نشطة (جارية)", value: String(activeRentals), icon: Car, tone: "text-violet-600" },
           { label: "تقديرات قيد الانتظار", value: money(pendingEstimate), icon: CalendarDays, tone: "text-amber-600" },
         ].map(({ label, value, icon: Icon, tone }) => (
           <div key={label} className="rounded-2xl border bg-card p-4 shadow-sm">
@@ -322,6 +327,11 @@ function ScheduleCalendar({ bookings, cars }: { bookings: OwnerBookingRow[]; car
     return map;
   }, [cars]);
 
+  const maintenanceIds = useMemo(
+    () => new Set<number>(cars.filter((car) => toFleetStatus(car.status) === "Maintenance").map((car) => car.id)),
+    [cars],
+  );
+
   const activeBookings = useMemo(
     () => bookings.filter((booking) => booking.status === "Pending" || booking.status === "Confirmed"),
     [bookings],
@@ -350,11 +360,12 @@ function ScheduleCalendar({ bookings, cars }: { bookings: OwnerBookingRow[]; car
   }, [activeBookings, monthStart, monthEnd]);
 
   const rows = useMemo(() => {
-    const listingIds = Array.from(coverage.keys());
-    return listingIds
+    const ids = new Set<number>(coverage.keys());
+    maintenanceIds.forEach((id) => ids.add(id));
+    return Array.from(ids)
       .map((id) => ({ id, title: carTitleById.get(id) ?? `سيارة #${id}` }))
       .sort((a, b) => a.title.localeCompare(b.title, "ar"));
-  }, [coverage, carTitleById]);
+  }, [coverage, carTitleById, maintenanceIds]);
 
   const today = midnight(new Date());
   const monthLabel = cursor.toLocaleDateString("ar-MA", { month: "long", year: "numeric" });
@@ -367,7 +378,7 @@ function ScheduleCalendar({ bookings, cars }: { bookings: OwnerBookingRow[]; car
           <CalendarRange className="h-5 w-5 text-[#0e5b52]" />
           <div>
             <h3 className="font-bold">جدول الحجوزات التفاعلي</h3>
-            <p className="text-xs text-muted-foreground">مؤكد (أخضر) · قيد الانتظار (كهرماني) · تعارض محتمل (أحمر)</p>
+            <p className="text-xs text-muted-foreground">مؤكد (أخضر) · قيد الانتظار (كهرماني) · تعارض محتمل (أحمر) · صيانة محجوبة (بنفسجي)</p>
           </div>
         </div>
         <div className="flex items-center gap-1.5">
@@ -422,7 +433,11 @@ function ScheduleCalendar({ bookings, cars }: { bookings: OwnerBookingRow[]; car
                       const isWeekend = weekend(date);
                       let cellClass = "bg-slate-50 text-slate-500 dark:bg-slate-900/60 dark:text-slate-400";
                       let titleText = "";
-                      if (slot) {
+                      const isMaintenance = maintenanceIds.has(row.id);
+                      if (isMaintenance) {
+                        cellClass = "bg-violet-200/80 text-violet-800 dark:bg-violet-900/50 dark:text-violet-200";
+                        titleText = "في الصيانة — الفترة محجوبة تلقائياً";
+                      } else if (slot) {
                         const activeList = activeBookings.filter(
                           (booking) =>
                             booking.listingId === row.id &&
@@ -440,7 +455,7 @@ function ScheduleCalendar({ bookings, cars }: { bookings: OwnerBookingRow[]; car
                           cellClass = "bg-amber-400 text-white";
                         }
                       }
-                      if (isWeekend && !slot) cellClass = "bg-slate-100/60 text-slate-300 dark:bg-slate-800/60 dark:text-slate-600";
+                      if (isWeekend && !slot && !isMaintenance) cellClass = "bg-slate-100/60 text-slate-300 dark:bg-slate-800/60 dark:text-slate-600";
                       if (isToday) cellClass += " ring-2 ring-inset ring-[#0e5b52]/60";
                       return (
                         <div
@@ -464,6 +479,7 @@ function ScheduleCalendar({ bookings, cars }: { bookings: OwnerBookingRow[]; car
         <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded bg-emerald-500" /> مؤكد</span>
         <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded bg-amber-400" /> قيد الانتظار</span>
         <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded bg-rose-500" /> تعارض (تداخل)</span>
+        <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded bg-violet-400" /> في الصيانة (محجوب)</span>
         <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded border-2 border-[#0e5b52]/50" /> اليوم</span>
       </div>
     </div>
