@@ -75,12 +75,19 @@ export async function upsertUser(user: InsertUser): Promise<void> {
       values.legalConsentAt = user.legalConsentAt;
       updateSet.legalConsentAt = user.legalConsentAt;
     }
+    // Authoritative operator elevation: the platform owner (OWNER_OPEN_ID) and
+    // any openIds listed in SUPER_ADMIN_OPEN_IDS are always synced to
+    // SUPER_ADMIN on login. This is what lets /admin/super/* recognise the
+    // operator session as super admin.
+    const superAdminOpenIds = new Set<string>(
+      [...ENV.superAdminOpenIds, ENV.ownerOpenId].filter(Boolean),
+    );
     if (user.role !== undefined) {
       values.role = user.role;
       updateSet.role = user.role;
-    } else if (user.openId === ENV.ownerOpenId) {
-      values.role = 'admin';
-      updateSet.role = 'admin';
+    } else if (superAdminOpenIds.has(user.openId)) {
+      values.role = 'SUPER_ADMIN';
+      updateSet.role = 'SUPER_ADMIN';
     }
 
     // Persist the profile phone when provided. For the owner/admin account,

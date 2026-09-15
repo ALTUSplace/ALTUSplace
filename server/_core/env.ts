@@ -5,6 +5,12 @@ export const ENV = {
   oAuthServerUrl: process.env.OAUTH_SERVER_URL ?? "",
   ownerOpenId: process.env.OWNER_OPEN_ID ?? "",
   ownerWhatsappPhone: process.env.OWNER_WHATSAPP_PHONE ?? "",
+  // Comma-separated openIds that are always synced to SUPER_ADMIN on login.
+  // The owner account (OWNER_OPEN_ID) is implicitly elevated too.
+  superAdminOpenIds: (process.env.SUPER_ADMIN_OPEN_IDS ?? "")
+    .split(",")
+    .map((id) => id.trim())
+    .filter(Boolean),
   isProduction: process.env.NODE_ENV === "production",
   forgeApiUrl: process.env.BUILT_IN_FORGE_API_URL ?? "",
   forgeApiKey: process.env.BUILT_IN_FORGE_API_KEY ?? "",
