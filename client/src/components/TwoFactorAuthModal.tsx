@@ -2,6 +2,18 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ShieldCheck, Lock, Smartphone, CheckCircle2, Key, Copy, Download, Check } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAuth } from '@/_core/hooks/useAuth';
+
+const DEFAULT_TWO_FA_PHONE = '+212 627 631708';
+
+function formatPhone(phone: string | null | undefined): string {
+  const digits = (phone ?? '').replace(/\D/g, '');
+  if (digits.length >= 12) {
+    return `+${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6)}`;
+  }
+  if (digits.length) return `+${digits}`;
+  return DEFAULT_TWO_FA_PHONE;
+}
 
 interface TwoFactorAuthModalProps {
   isOpen: boolean;
@@ -10,6 +22,8 @@ interface TwoFactorAuthModalProps {
 }
 
 export function TwoFactorAuthModal({ isOpen, onClose, onSuccess }: TwoFactorAuthModalProps) {
+  const { user } = useAuth();
+  const displayPhone = formatPhone(user?.whatsappPhone);
   const [step, setStep] = useState<'verify' | 'recovery' | 'success'>('verify');
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
@@ -164,7 +178,7 @@ export function TwoFactorAuthModal({ isOpen, onClose, onSuccess }: TwoFactorAuth
               <Smartphone className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
               <div className="text-xs space-y-1 text-slate-300">
                 <p className="font-bold text-white">تم إرسال رمز التحقق إلى هاتفك المرتبط:</p>
-                <p className="font-mono text-amber-400">+212 6 •• •• 88 41 (Google Authenticator / SMS)</p>
+                <p className="font-mono text-amber-400">{displayPhone} (Google Authenticator / SMS)</p>
               </div>
             </div>
 

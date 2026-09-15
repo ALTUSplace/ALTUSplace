@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { InsertUser, users } from "../drizzle/schema";
+import { normalizeWhatsAppNumber } from "./whatsappNumber";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -80,6 +81,24 @@ export async function upsertUser(user: InsertUser): Promise<void> {
     } else if (user.openId === ENV.ownerOpenId) {
       values.role = 'admin';
       updateSet.role = 'admin';
+    }
+
+    // Persist the profile phone when provided. For the owner/admin account,
+    // fall back to OWNER_WHATSAPP_PHONE so the platform operator's number is
+    // stored automatically on their first login.
+    const providedPhone =
+      user.whatsappPhone !== undefined
+        ? (user.whatsappPhone ? normalizeWhatsAppNumber(user.whatsappPhone) : null)
+        : undefined;
+    const resolvedPhone =
+      providedPhone !== undefined
+        ? providedPhone
+        : user.openId === ENV.ownerOpenId && ENV.ownerWhatsappPhone
+          ? normalizeWhatsAppNumber(ENV.ownerWhatsappPhone)
+          : undefined;
+    if (resolvedPhone !== undefined) {
+      values.whatsappPhone = resolvedPhone;
+      updateSet.whatsappPhone = resolvedPhone;
     }
 
     if (!values.lastSignedIn) {
