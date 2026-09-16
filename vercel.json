@@ -3,6 +3,10 @@
   "outputDirectory": "dist/public",
   "rewrites": [
     {
+      "source": "/api/:path*",
+      "destination": "/api-404.json"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

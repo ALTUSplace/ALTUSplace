@@ -1,0 +1,4 @@
+{
+  "error": "API_NOT_FOUND",
+  "message": "This Vercel host serves only the static SPA. The tRPC/OAuth API is not available here. Point VITE_API_URL (build-time) at your Node backend's tRPC origin (e.g. https://your-api-host.example/api/trpc), and run the Express server with DATABASE_URL and the OAuth env vars."
+}

@@ -37,8 +37,9 @@
    - **Install Command:** `pnpm install`
 4. أضف متغيرات البيئة المطلوبة للواجهة (Build-time على Vercel):
    - `VITE_APP_URL=your_frontend_url`
-   - `VITE_API_URL` (عند فصل الواجهة عن الـ backend: رابط tRPC الخلفي)
+   - `VITE_API_URL` (عند فصل الواجهة عن الـ backend: رابط tRPC الخلفي — **إلزامي**، مثل `https://الخادم الخاص بك/api/trpc`)
 5. المعمارية: Vercel يستضيف SPA ثابتة فقط، بينما خادم Node (`npm start` من `server/_core/index.ts`) يشغّل tRPC، المدفوعات، WhatsApp اورالرسائل على استضافة منفصلة مع `DATABASE_URL`.
+   - ملاحظة: أي طلب يصل إلى `/api/*` على Vercel يُردّ الآن بملف JSON (`api-404.json`) بدلاً من صفحة HTML حتى لا يكسر عميل tRPC.
 
 ### الخطوة الرابعة: متغيرات WhatsApp (تنبيهات الوكلاء الفورية)
 على استضافة الـ Node backend، أضف ما يلي لتفعيل رسائل WhatsApp الفورية عند كل حجز جديد:
