@@ -1,6 +1,12 @@
 export const ENV = {
   appId: process.env.VITE_APP_ID ?? "",
-  cookieSecret: process.env.JWT_SECRET ?? "",
+  // Session-signing secret. Falls back to DIRECT_LOGIN_PASSWORD so a single
+  // secret is enough to bring the app up when the OAuth portal is unavailable.
+  // Set JWT_SECRET separately in production when possible.
+  cookieSecret: process.env.JWT_SECRET ?? process.env.DIRECT_LOGIN_PASSWORD ?? "",
+  // Password for the fallback direct owner login (/api/auth/direct-login).
+  // Empty = the endpoint is disabled (404). See server/_core/directAuth.ts.
+  directLoginPassword: process.env.DIRECT_LOGIN_PASSWORD ?? "",
   databaseUrl: process.env.DATABASE_URL ?? process.env.SUPABASE_DB_URL ?? "",
   oAuthServerUrl: process.env.OAUTH_SERVER_URL ?? "",
   ownerOpenId: process.env.OWNER_OPEN_ID ?? "",

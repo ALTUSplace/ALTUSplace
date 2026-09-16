@@ -49,6 +49,7 @@ const VoucherPage = lazy(() => import("./pages/Voucher"));
 const BookingMessagesPage = lazy(() => import("./pages/BookingMessages"));
 const AgencyDashboardPage = lazy(() => import("./pages/AgencyDashboard"));
 const RegisterPage = lazy(() => import("./pages/Register"));
+const DirectLoginPage = lazy(() => import("./pages/DirectLogin"));
 const LocationLandingPage = lazy(() => import("./pages/LocationLanding"));
 
 function PageLoader() {
@@ -125,6 +126,7 @@ function Router() {
       <Route path="/dispute-resolution" component={DisputeResolutionPage} />
       <Route path="/terms" component={TermsPage} />
       <Route path="/register">{() => <Suspense fallback={<PageLoader />}><RegisterPage /></Suspense>}</Route>
+      <Route path="/direct-login">{() => <Suspense fallback={<PageLoader />}><DirectLoginPage /></Suspense>}</Route>
       <Route path="/privacy" component={PrivacyPage} />
       <Route path="/host">{() => <AccessGuard area="host"><HostDashboard /></AccessGuard>}</Route>
       <Route path="/host-dashboard">{() => <AccessGuard area="host"><HostDashboard /></AccessGuard>}</Route>
