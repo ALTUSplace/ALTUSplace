@@ -18,7 +18,12 @@ export default function DirectLogin() {
     try {
       const response = await fetch("/api/auth/direct-login", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          // Redundant channel: serverless runtimes pre-parse the body, and the
+          // header survives independently of body parsing.
+          "x-owner-password": password,
+        },
         credentials: "include",
         body: JSON.stringify({ password }),
       });
@@ -27,10 +32,18 @@ export default function DirectLogin() {
         window.location.href = data.redirectTo || "/admin/super/dashboard";
         return;
       }
-      if (response.status === 404) {
+      const payload = (await response.json().catch(() => null)) as { reason?: string } | null;
+      const reason = payload?.reason;
+      if (response.status === 404 || reason === "not_configured") {
         setError("Direct login is disabled. Set DIRECT_LOGIN_PASSWORD in your environment and redeploy.");
       } else if (response.status === 429) {
         setError("Too many attempts. Please wait a minute and try again.");
+      } else if (reason === "missing_password") {
+        setError("The server did not receive the password. Please try again.");
+      } else if (reason === "server_error") {
+        setError("Server error during login. Check the Vercel function logs for [DirectAuth].");
+      } else if (reason === "password_mismatch") {
+        setError("Incorrect password. If you pasted the value into Vercel, re-save it without surrounding spaces, newlines, or quotes.");
       } else {
         setError("Incorrect password. Please try again.");
       }
