@@ -28,18 +28,23 @@
 4. بعد ضبط `DATABASE_URL`، طبّق ترحيلات المخطط (مigrations) على قاعدة البيانات الحيّة:
    - `pnpm db:migrate`  (يطبّق الفروع المعلّقة حالياً: `0007` حقول الطيران + `0008` تسعير العقارات الشهري)
 
-### الخطوة الثالثة: النشر على Vercel (الواجهة الثابتة)
+### الخطوة الثالثة: النشر على Vercel (SPA + واجهة API معاً)
 1. قم بتسجيل الدخول إلى **Vercel** واضغط على **New Project**.
 2. استورد مستودع GitHub الخاص بمنصة ALTUSplace.
 3. إعدادات البناء (Build Settings) — مطابقة لملف `vercel.json`:
    - **Build Command:** `pnpm build`
    - **Output Directory:** `dist/public`
    - **Install Command:** `pnpm install`
-4. أضف متغيرات البيئة المطلوبة للواجهة (Build-time على Vercel):
+4. المعمارية: نفس مشروع Vercel يستضيف الواجهة الثابتة (`dist/public`) **وتشغّل ملف `api/[[...path]].js` دالة Serverless تعيد توجيه كل طلب `/api/*` إلى خادم Express المدمج** — أي أن tRPC والـ OAuth والـ webhooks تعمل على نفس نطاق Vercel دون حاجة إلى `VITE_API_URL`.
+5. أضف متغيرات بيئة وقت التشغيل (Runtime) في Vercel → Settings → Environment Variables:
+   - `DATABASE_URL` (رابط Supabase Transaction Pooler)
+   - `JWT_SECRET` (مفتاح توقيع الجلسات — ≥ 32 بايت)
+   - `OAUTH_SERVER_URL` (بوابة الدخول الخارجية)
+   - `WHATSAPP_PHONE_NUMBER_ID` + `WHATSAPP_ACCESS_TOKEN` (تنبيهات الوكلاء الفورية)
+   - `OWNER_OPEN_ID` + `SUPER_ADMIN_OPEN_IDS` (حسابات الإدارة العليا)
+6. أضف متغيرات بناء الواجهة (Build-time) في Vercel:
    - `VITE_APP_URL=your_frontend_url`
-   - `VITE_API_URL` (عند فصل الواجهة عن الـ backend: رابط tRPC الخلفي — **إلزامي**، مثل `https://الخادم الخاص بك/api/trpc`)
-5. المعمارية: Vercel يستضيف SPA ثابتة فقط، بينما خادم Node (`npm start` من `server/_core/index.ts`) يشغّل tRPC، المدفوعات، WhatsApp اورالرسائل على استضافة منفصلة مع `DATABASE_URL`.
-   - ملاحظة: أي طلب يصل إلى `/api/*` على Vercel يُردّ الآن بملف JSON (`api-404.json`) بدلاً من صفحة HTML حتى لا يكسر عميل tRPC.
+   - `VITE_APP_ID` + `VITE_OAUTH_PORTAL_URL` (لتفعيل زر الدخول)
 
 ### الخطوة الرابعة: متغيرات WhatsApp (تنبيهات الوكلاء الفورية)
 على استضافة الـ Node backend، أضف ما يلي لتفعيل رسائل WhatsApp الفورية عند كل حجز جديد:

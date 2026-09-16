@@ -37,8 +37,8 @@ describe("final readiness security audit", () => {
     expect(security).toMatch(/paymentStrictLimiter[\s\S]*?max:\s*5/);
     expect(security).toMatch(/sensitiveApiLimiter[\s\S]*?max:\s*100/);
     expect(security).toContain("strictRateLimitDispatcher");
-    const entry = read("server/_core/index.ts");
-    // index.ts wires the shield via registerSecurity(), which mounts the
+    const entry = read("server/_core/app.ts");
+    // app.ts wires the shield via registerSecurity(), which mounts the
     // strict dispatcher + global limiter internally (see registerSecurity).
     expect(entry).toContain("registerSecurity");
     expect(security).toContain("app.use(\"/api/\", strictRateLimitDispatcher)");

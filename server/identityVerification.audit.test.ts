@@ -42,7 +42,7 @@ describe("automated identity verification (kyc) audit", () => {
   });
 
   it("mounts the signed verification webhook in the app entry point", () => {
-    const entry = read("server/_core/index.ts");
+    const entry = read("server/_core/app.ts");
     expect(entry).toContain("/api/v1/verification/webhook");
     expect(entry).toContain("createVerificationWebhookHandler");
     expect(entry).toContain("configureProviderSecrets");
