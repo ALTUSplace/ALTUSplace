@@ -71,6 +71,7 @@
     --shadow-xl:  0 4px 8px rgba(52, 40, 23, 0.09), 0 24px 52px rgba(52, 40, 23, 0.13);
     --shadow-clay:    0 2px 4px rgba(166, 58, 32, 0.14), 0 10px 24px rgba(166, 58, 32, 0.18);
     --shadow-card-hover: 0 2px 5px rgba(52, 40, 23, 0.08), 0 18px 44px rgba(52, 40, 23, 0.13);
+    --shadow-button: 0 2px 4px rgba(166, 58, 32, 0.2), 0 8px 18px rgba(166, 58, 32, 0.26);
 
     /* Radius Tokens — architectural, slightly sharp */
     --radius-xs:   0.125rem;
@@ -170,6 +171,7 @@
     --shadow-xl:  0 4px 8px rgba(0, 0, 0, 0.6), 0 24px 52px rgba(0, 0, 0, 0.55);
     --shadow-clay:    0 2px 6px rgba(0, 0, 0, 0.45), 0 12px 28px rgba(226, 119, 82, 0.16);
     --shadow-card-hover: 0 2px 5px rgba(0, 0, 0, 0.5), 0 18px 44px rgba(0, 0, 0, 0.55);
+    --shadow-button: 0 2px 4px rgba(0, 0, 0, 0.45), 0 10px 22px rgba(226, 119, 82, 0.24);
   }
 }
 
@@ -237,6 +239,23 @@
   --radius-xl:  var(--radius-xl);
   --radius-2xl: var(--radius-2xl);
   --radius-3xl: var(--radius-3xl);
+  --radius-full: var(--radius-full);
+
+  /* shadow scale — warm, layered, matte (replaces Tailwind's cold defaults,
+     so shadow-sm / shadow-md / … never reintroduce grey-box shadows) */
+  --shadow-xs:          var(--shadow-xs);
+  --shadow-sm:          var(--shadow-sm);
+  --shadow-md:          var(--shadow-md);
+  --shadow-lg:          var(--shadow-lg);
+  --shadow-xl:          var(--shadow-xl);
+  --shadow-clay:        var(--shadow-clay);
+  --shadow-card-hover:  var(--shadow-card-hover);
+  --shadow-button:      var(--shadow-button);
+  --shadow-soft:        var(--shadow-sm);
+  --shadow-card:        var(--shadow-md);
+  --shadow-header:      var(--shadow-lg);
+  --shadow-blue:        var(--shadow-clay);
+  --shadow-gold:        var(--shadow-clay);
 
   /* fonts */
   --font-sans:    var(--font-body);

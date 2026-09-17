@@ -565,7 +565,7 @@ export default function Search() {
                     onClick={() => {
                       window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`شاهد هذا العرض الرائع: ${quickViewItem.title} - ${quickViewItem.pricePerUnit} ${quickViewItem.unitLabel} في ${quickViewItem.city} عبر منصة ALTUSplace: ${window.location.href}`)}`, '_blank');
                     }}
-                    className="bg-emerald-600/15 hover:bg-emerald-600/25 text-emerald-700 dark:text-emerald-400 p-2 rounded-full text-xs flex items-center gap-1 transition-colors"
+                    className="bg-accent-green-soft hover:bg-[var(--accent-green-s)] text-accent-green p-2 rounded-full text-xs flex items-center gap-1 transition-colors"
                     title="مشاركة عبر واتساب"
                   >
                     واتساب
