@@ -327,6 +327,14 @@ export const platformSettings = pgTable("platform_settings", {
   contactEmail: varchar("contact_email", { length: 320 }),
   contactPhone: varchar("contact_phone", { length: 40 }),
   maintenanceMode: boolean("maintenance_mode").default(false).notNull(),
+  // Owner fallback-login credentials (see server/_core/ownerAuth.ts). Nullable
+  // so the app works without any pre-seeded auth secret; set once via the
+  // first-run /api/auth/owner-setup flow and stored as a scrypt hash.
+  ownerPasswordHash: text("owner_password_hash"),
+  ownerPasswordSalt: text("owner_password_salt"),
+  // DB-backed HMAC secret used to sign session cookies when no JWT_SECRET /
+  // DIRECT_LOGIN_PASSWORD env var is configured (see server/_core/sessionSecret.ts).
+  sessionSecret: text("session_secret"),
   updatedBy: integer("updated_by"),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

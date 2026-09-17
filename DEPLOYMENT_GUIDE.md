@@ -40,10 +40,14 @@
    - `DATABASE_URL` (رابط Supabase Transaction Pooler)
    - `JWT_SECRET` (مفتاح توقيع الجلسات — ≥ 32 بايت)
    - `OAUTH_SERVER_URL` (بوابة الدخول الخارجية)
-   - `DIRECT_LOGIN_PASSWORD` (دخول المالك المباشر — بديل عند غياب بوابة OAuth).
+   - `DIRECT_LOGIN_PASSWORD` (اختياري — دخول المالك المباشر بديل عند غياب بوابة OAuth).
      عند ضبطه تُفعَّل صفحة `/direct-login` ونقطة `POST /api/auth/direct-login`،
      ويُسجَّل حساب المالك دائماً بدور **SUPER_ADMIN**. اتركه فارغاً لتعطيله (404).
-     استخدم كلمة مرور طويلة عشوائية، وألغِ تفعيله بعد استعادة بوابة OAuth.
+     **بدون أي ضبط مسبق:** افتح `/direct-login` مرة واحدة لضبط كلمة مرور المالك،
+     فتُخزَّن كـ scrypt hash في قاعدة البيانات (`platform_settings.owner_password_hash`)
+     ولا يوجد أي سرّ داخل المستودع. الإعداد متاح مرة واحدة فقط؛ بعده يصبح تسجيل الدخول فقط.
+     كما يُولَّد مفتاح توقيع الجلسات تلقائياً ويُخزَّن في `platform_settings.session_secret`
+     عند غياب `JWT_SECRET`. استخدم كلمة مرور طويلة عشوائية، وألغِ تفعيله بعد استعادة بوابة OAuth.
    - `WHATSAPP_PHONE_NUMBER_ID` + `WHATSAPP_ACCESS_TOKEN` (تنبيهات الوكلاء الفورية)
    - `OWNER_OPEN_ID` + `SUPER_ADMIN_OPEN_IDS` (حسابات الإدارة العليا)
 6. أضف متغيرات بناء الواجهة (Build-time) في Vercel:
