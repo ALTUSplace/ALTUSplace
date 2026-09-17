@@ -419,6 +419,8 @@ export default function Search() {
                     unitLabel={item.unitLabel}
                     images={item.image ? [item.image] : []}
                     type={item.type === 'car' ? 'car' : 'property'}
+                    startDate={startDateParam}
+                    endDate={endDateParam}
                     specs={{
                       transmission: item.specs?.transmission,
                       fuel: item.specs?.fuel,

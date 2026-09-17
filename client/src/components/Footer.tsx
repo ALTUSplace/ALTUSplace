@@ -73,6 +73,10 @@ export default function Footer() {
         <div className="mt-12 border-t border-white/10 pt-6 flex flex-col items-center gap-3 text-center text-xs text-white/40">
           <p>{t("footerNoticeText")}</p>
           <p>{t("footerAddress")}</p>
+          <nav className="flex flex-wrap items-center justify-center gap-5 pt-1" aria-label="Host">
+            <Link href="/add-car" className="text-white/50 hover:text-white transition-colors font-semibold">{t("addCar")}</Link>
+            <Link href="/partner" className="text-white/50 hover:text-white transition-colors font-semibold">{t("partnerPortal")}</Link>
+          </nav>
           <nav className="flex flex-wrap items-center justify-center gap-5 pt-1" aria-label="Legal">
             <Link href="/terms" className="text-white/50 hover:text-white transition-colors font-semibold">{t("termsOfService")}</Link>
             <Link href="/privacy" className="text-white/50 hover:text-white transition-colors font-semibold">{t("privacyPolicy")}</Link>

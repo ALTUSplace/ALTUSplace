@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Link, useLocation, useParams } from "wouter";
+import { Link, useLocation, useParams, useSearch } from "wouter";
 import { ArrowRight, Bath, Bed, Building2, CheckCircle2, Heart, MapPin, Share2, Video, Calendar, Lock, ShieldCheck, MessageCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -91,9 +91,12 @@ const RENTAL_LABEL_FR: Record<string, string> = {
   yearly: "Annuel",
 };
 
+const isIsoDay = (value: string | null): value is string => /^\d{4}-\d{2}-\d{2}$/.test(value ?? "");
+
 export default function PropertyDetailWithVideo() {
   const params = useParams<{ id?: string }>();
   const [, setLocation] = useLocation();
+  const searchParams = new URLSearchParams(useSearch());
   const { language, direction, t } = useLanguage();
 
   // Safely parse listing ID — reject missing, non-numeric, or non-positive values
@@ -134,11 +137,15 @@ export default function PropertyDetailWithVideo() {
 
   // Booking state
   const [startDate, setStartDate] = useState(() => {
+    const param = searchParams.get("startDate");
+    if (isIsoDay(param)) return param;
     const date = new Date();
     date.setDate(date.getDate() + 1);
     return date.toISOString().slice(0, 10);
   });
   const [endDate, setEndDate] = useState(() => {
+    const param = searchParams.get("endDate");
+    if (isIsoDay(param)) return param;
     const date = new Date();
     date.setDate(date.getDate() + 6);
     return date.toISOString().slice(0, 10);

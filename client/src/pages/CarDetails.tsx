@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useRoute, useLocation } from 'wouter';
+import { useRoute, useLocation, useSearch } from 'wouter';
 import { Button } from '@/components/ui/button';
 import InteractiveCalendar from '@/components/InteractiveCalendar';
 import { Star, ShieldCheck, Users, Car as CarIcon, Fuel, MapPin, MessageCircle, CheckCircle2, Award, Calendar, ChevronRight, Share2, Copy, Check } from 'lucide-react';
@@ -13,9 +13,12 @@ import { RENTAL_TERMS } from '@/lib/rentalTerms';
 import CommentSection from '@/components/CommentSection';
 import { BookingWidget } from '@/components/ui/BookingWidget';
 
+const isIsoDay = (value: string | null): value is string => /^\d{4}-\d{2}-\d{2}$/.test(value ?? '');
+
 export default function CarDetails() {
   const [, params] = useRoute('/car/:id');
   const [, setLocation] = useLocation();
+  const searchParams = new URLSearchParams(useSearch());
   const { t } = useLanguage();
 
   const carId = params?.id || '';
@@ -55,12 +58,16 @@ export default function CarDetails() {
     agency: { name: staticCar.providerName || 'المؤجر على ALTUSplace', address: staticCar.city, whatsapp: '' },
   } : null;
 
-  const [startDate, setStartDate] = useState(() => {
+  const [startDate, setStartDate] = useState<string>(() => {
+    const param = searchParams.get('startDate');
+    if (isIsoDay(param)) return param;
     const date = new Date();
     date.setDate(date.getDate() + 1);
     return date.toISOString().slice(0, 10);
   });
-  const [endDate, setEndDate] = useState(() => {
+  const [endDate, setEndDate] = useState<string>(() => {
+    const param = searchParams.get('endDate');
+    if (isIsoDay(param)) return param;
     const date = new Date();
     date.setDate(date.getDate() + 6);
     return date.toISOString().slice(0, 10);
@@ -353,6 +360,8 @@ export default function CarDetails() {
             <BookingWidget
               pricePerDay={car.pricePerDay}
               currency="MAD"
+              initialCheckIn={startDate}
+              initialCheckOut={endDate}
               onReserve={({ checkIn, checkOut }) => {
                 handleProceedBooking({ checkIn, checkOut });
               }}

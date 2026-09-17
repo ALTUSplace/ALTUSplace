@@ -1,6 +1,6 @@
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
-import { Redirect, Route, Switch } from "wouter";
+import { Redirect, Route, Switch, useLocation } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { RoleProvider } from "./contexts/RoleContext";
@@ -37,7 +37,6 @@ const SupportTicketsPage = lazy(() => import("./pages/SupportTickets"));
 const NotificationsPage = lazy(() => import("./pages/NotificationsPage"));
 const BlogPage = lazy(() => import("./pages/BlogPage"));
 const CarDetailsPage = lazy(() => import("./pages/CarDetails"));
-const BookingPage = lazy(() => import("./pages/Booking"));
 const SuccessPage = lazy(() => import("./pages/Success"));
 const AdminDashboardPage = lazy(() => import("./pages/AdminDashboard"));
 const SuperDashboardPage = lazy(() => import("./pages/SuperDashboard"));
@@ -78,6 +77,15 @@ function AccessGuard({ area, children }: { area: 'admin' | 'superadmin' | 'host'
   return <>{children}</>;
 }
 
+function BottomNavGate() {
+  const [location] = useLocation();
+  const path = location.split("?")[0];
+  // Detail pages render BookingWidget's own fixed mobile CTA — suppress the
+  // global bottom nav there so the two bars can never overlap.
+  if (/^\/(car|property)\//.test(path)) return null;
+  return <BottomNavigationBar />;
+}
+
 function Router() {
   return (
     <Switch>
@@ -105,12 +113,9 @@ function Router() {
           </Suspense>
         )}
       </Route>
+      {/* Legacy /booking flow now hands off directly to the secure checkout. */}
       <Route path={"/booking"}>
-        {() => (
-          <Suspense fallback={<PageLoader />}>
-            <BookingPage />
-          </Suspense>
-        )}
+        {() => <Redirect to={`/checkout${window.location.search}`} replace />}
       </Route>
       <Route path={"/success"}>
         {() => (
@@ -176,7 +181,7 @@ export default function App() {
                     </PageTransition>
                   </main>
                   <Footer />
-                  <BottomNavigationBar />
+                  <BottomNavGate />
                   <Suspense fallback={null}>
                     <AIChatWidget />
                   </Suspense>

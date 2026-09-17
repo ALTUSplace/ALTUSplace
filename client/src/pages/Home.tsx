@@ -322,6 +322,8 @@ export default function Home() {
               pricePerDay={item.pricePerUnit}
               images={item.image ? [item.image] : []}
               type="car"
+              startDate={pickupDate || undefined}
+              endDate={dropoffDate || undefined}
               specs={{
                 transmission: item.specs?.transmission,
                 fuel: item.specs?.fuel,
@@ -352,6 +354,8 @@ export default function Home() {
                 pricePerDay={item.pricePerUnit}
                 images={item.image ? [item.image] : []}
                 type="property"
+                startDate={pickupDate || undefined}
+                endDate={dropoffDate || undefined}
                 specs={{
                   rooms: item.specs.rooms ? Number(item.specs.rooms) : undefined,
                 }}

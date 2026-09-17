@@ -6,6 +6,7 @@ import { readBrandPreference, writeBrandPreference } from "@/config/brand";
 import {
   Bell,
   BookOpen,
+  Building2,
   Car,
   Check,
   ChevronDown,
@@ -45,6 +46,7 @@ type NavLink = {
 const navLinks: NavLink[] = [
   { href: "/", label: "الرئيسية", labelKey: "home" },
   { href: "/search?type=car", label: "تأجير السيارات", labelKey: "cars", icon: Car },
+  { href: "/search?type=property", label: "العقارات", labelKey: "properties", icon: Building2 },
   { href: "/partner", label: "فضاء الشركاء", labelKey: "partnerPortal", icon: Handshake },
   { href: "/admin", label: "لوحة الإدارة", labelKey: "admin", icon: ShieldAlert },
   { href: "/host", label: "لوحة المالك", labelKey: "dashboard", icon: LayoutDashboard },
@@ -566,9 +568,6 @@ export default function Navbar() {
               </button>
             )}
 
-            <Link href="/add-car" className="b2-press corner-cut-sm inline-flex min-h-11 items-center rounded-sm bg-accent-clay px-4 py-2 text-xs font-extrabold text-white shadow-[var(--shadow-clay)] transition-colors hover:bg-accent-clay-hover">
-              {t("addCar")}
-            </Link>
           </div>
 
           <div className="flex items-center gap-1.5 sm:gap-2 2xl:hidden">

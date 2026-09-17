@@ -25,6 +25,9 @@ export interface ListingCardProps {
   isFavorite?: boolean;
   onToggleFavorite?: () => void;
   specs?: { transmission?: string; fuel?: string; seats?: number; rooms?: number };
+  /** Optional search dates carried through to the detail page for 1-tap booking. */
+  startDate?: string;
+  endDate?: string;
   className?: string;
   style?: React.CSSProperties;
 }
@@ -39,7 +42,7 @@ const BADGE_CONFIG: Record<string, { label: string; icon: typeof Award; classNam
 
 export function ListingCard(props: ListingCardProps) {
   const { id, title, titleFr, city, pricePerDay, unitLabel = "/ day", currency = "MAD", images, type,
-    badges, rating, reviewCount, hostName, isFavorite, onToggleFavorite, specs, className, style } = props;
+    badges, rating, reviewCount, hostName, isFavorite, onToggleFavorite, specs, startDate, endDate, className, style } = props;
   const [, setLocation] = useLocation();
   const { language } = useLanguage();
   const [activeSlide, setActiveSlide] = useState(0);
@@ -67,7 +70,14 @@ export function ListingCard(props: ListingCardProps) {
     return () => clearInterval(interval);
   }, [isHovered, totalSlides]);
 
-  const handleCardClick = () => setLocation(type === "property" ? `/property/${id}` : `/car/${id}`);
+  const handleCardClick = () => {
+    const basePath = type === "property" ? `/property/${id}` : `/car/${id}`;
+    const params = new URLSearchParams();
+    if (startDate) params.set("startDate", startDate);
+    if (endDate) params.set("endDate", endDate);
+    const query = params.toString();
+    setLocation(query ? `${basePath}?${query}` : basePath);
+  };
 
   return (
     <article
