@@ -691,3 +691,273 @@
     --brand-white:        var(--bg-surface);
   }
 }
+
+/* ── 8. Palette Kill-Switch — Default Tailwind Colors → Tanger Clay ───────────
+   The Airbnb/Kayak-inspired identity is now the ONLY palette. Every utility
+   class that used to resolve to Tailwind's stock palette is re-pointed at the
+   design-system ramps below, so legacy classes (bg-slate-950, text-amber-500,
+   border-blue-500, …) can NEVER reintroduce the old navy/amber or rainbow
+   brand. Semantic hues are preserved (green = success, red = destructive,
+   amber = warning) but are now the muted matte tones of this system.
+
+   Ramp bridge tokens — five warm ramps derived from the design tokens:
+     neutral (paper→ink), clay (brand), gold (warm secondary),
+     green (success), red (destructive). */
+@layer base {
+  :root {
+    /* neutral — warm paper → warm ink */
+    --ramp-n-50:  #FCFAF5;
+    --ramp-n-100: #EAE4D6;
+    --ramp-n-200: #E5DECE;
+    --ramp-n-300: #D6CDB9;
+    --ramp-n-400: #B3A78C;
+    --ramp-n-500: #948B79;
+    --ramp-n-600: #6E6657;
+    --ramp-n-700: #5D574A;
+    --ramp-n-800: #3A362C;
+    --ramp-n-900: #1E1B14;
+    --ramp-n-950: #15120D;
+
+    /* clay — the single brand accent */
+    --ramp-c-50:  #F8EBE6;
+    --ramp-c-100: #F3DBD2;
+    --ramp-c-200: #E9B5A6;
+    --ramp-c-300: #DE8F7A;
+    --ramp-c-400: #D06A50;
+    --ramp-c-500: #A63A20;
+    --ramp-c-600: #8B2F18;
+    --ramp-c-700: #7A2815;
+    --ramp-c-800: #68220F;
+    --ramp-c-900: #571B0D;
+    --ramp-c-950: #451405;
+
+    /* gold — warm secondary (premium hints) */
+    --ramp-g-50:  #F6EFE3;
+    --ramp-g-100: #EDE0C8;
+    --ramp-g-200: #E2CCA6;
+    --ramp-g-300: #D2B57F;
+    --ramp-g-400: #C4A05B;
+    --ramp-g-500: #97703A;
+    --ramp-g-600: #825C2D;
+    --ramp-g-700: #7C5A2C;
+    --ramp-g-800: #6B4C26;
+    --ramp-g-900: #5A3F20;
+    --ramp-g-950: #4A331A;
+
+    /* green — muted success */
+    --ramp-s-50:  #EAF2ED;
+    --ramp-s-100: #D7E8DD;
+    --ramp-s-200: #B4D1C1;
+    --ramp-s-300: #8CB9A1;
+    --ramp-s-400: #639A7E;
+    --ramp-s-500: #3E7C59;
+    --ramp-s-600: #336649;
+    --ramp-s-700: #2A543D;
+    --ramp-s-800: #224332;
+    --ramp-s-900: #1A3527;
+    --ramp-s-950: #12281E;
+
+    /* red — muted destructive */
+    --ramp-d-50:  #F7EBE9;
+    --ramp-d-100: #F0DCD7;
+    --ramp-d-200: #E2BBB3;
+    --ramp-d-300: #D4978B;
+    --ramp-d-400: #C47061;
+    --ramp-d-500: #AE4A3B;
+    --ramp-d-600: #933D31;
+    --ramp-d-700: #7D342A;
+    --ramp-d-800: #682B23;
+    --ramp-d-900: #55231C;
+    --ramp-d-950: #411B16;
+  }
+
+  .dark {
+    --ramp-n-50:  #2C261A;
+    --ramp-n-100: #262116;
+    --ramp-n-200: #312B20;
+    --ramp-n-300: #3A3326;
+    --ramp-n-400: #4A4232;
+    --ramp-n-500: #80775F;
+    --ramp-n-600: #A39A88;
+    --ramp-n-700: #B9B0A0;
+    --ramp-n-800: #D8D0C1;
+    --ramp-n-900: #F2EDE2;
+    --ramp-n-950: #F7F3EA;
+
+    --ramp-c-50:  #2C1510;
+    --ramp-c-100: #3A1A12;
+    --ramp-c-200: #4C2015;
+    --ramp-c-300: #63301F;
+    --ramp-c-400: #9E4526;
+    --ramp-c-500: #E27752;
+    --ramp-c-600: #EF9A7C;
+    --ramp-c-700: #F2AC90;
+    --ramp-c-800: #F6BFA8;
+    --ramp-c-900: #F9D0BE;
+    --ramp-c-950: #FCDDD0;
+
+    --ramp-g-50:  #2E2517;
+    --ramp-g-100: #3A2E1C;
+    --ramp-g-200: #4A3A24;
+    --ramp-g-300: #604828;
+    --ramp-g-400: #9B743C;
+    --ramp-g-500: #C89B5E;
+    --ramp-g-600: #D9B374;
+    --ramp-g-700: #E2C08B;
+    --ramp-g-800: #EACAA0;
+    --ramp-g-900: #F2D9B8;
+    --ramp-g-950: #F8E7CE;
+
+    --ramp-s-50:  #152219;
+    --ramp-s-100: #1C2C21;
+    --ramp-s-200: #263927;
+    --ramp-s-300: #2F4A33;
+    --ramp-s-400: #4D7057;
+    --ramp-s-500: #7FBF9B;
+    --ramp-s-600: #96CBB0;
+    --ramp-s-700: #A8D4BD;
+    --ramp-s-800: #BADCC9;
+    --ramp-s-900: #CCE5D6;
+    --ramp-s-950: #DDEDE3;
+
+    --ramp-d-50:  #2B1713;
+    --ramp-d-100: #391D18;
+    --ramp-d-200: #4A251F;
+    --ramp-d-300: #5E2E26;
+    --ramp-d-400: #9C4F40;
+    --ramp-d-500: #E08A7A;
+    --ramp-d-600: #E79C8F;
+    --ramp-d-700: #EBAFA4;
+    --ramp-d-800: #F0C1B8;
+    --ramp-d-900: #F4D3CC;
+    --ramp-d-950: #F8E4DF;
+  }
+}
+
+/* Re-map the default Tailwind palette to the ramps. `@theme inline` keeps the
+   values as live var() references so dark mode continues to flip at runtime. */
+@theme inline {
+  /* neutral families: slate / gray / stone ⟶ warm paper → ink */
+  --color-slate-50:   var(--ramp-n-50);
+  --color-slate-100:  var(--ramp-n-100);
+  --color-slate-200:  var(--ramp-n-200);
+  --color-slate-300:  var(--ramp-n-300);
+  --color-slate-400:  var(--ramp-n-400);
+  --color-slate-500:  var(--ramp-n-500);
+  --color-slate-600:  var(--ramp-n-600);
+  --color-slate-700:  var(--ramp-n-700);
+  --color-slate-800:  var(--ramp-n-800);
+  --color-slate-900:  var(--ramp-n-900);
+  --color-slate-950:  var(--ramp-n-950);
+  --color-gray-100:   var(--ramp-n-100);
+  --color-gray-400:   var(--ramp-n-400);
+  --color-gray-500:   var(--ramp-n-500);
+  --color-gray-900:   var(--ramp-n-900);
+  --color-stone-100:  var(--ramp-n-100);
+  --color-stone-200:  var(--ramp-n-200);
+  --color-stone-300:  var(--ramp-n-300);
+  --color-stone-400:  var(--ramp-n-400);
+  --color-stone-500:  var(--ramp-n-500);
+  --color-stone-700:  var(--ramp-n-700);
+  --color-stone-800:  var(--ramp-n-800);
+  --color-stone-900:  var(--ramp-n-900);
+
+  /* brand families: amber ⟶ clay (matches the --brand-amber alias) */
+  --color-amber-50:   var(--ramp-c-50);
+  --color-amber-100:  var(--ramp-c-100);
+  --color-amber-200:  var(--ramp-c-200);
+  --color-amber-300:  var(--ramp-c-300);
+  --color-amber-400:  var(--ramp-c-400);
+  --color-amber-500:  var(--ramp-c-500);
+  --color-amber-600:  var(--ramp-c-600);
+  --color-amber-700:  var(--ramp-c-700);
+  --color-amber-800:  var(--ramp-c-800);
+  --color-amber-900:  var(--ramp-c-900);
+  --color-amber-950:  var(--ramp-c-950);
+
+  /* warm secondary: yellow / orange ⟶ gold */
+  --color-yellow-300: var(--ramp-g-300);
+  --color-yellow-500: var(--ramp-g-500);
+  --color-orange-400: var(--ramp-g-400);
+
+  /* former blue/purple brand accent families ⟶ clay */
+  --color-blue-50:    var(--ramp-c-50);
+  --color-blue-300:   var(--ramp-c-300);
+  --color-blue-400:   var(--ramp-c-400);
+  --color-blue-500:   var(--ramp-c-500);
+  --color-blue-600:   var(--ramp-c-600);
+  --color-blue-700:   var(--ramp-c-700);
+  --color-indigo-400: var(--ramp-c-400);
+  --color-indigo-500: var(--ramp-c-500);
+  --color-cyan-200:   var(--ramp-c-200);
+  --color-cyan-300:   var(--ramp-c-300);
+  --color-cyan-400:   var(--ramp-c-400);
+  --color-cyan-500:   var(--ramp-c-500);
+  --color-sky-50:     var(--ramp-c-50);
+  --color-sky-100:    var(--ramp-c-100);
+  --color-sky-200:    var(--ramp-c-200);
+  --color-sky-300:    var(--ramp-c-300);
+  --color-sky-400:    var(--ramp-c-400);
+  --color-sky-500:    var(--ramp-c-500);
+  --color-sky-600:    var(--ramp-c-600);
+  --color-sky-700:    var(--ramp-c-700);
+  --color-sky-800:    var(--ramp-c-800);
+  --color-sky-950:    var(--ramp-c-950);
+  --color-violet-100: var(--ramp-c-100);
+  --color-violet-200: var(--ramp-c-200);
+  --color-violet-300: var(--ramp-c-300);
+  --color-violet-400: var(--ramp-c-400);
+  --color-violet-500: var(--ramp-c-500);
+  --color-violet-600: var(--ramp-c-600);
+  --color-violet-700: var(--ramp-c-700);
+  --color-violet-800: var(--ramp-c-800);
+  --color-violet-900: var(--ramp-c-900);
+  --color-purple-50:  var(--ramp-c-50);
+  --color-purple-300: var(--ramp-c-300);
+  --color-purple-400: var(--ramp-c-400);
+  --color-purple-500: var(--ramp-c-500);
+  --color-purple-600: var(--ramp-c-600);
+  --color-purple-700: var(--ramp-c-700);
+
+  /* success family: emerald / teal / lime ⟶ muted green */
+  --color-emerald-50:   var(--ramp-s-50);
+  --color-emerald-100:  var(--ramp-s-100);
+  --color-emerald-200:  var(--ramp-s-200);
+  --color-emerald-300:  var(--ramp-s-300);
+  --color-emerald-400:  var(--ramp-s-400);
+  --color-emerald-500:  var(--ramp-s-500);
+  --color-emerald-600:  var(--ramp-s-600);
+  --color-emerald-700:  var(--ramp-s-700);
+  --color-emerald-800:  var(--ramp-s-800);
+  --color-emerald-900:  var(--ramp-s-900);
+  --color-emerald-950:  var(--ramp-s-950);
+  --color-teal-400:     var(--ramp-s-400);
+  --color-teal-500:     var(--ramp-s-500);
+  --color-lime-300:     var(--ramp-s-300);
+  --color-lime-400:     var(--ramp-s-400);
+  --color-lime-500:     var(--ramp-s-500);
+  --color-lime-600:     var(--ramp-s-600);
+  --color-lime-700:     var(--ramp-s-700);
+
+  /* destructive family: red / rose ⟶ muted red */
+  --color-red-50:   var(--ramp-d-50);
+  --color-red-100:  var(--ramp-d-100);
+  --color-red-200:  var(--ramp-d-200);
+  --color-red-300:  var(--ramp-d-300);
+  --color-red-400:  var(--ramp-d-400);
+  --color-red-500:  var(--ramp-d-500);
+  --color-red-600:  var(--ramp-d-600);
+  --color-red-700:  var(--ramp-d-700);
+  --color-red-800:  var(--ramp-d-800);
+  --color-red-900:  var(--ramp-d-900);
+  --color-red-950:  var(--ramp-d-950);
+  --color-rose-50:  var(--ramp-d-50);
+  --color-rose-200: var(--ramp-d-200);
+  --color-rose-300: var(--ramp-d-300);
+  --color-rose-400: var(--ramp-d-400);
+  --color-rose-500: var(--ramp-d-500);
+  --color-rose-600: var(--ramp-d-600);
+  --color-rose-700: var(--ramp-d-700);
+  --color-rose-800: var(--ramp-d-800);
+  --color-rose-950: var(--ramp-d-950);
+}
