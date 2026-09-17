@@ -6,6 +6,17 @@ import { useLanguage } from "@/contexts/LanguageContext";
 
 type Mode = "loading" | "login" | "setup" | "unavailable";
 
+/** Parse JSON only when the API actually returned JSON (never the SPA HTML). */
+async function readJson(response: Response): Promise<{ configured?: boolean; reason?: string; redirectTo?: string } | null> {
+  const contentType = response.headers.get("content-type") ?? "";
+  if (!contentType.includes("application/json")) return null;
+  try {
+    return (await response.json()) as { configured?: boolean; reason?: string; redirectTo?: string };
+  } catch {
+    return null;
+  }
+}
+
 export default function DirectLogin() {
   const { direction } = useLanguage();
   const [mode, setMode] = useState<Mode>("loading");
@@ -17,13 +28,21 @@ export default function DirectLogin() {
   useEffect(() => {
     let cancelled = false;
     fetch("/api/auth/owner-status", { credentials: "include" })
-      .then((response) => (response.ok ? response.json() : { configured: false }))
-      .then((data: { configured?: boolean }) => {
+      .then(async (response) => {
         if (cancelled) return;
+        const data = await readJson(response);
+        if (!data) {
+          setMode("unavailable");
+          setError("The API is not reachable on this deployment (it returned a web page instead of JSON).");
+          return;
+        }
         setMode(data.configured ? "login" : "setup");
       })
       .catch(() => {
-        if (!cancelled) setMode("unavailable");
+        if (!cancelled) {
+          setMode("unavailable");
+          setError(null);
+        }
       });
     return () => {
       cancelled = true;
@@ -63,13 +82,16 @@ export default function DirectLogin() {
         credentials: "include",
         body: JSON.stringify({ password }),
       });
-      if (response.ok) {
-        const data = (await response.json()) as { redirectTo?: string };
-        window.location.href = data.redirectTo || "/admin/super/dashboard";
+      const payload = await readJson(response);
+      if (!payload) {
+        setError("The API is not reachable on this deployment (it returned a web page instead of JSON).");
         return;
       }
-      const payload = (await response.json().catch(() => null)) as { reason?: string } | null;
-      const reason = payload?.reason;
+      if (response.ok) {
+        window.location.href = payload.redirectTo || "/admin/super/dashboard";
+        return;
+      }
+      const reason = payload.reason;
       if (reason === "already_configured") {
         setMode("login");
         setError("This owner login has already been set up. Please sign in.");
@@ -117,9 +139,11 @@ export default function DirectLogin() {
           {mode === "loading" ? (
             <p className="mt-6 text-sm font-semibold text-slate-500">Checking owner login status…</p>
           ) : mode === "unavailable" ? (
-            <p role="alert" className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm font-semibold text-amber-800">
-              Could not reach the server. Please refresh the page and try again.
-            </p>
+            error ? null : (
+              <p className="mt-6 text-sm font-semibold text-slate-500">
+                Could not reach the server. Please refresh the page and try again.
+              </p>
+            )
           ) : (
             <>
               <label htmlFor="direct-password" className="mt-6 block text-sm font-semibold text-slate-800">

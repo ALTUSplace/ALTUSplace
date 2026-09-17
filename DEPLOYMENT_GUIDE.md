@@ -35,7 +35,7 @@
    - **Build Command:** `pnpm build`
    - **Output Directory:** `dist/public`
    - **Install Command:** `pnpm install`
-4. المعمارية: نفس مشروع Vercel يستضيف الواجهة الثابتة (`dist/public`) **وتشغّل ملف `api/[[...path]].js` دالة Serverless تعيد توجيه كل طلب `/api/*` إلى خادم Express المدمج** — أي أن tRPC والـ OAuth والـ webhooks تعمل على نفس نطاق Vercel دون حاجة إلى `VITE_API_URL`.
+4. المعمارية: نفس مشروع Vercel يستضيف الواجهة الثابتة (`dist/public`) **وتشغّل دالة Serverless واحدة (`api/index.js`) تُعاد إليها كل طلبات `/api/*` عبر `rewrites` في `vercel.json`، ثم يقوم خادم Express المدمج بالتوجيه الداخلي** — أي أن tRPC والـ OAuth والـ webhooks تعمل على نفس نطاق Vercel دون حاجة إلى `VITE_API_URL`. (ملاحظة: Vercel لا يدعم ملفات catch-all مثل `api/[[...path]].js` خارج Next.js، لذلك نستخدم ملفاً واحداً + rewrite.)
 5. أضف متغيرات بيئة وقت التشغيل (Runtime) في Vercel → Settings → Environment Variables:
    - `DATABASE_URL` (رابط Supabase Transaction Pooler)
    - `JWT_SECRET` (مفتاح توقيع الجلسات — ≥ 32 بايت)

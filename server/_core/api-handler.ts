@@ -5,8 +5,9 @@ const app = createApp();
 
 /**
  * Vercel serverless handler. Bundled to dist/api-handler.mjs at build time and
- * mounted from api/[[...path]].js. Receives the original request path, so the
- * Express router matches /api/trpc, /api/oauth/callback, webhooks, health, etc.
+ * mounted from api/index.js, which vercel.json rewrites every /api/* request to.
+ * Receives the original request path, so the Express router matches /api/trpc,
+ * /api/oauth/callback, webhooks, health, etc.
  */
 export default function apiHandler(req: Request, res: Response) {
   app(req, res, (err: unknown) => {
