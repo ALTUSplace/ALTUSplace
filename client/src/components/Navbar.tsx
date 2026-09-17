@@ -13,6 +13,7 @@ import {
   CreditCard,
   Globe,
   HelpCircle,
+  Handshake,
   LayoutDashboard,
   Menu,
   Moon,
@@ -44,6 +45,7 @@ type NavLink = {
 const navLinks: NavLink[] = [
   { href: "/", label: "الرئيسية", labelKey: "home" },
   { href: "/search?type=car", label: "تأجير السيارات", labelKey: "cars", icon: Car },
+  { href: "/partner", label: "فضاء الشركاء", labelKey: "partnerPortal", icon: Handshake },
   { href: "/admin", label: "لوحة الإدارة", labelKey: "admin", icon: ShieldAlert },
   { href: "/host", label: "لوحة المالك", labelKey: "dashboard", icon: LayoutDashboard },
   { href: "/my-bookings", label: "حجوزاتي", labelKey: "myBookings", icon: BookmarkCheck },
