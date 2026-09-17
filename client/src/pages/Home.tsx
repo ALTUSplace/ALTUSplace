@@ -4,7 +4,7 @@ import { trpc } from '@/lib/trpc';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { OptimizedImage } from '@/components/OptimizedImage';
-import { Search, MapPin, Car, ShieldCheck, ArrowRight, CheckCircle2, Award, Clock } from 'lucide-react';
+import { Search, MapPin, Car, Building2, ShieldCheck, ArrowRight, CheckCircle2, Award, Clock } from 'lucide-react';
 import { LISTINGS } from '@/data/altusplace';
 import { SmartRecommendations } from '@/components/SmartRecommendations';
 import { FAQSection } from '@/components/FAQSection';
@@ -22,6 +22,15 @@ export default function Home() {
   const [carCity, setCarCity] = useState('الدار البيضاء');
   const [pickupDate, setPickupDate] = useState('');
   const [dropoffDate, setDropoffDate] = useState('');
+  const [searchTab, setSearchTab] = useState<'car' | 'property'>('car');
+
+  const categoryPills = [
+    { key: 'catSuv', type: 'car', q: 'SUV' },
+    { key: 'catSedan', type: 'car', q: 'سيدان' },
+    { key: 'catApartment', type: 'property', q: 'شقة' },
+    { key: 'catVilla', type: 'property', q: 'فيلا' },
+    { key: 'catStudio', type: 'property', q: 'استوديو' },
+  ] as const;
 
   // Database listings formatted as unified car items
   const { data: dbListings = [] } = trpc.listings.list.useQuery();
@@ -61,13 +70,12 @@ export default function Home() {
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setLocation(`/search?type=car&city=${encodeURIComponent(carCity)}&startDate=${encodeURIComponent(pickupDate)}&endDate=${encodeURIComponent(dropoffDate)}`);
+    setLocation(`/search?type=${searchTab}&city=${encodeURIComponent(carCity)}&startDate=${encodeURIComponent(pickupDate)}&endDate=${encodeURIComponent(dropoffDate)}`);
   };
 
-  // Editorial search field primitives
+  // Editorial search field primitives — pill-shaped, floating on a white card
   const fieldBase =
-    'group relative flex flex-1 items-center gap-3 px-4 py-3 text-right transition-colors duration-200 cursor-pointer hover:bg-bg-muted/60 focus-within:bg-bg-muted/60';
-  const fieldDivider = 'border-t sm:border-t-0 sm:border-s sm:border-border-subtle';
+    'group relative flex flex-1 items-center gap-3 rounded-full bg-bg-muted/55 px-5 py-3 text-right transition-colors duration-200 cursor-pointer hover:bg-bg-muted focus-within:bg-bg-muted';
   const fieldIconClass =
     'shrink-0 h-5 w-5 text-ink-tertiary transition-colors duration-200 group-hover:text-ink-secondary group-focus-within:text-accent-clay';
   const fieldCaptionClass =
@@ -135,57 +143,122 @@ export default function Home() {
               </div>
             </div>
 
-            {/* ── Editorial search bar — spans full width below the diptych ── */}
+            {/* ── Floating multi-tab search widget — spans the full width ── */}
             <div className="lg:col-span-12 mt-2">
-              <div className="border border-border-default bg-bg-surface shadow-lg rounded-lg">
-                <form onSubmit={handleSearchSubmit} className="flex flex-col lg:flex-row lg:items-stretch">
-                  <label className={fieldBase}>
-                    <MapPin className={fieldIconClass} strokeWidth={1.5} />
-                    <span className="flex min-w-0 flex-1 flex-col items-start text-right">
-                      <span className={fieldCaptionClass}>{t('searchCityOdgency')}</span>
-                      <CitySelect
-                        value={carCity}
-                        onChange={setCarCity}
-                        className={fieldControlClass}
-                      />
-                    </span>
-                  </label>
+              <div className="mx-auto max-w-4xl">
+                {/* Segmented tabs */}
+                <div className="mb-4 flex justify-center">
+                  <div
+                    role="tablist"
+                    aria-label={t('browseCategories')}
+                    className="inline-flex items-center gap-1 rounded-full border border-border-subtle bg-bg-surface/85 p-1 shadow-md backdrop-blur-md"
+                  >
+                    <button
+                      type="button"
+                      role="tab"
+                      aria-selected={searchTab === 'car'}
+                      onClick={() => setSearchTab('car')}
+                      className={`inline-flex items-center gap-2 rounded-full px-5 py-2 text-sm font-bold transition-colors duration-200 ${
+                        searchTab === 'car'
+                          ? 'bg-accent-clay text-white shadow-[var(--shadow-clay)]'
+                          : 'text-ink-secondary hover:text-ink-primary'
+                      }`}
+                    >
+                      <Car className="h-4 w-4" />
+                      {t('searchTabCars')}
+                    </button>
+                    <button
+                      type="button"
+                      role="tab"
+                      aria-selected={searchTab === 'property'}
+                      onClick={() => setSearchTab('property')}
+                      className={`inline-flex items-center gap-2 rounded-full px-5 py-2 text-sm font-bold transition-colors duration-200 ${
+                        searchTab === 'property'
+                          ? 'bg-accent-clay text-white shadow-[var(--shadow-clay)]'
+                          : 'text-ink-secondary hover:text-ink-primary'
+                      }`}
+                    >
+                      <Building2 className="h-4 w-4" />
+                      {t('searchTabProperties')}
+                    </button>
+                  </div>
+                </div>
 
-                  <label className={`${fieldBase} ${fieldDivider}`}>
-                    <span className="flex min-w-0 flex-1 flex-col items-start text-right">
-                      <span className={fieldCaptionClass}>{t('searchPickupDate')}</span>
-                      <input
-                        type="date"
-                        value={pickupDate}
-                        onChange={(e) => setPickupDate(e.target.value)}
-                        className={fieldControlClass}
-                      />
-                    </span>
-                  </label>
+                {/* Floating search card */}
+                <div className="rounded-[2rem] border border-border-subtle bg-bg-surface p-2 shadow-2xl ring-1 ring-ink-primary/[0.03]">
+                  <form onSubmit={handleSearchSubmit} className="flex flex-col gap-2 lg:flex-row lg:items-stretch">
+                    <label className={fieldBase}>
+                      <MapPin className={fieldIconClass} strokeWidth={1.5} />
+                      <span className="flex min-w-0 flex-1 flex-col items-start text-right">
+                        <span className={fieldCaptionClass}>{t('searchCityOdgency')}</span>
+                        <CitySelect
+                          value={carCity}
+                          onChange={setCarCity}
+                          className={fieldControlClass}
+                        />
+                      </span>
+                    </label>
 
-                  <label className={`${fieldBase} ${fieldDivider}`}>
-                    <span className="flex min-w-0 flex-1 flex-col items-start text-right">
-                      <span className={fieldCaptionClass}>{t('searchDropoffDate')}</span>
-                      <input
-                        type="date"
-                        value={dropoffDate}
-                        onChange={(e) => setDropoffDate(e.target.value)}
-                        className={fieldControlClass}
-                      />
-                    </span>
-                  </label>
+                    <label className={fieldBase}>
+                      <span className="flex min-w-0 flex-1 flex-col items-start text-right">
+                        <span className={fieldCaptionClass}>{t('searchPickupDate')}</span>
+                        <input
+                          type="date"
+                          value={pickupDate}
+                          onChange={(e) => setPickupDate(e.target.value)}
+                          className={fieldControlClass}
+                        />
+                      </span>
+                    </label>
 
-                  <div className="flex items-stretch lg:items-center lg:border-s lg:border-border-subtle px-4 py-3 lg:py-0">
+                    <label className={fieldBase}>
+                      <span className="flex min-w-0 flex-1 flex-col items-start text-right">
+                        <span className={fieldCaptionClass}>{t('searchDropoffDate')}</span>
+                        <input
+                          type="date"
+                          value={dropoffDate}
+                          onChange={(e) => setDropoffDate(e.target.value)}
+                          className={fieldControlClass}
+                        />
+                      </span>
+                    </label>
+
                     <button
                       type="submit"
                       aria-label={t('searchSubmitAdvanced')}
-                      className="b2-press corner-cut-sm flex w-full items-center justify-center gap-2 rounded-sm bg-accent-clay px-6 py-3 text-sm font-extrabold text-white shadow-[var(--shadow-clay)] transition-colors hover:bg-accent-clay-hover lg:w-auto"
+                      className="b2-press flex shrink-0 items-center justify-center gap-2 self-stretch rounded-full bg-accent-clay px-8 py-3.5 text-sm font-extrabold text-white shadow-[var(--shadow-clay)] transition-colors hover:bg-accent-clay-hover lg:ms-1"
                     >
                       <Search className="h-4 w-4" strokeWidth={2.5} />
-                      <span className="lg:hidden 2xl:inline">{t('search')}</span>
+                      <span>{t('search')}</span>
                     </button>
+                  </form>
+                </div>
+
+                {/* Horizontal category pills */}
+                <div className="mt-6 flex flex-col gap-3">
+                  <span className="text-center text-[11px] font-bold uppercase tracking-[0.18em] text-ink-tertiary">
+                    {t('browseCategories')}
+                  </span>
+                  <div className="pill-rail no-scrollbar justify-start lg:justify-center">
+                    <button
+                      type="button"
+                      onClick={() => setLocation('/search')}
+                      className="b2-press shrink-0 rounded-full border border-accent-clay bg-accent-clay-soft px-4 py-2 text-xs font-bold text-accent-clay transition-colors hover:bg-accent-clay hover:text-white"
+                    >
+                      {t('catAll')}
+                    </button>
+                    {categoryPills.map((pill) => (
+                      <button
+                        key={pill.key}
+                        type="button"
+                        onClick={() => setLocation(`/search?type=${pill.type}&q=${encodeURIComponent(pill.q)}`)}
+                        className="b2-press shrink-0 rounded-full border border-border-default bg-bg-surface px-4 py-2 text-xs font-bold text-ink-secondary shadow-xs transition-colors hover:border-accent-clay hover:text-accent-clay"
+                      >
+                        {t(pill.key)}
+                      </button>
+                    ))}
                   </div>
-                </form>
+                </div>
               </div>
             </div>
           </div>

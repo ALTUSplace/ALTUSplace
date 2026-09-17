@@ -72,7 +72,7 @@ export function ListingCard(props: ListingCardProps) {
   return (
     <article
       className={cn(
-        "group relative flex flex-col overflow-hidden rounded-lg bg-bg-surface border border-border-subtle",
+        "group relative flex flex-col overflow-hidden rounded-2xl bg-bg-surface border border-border-subtle",
         "shadow-xs hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-1 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] cursor-pointer",
         className,
       )}
@@ -84,7 +84,7 @@ export function ListingCard(props: ListingCardProps) {
       onKeyDown={(e) => { if (e.key === "Enter") handleCardClick(); }}
     >
       <div className="absolute inset-x-0 top-0 h-0.5 bg-accent-clay scale-x-0 origin-start transition-transform duration-300 ease-out group-hover:scale-x-100" aria-hidden="true" />
-      <div className="relative aspect-[4/3] overflow-hidden bg-bg-muted">
+      <div className="relative aspect-[5/4] overflow-hidden bg-bg-muted">
         <div className="flex h-full transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]" style={{ transform: `translateX(${activeSlide * -100}%)` }}>
           {displayImages.map((src, i) => (
             <div key={i} className="relative h-full w-full shrink-0">
@@ -104,7 +104,7 @@ export function ListingCard(props: ListingCardProps) {
             {badges.slice(0, 2).map((badge) => {
               const cfg = BADGE_CONFIG[badge];
               const Icon = cfg.icon;
-              return (<span key={badge} className={cn("inline-flex items-center gap-1 rounded-sm px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide shadow-sm backdrop-blur-sm", cfg.className)}><Icon className="h-3 w-3" />{cfg.label}</span>);
+              return (<span key={badge} className={cn("inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide shadow-md ring-1 ring-white/20 backdrop-blur-md", cfg.className)}><Icon className="h-3 w-3" />{cfg.label}</span>);
             })}
           </div>
         )}
@@ -114,10 +114,10 @@ export function ListingCard(props: ListingCardProps) {
           </button>
         )}
         <div className="absolute bottom-3 left-3">
-          <div className="corner-cut-sm rounded-sm bg-bg-surface/90 px-3 py-1.5 shadow-md backdrop-blur-md ring-1 ring-white/20">
-            <span key={`${activeCurrency}-${showTotal ? "total" : "day"}`} className="inline-block font-display text-lg font-bold text-ink-primary animate-fade-in">{showTotal ? formatTotalPrice(safePrice) : formatPrice(safePrice)}</span>
-            <span className="ms-1 text-[10px] font-medium text-ink-tertiary" aria-label={currency}>{unitLabel}</span>
-
+          <div className="inline-flex items-baseline gap-1.5 rounded-full bg-bg-surface/92 px-3.5 py-1.5 shadow-lg backdrop-blur-md ring-1 ring-white/25">
+            <span key={`${activeCurrency}-${showTotal ? "total" : "day"}`} className="price-figure inline-block text-lg text-ink-primary animate-fade-in">{showTotal ? formatTotalPrice(safePrice) : formatPrice(safePrice)}</span>
+            <span className="rounded-md bg-accent-clay/12 px-1.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-accent-clay" aria-label={currency}>{currency}</span>
+            <span className="text-[10px] font-medium text-ink-tertiary">{unitLabel}</span>
           </div>
         </div>
         {totalSlides > 1 && (<>
@@ -134,16 +134,16 @@ export function ListingCard(props: ListingCardProps) {
       </div>
       <div className="flex flex-1 flex-col gap-2 p-4">
         <div className="flex items-start justify-between gap-2">
-          <h3 className="line-clamp-1 text-sm font-bold text-ink-primary group-hover:text-accent-clay transition-colors" title={displayTitle}>{displayTitle}</h3>
+          <h3 className="line-clamp-2 text-[15px] font-bold leading-snug text-ink-primary transition-colors group-hover:text-accent-clay" title={displayTitle}>{displayTitle}</h3>
           {rating && rating > 0 && (<div className="flex shrink-0 items-center gap-1 text-xs font-medium text-ink-secondary"><Star className="h-3.5 w-3.5 fill-accent-warm text-accent-warm" /><span>{rating.toFixed(1)}</span>{reviewCount && <span className="text-ink-tertiary">({reviewCount})</span>}</div>)}
         </div>
         <div className="flex items-center gap-1 text-xs text-ink-secondary"><MapPin className="h-3 w-3 text-ink-tertiary" /><span className="line-clamp-1">{city}</span></div>
         {specs && (specs.transmission || specs.fuel || specs.seats || specs.rooms) && (
           <div className="flex flex-wrap gap-2 text-[11px] text-ink-tertiary">
-            {specs.transmission && <span className="inline-flex items-center gap-1 rounded-sm bg-bg-muted px-2 py-0.5"><Settings className="h-3 w-3" /> {specs.transmission}</span>}
-            {specs.fuel && <span className="inline-flex items-center gap-1 rounded-sm bg-bg-muted px-2 py-0.5"><Fuel className="h-3 w-3" /> {specs.fuel}</span>}
-            {specs.seats && <span className="inline-flex items-center gap-1 rounded-sm bg-bg-muted px-2 py-0.5"><Users className="h-3 w-3" /> {specs.seats} seats</span>}
-            {specs.rooms && specs.rooms > 0 && <span className="inline-flex items-center gap-1 rounded-sm bg-bg-muted px-2 py-0.5"><Home className="h-3 w-3" /> {specs.rooms} rooms</span>}
+            {specs.transmission && <span className="inline-flex items-center gap-1 rounded-full bg-bg-muted px-2 py-0.5"><Settings className="h-3 w-3" /> {specs.transmission}</span>}
+            {specs.fuel && <span className="inline-flex items-center gap-1 rounded-full bg-bg-muted px-2 py-0.5"><Fuel className="h-3 w-3" /> {specs.fuel}</span>}
+            {specs.seats && <span className="inline-flex items-center gap-1 rounded-full bg-bg-muted px-2 py-0.5"><Users className="h-3 w-3" /> {specs.seats} seats</span>}
+            {specs.rooms && specs.rooms > 0 && <span className="inline-flex items-center gap-1 rounded-full bg-bg-muted px-2 py-0.5"><Home className="h-3 w-3" /> {specs.rooms} rooms</span>}
           </div>
         )}
         {hostName && (<div className="mt-auto pt-2 border-t border-border-subtle"><span className="text-[11px] text-ink-tertiary">Hosted by <span className="font-medium text-ink-secondary">{hostName}</span></span></div>)}
@@ -156,8 +156,8 @@ export function ListingCard(props: ListingCardProps) {
 
 export function ListingCardSkeleton({ className }: { className?: string }) {
   return (
-    <div className={cn("flex flex-col overflow-hidden rounded-lg border border-border-subtle bg-bg-surface", className)}>
-      <div className="aspect-[4/3] animate-shimmer bg-skeleton-from" />
+    <div className={cn("flex flex-col overflow-hidden rounded-2xl border border-border-subtle bg-bg-surface", className)}>
+      <div className="aspect-[5/4] animate-shimmer bg-skeleton-from" />
       <div className="flex flex-col gap-3 p-4">
         <div className="flex justify-between">
           <div className="h-4 w-2/3 animate-shimmer rounded bg-skeleton-from" />

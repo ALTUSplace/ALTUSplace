@@ -5,8 +5,8 @@
    ALTUSplace — "Tanger Clay" Editorial Design System (Tailwind v4)
    ─────────────────────────────────────────────────────────────────────────────
    A bespoke, warm editorial identity: matte paper neutrals, a single clay
-   terracotta accent, and ink typography built on El Messiri (display) with
-   Cairo (UI) and Fraunces (editorial serif accents).
+   terracotta accent, and ink typography built on Plus Jakarta Sans (Latin
+   display/numerals), Tajawal (Arabic UI) and Fraunces (editorial serif accents).
 
    Principles
    · One accent colour, used deliberately — clay. Everything else is a warm
@@ -105,10 +105,13 @@
                               border-color var(--dur-fast) var(--ease-smooth),
                               color var(--dur-fast) var(--ease-smooth);
 
-    /* Typography Tokens */
-    --font-display: 'El Messiri', 'Cairo', 'Fraunces', system-ui, -apple-system, sans-serif;
-    --font-body:    'Cairo', 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
-    --font-serif:   'Fraunces', 'Cairo', Georgia, 'Times New Roman', serif;
+    /* Typography Tokens — Plus Jakarta Sans (Latin/numerals), Tajawal (Arabic),
+       with Cairo as a warm fallback. Arabic glyphs are absent from Plus Jakarta
+       Sans, so the stack naturally renders Arabic in Tajawal and Latin in
+       Plus Jakarta Sans without per-script class switching. */
+    --font-display: 'Plus Jakarta Sans', 'Tajawal', 'El Messiri', system-ui, -apple-system, sans-serif;
+    --font-body:    'Plus Jakarta Sans', 'Tajawal', 'Cairo', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-serif:   'Fraunces', 'Tajawal', Georgia, 'Times New Roman', serif;
 
     --text-display: clamp(2.5rem, 5.5vw, 4.5rem);
     --text-h1:      clamp(2rem, 3.75vw, 3.25rem);
@@ -531,6 +534,26 @@
     height: 1px;
     background: var(--accent-primary);
   }
+
+  /* Premium price presentation — tabular figures stop prices from jittering,
+     and the display face gives them the confident, booking-site weight. */
+  .price-figure {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+
+  /* Horizontally scrollable chip rails (category pills) that fade their edges */
+  .pill-rail {
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 0.25rem;
+  }
+  .pill-rail > * { scroll-snap-align: start; }
 
   .b2-icon-button {
     display: inline-flex;

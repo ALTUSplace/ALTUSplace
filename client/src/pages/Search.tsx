@@ -92,7 +92,7 @@ export default function Search() {
   const [searchQuery, setSearchQuery] = useState(naturalQuery);
   const [maxPrice, setMaxPrice] = useState(4000);
   const [excellenceOnly, setExcellenceOnly] = useState(false);
-  const [sortBy, setSortBy] = useState<'price-asc' | 'price-desc'>('price-asc');
+  const [sortBy, setSortBy] = useState<'recommended' | 'price-asc' | 'price-desc'>('recommended');
   const listingInput = useMemo(() => ({ startDate: startDateParam, endDate: endDateParam }), [startDateParam, endDateParam]);
   const listingsQuery = trpc.listings.list.useQuery(listingInput);
   const serverListings = useMemo(() => (listingsQuery.data ?? []).map(toListingItem), [listingsQuery.data]);
@@ -192,29 +192,43 @@ export default function Search() {
 
   const [isSearching, setIsSearching] = useState(false);
 
+  const categoryPills = [
+    { key: 'catAll', type: 'all', q: '' },
+    { key: 'catSuv', type: 'car', q: 'SUV' },
+    { key: 'catSedan', type: 'car', q: 'سيدان' },
+    { key: 'catApartment', type: 'property', q: 'شقة' },
+    { key: 'catVilla', type: 'property', q: 'فيلا' },
+    { key: 'catStudio', type: 'property', q: 'استوديو' },
+  ] as const;
+  const activeCategoryKey = categoryPills.find((pill) => pill.type === typeFilter && pill.q === searchQuery)?.key ?? null;
+  const applyCategoryPill = (pill: (typeof categoryPills)[number]) => {
+    setTypeFilter(pill.type);
+    setSearchQuery(pill.q);
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground pb-20" dir="rtl">
       <div className="container mx-auto px-4 space-y-8">
         
         {/* شريط عائم للمقارنة */}
         {compareList.length > 0 && (
-          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-950/95 backdrop-blur-xl border border-amber-500/50 p-4 rounded-2xl shadow-2xl flex items-center gap-4 animate-in fade-in-50">
+          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-bg-elevated/95 backdrop-blur-xl border border-accent-clay/40 p-4 rounded-2xl shadow-2xl flex items-center gap-4 animate-in fade-in-50">
             <div className="flex items-center gap-2">
-              <Scale className="w-5 h-5 text-amber-400" />
-              <span className="text-xs font-bold text-white">المقارنة ({compareList.length}/2):</span>
+              <Scale className="w-5 h-5 text-accent-clay" />
+              <span className="text-xs font-bold text-ink-primary">المقارنة ({compareList.length}/2):</span>
             </div>
             <div className="flex items-center gap-2">
               {compareList.map(c => (
-                <span key={c.id} className="bg-slate-900 border border-slate-700 text-xs px-3 py-1 rounded-xl text-slate-200 flex items-center gap-2">
+                <span key={c.id} className="bg-bg-muted border border-border-default text-xs px-3 py-1 rounded-xl text-ink-secondary flex items-center gap-2">
                   {c.title}
-                  <button onClick={() => toggleCompare(c)} className="text-red-400 hover:text-red-300"><X className="w-3.5 h-3.5" /></button>
+                  <button onClick={() => toggleCompare(c)} className="text-accent-red hover:opacity-80"><X className="w-3.5 h-3.5" /></button>
                 </span>
               ))}
             </div>
             {compareList.length === 2 && (
               <Button
                 onClick={() => setShowCompareModal(true)}
-                className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs px-4 py-2 rounded-xl shadow-lg"
+                className="bg-accent-clay hover:bg-accent-clay-hover text-white font-bold text-xs px-4 py-2 rounded-xl shadow-lg"
               >
                 قارن الآن
               </Button>
@@ -224,62 +238,80 @@ export default function Search() {
 
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div className="space-y-2">
-            <h1 className="text-3xl font-extrabold text-white">{language === 'fr' ? 'Guide des voitures disponibles' : 'دليل السيارات المتاحة'}</h1>
-            <p className="text-slate-400 text-sm">{language === 'fr' ? 'Découvrez les offres vérifiées au Maroc avec filtres professionnels et réservation simplifiée.' : 'استعرض أفضل العروض المعتمدة في المغرب مع فلاتر مهنية وحجز مبسط.'}</p>
+            <h1 className="text-3xl font-extrabold tracking-tight text-ink-primary">{language === 'fr' ? 'Guide des voitures disponibles' : 'دليل السيارات المتاحة'}</h1>
+            <p className="text-ink-secondary text-sm leading-relaxed">{language === 'fr' ? 'Découvrez les offres vérifiées au Maroc avec filtres professionnels et réservation simplifiée.' : 'استعرض أفضل العروض المعتمدة في المغرب مع فلاتر مهنية وحجز مبسط.'}</p>
           </div>
         </div>
 
+        {/* Horizontal category pills */}
+        <div className="pill-rail no-scrollbar">
+          {categoryPills.map((pill) => (
+            <button
+              key={pill.key}
+              type="button"
+              onClick={() => applyCategoryPill(pill)}
+              className={`shrink-0 rounded-full border px-4 py-2 text-xs font-bold transition-colors ${
+                activeCategoryKey === pill.key
+                  ? 'border-accent-clay bg-accent-clay text-white shadow-[var(--shadow-clay)]'
+                  : 'border-border-default bg-bg-surface text-ink-secondary hover:border-accent-clay hover:text-accent-clay'
+              }`}
+            >
+              {t(pill.key)}
+            </button>
+          ))}
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          <div className="lg:col-span-1 bg-slate-950 border border-slate-800 p-6 rounded-3xl space-y-6 h-fit sticky top-28 shadow-xl">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-              <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                <Filter className="w-5 h-5 text-amber-400" />
+          <div className="lg:col-span-1 bg-bg-surface border border-border-subtle p-6 rounded-3xl space-y-6 h-fit sticky top-28 shadow-xl">
+            <div className="flex items-center justify-between border-b border-border-subtle pb-4">
+              <h2 className="text-lg font-bold text-ink-primary flex items-center gap-2">
+                <Filter className="w-5 h-5 text-accent-clay" />
                 <span>{t('advancedFilters')}</span>
               </h2>
               <button
                 onClick={() => {
-setCityFilter('all');
+                  setCityFilter('all');
                   setTypeFilter('all');
                   setMaxPrice(4000);
                   setExcellenceOnly(false);
                 }}
-                className="text-xs text-amber-400 hover:underline"
+                className="text-xs text-accent-clay hover:underline"
               >
                 {t('resetFilters')}
               </button>
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-semibold text-slate-300">{t('naturalSearch')}</label>
+              <label className="text-xs font-semibold text-ink-secondary">{t('naturalSearch')}</label>
               <input
                 type="text"
                 placeholder={t('searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-700 text-white rounded-xl p-3 text-xs focus:outline-none focus:border-amber-500"
+                className="w-full bg-bg-muted border border-border-default text-ink-primary rounded-xl p-3 text-xs focus:outline-none focus:border-accent-clay"
               />
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-semibold text-slate-300">{t('city')}</label>
+              <label className="text-xs font-semibold text-ink-secondary">{t('city')}</label>
               <CitySelect
                 value={cityFilter}
                 onChange={setCityFilter}
                 includeAll
-                className="w-full bg-slate-900 border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500"
+                className="w-full bg-bg-muted border-border-default rounded-xl px-3 py-2 text-sm text-ink-primary focus:outline-none focus:border-accent-clay"
               />
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-semibold text-slate-300">النوع</label>
-              <div className="grid grid-cols-3 gap-1 bg-slate-900 border border-slate-700 rounded-xl p-1">
+              <label className="text-xs font-semibold text-ink-secondary">النوع</label>
+              <div className="grid grid-cols-3 gap-1 bg-bg-muted border border-border-default rounded-xl p-1">
                 {([['all', 'الكل'], ['car', 'سيارات'], ['property', 'عقارات']] as const).map(([value, label]) => (
                   <button
                     key={value}
                     type="button"
                     onClick={() => setTypeFilter(value)}
                     className={`px-3 py-2 rounded-lg text-xs font-bold transition-all ${
-                      typeFilter === value ? 'bg-amber-500 text-slate-950 shadow-lg' : 'text-slate-400 hover:text-white'
+                      typeFilter === value ? 'bg-accent-clay text-white shadow-lg' : 'text-ink-secondary hover:text-ink-primary'
                     }`}
                   >
                     {label}
@@ -290,8 +322,8 @@ setCityFilter('all');
 
             <div className="space-y-2">
               <div className="flex justify-between text-xs">
-                <span className="font-semibold text-slate-300">{t('maxPrice')}</span>
-                <span className="text-amber-400 font-bold">{maxPrice} درهم</span>
+                <span className="font-semibold text-ink-secondary">{t('maxPrice')}</span>
+                <span className="text-accent-clay font-bold">{maxPrice} درهم</span>
               </div>
               <input
                 type="range"
@@ -300,25 +332,25 @@ setCityFilter('all');
                 step="100"
                 value={maxPrice}
                 onChange={(e) => setMaxPrice(Number(e.target.value))}
-                className="w-full accent-amber-500 bg-slate-800 cursor-pointer"
+                className="w-full accent-accent-clay bg-bg-muted cursor-pointer"
               />
             </div>
           </div>
 
           <div className="lg:col-span-3 space-y-6">
-            <div className="bg-slate-950 border border-slate-800 p-4 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="text-sm text-slate-300">
-                {t('offersFoundPrefix')} <span className="text-amber-400 font-bold">{filteredListings.length}</span> {t('availableOffers')}
+            <div className="bg-bg-surface border border-border-subtle p-4 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="text-sm text-ink-secondary">
+                {t('offersFoundPrefix')} <span className="text-accent-clay font-bold">{filteredListings.length}</span> {t('availableOffers')}
               </div>
               <div className="flex items-center gap-3 w-full sm:w-auto">
                 {/* View Toggle Buttons */}
-                <div className="flex items-center bg-slate-900 border border-slate-700 rounded-xl p-1">
+                <div className="flex items-center bg-bg-muted border border-border-default rounded-xl p-1">
                   <button
                     onClick={() => setViewMode('grid')}
                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                       viewMode === 'grid'
-                        ? 'bg-amber-500 text-slate-950 shadow-lg'
-                        : 'text-slate-400 hover:text-white'
+                        ? 'bg-accent-clay text-white shadow-lg'
+                        : 'text-ink-secondary hover:text-ink-primary'
                     }`}
                   >
                     <LayoutGrid className="w-3.5 h-3.5" />
@@ -328,22 +360,23 @@ setCityFilter('all');
                     onClick={() => setViewMode('map')}
                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                       viewMode === 'map'
-                        ? 'bg-amber-500 text-slate-950 shadow-lg'
-                        : 'text-slate-400 hover:text-white'
+                        ? 'bg-accent-clay text-white shadow-lg'
+                        : 'text-ink-secondary hover:text-ink-primary'
                     }`}
                   >
                     <Map className="w-3.5 h-3.5" />
                     خريطة
                   </button>
                 </div>
-                <div className="hidden sm:block w-px h-6 bg-slate-700" />
-                <ArrowUpDown className="w-4 h-4 text-amber-400" />
-                <span className="text-xs text-slate-400">{t('sortBy')}:</span>
+                <div className="hidden sm:block w-px h-6 bg-border-default" />
+                <ArrowUpDown className="w-4 h-4 text-accent-clay" />
+                <span className="text-xs text-ink-secondary">{t('sortBy')}:</span>
                 <select
                   value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as any)}
-                  className="bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500"
+                  onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+                  className="bg-bg-muted border border-border-default rounded-xl px-3 py-1.5 text-xs text-ink-primary focus:outline-none focus:border-accent-clay"
                 >
+                  <option value="recommended">{t('sortRecommended')}</option>
                   <option value="price-asc">{t('lowestPrice')}</option>
                   <option value="price-desc">{t('highestPrice')}</option>
                 </select>
@@ -413,10 +446,10 @@ setCityFilter('all');
                 </div>
 
                 <div className="space-y-4">
-                  <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-3">
+                  <div className="bg-bg-surface border border-border-subtle rounded-2xl p-4 space-y-3 shadow-sm">
                     <div className="flex items-center justify-between">
-                      <label className="text-xs font-semibold text-slate-300">{t('searchRadius')}</label>
-                      <span className="text-xs font-bold text-amber-400">{mapRadius} {t('mapKmUnit')}</span>
+                      <label className="text-xs font-semibold text-ink-secondary">{t('searchRadius')}</label>
+                      <span className="text-xs font-bold text-accent-clay">{mapRadius} {t('mapKmUnit')}</span>
                     </div>
                     <input
                       type="range"
@@ -425,25 +458,25 @@ setCityFilter('all');
                       step="5"
                       value={mapRadius}
                       onChange={(e) => setMapRadius(Number(e.target.value))}
-                      className="w-full accent-amber-500 bg-slate-800 cursor-pointer"
+                      className="w-full accent-accent-clay bg-bg-muted cursor-pointer"
                     />
                   </div>
 
-                  <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-3">
-                    <div className="text-xs font-bold text-white border-b border-slate-800 pb-2">
-                      {t('mapResultsTitle')} — <span className="text-amber-400">{mapSearch.data?.total ?? 0}</span>
+                  <div className="bg-bg-surface border border-border-subtle rounded-2xl p-4 space-y-3 shadow-sm">
+                    <div className="text-xs font-bold text-ink-primary border-b border-border-subtle pb-2">
+                      {t('mapResultsTitle')} — <span className="text-accent-clay">{mapSearch.data?.total ?? 0}</span>
                     </div>
                     {mapSearch.isLoading && (
-                      <div className="flex items-center justify-center py-8 text-xs text-slate-400">جاري البحث في المنطقة…</div>
+                      <div className="flex items-center justify-center py-8 text-xs text-ink-secondary">جاري البحث في المنطقة…</div>
                     )}
                     {!mapSearch.isLoading && (mapSearch.data?.total ?? 0) === 0 && (
-                      <p className="text-xs text-slate-400 leading-relaxed">{t('mapNoResults')}</p>
+                      <p className="text-xs text-ink-secondary leading-relaxed">{t('mapNoResults')}</p>
                     )}
                     <div className="space-y-3 max-h-[520px] overflow-y-auto pl-1">
                       {(mapSearch.data?.items ?? []).map((item) => {
                         const li = toListingItem(item);
                         return (
-                          <div key={li.id} className="flex gap-3 bg-slate-900 border border-slate-800 rounded-xl p-3 items-center">
+                          <div key={li.id} className="flex gap-3 bg-bg-muted border border-border-subtle rounded-xl p-3 items-center">
                             <img
                               src={li.image}
                               alt={li.title}
@@ -451,15 +484,15 @@ setCityFilter('all');
                               className="w-16 h-16 object-cover rounded-lg flex-shrink-0"
                             />
                             <div className="flex-1 min-w-0 space-y-1">
-                              <h5 className="text-xs font-bold text-white line-clamp-1">{li.title}</h5>
-                              <p className="text-[11px] text-slate-400 flex items-center gap-1">
+                              <h5 className="text-xs font-bold text-ink-primary line-clamp-1">{li.title}</h5>
+                              <p className="text-[11px] text-ink-secondary flex items-center gap-1">
                                 <MapPin className="w-3 h-3" /> {li.city}
                               </p>
-                              <div className="text-xs font-extrabold text-amber-400">{li.pricePerUnit} {li.unitLabel}</div>
+                              <div className="text-xs font-extrabold text-accent-clay">{li.pricePerUnit} {li.unitLabel}</div>
                             </div>
                             <button
                               onClick={() => setLocation(listingRoute(li))}
-                              className="self-center bg-amber-500 hover:bg-amber-600 text-slate-950 text-[11px] font-bold px-3 py-1.5 rounded-lg shrink-0"
+                              className="self-center bg-accent-clay hover:bg-accent-clay-hover text-white text-[11px] font-bold px-3 py-1.5 rounded-full shrink-0"
                             >
                               {t('mapViewListing')}
                             </button>
@@ -477,11 +510,11 @@ setCityFilter('all');
 
       {/* نافذة العرض السريع المنبثقة (Quick View Modal) */}
       {quickViewItem && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-slate-950 border border-slate-800 rounded-3xl max-w-2xl w-full p-8 space-y-6 shadow-2xl relative animate-in zoom-in-95">
+        <div className="fixed inset-0 z-50 bg-ink-primary/60 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-bg-surface border border-border-subtle rounded-3xl max-w-2xl w-full p-8 space-y-6 shadow-2xl relative animate-in zoom-in-95">
             <button
               onClick={() => setQuickViewItem(null)}
-              className="absolute top-6 left-6 text-slate-400 hover:text-white bg-slate-900 p-2 rounded-full"
+              className="absolute top-6 left-6 text-ink-tertiary hover:text-ink-primary bg-bg-muted p-2 rounded-full"
             >
               <X className="w-5 h-5" />
             </button>
@@ -498,7 +531,7 @@ setCityFilter('all');
                 height={512}
                 className="w-full h-full object-cover"
               />
-              <div className="absolute top-4 right-4 bg-amber-500 text-slate-950 px-3 py-1 rounded-xl text-xs font-bold">
+              <div className="absolute top-4 right-4 bg-accent-clay text-white px-3 py-1 rounded-full text-xs font-bold">
                 {quickViewItem.city}
               </div>
             </div>
@@ -506,33 +539,33 @@ setCityFilter('all');
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="text-xs text-amber-400 font-bold">{quickViewItem.providerName}</span>
-                  <h2 className="text-xl font-black text-white">{quickViewItem.title}</h2>
+                  <span className="text-xs text-accent-clay font-bold">{quickViewItem.providerName}</span>
+                  <h2 className="text-xl font-black text-ink-primary">{quickViewItem.title}</h2>
                 </div>
                 <div className="text-left">
-                  <div className="text-2xl font-black text-amber-400">{quickViewItem.pricePerUnit} {quickViewItem.unitLabel}</div>
-                  <div className="text-xs text-slate-500">التقييمات الموثقة تظهر في صفحة الإعلان بعد توفرها</div>
+                  <div className="text-2xl font-black text-accent-clay">{quickViewItem.pricePerUnit} {quickViewItem.unitLabel}</div>
+                  <div className="text-xs text-ink-tertiary">التقييمات الموثقة تظهر في صفحة الإعلان بعد توفرها</div>
                 </div>
               </div>
 
-              <p className="text-xs text-slate-300 leading-relaxed">{quickViewItem.description}</p>
+              <p className="text-xs text-ink-secondary leading-relaxed">{quickViewItem.description}</p>
 
               <div className="flex flex-wrap gap-2">
                 {quickViewItem.features.map((f, i) => (
-                  <span key={i} className="text-[11px] bg-slate-900 border border-slate-800 text-slate-300 px-3 py-1 rounded-xl">
+                  <span key={i} className="text-[11px] bg-bg-muted border border-border-subtle text-ink-secondary px-3 py-1 rounded-full">
                     ✓ {f}
                   </span>
                 ))}
               </div>
 
-              <div className="flex flex-wrap items-center justify-between pt-4 border-t border-slate-800">
+              <div className="flex flex-wrap items-center justify-between pt-4 border-t border-border-subtle">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-slate-400">مشاركة:</span>
+                  <span className="text-xs text-ink-tertiary">مشاركة:</span>
                   <button
                     onClick={() => {
                       window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`شاهد هذا العرض الرائع: ${quickViewItem.title} - ${quickViewItem.pricePerUnit} ${quickViewItem.unitLabel} في ${quickViewItem.city} عبر منصة ALTUSplace: ${window.location.href}`)}`, '_blank');
                     }}
-                    className="bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 p-2 rounded-xl text-xs flex items-center gap-1 transition-colors"
+                    className="bg-emerald-600/15 hover:bg-emerald-600/25 text-emerald-700 dark:text-emerald-400 p-2 rounded-full text-xs flex items-center gap-1 transition-colors"
                     title="مشاركة عبر واتساب"
                   >
                     واتساب
@@ -542,7 +575,7 @@ setCityFilter('all');
                       navigator.clipboard.writeText(window.location.href);
                       toast.success('تم نسخ رابط العرض بنجاح!');
                     }}
-                    className="bg-slate-800 hover:bg-slate-700 text-slate-300 p-2 rounded-xl text-xs transition-colors"
+                    className="bg-bg-muted hover:bg-border-default text-ink-secondary p-2 rounded-full text-xs transition-colors"
                     title="نسخ الرابط"
                   >
                     نسخ الرابط
@@ -550,13 +583,13 @@ setCityFilter('all');
                 </div>
                 <Button
                   onClick={() => setQuickViewItem(null)}
-                  className="bg-slate-800 hover:bg-slate-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs"
+                  className="bg-bg-muted hover:bg-border-default text-ink-primary font-bold px-4 py-2.5 rounded-full text-xs"
                 >
                   إغلاق
                 </Button>
                 <Button
                   onClick={() => setLocation(listingRoute(quickViewItem))}
-                  className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-6 py-2.5 rounded-xl text-xs shadow-lg shadow-amber-500/20"
+                  className="bg-accent-clay hover:bg-accent-clay-hover text-white font-bold px-6 py-2.5 rounded-full text-xs shadow-lg"
                 >
                   الانتقال لصفحة الحجز الكاملة
                 </Button>
@@ -568,22 +601,22 @@ setCityFilter('all');
 
       {/* نافذة المقارنة المنبثقة */}
       {showCompareModal && compareList.length === 2 && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-slate-950 border border-slate-800 p-8 rounded-3xl max-w-4xl w-full space-y-6 shadow-2xl relative animate-in zoom-in-95">
+        <div className="fixed inset-0 z-50 bg-ink-primary/60 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-bg-surface border border-border-subtle p-8 rounded-3xl max-w-4xl w-full space-y-6 shadow-2xl relative animate-in zoom-in-95">
             <button
               onClick={() => setShowCompareModal(false)}
-              className="absolute top-6 left-6 text-slate-400 hover:text-white bg-slate-900 p-2 rounded-full"
+              className="absolute top-6 left-6 text-ink-tertiary hover:text-ink-primary bg-bg-muted p-2 rounded-full"
             >
               <X className="w-5 h-5" />
             </button>
             <div className="text-center space-y-2">
-              <span className="text-amber-500 text-xs font-bold uppercase tracking-widest">مقارنة تفصيلية</span>
-              <h2 className="text-2xl font-black text-white">مقارنة جنباً إلى جنب (Side-by-Side)</h2>
+              <span className="text-accent-clay text-xs font-bold uppercase tracking-widest">مقارنة تفصيلية</span>
+              <h2 className="text-2xl font-black text-ink-primary">مقارنة جنباً إلى جنب (Side-by-Side)</h2>
             </div>
 
             <div className="grid grid-cols-2 gap-6">
               {compareList.map(c => (
-                <div key={c.id} className="bg-slate-900 border border-slate-800 p-6 rounded-2xl space-y-4">
+                <div key={c.id} className="bg-bg-muted border border-border-subtle p-6 rounded-2xl space-y-4">
                   <OptimizedImage
                     src={c.image}
                     srcSet={`${c.image} 640w`}
@@ -595,18 +628,18 @@ setCityFilter('all');
                     height={256}
                     className="w-full h-40 object-cover rounded-xl"
                   />
-                  <h3 className="text-lg font-bold text-white text-center">{c.title}</h3>
-                  <div className="space-y-2 text-xs text-slate-300">
-                    <div className="flex justify-between py-2 border-b border-slate-800">
-                      <span className="text-slate-400">السعر:</span>
-                      <span className="font-extrabold text-amber-400">{c.pricePerUnit} {c.unitLabel}</span>
+                  <h3 className="text-lg font-bold text-ink-primary text-center">{c.title}</h3>
+                  <div className="space-y-2 text-xs text-ink-secondary">
+                    <div className="flex justify-between py-2 border-b border-border-subtle">
+                      <span className="text-ink-tertiary">السعر:</span>
+                      <span className="font-extrabold text-accent-clay">{c.pricePerUnit} {c.unitLabel}</span>
                     </div>
-                    <div className="flex justify-between py-2 border-b border-slate-800">
-                      <span className="text-slate-400">المدينة:</span>
+                    <div className="flex justify-between py-2 border-b border-border-subtle">
+                      <span className="text-ink-tertiary">المدينة:</span>
                       <span className="font-bold">{c.city}</span>
                     </div>
                     <div className="flex justify-between py-2">
-                      <span className="text-slate-400">المزود:</span>
+                      <span className="text-ink-tertiary">المزود:</span>
                       <span className="font-bold">{c.providerName}</span>
                     </div>
                   </div>
@@ -617,7 +650,7 @@ setCityFilter('all');
             <div className="flex justify-center">
               <Button
                 onClick={() => setShowCompareModal(false)}
-                className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-8 py-2.5 rounded-xl text-xs"
+                className="bg-accent-clay hover:bg-accent-clay-hover text-white font-bold px-8 py-2.5 rounded-full text-xs"
               >
                 إنهاء المقارنة
               </Button>
