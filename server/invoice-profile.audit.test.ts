@@ -24,7 +24,7 @@ describe("invoice and profile audit contracts", () => {
     expect(routerSource).toMatch(/payments:\s*router\([\s\S]*?booking\.totalPrice, booking\.commissionFee/);
     expect(routerSource).toMatch(/payments:\s*router\([\s\S]*?simulated:\s*true/);
     expect(routerSource).toMatch(/payments:\s*router\([\s\S]*?invoiceNumber:\s*createInvoiceNumber\(booking\.id\)/);
-    expect(checkoutPage).toMatch(/createBookingMutation\.mutate\(\{\s*listingId,\s*startDate:/s);
+    expect(checkoutPage).toMatch(/createBooking\.mutateAsync\(\{\s*listingId:\s*parsedListingId,\s*startDate:/);
     expect(checkoutPage).not.toMatch(/createBookingMutation\.mutate\([\s\S]*?totalPrice/);
     expect(checkoutPage).not.toMatch(/name=["'](?:cardNumber|cvv|cardHolder)["']/i);
   });

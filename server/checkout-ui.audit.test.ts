@@ -6,25 +6,26 @@ const checkoutSource = readFileSync(
   "utf8",
 );
 
-describe("Checkout simulated CMI UI audit", () => {
-  it("communicates that the payment gateway is simulated and does not collect real card data", () => {
-    expect(checkoutSource).toContain("بوابة دفع مغربية محاكية");
-    expect(checkoutSource).toContain("لا تدخل رقم بطاقة أو رمز CVV حقيقياً");
-    expect(checkoutSource).toContain("لا نخزن بيانات البطاقة");
-    expect(checkoutSource).toContain("لا تتصل بمؤسسة CMI");
+describe("Checkout WhatsApp-handoff UI audit", () => {
+  it("never collects real card data — booking is confirmed via WhatsApp", () => {
+    expect(checkoutSource).not.toMatch(/name=["'](?:cardNumber|cvv|cardHolder)["']/i);
+    expect(checkoutSource).toContain("لا حاجة إلى بطاقة دفع");
+    expect(checkoutSource).toContain("تأكيد الحجز عبر الواتساب");
+    expect(checkoutSource).toContain("راجعها ثم أرسلها لتأكيد الحجز مباشرة");
   });
 
-  it("keeps the supported payment choices visible in the checkout flow", () => {
-    expect(checkoutSource).toContain("Visa / Mastercard / CMI");
-    expect(checkoutSource).toContain("التحويل البنكي المباشر (RIB)");
-    expect(checkoutSource).toContain("paymentMethod === 'cmi_card'");
-    expect(checkoutSource).toContain("paymentMethod === 'bank_transfer'");
+  it("keeps the mandatory document upload and residency choices visible in the booking flow", () => {
+    expect(checkoutSource).toContain("التحقق الإلزامي من الوثائق");
+    expect(checkoutSource).toContain("حالة الإقامة");
+    expect(checkoutSource).toContain("بطاقة التعريف الوطنية (CIN)");
+    expect(checkoutSource).toContain("رخصة السياقة (البيرمي)");
+    expect(checkoutSource).toContain("لن يُفتح زر تأكيد الحجز عبر الواتساب إلا بعد إرفاق كامل الوثائق المطلوبة");
   });
 
   it("includes responsive trust and order-summary landmarks", () => {
-    expect(checkoutSource).toContain("ALTUSplace Secure Checkout");
-    expect(checkoutSource).toContain("جلسة دفع محمية");
     expect(checkoutSource).toContain("ملخص الفاتورة الشفافة");
+    expect(checkoutSource).toContain("بدون رسوم خفية");
+    expect(checkoutSource).toContain("محمية ومشفّرة");
     expect(checkoutSource).toContain("md:sticky md:top-6");
   });
 });

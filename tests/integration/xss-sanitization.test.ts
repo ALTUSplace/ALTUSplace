@@ -13,7 +13,7 @@ describe("XSS sanitization - sanitizeTrpcInput", () => {
     const input = { value: '<img src=x onerror="alert(1)">' };
     const result = sanitizeTrpcInput(input) as { value: string };
     expect(result.value).not.toContain("<img");
-    expect(result.value).not.toContain("onerror");
+    expect(result.value).toContain("&lt;img");
   });
 
   it("leaves numbers unchanged", () => {
@@ -99,7 +99,7 @@ describe("XSS sanitization - sanitizeTrpcInput", () => {
     const result = sanitizeTrpcInput(input) as { value: string };
     expect(result.value).not.toContain("<");
     expect(result.value).not.toContain(">");
-    expect(result.value).not.toContain("&");
+    expect(result.value).toBe("&lt;&gt;&amp;&quot;&#x27;");
   });
 
   it("preserves non-HTML content", () => {

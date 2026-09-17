@@ -37,7 +37,7 @@ describe("kyc document requirements", () => {
   });
 
   it("masks document numbers to their last four characters", () => {
-    expect(maskDocumentNumber("AB123456")).toBe("**123456");
+    expect(maskDocumentNumber("AB123456")).toBe("****3456");
     expect(maskDocumentNumber("  X987654321 ")).toBe("******4321");
     expect(maskDocumentNumber("AB12")).toBe("**AB12");
     expect(maskDocumentNumber(null)).toBeNull();

@@ -19,6 +19,9 @@ function fakeDb(rows: Array<{ documentType?: string; expiryDate?: Date | null } 
         where: () => local,
         orderBy: () => local,
         limit: () => Promise.resolve(rows),
+        // Make the chain awaitable like a real drizzle query builder.
+        then: (onFulfilled: (value: typeof rows) => unknown, onRejected?: (reason: unknown) => unknown) =>
+          Promise.resolve(rows).then(onFulfilled, onRejected),
       };
       return local;
     },
@@ -90,7 +93,7 @@ describe("kyc booking eligibility", () => {
   it("returns an aggregated status payload", async () => {
     const payload = await getKycStatusPayload({ db: fakeDb([cniRow]), userId: 7 });
     expect(payload.status).toBe("unverified");
-    expect(payload.approvedDocumentTypes).toEqual([]);
+    expect(payload.approvedDocumentTypes).toEqual(["cni"]);
     expect(payload.requiredDocuments.car).toEqual(["driving_license"]);
   });
 });

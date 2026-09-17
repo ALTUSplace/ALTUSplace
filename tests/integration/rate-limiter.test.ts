@@ -13,7 +13,7 @@ describe("rate limiter", () => {
       namespace: "test:allows",
     });
 
-    const mockReq = { ip: "127.0.0.1", method: "GET", path: "/api/test" } as any;
+    const mockReq = { ip: "127.0.0.1", method: "GET", path: "/api/test", headers: {} } as any;
     const mockRes = {
       status: function () { return this; },
       json: function () { return this; },
@@ -36,7 +36,7 @@ describe("rate limiter", () => {
       namespace: "test:blocks",
     });
 
-    const mockReq = { ip: "127.0.0.2", method: "GET", path: "/api/test" } as any;
+    const mockReq = { ip: "127.0.0.2", method: "GET", path: "/api/test", headers: {} } as any;
     const mockRes = {
       status: function () { return this; },
       json: function () { return this; },
@@ -70,7 +70,7 @@ describe("rate limiter", () => {
       namespace: "test:options",
     });
 
-    const mockReq = { ip: "127.0.0.3", method: "OPTIONS", path: "/api/test" } as any;
+    const mockReq = { ip: "127.0.0.3", method: "OPTIONS", path: "/api/test", headers: {} } as any;
     const mockRes = {
       status: function () { return this; },
       json: function () { return this; },
@@ -92,7 +92,7 @@ describe("rate limiter", () => {
       namespace: "test:health",
     });
 
-    const mockReq = { ip: "127.0.0.4", method: "GET", path: "/api/health" } as any;
+    const mockReq = { ip: "127.0.0.4", method: "GET", path: "/api/health", headers: {} } as any;
     const mockRes = {
       status: function () { return this; },
       json: function () { return this; },
@@ -121,7 +121,7 @@ describe("rate limiter", () => {
     } as any;
 
     // IP 1 uses its quota
-    const req1 = { ip: "10.0.0.1", method: "GET", path: "/api/test" } as any;
+    const req1 = { ip: "10.0.0.1", method: "GET", path: "/api/test", headers: {} } as any;
     for (let i = 0; i < 2; i++) {
       let nextCalled = false;
       limiter(req1, mockRes, () => { nextCalled = true; });
@@ -133,7 +133,7 @@ describe("rate limiter", () => {
     expect(nextCalled).toBe(false);
 
     // IP 2 should still be allowed
-    const req2 = { ip: "10.0.0.2", method: "GET", path: "/api/test" } as any;
+    const req2 = { ip: "10.0.0.2", method: "GET", path: "/api/test", headers: {} } as any;
     let nextCalled2 = false;
     limiter(req2, mockRes, () => { nextCalled2 = true; });
     expect(nextCalled2).toBe(true);
@@ -147,7 +147,7 @@ describe("rate limiter", () => {
     });
 
     const headers: Record<string, string> = {};
-    const mockReq = { ip: "127.0.0.5", method: "GET", path: "/api/test" } as any;
+    const mockReq = { ip: "127.0.0.5", method: "GET", path: "/api/test", headers: {} } as any;
     const mockRes = {
       status: function () { return this; },
       json: function () { return this; },

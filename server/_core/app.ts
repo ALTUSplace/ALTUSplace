@@ -17,7 +17,11 @@ import { registerStorageProxy } from "./storageProxy";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { leaseEndReminderHandler } from "../leaseReminder";
-import { icalExportHandler, icalSyncHandler } from "../ical";
+import { icalExportHandler, icalSyncHandler as scheduledIcalSyncHandler } from "../ical";
+import { verifyCron } from "../middleware/cronAuth";
+import { icalSyncHandler } from "../cron/icalSync";
+import { leaseRemindersHandler } from "../cron/leaseReminders";
+import { demoCleanupHandler } from "../cron/demoCleanup";
 import { logger } from "./logger";
 
 /**
@@ -125,7 +129,11 @@ export function createApp() {
   registerDirectAuthRoutes(app);
   // tRPC API
   app.post("/api/scheduled/lease-end-reminder", leaseEndReminderHandler);
-  app.post("/api/scheduled/ical-sync", icalSyncHandler);
+  app.post("/api/scheduled/ical-sync", scheduledIcalSyncHandler);
+  // Vercel Cron endpoints — guarded by verifyCron (x-vercel-cron header or CRON_SECRET bearer).
+  app.post("/api/cron/ical-sync", verifyCron, icalSyncHandler);
+  app.post("/api/cron/lease-reminders", verifyCron, leaseRemindersHandler);
+  app.post("/api/cron/demo-cleanup", verifyCron, demoCleanupHandler);
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok", timestamp: new Date().toISOString() });
   });

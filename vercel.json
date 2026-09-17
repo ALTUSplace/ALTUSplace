@@ -1,6 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "pnpm build",
+  "installCommand": "pnpm install",
+  "buildCommand": "pnpm install && pnpm build",
   "outputDirectory": "dist/public",
   "crons": [
     {
@@ -51,7 +52,7 @@
       "headers": [
         {
           "key": "Cache-Control",
-          "value": "no-store"
+          "value": "no-store, must-revalidate"
         },
         {
           "key": "X-Robots-Tag",
@@ -69,7 +70,7 @@
       ]
     },
     {
-      "source": "/(.*)\\.(?:jpg|jpeg|png|gif|webp|avif|svg|ico)",
+      "source": "/(.*\\.(?:png|jpg|jpeg|webp|avif|svg|ico))",
       "headers": [
         {
           "key": "Cache-Control",
