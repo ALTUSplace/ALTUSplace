@@ -33,7 +33,7 @@ export default function HostDashboard() {
   const setAvailability = trpc.listings.setAvailability.useMutation({ onSuccess: () => { listings.refetch(); toast.success("تم تحديث تقويم التوفر"); }, onError: (error) => toast.error(error.message) });
   const saveIcal = trpc.listings.saveIcalSettings.useMutation({ onSuccess: async () => { await listings.refetch(); toast.success("تم حفظ إعدادات iCal"); }, onError: (error) => toast.error(error.message) });
   const syncIcal = trpc.listings.syncIcalNow.useMutation({ onSuccess: async (result) => { await listings.refetch(); toast.success(result.synced ? `تم استيراد ${result.count ?? 0} فترة من التقويم` : "لا يوجد رابط iCal مضبوط"); }, onError: (error) => toast.error(error.message) });
-  const financials = trpc.admin.ownerFinancials.useQuery(undefined, { enabled: !!user && (user.role === "owner" || user.role === "admin") });
+  const financials = trpc.admin.ownerFinancials.useQuery(undefined, { enabled: !!user && (user.role === "owner" || user.role === "admin" || user.role === "partner") });
   const requestPayout = trpc.payouts.request.useMutation({ onSuccess: async () => { toast.success("تم إرسال طلب السحب للمراجعة"); await financials.refetch(); setPayoutAmount(""); }, onError: (error) => toast.error(error.message) });
 
   const [form, setForm] = useState({ title: "", city: "الدار البيضاء", officeType: "office", rentalPeriod: "monthly", price: "", description: "", amenities: [] as string[], imageUrl: "", imageVerificationProof: "" });
@@ -92,7 +92,7 @@ export default function HostDashboard() {
 
   if (loading) return <div className="container py-24 text-center">جاري تحميل لوحة المالك...</div>;
   if (!user) return <div className="container py-24 text-center">يرجى تسجيل الدخول للوصول إلى لوحة المالك.</div>;
-  if (user.role !== "owner" && user.role !== "admin" && user.role !== "SUPER_ADMIN") return <Redirect to="/become-agency" />;
+  if (user.role !== "owner" && user.role !== "admin" && user.role !== "partner" && user.role !== "SUPER_ADMIN") return <Redirect to="/become-agency" />;
 
   const submit = (event: React.FormEvent) => {
     event.preventDefault();

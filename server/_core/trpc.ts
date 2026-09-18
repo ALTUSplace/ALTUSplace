@@ -54,7 +54,7 @@ export const protectedProcedure = t.procedure.use(sanitizeInputMiddleware).use(r
 export const ownerProcedure = protectedProcedure.use(
   t.middleware(async opts => {
     const { ctx, next } = opts;
-    if (!['owner', 'admin', 'SUPER_ADMIN'].includes(ctx.user!.role)) {
+    if (!['owner', 'admin', 'partner', 'SUPER_ADMIN'].includes(ctx.user!.role)) {
       throw new TRPCError({ code: 'FORBIDDEN', message: 'هذه العملية مخصصة للملاك.' });
     }
     return next({ ctx: { ...ctx, user: ctx.user } });

@@ -75,7 +75,7 @@ export default function AgencySettings() {
   if (!user) {
     return <div className="container grid min-h-[50vh] place-items-center p-6 text-center" dir="rtl"><p>يرجى تسجيل الدخول للوصول إلى إعدادات الوكالة.</p></div>;
   }
-  if (user.role !== "owner" && user.role !== "admin") {
+  if (user.role !== "owner" && user.role !== "admin" && user.role !== "partner") {
     return <div className="container grid min-h-[50vh] place-items-center p-6 text-center" dir="rtl"><p>هذه الصفحة مخصصة لأصحاب الوكالات.</p></div>;
   }
 

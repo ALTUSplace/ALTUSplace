@@ -1,6 +1,6 @@
 import { boolean, doublePrecision, index, integer, jsonb, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid, varchar } from "drizzle-orm/pg-core";
 
-export const userRoleEnum = pgEnum("user_role", ["renter", "owner", "admin", "user", "SUPER_ADMIN"]);
+export const userRoleEnum = pgEnum("user_role", ["renter", "owner", "admin", "partner", "user", "SUPER_ADMIN"]);
 export const vendorTierEnum = pgEnum("vendor_tier", ["bronze", "silver", "gold"]);
 export const accountStatusEnum = pgEnum("account_status", ["active", "suspended", "banned"]);
 export const listingStatusEnum = pgEnum("listing_status", ["Pending", "Approved", "Available", "Rented", "Rejected", "Published", "Maintenance"]);
@@ -48,6 +48,8 @@ export const users = pgTable("users", {
   agencyHours: text("agency_hours"),
   loginMethod: varchar("loginMethod", { length: 64 }),
   passwordHash: varchar("passwordHash", { length: 255 }),
+  passwordSalt: text("password_salt"),
+  agencyCity: varchar("agency_city", { length: 120 }),
   role: userRoleEnum("role").default("user").notNull(),
   vendorTier: vendorTierEnum("vendor_tier").default("bronze").notNull(), // commission tier: Bronze | Silver | Gold
   stripeAccountId: varchar("stripe_account_id", { length: 120 }), // Stripe Connect express account for vendor payouts

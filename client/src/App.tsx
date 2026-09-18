@@ -76,7 +76,7 @@ function AccessGuard({ area, children }: { area: 'admin' | 'superadmin' | 'host'
     ? user.role === 'admin' || user.role === 'SUPER_ADMIN'
     : area === 'superadmin'
       ? user.role === 'SUPER_ADMIN'
-      : user.role === 'owner' || user.role === 'admin' || user.role === 'SUPER_ADMIN';
+      : user.role === 'owner' || user.role === 'admin' || user.role === 'partner' || user.role === 'SUPER_ADMIN';
   if (!allowed) return <div className="min-h-[50vh] flex flex-col items-center justify-center gap-3 p-6 text-center"><h1 className="text-2xl font-bold">{t("forbiddenTitle")}</h1><p className="text-muted-foreground">{t("forbiddenDesc")}</p></div>;
   return <>{children}</>;
 }

@@ -126,7 +126,7 @@ export const appRouter = router({
       .mutation(async ({ ctx, input }) => {
         const db = await getDb();
         if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "قاعدة البيانات غير متاحة." });
-        if (['owner', 'admin', 'SUPER_ADMIN'].includes(ctx.user!.role)) {
+        if (['owner', 'admin', 'partner', 'SUPER_ADMIN'].includes(ctx.user!.role)) {
           throw new TRPCError({ code: "CONFLICT", message: "أنت مسجل بالفعل كوكالة تأجير أو مشرف." });
         }
         const beforeRole = ctx.user!.role;
@@ -761,7 +761,7 @@ export const appRouter = router({
         return { success: true as const };
       }),
     updateUserRole: adminProcedure
-      .input(z.object({ userId: z.number().int().positive(), role: z.enum(['renter', 'owner', 'admin', 'user', 'SUPER_ADMIN']) }))
+      .input(z.object({ userId: z.number().int().positive(), role: z.enum(['renter', 'owner', 'admin', 'partner', 'user', 'SUPER_ADMIN']) }))
       .mutation(async ({ ctx, input }) => {
         const db = await getDb();
         if (!db) throw new Error('Database unavailable');
@@ -1218,7 +1218,7 @@ export const appRouter = router({
       users: superAdminProcedure
         .input(z.object({
           q: z.string().trim().max(120).optional(),
-          role: z.enum(['renter', 'owner', 'admin', 'user', 'SUPER_ADMIN']).nullable().optional(),
+          role: z.enum(['renter', 'owner', 'admin', 'partner', 'user', 'SUPER_ADMIN']).nullable().optional(),
           status: z.enum(['active', 'suspended', 'banned']).nullable().optional(),
           limit: z.number().int().min(1).max(500).optional(),
         }))
@@ -1243,7 +1243,7 @@ export const appRouter = router({
             .orderBy(desc(users.createdAt)).limit(limit);
         }),
       setUserRole: superAdminProcedure
-        .input(z.object({ userId: z.number().int().positive(), role: z.enum(['renter', 'owner', 'admin', 'user', 'SUPER_ADMIN']) }))
+        .input(z.object({ userId: z.number().int().positive(), role: z.enum(['renter', 'owner', 'admin', 'partner', 'user', 'SUPER_ADMIN']) }))
         .mutation(async ({ ctx, input }) => {
           const db = await getDb();
           if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'قاعدة البيانات غير متاحة.' });
@@ -1946,7 +1946,7 @@ export const appRouter = router({
     mine: ownerProcedure.query(async ({ ctx }) => {
       const db = await getDb();
       if (!db) return [];
-      if (!['owner', 'admin'].includes(ctx.user!.role)) throw new Error('هذه الصفحة مخصصة للملاك.');
+      if (!['owner', 'admin', 'partner'].includes(ctx.user!.role)) throw new Error('هذه الصفحة مخصصة للملاك.');
       return db.select().from(listings).where(eq(listings.ownerId, ctx.user!.id)).orderBy(desc(listings.createdAt));
     }),
   }),
@@ -2215,7 +2215,7 @@ export const appRouter = router({
     ownerList: ownerProcedure.query(async ({ ctx }) => {
       const db = await getDb();
       if (!db) return [];
-      if (!['owner', 'admin'].includes(ctx.user!.role)) throw new Error('هذه العملية مخصصة للملاك.');
+      if (!['owner', 'admin', 'partner'].includes(ctx.user!.role)) throw new Error('هذه العملية مخصصة للملاك.');
       const rows = await db.select({
         id: bookings.id,
         renterId: bookings.renterId,
@@ -2253,7 +2253,7 @@ export const appRouter = router({
       .mutation(async ({ ctx, input }) => {
         const db = await getDb();
         if (!db) throw new Error('Database unavailable');
-        if (!['owner', 'admin'].includes(ctx.user!.role)) throw new Error('هذه العملية مخصصة للملاك.');
+        if (!['owner', 'admin', 'partner'].includes(ctx.user!.role)) throw new Error('هذه العملية مخصصة للملاك.');
         const owned = await db.select({ id: bookings.id }).from(bookings)
           .innerJoin(listings, eq(bookings.listingId, listings.id))
           .where(and(eq(bookings.id, input.bookingId), eq(listings.ownerId, ctx.user!.id)))

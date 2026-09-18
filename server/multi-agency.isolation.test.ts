@@ -10,7 +10,7 @@ describe("multi-agency isolation audit", () => {
   it("keeps a distinct owner (agency) role separate from renters in the schema", () => {
     const schema = read("drizzle/schema.ts");
     expect(schema).toMatch(/pgTable\("users"/);
-    expect(schema).toContain('pgEnum("user_role", ["renter", "owner", "admin", "user", "SUPER_ADMIN"])');
+    expect(schema).toContain('pgEnum("user_role", ["renter", "owner", "admin", "partner", "user", "SUPER_ADMIN"])');
     expect(schema).toContain("ownerId: integer(\"owner_id\")");
     expect(schema).toMatch(/agencyName: varchar\("agency_name"/);
   });

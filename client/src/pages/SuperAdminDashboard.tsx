@@ -27,6 +27,7 @@ const NAV: Array<{ key: Section; label: string; icon: typeof Gauge }> = [
 const ROLE_OPTIONS: Array<{ value: string; label: string }> = [
   { value: 'renter', label: 'مستأجر' },
   { value: 'owner', label: 'شريك/وكيل' },
+  { value: 'partner', label: 'شريك' },
   { value: 'admin', label: 'إدارة' },
   { value: 'user', label: 'مستخدم' },
   { value: 'SUPER_ADMIN', label: 'إدارة عليا' },
@@ -70,7 +71,7 @@ export default function SuperAdminDashboard() {
   const users = trpc.admin.super.users.useQuery(
     {
       q: userQuery.trim() || undefined,
-      role: (userRole || null) as 'renter' | 'owner' | 'admin' | 'user' | 'SUPER_ADMIN' | null,
+      role: (userRole || null) as 'renter' | 'owner' | 'admin' | 'partner' | 'user' | 'SUPER_ADMIN' | null,
       status: (userStatus || null) as 'active' | 'suspended' | 'banned' | null,
     },
     {
@@ -468,7 +469,7 @@ function UsersSection({ rows, loading, query, onQuery, role, onRole, status, onS
   onRole: (value: string) => void;
   status: string;
   onStatus: (value: string) => void;
-  onSetRole: (userId: number, role: 'renter' | 'owner' | 'admin' | 'user' | 'SUPER_ADMIN') => void;
+  onSetRole: (userId: number, role: 'renter' | 'owner' | 'admin' | 'partner' | 'user' | 'SUPER_ADMIN') => void;
   onSetStatus: (userId: number, status: 'active' | 'suspended' | 'banned') => void;
 }) {
   return (
@@ -545,7 +546,7 @@ function UsersSection({ rows, loading, query, onQuery, role, onRole, status, onS
                     </Badge>
                     <select
                       value={u.role}
-                      onChange={(e) => onSetRole(u.id, e.target.value as 'renter' | 'owner' | 'admin' | 'user' | 'SUPER_ADMIN')}
+                      onChange={(e) => onSetRole(u.id, e.target.value as 'renter' | 'owner' | 'admin' | 'partner' | 'user' | 'SUPER_ADMIN')}
                       className="rounded-lg border border-slate-700 dark:border-[#48484D] bg-slate-900 dark:bg-[#1C1C1E] px-2 py-1.5 text-xs text-slate-200 dark:text-[#E8E8EB]"
                       title="تغيير الدور"
                     >

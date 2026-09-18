@@ -736,7 +736,7 @@ export default function AgencyDashboard() {
     [cars],
   );
 
-  const isOwner = user?.role === "owner" || user?.role === "admin" || user?.role === "SUPER_ADMIN";
+  const isOwner = user?.role === "owner" || user?.role === "admin" || user?.role === "partner" || user?.role === "SUPER_ADMIN";
   if (user && !isOwner) {
     return (
       <div className="container py-24 text-center space-y-4">
