@@ -33,7 +33,10 @@ function fileToBase64(file: File): Promise<string> {
 }
 
 export default function AgencySettings() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading } = useAuth({
+    redirectOnUnauthenticated: true,
+    redirectPath: "/become-agency",
+  });
   const fileRef = useRef<HTMLInputElement>(null);
   const settingsQuery = trpc.agency.settings.useQuery(undefined, { enabled: !!user });
   const updateSettings = trpc.agency.updateSettings.useMutation({
@@ -51,6 +54,18 @@ export default function AgencySettings() {
     onError: (error) => toast.error(error.message),
   });
   const [form, setForm] = useState<AgencyForm>(initialForm);
+  const [settingsLoadTimedOut, setSettingsLoadTimedOut] = useState(false);
+
+  // If the agency settings fetch never settles, stop the spinner and let the
+  // user retry instead of leaving the page loading forever.
+  useEffect(() => {
+    if (!settingsQuery.isLoading) {
+      setSettingsLoadTimedOut(false);
+      return;
+    }
+    const timer = setTimeout(() => setSettingsLoadTimedOut(true), 15_000);
+    return () => clearTimeout(timer);
+  }, [settingsQuery.isLoading]);
 
   useEffect(() => {
     const data = settingsQuery.data;
@@ -69,14 +84,24 @@ export default function AgencySettings() {
     });
   }, [settingsQuery.data]);
 
-  if (authLoading || (user && settingsQuery.isLoading)) {
+  if (authLoading) {
     return <div className="container grid min-h-[50vh] place-items-center" dir="rtl">جاري تحميل إعدادات الوكالة...</div>;
   }
   if (!user) {
-    return <div className="container grid min-h-[50vh] place-items-center p-6 text-center" dir="rtl"><p>يرجى تسجيل الدخول للوصول إلى إعدادات الوكالة.</p></div>;
+    // Unauthenticated visitors are auto-redirected to /become-agency by useAuth;
+    // this is only a fallback while the redirect navigates.
+    return <div className="container grid min-h-[50vh] place-items-center p-6 text-center" dir="rtl"><p>يرجى تسجيل الدخول للوصول إلى إعدادات الوكالة.</p><Link href="/become-agency" className="mt-4"><Button className="bg-[var(--brand-amber)] text-white">إنشاء حساب وكالة</Button></Link></div>;
   }
   if (user.role !== "owner" && user.role !== "admin" && user.role !== "partner") {
-    return <div className="container grid min-h-[50vh] place-items-center p-6 text-center" dir="rtl"><p>هذه الصفحة مخصصة لأصحاب الوكالات.</p></div>;
+    return <div className="container grid min-h-[50vh] place-items-center p-6 text-center" dir="rtl"><p>هذه الصفحة مخصصة لأصحاب الوكالات.</p><Link href="/become-agency" className="mt-4"><Button className="bg-[var(--brand-amber)] text-white">إنشاء حساب وكالة</Button></Link></div>;
+  }
+  if (settingsQuery.isLoading && !settingsLoadTimedOut) {
+    return <div className="container grid min-h-[50vh] place-items-center" dir="rtl">جاري تحميل إعدادات الوكالة...</div>;
+  }
+  if (settingsQuery.isError || settingsLoadTimedOut) {
+    return <div className="container grid min-h-[50vh] place-items-center p-6 text-center" dir="rtl">
+      <div className="space-y-3"><p className="font-bold">تعذر تحميل إعدادات الوكالة.</p><p className="text-sm text-muted-foreground">تحقق من اتصالك بالإنترنت ثم أعد المحاولة.</p><Button onClick={() => { setSettingsLoadTimedOut(false); settingsQuery.refetch(); }}>إعادة المحاولة</Button></div>
+    </div>;
   }
 
   const updateField = (field: keyof AgencyForm, value: string) => setForm((current) => ({ ...current, [field]: value }));
