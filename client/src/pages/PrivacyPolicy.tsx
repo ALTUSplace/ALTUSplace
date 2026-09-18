@@ -21,7 +21,10 @@ const sections = [
   },
 ];
 
+import { useSEO } from "@/lib/seo";
+
 export default function PrivacyPolicy() {
+  useSEO({ title: "سياسة الخصوصية | ALTUSplace", description: "كيفية جمع ومعالجة بياناتك الشخصية في ALTUSplace وحماية معلوماتك عند كراء السيارات والعقارات بالمغرب.", path: "/privacy" });
   const { direction } = useLanguage();
   return (
     <div className="b2-page-shell" dir={direction}>

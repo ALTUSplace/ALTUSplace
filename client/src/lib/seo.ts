@@ -160,3 +160,13 @@ export function renderJsonLd<T extends JsonLdEntry>(id: string, entry: T): void 
   script.textContent = JSON.stringify(entry);
   document.head.appendChild(script);
 }
+
+/**
+ * Marks a page as private for search engines. Used on auth funnels and
+ * dashboard areas that must never be indexed.
+ */
+export function useNoIndex(): void {
+  if (typeof document === "undefined") return;
+  upsertMeta("name", "robots", "noindex, follow");
+  upsertMeta("property", "og:robots", "noindex, follow");
+}

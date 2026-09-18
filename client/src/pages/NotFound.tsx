@@ -3,7 +3,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { AlertCircle, Home } from "lucide-react";
 import { useLocation } from "wouter";
 
+import { useSEO } from "@/lib/seo";
+
 export default function NotFound() {
+  useSEO({ title: "الصفحة غير موجودة | ALTUSplace", description: "الصفحة التي تبحث عنها غير موجودة.", path: "/", robots: "noindex, follow" });
   const [, setLocation] = useLocation();
 
   const handleGoHome = () => {

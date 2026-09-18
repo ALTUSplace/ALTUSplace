@@ -26,7 +26,10 @@ const statusLabel: Record<TicketStatus, string> = {
 const formatDate = (value: Date | string) =>
   new Intl.DateTimeFormat('ar-MA', { dateStyle: 'medium' }).format(new Date(value));
 
+import { useNoIndex } from "@/lib/seo";
+
 export default function SupportTickets() {
+  useNoIndex();
   const { direction } = useLanguage();
   const utils = trpc.useUtils();
   const ticketsQuery = trpc.supportTickets.list.useQuery();

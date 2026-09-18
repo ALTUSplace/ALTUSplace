@@ -8,7 +8,7 @@ import { trpc } from '@/lib/trpc';
 import { LISTINGS } from '@/data/altusplace';
 import { OptimizedImage } from '@/components/OptimizedImage';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useSEO } from '@/lib/seo';
+import { useSEO, SITE_URL } from '@/lib/seo';
 import { BABY_SEAT_FEE_PER_DAY, calculateRentalDays, calculateRentalSubtotal, INSURANCE_FEE_PER_DAY } from '@/lib/pricing';
 import { RENTAL_TERMS } from '@/lib/rentalTerms';
 import CommentSection from '@/components/CommentSection';
@@ -197,7 +197,7 @@ export default function CarDetails() {
     "@context": "https://schema.org",
     "@type": "Product",
     "name": `${car.brand} ${car.name}`,
-    "image": [car.image],
+    "image": galleryImages,
     "description": car.features ? car.features.join(', ') : `سيارة ${car.name} للإيجار في ${car.cityName} بسعر ${car.pricePerDay} درهم يومياً.`,
     "brand": {
       "@type": "Brand",
@@ -210,6 +210,25 @@ export default function CarDetails() {
       "availability": "https://schema.org/InStock",
       "areaServed": car.cityName
     },
+    ...(reviews.length > 0
+      ? {
+          "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": Number(summary.average) || 0,
+            "reviewCount": reviews.length,
+          },
+        }
+      : {}),
+  };
+
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "ALTUSplace", "item": SITE_URL },
+      { "@type": "ListItem", "position": 2, "name": "سيارات للكراء في المغرب", "item": `${SITE_URL}/search` },
+      { "@type": "ListItem", "position": 3, "name": `${car.brand} ${car.name}`, "item": `${SITE_URL}/car/${car.id}` },
+    ],
   };
 
   return (
@@ -217,6 +236,10 @@ export default function CarDetails() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(carSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
       <div className="container mx-auto px-4 space-y-8">
         

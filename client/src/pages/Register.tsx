@@ -7,7 +7,10 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { startLogin } from "@/const";
 import { legalDisclosure, persistLegalConsent } from "@/lib/legalDisclosure";
 
+import { useSEO } from "@/lib/seo";
+
 export default function Register() {
+  useSEO({ title: "إنشاء حساب | ALTUSplace", description: "أنشئ حسابك على ALTUSplace لكراء أو عرض السيارات والعقارات في المغرب.", path: "/register", robots: "noindex, follow" });
   const [, setLocation] = useLocation();
   const { language, direction, t } = useLanguage();
   const [accepted, setAccepted] = useState(false);

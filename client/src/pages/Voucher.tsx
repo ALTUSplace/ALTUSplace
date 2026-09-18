@@ -8,7 +8,10 @@ import { toast } from 'sonner';
 import { OptimizedImage } from '@/components/OptimizedImage';
 import { buildWhatsAppUrl } from '@/lib/whatsapp';
 
+import { useNoIndex } from "@/lib/seo";
+
 export default function VoucherPage() {
+  useNoIndex();
   const { code = '' } = useParams<{ code: string }>();
   const [, setLocation] = useLocation();
   const voucherQuery = trpc.vouchers.getByCode.useQuery({ code }, { enabled: code.length >= 8, retry: false });

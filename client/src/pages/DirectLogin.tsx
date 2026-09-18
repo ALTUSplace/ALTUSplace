@@ -17,7 +17,10 @@ async function readJson(response: Response): Promise<{ configured?: boolean; rea
   }
 }
 
+import { useSEO } from "@/lib/seo";
+
 export default function DirectLogin() {
+  useSEO({ title: "تسجيل الدخول المباشر | ALTUSplace", description: "صفحة دخول مخصصة لشركاء ALTUSplace.", path: "/direct-login", robots: "noindex, follow" });
   const { direction, language } = useLanguage();
   const [mode, setMode] = useState<Mode>("loading");
   const [password, setPassword] = useState("");

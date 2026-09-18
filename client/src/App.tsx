@@ -14,6 +14,7 @@ import BreadcrumbNav from "./components/BreadcrumbNav";
 import { PageTransition } from "./components/PageTransition";
 import { lazy, Suspense } from "react";
 import { useAuth } from "./_core/hooks/useAuth";
+import { useNoIndex } from "@/lib/seo";
 import { startLogin } from "./const";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
@@ -67,6 +68,7 @@ function PageLoader() {
 function AccessGuard({ area, children }: { area: 'admin' | 'superadmin' | 'host'; children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const { t } = useLanguage();
+  useNoIndex();
   if (loading) return <div className="min-h-[50vh] flex items-center justify-center">{t("accessChecking")}</div>;
   if (!user) return <div className="min-h-[50vh] flex flex-col items-center justify-center gap-4 p-6 text-center"><h1 className="text-2xl font-bold">{t("loginRequired")}</h1><p className="text-muted-foreground">{t("loginRequiredDesc")}</p><Button onClick={() => startLogin()}>{t("loginAction")}</Button></div>;
   if (user.accountStatus && user.accountStatus !== 'active') return <div className="min-h-[50vh] flex flex-col items-center justify-center gap-3 p-6 text-center"><h1 className="text-2xl font-bold">{t("accountInactive")}</h1><p className="text-muted-foreground">{t("accountInactiveDesc")}</p></div>;

@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { trpc } from "@/lib/trpc";
 import { calculateRentalDays, calculateRentalSubtotal } from "@/lib/pricing";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useSEO } from "@/lib/seo";
+import { useSEO, SITE_URL } from "@/lib/seo";
 import { LISTINGS, type ListingItem } from "@/data/altusplace";
 import { toast } from "sonner";
 import { OptimizedImage } from "@/components/OptimizedImage";
@@ -247,6 +247,25 @@ export default function PropertyDetailWithVideo() {
     image: galleryImages.length ? galleryImages : [],
     address: { "@type": "PostalAddress", addressLocality: listing.city, addressCountry: "MA" },
     offers: { "@type": "Offer", priceCurrency: "MAD", price: safePrice, availability: "https://schema.org/InStock" },
+    ...(summary.count > 0
+      ? {
+          "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": Number(summary.average) || 0,
+            "reviewCount": summary.count,
+          },
+        }
+      : {}),
+  };
+
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "ALTUSplace", "item": SITE_URL },
+      { "@type": "ListItem", "position": 2, "name": "عقارات للكراء في المغرب", "item": `${SITE_URL}/search` },
+      { "@type": "ListItem", "position": 3, "name": listing.title, "item": `${SITE_URL}/property/${listing.id}` },
+    ],
   };
 
   const totalPrice = calculateRentalSubtotal(safePrice, daysCount) || safePrice * daysCount;
@@ -283,6 +302,7 @@ export default function PropertyDetailWithVideo() {
   return (
     <div className="min-h-screen bg-slate-50 py-6 sm:py-10 px-4 sm:px-6" dir={direction}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
       <div className="max-w-6xl mx-auto space-y-6">
         <div className="flex items-center justify-between gap-3">
           <Button variant="ghost" onClick={() => window.history.back()} className="gap-2 text-slate-600 px-0">

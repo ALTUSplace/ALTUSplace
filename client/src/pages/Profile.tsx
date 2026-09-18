@@ -25,7 +25,10 @@ const statusLabel: Record<string, string> = {
   Rejected: "مرفوض",
 };
 
+import { useNoIndex } from "@/lib/seo";
+
 export default function Profile() {
+  useNoIndex();
   const { user, loading: authLoading, isAuthenticated } = useAuth({ redirectOnUnauthenticated: true });
   const { theme, toggleTheme } = useTheme();
   const { direction } = useLanguage();

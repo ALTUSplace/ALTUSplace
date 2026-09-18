@@ -150,7 +150,10 @@ function readFileAsBase64(file: File): Promise<string> {
   });
 }
 
+import { useSEO } from "@/lib/seo";
+
 export default function CheckoutPage() {
+  useSEO({ title: "إتمام الحجز والدفع | ALTUSplace", description: "خطوة الدفع الآمنة عبر CMI لإكمال حجزك على ALTUSplace.", path: "/checkout", robots: "noindex, follow" });
   const [, setLocation] = useLocation();
   const searchString = useSearch();
   const searchParams = new URLSearchParams(searchString);

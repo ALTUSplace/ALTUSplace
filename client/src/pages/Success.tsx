@@ -9,7 +9,10 @@ import { cancellationRefundPolicy } from '@/lib/legalDisclosure';
 import { buildWhatsAppUrl } from '@/lib/whatsapp';
 import { PaymentStatusBadge, PaymentMethodBadge, TransactionReference } from '@/components/PaymentStatusBadge';
 
+import { useSEO } from "@/lib/seo";
+
 export default function Success() {
+  useSEO({ title: "تأكيد العملية | ALTUSplace", description: "ملخص عملية الحجز الناجحة على ALTUSplace.", path: "/success", robots: "noindex, follow" });
   const [, setLocation] = useLocation();
   const searchParams = new URLSearchParams(window.location.search);
   const bookingId = Number(searchParams.get('bookingId') || 0);

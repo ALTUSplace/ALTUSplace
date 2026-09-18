@@ -3,7 +3,10 @@ import { ShieldCheck, FileText, Lock, Scale, CheckCircle2, Globe } from 'lucide-
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
+import { useSEO } from "@/lib/seo";
+
 export default function TermsOfService() {
+  useSEO({ title: "شروط الاستخدام | ALTUSplace", description: "شروط وقواعد استخدام منصة ALTUSplace لكراء السيارات والعقارات في المغرب: الحجز، الدفع، الإلغاء والتعويضات.", path: "/terms" });
   const [lang, setLang] = useState<'ar' | 'fr'>('ar');
 
   return (

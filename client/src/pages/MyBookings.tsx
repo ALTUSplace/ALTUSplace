@@ -12,7 +12,10 @@ import { useAuth } from "@/_core/hooks/useAuth";
 const formatDate = (value: string | Date) => new Date(value).toLocaleDateString('fr-MA');
 const formatMoney = (value: number) => new Intl.NumberFormat('fr-MA').format(value);
 
+import { useNoIndex } from "@/lib/seo";
+
 export default function MyBookings() {
+  useNoIndex();
   const { direction } = useLanguage();
   const { isAuthenticated, loading: authLoading } = useAuth();
   const [, setLocation] = useLocation();

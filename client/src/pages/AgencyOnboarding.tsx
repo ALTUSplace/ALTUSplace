@@ -12,7 +12,10 @@ import { formatApiError, trpcErrorCode } from "@/lib/apiError";
 const AGENCY_NAME_MIN = 2;
 const AGENCY_NAME_MAX = 80;
 
+import { useSEO } from "@/lib/seo";
+
 export default function AgencyOnboarding() {
+  useSEO({ title: "سجّل وكالتك واربح من الكراء | ALTUSplace", description: "انضم إلى ALTUSplace كمالك أو وكالة واعرض سياراتك وعقاراتك للكراء في المغرب.", path: "/become-agency", canonicalPath: "/become-agency" });
   const { t } = useLanguage();
   const { user, loading, refresh } = useAuth();
   const [, setLocation] = useLocation();

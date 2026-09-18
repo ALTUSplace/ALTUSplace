@@ -8,7 +8,10 @@ import { OptimizedImage } from '@/components/OptimizedImage';
 import { readBrandPreference, writeBrandPreference } from '@/config/brand';
 import { useLanguage } from "@/contexts/LanguageContext";
 
+import { useNoIndex } from "@/lib/seo";
+
 export default function Favorites() {
+  useNoIndex();
   const { direction } = useLanguage();
   const [favorites, setFavorites] = useState<string[]>([]);
   const [filterType, setFilterType] = useState<'all' | 'car' | 'property'>('all');

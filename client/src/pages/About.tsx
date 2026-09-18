@@ -1,6 +1,9 @@
 import { Car, ShieldCheck, Award, Users } from 'lucide-react';
 
+import { useSEO } from "@/lib/seo";
+
 export default function About() {
+  useSEO({ title: "من نحن | ALTUSplace", description: "ALTUSplace منصة مغربية آمنة لكراء السيارات والشقق والفيلات بين المالكين والمستأجرين مع دفع آمن.", path: "/about" });
   return (
     <div className="min-h-screen bg-slate-900 dark:bg-[#1C1C1E] text-slate-100 dark:text-[#F1F1F3] py-16">
       <div className="container mx-auto px-4 max-w-4xl space-y-12">

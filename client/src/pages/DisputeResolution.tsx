@@ -56,7 +56,10 @@ function fileToBase64(file: File): Promise<string> {
   });
 }
 
+import { useSEO } from "@/lib/seo";
+
 export default function DisputeResolution() {
+  useSEO({ title: "حل النزاعات | ALTUSplace", description: "إجراءات تتبع وحل النزاعات بين الأطراف في منصة ALTUSplace بشكل عادل وشفاف.", path: "/dispute-resolution" });
   const { direction } = useLanguage();
   const utils = trpc.useUtils();
   const disputesQuery = trpc.disputes.listMine.useQuery();

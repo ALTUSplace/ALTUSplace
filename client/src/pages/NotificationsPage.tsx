@@ -17,7 +17,10 @@ function notificationTime(value: Date | string, language: Language) {
   });
 }
 
+import { useNoIndex } from "@/lib/seo";
+
 export default function NotificationsPage() {
+  useNoIndex();
   const { isAuthenticated } = useAuth();
   const { language, direction } = useLanguage();
   const [filter, setFilter] = useState<Filter>("all");
