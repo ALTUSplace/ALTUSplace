@@ -193,9 +193,9 @@ function daysBetween(start: string | Date, end: string | Date): number {
 function DocumentPreview({ src, mime, fileName }: { src: string; mime: string; fileName: string }) {
   const isImage = mime?.startsWith("image/");
   return (
-    <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-3 dark:border-slate-700 dark:bg-slate-900/50">
+    <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="flex items-center gap-2 text-sm font-bold text-slate-700 dark:text-slate-300" dir="ltr">
+        <p className="flex items-center gap-2 text-sm font-bold text-slate-700" dir="ltr">
           <FileText className="h-4 w-4 shrink-0 text-slate-400" />
           <span className="truncate">{fileName}</span>
         </p>
@@ -203,13 +203,13 @@ function DocumentPreview({ src, mime, fileName }: { src: string; mime: string; f
           href={src}
           target="_blank"
           rel="noreferrer"
-          className="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
+          className="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-100"
         >
           <Eye className="h-3.5 w-3.5" />
           فتح في نافذة جديدة
         </a>
       </div>
-      <div className="max-h-80 overflow-auto rounded-lg bg-white dark:bg-slate-950">
+      <div className="max-h-80 overflow-auto rounded-lg bg-white">
         {isImage ? (
           <img src={src} alt={fileName} className="mx-auto max-h-80 w-auto object-contain" />
         ) : (
@@ -315,7 +315,7 @@ function FinancialAnalytics({ bookings }: { bookings: OwnerBookingRow[] }) {
           </div>
           <div className="space-y-4">
             {breakdown.map((item) => (
-              <div key={item.key} className="rounded-2xl border border-slate-100 p-4 dark:border-slate-800">
+              <div key={item.key} className="rounded-2xl border border-slate-100 p-4">
                 <div className="flex items-center justify-between gap-2 text-sm">
                   <span className="font-bold">{item.label}</span>
                   <span className="text-muted-foreground">{money(item.value)}</span>
@@ -324,7 +324,7 @@ function FinancialAnalytics({ bookings }: { bookings: OwnerBookingRow[] }) {
                   <span>{item.count} حجز</span>
                   <span>· {item.pct}%</span>
                 </div>
-                <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-slate-100">
                   <div className={`h-full rounded-full ${item.color}`} style={{ width: `${item.pct}%` }} />
                 </div>
               </div>
@@ -442,10 +442,10 @@ function ScheduleCalendar({ bookings, cars }: { bookings: OwnerBookingRow[]; car
                     date.getDate() === today.getDate() && date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear();
                   return (
                     <div key={`h-${dayKey(date)}`} className="py-0.5 text-center">
-                      <div className={`text-[11px] font-black ${weekend(date) ? "text-slate-400 dark:text-slate-600" : "text-slate-600 dark:text-slate-300"}`}>
+                      <div className={`text-[11px] font-black ${weekend(date) ? "text-slate-400" : "text-slate-600"}`}>
                         {date.getDate()}
                       </div>
-                      <div className={`text-[8px] leading-tight ${isTodayHeader ? "font-bold text-[#0e5b52]" : "text-slate-300 dark:text-slate-600"}`}>
+                      <div className={`text-[8px] leading-tight ${isTodayHeader ? "font-bold text-[#0e5b52]" : "text-slate-300"}`}>
                         {WEEKDAY_SHORT[date.getDay()]}
                       </div>
                     </div>
@@ -462,11 +462,11 @@ function ScheduleCalendar({ bookings, cars }: { bookings: OwnerBookingRow[]; car
                       const slot = coverage.get(row.id)?.get(dayKey(date));
                       const isToday = dayKey(date) === dayKey(today);
                       const isWeekend = weekend(date);
-                      let cellClass = "bg-slate-50 text-slate-500 dark:bg-slate-900/60 dark:text-slate-400";
+                      let cellClass = "bg-slate-50 text-slate-500";
                       let titleText = "";
                       const isMaintenance = maintenanceIds.has(row.id);
                       if (isMaintenance) {
-                        cellClass = "bg-violet-200/80 text-violet-800 dark:bg-violet-900/50 dark:text-violet-200";
+                        cellClass = "bg-violet-200/80 text-violet-800";
                         titleText = "في الصيانة — الفترة محجوبة تلقائياً";
                       } else if (slot) {
                         const activeList = activeBookings.filter(
@@ -486,7 +486,7 @@ function ScheduleCalendar({ bookings, cars }: { bookings: OwnerBookingRow[]; car
                           cellClass = "bg-amber-400 text-white";
                         }
                       }
-                      if (isWeekend && !slot && !isMaintenance) cellClass = "bg-slate-100/60 text-slate-300 dark:bg-slate-800/60 dark:text-slate-600";
+                      if (isWeekend && !slot && !isMaintenance) cellClass = "bg-slate-100/60 text-slate-300";
                       if (isToday) cellClass += " ring-2 ring-inset ring-[#0e5b52]/60";
                       return (
                         <div
@@ -580,7 +580,7 @@ function ActivityLog({ items }: { items: ActivityItem[] }) {
             const meta = activityMeta[item.action] ?? { label: item.action, icon: Activity, cls: "bg-slate-100 text-slate-700" };
             const Icon = meta.icon;
             return (
-              <li key={item.id} className="flex items-start gap-3 rounded-2xl border border-slate-100 p-3 dark:border-slate-800">
+              <li key={item.id} className="flex items-start gap-3 rounded-2xl border border-slate-100 p-3">
                 <span className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${meta.cls}`}>
                   <Icon className="h-4 w-4" />
                 </span>
@@ -1020,7 +1020,7 @@ export default function AgencyDashboard() {
                   </thead>
                   <tbody className="divide-y">
                     {filtered.map((booking) => (
-                      <tr key={booking.id} className="align-middle hover:bg-slate-50 dark:hover:bg-slate-900/40">
+                      <tr key={booking.id} className="align-middle hover:bg-slate-50">
                         <td className="px-3 py-3 font-mono font-bold">BK-{booking.id}</td>
                         <td className="px-3 py-3">
                           <p className="font-bold">{booking.renterName ?? "مستأجر"}</p>
@@ -1030,7 +1030,7 @@ export default function AgencyDashboard() {
                             </p>
                           )}
                           {booking.flightNumber && (
-                            <p className="mt-1 inline-flex items-center gap-1 rounded-full border border-sky-300 bg-sky-50 px-2 py-0.5 text-[11px] font-semibold text-sky-800 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-300">
+                            <p className="mt-1 inline-flex items-center gap-1 rounded-full border border-sky-300 bg-sky-50 px-2 py-0.5 text-[11px] font-semibold text-sky-800">
                               <Plane className="h-3 w-3" />
                               {booking.flightNumber}
                               {booking.arrivalTime
@@ -1149,13 +1149,13 @@ export default function AgencyDashboard() {
                     {cars.map((car) => {
                       const status = toFleetStatus(car.status);
                       return (
-                        <tr key={car.id} className="align-middle hover:bg-slate-50 dark:hover:bg-slate-900/40">
+                        <tr key={car.id} className="align-middle hover:bg-slate-50">
                           <td className="px-3 py-3">
                             {car.imageUrl ? (
                               <img
                                 src={car.imageUrl}
                                 alt={car.title ?? `سيارة ${car.id}`}
-                                className="h-12 w-16 rounded-lg border border-slate-200 object-cover dark:border-slate-700"
+                                className="h-12 w-16 rounded-lg border border-slate-200 object-cover"
                               />
                             ) : (
                               <div className="flex h-12 w-16 items-center justify-center rounded-lg border border-dashed text-slate-300">
@@ -1276,14 +1276,14 @@ export default function AgencyDashboard() {
                     {properties.map((property) => {
                       const status = toFleetStatus(property.status);
                       return (
-                        <tr key={property.id} className="align-middle hover:bg-slate-50 dark:hover:bg-slate-900/40">
+                        <tr key={property.id} className="align-middle hover:bg-slate-50">
                           <td className="px-3 py-3">
                             <div className="flex items-center gap-3">
                               {property.imageUrl ? (
                                 <img
                                   src={property.imageUrl}
                                   alt={property.title ?? `عقار ${property.id}`}
-                                  className="h-12 w-16 rounded-lg border border-slate-200 object-cover dark:border-slate-700"
+                                  className="h-12 w-16 rounded-lg border border-slate-200 object-cover"
                                 />
                               ) : (
                                 <div className="flex h-12 w-16 items-center justify-center rounded-lg border border-dashed text-slate-300">
@@ -1378,7 +1378,7 @@ export default function AgencyDashboard() {
               </p>
 
               {docBooking.flightNumber && (
-                <div className="flex flex-wrap items-center gap-2 rounded-xl border border-sky-200 bg-sky-50 p-3 text-xs text-sky-800 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-300">
+                <div className="flex flex-wrap items-center gap-2 rounded-xl border border-sky-200 bg-sky-50 p-3 text-xs text-sky-800">
                   <Plane className="h-4 w-4" />
                   <span className="font-bold">استلام من المطار:</span>
                   <span className="font-mono font-bold" dir="ltr">{docBooking.flightNumber}</span>
@@ -1414,7 +1414,7 @@ export default function AgencyDashboard() {
               )}
 
               {docBooking.status === "Pending" && (
-                <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs leading-relaxed text-amber-800 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-300">
+                <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs leading-relaxed text-amber-800">
                   <p className="font-bold">التحقق قبل التسليم</p>
                   <p className="mt-1">
                     تأكد من تطابق الاسم والصورة في البيرمي مع وثيقة الهوية (CIN للمقيمين / جواز السفر للأجانب) قبل تأكيد
@@ -1524,7 +1524,7 @@ export default function AgencyDashboard() {
 
             {editingCar ? (
               <div className="space-y-3">
-                <div className="flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-muted-foreground dark:border-slate-700 dark:bg-slate-900/40">
+                <div className="flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-muted-foreground">
                   <Car className="h-4 w-4" />
                   الصورة الحالية: {editingCar.imageUrl ? "مرفوعة سابقاً" : "بدون صورة"} — ارفع صورة جديدة فقط إذا أردت إعادة فحصها وتغييرها.
                 </div>
@@ -1657,7 +1657,7 @@ export default function AgencyDashboard() {
 
             {editingProperty ? (
               <div className="space-y-3">
-                <div className="flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-muted-foreground dark:border-slate-700 dark:bg-slate-900/40">
+                <div className="flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-muted-foreground">
                   <Home className="h-4 w-4" />
                   الصورة الحالية: {editingProperty.imageUrl ? "مرفوعة سابقاً" : "بدون صورة"} — ارفع صورة جديدة فقط إذا أردت إعادة فحصها وتغييرها.
                 </div>

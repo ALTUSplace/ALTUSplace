@@ -209,7 +209,7 @@ export function KycDocumentUpload({
                 onClick={() => setDocumentType(type)}
                 className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition-all ${
                   documentType === type
-                    ? "border-amber-500 bg-amber-500/10 text-amber-700 dark:text-amber-400"
+                    ? "border-amber-500 bg-amber-500/10 text-amber-700"
                     : "border-border bg-background text-muted-foreground hover:border-amber-300 hover:text-foreground"
                 }`}
               >
@@ -233,7 +233,7 @@ export function KycDocumentUpload({
       {initialDocType && !showTypeSelector && (
         <div className="flex items-center gap-2 rounded-lg bg-amber-500/5 border border-amber-500/20 px-3 py-2">
           <FileText className="h-4 w-4 text-amber-600" />
-          <span className="text-xs font-semibold text-amber-700 dark:text-amber-400">
+          <span className="text-xs font-semibold text-amber-700">
             {DOCUMENT_TYPE_LABELS[documentType][lang]}
           </span>
         </div>
@@ -272,9 +272,9 @@ export function KycDocumentUpload({
         </div>
       )}
       {currentStatus === "rejected" && latestSubmission?.rejectionReason && (
-        <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 p-3 dark:border-red-800 dark:bg-red-950/30">
+        <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 p-3">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-red-600" />
-          <p className="text-xs text-red-700 dark:text-red-400">{latestSubmission.rejectionReason}</p>
+          <p className="text-xs text-red-700">{latestSubmission.rejectionReason}</p>
         </div>
       )}
 
@@ -308,7 +308,7 @@ export function KycDocumentUpload({
             {preview ? (
               <img src={preview} alt="Preview" className="h-16 w-16 rounded-lg object-cover border" />
             ) : (
-              <div className="flex h-16 w-16 items-center justify-center rounded-lg border bg-red-50 dark:bg-red-950/20">
+              <div className="flex h-16 w-16 items-center justify-center rounded-lg border bg-red-50">
                 <FileText className="h-8 w-8 text-red-500" />
               </div>
             )}
@@ -317,7 +317,7 @@ export function KycDocumentUpload({
               <p className="text-xs text-muted-foreground">{(file.size / (1024 * 1024)).toFixed(2)} MB</p>
             </div>
             <button type="button" onClick={handleRemove} disabled={isUploading}
-              className="rounded-lg p-1.5 text-muted-foreground hover:bg-red-100 hover:text-red-600 disabled:cursor-not-allowed dark:hover:bg-red-900/30">
+              className="rounded-lg p-1.5 text-muted-foreground hover:bg-red-100 hover:text-red-600 disabled:cursor-not-allowed">
               <X className="h-4 w-4" />
             </button>
           </div>

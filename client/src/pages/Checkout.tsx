@@ -87,15 +87,15 @@ function DocumentUploadField({
 }) {
   return (
     <div className="space-y-2">
-      <p className="text-sm font-bold text-slate-600 dark:text-slate-300">{label}</p>
+      <p className="text-sm font-bold text-slate-600">{label}</p>
       {file ? (
-        <div className="flex items-center justify-between gap-3 rounded-xl border-2 border-emerald-200 bg-emerald-50 p-3 animate-in fade-in duration-200 dark:border-emerald-800 dark:bg-emerald-950/30" role="status">
+        <div className="flex items-center justify-between gap-3 rounded-xl border-2 border-emerald-200 bg-emerald-50 p-3 animate-in fade-in duration-200" role="status">
           <div className="flex min-w-0 items-center gap-2.5">
             <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
             <div className="min-w-0">
-              <p className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400">تم إرفاقه بنجاح</p>
-              <p className="truncate text-sm font-semibold text-emerald-800 dark:text-emerald-300" dir="ltr">{file.name}</p>
-              <p className="text-[11px] text-emerald-700 dark:text-emerald-400">{Math.max(1, Math.round(file.size / 1024))} KB — جاهز للفحص المسبق من الوكالة</p>
+              <p className="text-[11px] font-bold text-emerald-700">تم إرفاقه بنجاح</p>
+              <p className="truncate text-sm font-semibold text-emerald-800" dir="ltr">{file.name}</p>
+              <p className="text-[11px] text-emerald-700">{Math.max(1, Math.round(file.size / 1024))} KB — جاهز للفحص المسبق من الوكالة</p>
             </div>
           </div>
           <button
@@ -105,16 +105,16 @@ function DocumentUploadField({
               event.stopPropagation();
               onFileChange(null);
             }}
-            className="shrink-0 rounded-lg border border-emerald-300 bg-white/60 px-3 py-1.5 text-[11px] font-bold text-emerald-700 hover:bg-emerald-100 dark:border-emerald-700 dark:bg-transparent dark:hover:bg-emerald-800"
+            className="shrink-0 rounded-lg border border-emerald-300 bg-white/60 px-3 py-1.5 text-[11px] font-bold text-emerald-700 hover:bg-emerald-100 dark:bg-transparent"
           >
             إزالة
           </button>
         </div>
       ) : (
-        <label className="flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border-2 border-dashed border-slate-300 p-4 text-sm font-medium text-slate-600 transition-all hover:border-amber-400 hover:bg-amber-50 active:scale-[0.99] dark:border-slate-600 dark:text-slate-300 dark:hover:bg-amber-950/20">
+        <label className="flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border-2 border-dashed border-slate-300 p-4 text-sm font-medium text-slate-600 transition-all hover:border-amber-400 hover:bg-amber-50 active:scale-[0.99]">
           <Upload className="h-5 w-5 shrink-0 text-amber-600" />
           <span className="flex-1">اضغط هنا لاختيار الملف</span>
-          <span className="shrink-0 rounded-lg bg-slate-100 px-2 py-1 text-[10px] font-bold text-slate-500 dark:bg-slate-800 dark:text-slate-400">JPG / PNG / PDF</span>
+          <span className="shrink-0 rounded-lg bg-slate-100 px-2 py-1 text-[10px] font-bold text-slate-500">JPG / PNG / PDF</span>
           <input
             type="file"
             accept="image/*,application/pdf"
@@ -372,13 +372,13 @@ const result = await createBooking.mutateAsync({
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                  <p className="text-sm text-slate-600 leading-relaxed">
                     سيسلّمك ممثل {agencyName} عند بوابة الوصول بعد هبوط رحلتك. المرجو إدخال رقم الرحلة ووقت الوصول
                     ليتمكنوا من الانتظار في الموعد المحدد.
                   </p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <label htmlFor="flight-number" className="text-sm font-bold text-slate-600 dark:text-slate-300">رقم الرحلة</label>
+                      <label htmlFor="flight-number" className="text-sm font-bold text-slate-600">رقم الرحلة</label>
                       <input
                         id="flight-number"
                         dir="ltr"
@@ -387,17 +387,17 @@ const result = await createBooking.mutateAsync({
                         placeholder="مثال: AT752"
                         value={flightNumber}
                         onChange={(e) => setFlightNumber(e.target.value)}
-                        className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-right placeholder:text-right dark:border-slate-700 dark:bg-slate-900"
+                        className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-right placeholder:text-right"
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label htmlFor="arrival-time" className="text-sm font-bold text-slate-600 dark:text-slate-300">وقت الوصول</label>
+                      <label htmlFor="arrival-time" className="text-sm font-bold text-slate-600">وقت الوصول</label>
                       <input
                         id="arrival-time"
                         type="datetime-local"
                         value={arrivalTime}
                         onChange={(e) => setArrivalTime(e.target.value)}
-                        className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm dark:border-slate-700 dark:bg-slate-900"
+                        className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm"
                       />
                     </div>
                   </div>
@@ -424,7 +424,7 @@ const result = await createBooking.mutateAsync({
                       onClick={() => toggleAddOn(id)}
                       className={`w-full flex items-center gap-3 p-4 rounded-xl border-2 text-right transition-all ${
                         selected
-                          ? 'border-amber-500 bg-amber-50 shadow-sm dark:bg-amber-950/20'
+                          ? 'border-amber-500 bg-amber-50 shadow-sm'
                           : 'border-slate-200 hover:border-slate-300'
                       }`}
                     >
@@ -455,7 +455,7 @@ const result = await createBooking.mutateAsync({
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <p className="text-sm font-bold text-slate-600 dark:text-slate-300">حالة الإقامة</p>
+                  <p className="text-sm font-bold text-slate-600">حالة الإقامة</p>
                   <div className="grid grid-cols-2 gap-2">
                     {RESIDENCY_OPTIONS.map((option) => {
                       const selected = residency === option.value;
@@ -468,12 +468,12 @@ const result = await createBooking.mutateAsync({
                           onClick={() => setResidency(option.value)}
                           className={`min-h-14 p-3 rounded-2xl border-2 text-sm transition-all active:scale-[0.98] ${
                             selected
-                              ? 'border-amber-500 bg-amber-50 shadow-sm dark:bg-amber-950/20'
-                              : 'border-slate-200 hover:border-slate-300 dark:border-slate-700'
+                              ? 'border-amber-500 bg-amber-50 shadow-sm'
+                              : 'border-slate-200 hover:border-slate-300'
                           }`}
                         >
                           <span className="block font-bold">{option.label}</span>
-                          <span className="block text-[11px] text-slate-500 dark:text-slate-400">{option.sublabel}</span>
+                          <span className="block text-[11px] text-slate-500">{option.sublabel}</span>
                         </button>
                       );
                     })}
@@ -496,7 +496,7 @@ const result = await createBooking.mutateAsync({
                   onFileChange={setIdentityFile}
                 />
 
-                <div className="flex items-start gap-2.5 rounded-xl border border-sky-200 bg-sky-50 p-3 text-[11px] text-sky-800 leading-relaxed dark:border-sky-800 dark:bg-sky-950/30 dark:text-sky-300" role="note">
+                <div className="flex items-start gap-2.5 rounded-xl border border-sky-200 bg-sky-50 p-3 text-[11px] text-sky-800 leading-relaxed" role="note">
                   <Lock className="h-4 w-4 shrink-0 text-sky-600 mt-0.5" />
                   <p>
                     {isPropertyBooking
@@ -506,7 +506,7 @@ const result = await createBooking.mutateAsync({
                 </div>
 
                 {!isFormValid && (
-                  <div className="rounded-xl border border-amber-300/40 bg-amber-50 p-3 text-xs text-amber-700 leading-relaxed dark:bg-amber-950/20 dark:text-amber-400" role="alert">
+                  <div className="rounded-xl border border-amber-300/40 bg-amber-50 p-3 text-xs text-amber-700 leading-relaxed" role="alert">
                     <p className="flex items-center gap-1.5 font-bold">
                       <ShieldAlert className="h-4 w-4" />
                       لم تُرفق بعد: {missingDocumentLabels.join('، ')}
@@ -532,12 +532,12 @@ const result = await createBooking.mutateAsync({
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                <p className="text-sm text-slate-600 leading-relaxed">
                   لا حاجة إلى بطاقة دفع. سيتم فتح محادثة واتساب مع {agencyName} ورسالة جاهزة تحوي تفاصيل حجزك —
                   راجعها ثم أرسلها لتأكيد الحجز مباشرة.
                 </p>
                 <div
-                  className="rounded-xl border border-slate-200 bg-slate-50 dark:bg-slate-900/60 dark:border-slate-700 p-4 text-sm leading-relaxed text-slate-700 dark:text-slate-300 whitespace-pre-line"
+                  className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm leading-relaxed text-slate-700 whitespace-pre-line"
                   dir="rtl"
                 >
                   {whatsappMessage}
@@ -546,13 +546,13 @@ const result = await createBooking.mutateAsync({
                   type="submit"
                   size="lg"
                   disabled={!isFormValid || isSubmitting}
-                  className="w-full bg-[#25D366] text-white hover:bg-[#1ebe5d] disabled:pointer-events-auto disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 disabled:opacity-100 disabled:hover:bg-slate-300 dark:disabled:bg-slate-700 dark:disabled:text-slate-500 dark:disabled:hover:bg-slate-700"
+                  className="w-full bg-[#25D366] text-white hover:bg-[#1ebe5d] disabled:pointer-events-auto disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 disabled:opacity-100 disabled:hover:bg-slate-300"
                 >
                   {isSubmitting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <MessageCircle className="mr-2 h-5 w-5" />}
                   {isSubmitting ? 'جارٍ تسجيل الحجز ورفع الوثائق...' : 'تأكيد الحجز عبر الواتساب'}
                 </Button>
                 {!isFormValid ? (
-                  <div className="rounded-lg border border-amber-300/40 bg-amber-50 p-2.5 text-[11px] text-amber-700 leading-relaxed dark:bg-amber-950/20 dark:text-amber-400" role="alert">
+                  <div className="rounded-lg border border-amber-300/40 bg-amber-50 p-2.5 text-[11px] text-amber-700 leading-relaxed" role="alert">
                     <p className="font-bold flex items-center gap-1">
                       <ShieldAlert className="h-3.5 w-3.5" />
                       يرجى إرفاق: {missingDocumentLabels.join('، ')}
@@ -562,7 +562,7 @@ const result = await createBooking.mutateAsync({
                     </p>
                   </div>
                 ) : (
-                  <p className="rounded-lg bg-emerald-50 border border-emerald-200 p-2.5 text-[11px] text-emerald-700 leading-relaxed dark:bg-emerald-950/30 dark:border-emerald-800 dark:text-emerald-400">
+                  <p className="rounded-lg bg-emerald-50 border border-emerald-200 p-2.5 text-[11px] text-emerald-700 leading-relaxed">
                     وثائقك مكتملة — وستؤكد رسالة الحجز إرفاقها للفحص المسبق من {agencyName} لضمان سرعة التأكيد.
                   </p>
                 )}
@@ -603,12 +603,12 @@ const result = await createBooking.mutateAsync({
                   </div>
                 </div>
                 {selectedAddOns.length > 0 && (
-                  <div className="rounded-lg bg-emerald-50 border border-emerald-200 p-2 text-[11px] text-emerald-700 dark:bg-emerald-950/30 dark:border-emerald-800 dark:text-emerald-400">
+                  <div className="rounded-lg bg-emerald-50 border border-emerald-200 p-2 text-[11px] text-emerald-700">
                     <span className="flex items-center gap-1"><ShieldCheck className="w-3.5 h-3.5" />تأمين وحماية مشمولة في الإضافات المختارة</span>
                   </div>
                 )}
                 {kycBlocked ? (
-                  <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-700 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-400" role="alert">
+                  <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-700" role="alert">
                     <p className="flex items-center gap-1.5 font-bold">
                       <ShieldAlert className="h-3.5 w-3.5" />
                       {`التحقق من الهوية مطلوب (${kycStatusLabel})`}
@@ -621,7 +621,7 @@ const result = await createBooking.mutateAsync({
                 ) : (
                   <div className="space-y-3">
                     {!isFormValid ? (
-                      <div className="rounded-lg border border-amber-300/40 bg-amber-50 p-2.5 text-[11px] text-amber-700 leading-relaxed dark:bg-amber-950/20 dark:text-amber-400" role="alert">
+                      <div className="rounded-lg border border-amber-300/40 bg-amber-50 p-2.5 text-[11px] text-amber-700 leading-relaxed" role="alert">
                         <p className="font-bold flex items-center gap-1">
                           <ShieldAlert className="h-3.5 w-3.5" />
                           يمكنك الحجز بعد إرفاق: {missingDocumentLabels.join('، ')}
@@ -631,11 +631,11 @@ const result = await createBooking.mutateAsync({
                         </p>
                       </div>
                     ) : (
-                      <p className="rounded-lg bg-emerald-50 border border-emerald-200 p-2.5 text-[11px] text-emerald-700 leading-relaxed dark:bg-emerald-950/30 dark:border-emerald-800 dark:text-emerald-400">
+                      <p className="rounded-lg bg-emerald-50 border border-emerald-200 p-2.5 text-[11px] text-emerald-700 leading-relaxed">
                         الوثائق مكتملة — تُضمَّن في رسالة الحجز للفحص المسبق من الوكالة.
                       </p>
                     )}
-                    <Button type="submit" size="lg" disabled={!isFormValid || isSubmitting} className="w-full bg-[#25D366] text-white hover:bg-[#1ebe5d] disabled:pointer-events-auto disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 disabled:opacity-100 disabled:hover:bg-slate-300 dark:disabled:bg-slate-700 dark:disabled:text-slate-500 dark:disabled:hover:bg-slate-700">
+                    <Button type="submit" size="lg" disabled={!isFormValid || isSubmitting} className="w-full bg-[#25D366] text-white hover:bg-[#1ebe5d] disabled:pointer-events-auto disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 disabled:opacity-100 disabled:hover:bg-slate-300">
                       {isSubmitting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <MessageCircle className="mr-2 h-5 w-5" />}
                       {isSubmitting ? 'جارٍ تسجيل الحجز ورفع الوثائق...' : `تأكيد الحجز عبر الواتساب (${showTotalDisplay})`}
                     </Button>

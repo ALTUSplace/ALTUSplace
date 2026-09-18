@@ -155,9 +155,9 @@ export function InteractiveMap({
       case 'car':
         return 'bg-accent-clay-soft text-accent-clay border-accent-clay/30';
       case 'property':
-        return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20';
+        return 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20';
       case 'office':
-        return 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20';
+        return 'bg-amber-500/10 text-amber-600 border-amber-500/20';
     }
   };
 
@@ -223,14 +223,14 @@ export function InteractiveMap({
                         {getTypeLabel(listing.type)}
                       </span>
                     </div>
-                    <h4 className="font-bold text-sm text-gray-900 dark:text-gray-100 line-clamp-1">
+                    <h4 className="font-bold text-sm text-gray-900 line-clamp-1">
                       {listing.title}
                     </h4>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-0.5">
+                    <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
                       <MapPin className="w-3 h-3" />
                       {listing.city}
                     </p>
-                    <div className="text-amber-600 dark:text-amber-400 font-extrabold text-sm mt-1">
+                    <div className="text-amber-600 font-extrabold text-sm mt-1">
                       {listing.pricePerUnit} <span className="text-xs font-normal">{listing.unitLabel}</span>
                     </div>
                   </div>

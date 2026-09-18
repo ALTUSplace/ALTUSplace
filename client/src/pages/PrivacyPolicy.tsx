@@ -26,7 +26,7 @@ export default function PrivacyPolicy() {
   return (
     <div className="b2-page-shell" dir={direction}>
       <section className="b2-container b2-section max-w-4xl">
-        <Link href="/" className="mb-8 inline-flex min-h-11 items-center gap-2 text-sm font-bold text-amber-700 hover:underline dark:text-amber-300">
+        <Link href="/" className="mb-8 inline-flex min-h-11 items-center gap-2 text-sm font-bold text-amber-700 hover:underline">
           <ArrowRight className="h-4 w-4" /> العودة إلى الرئيسية
         </Link>
 
@@ -42,18 +42,18 @@ export default function PrivacyPolicy() {
         <div className="grid gap-4 sm:grid-cols-2">
           {sections.map((section) => (
             <article key={section.title} className="b2-card p-6">
-              <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-300">
+              <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-700">
                 <CheckCircle2 className="h-5 w-5" />
               </div>
               <h2 className="text-lg font-black text-foreground">{section.title}</h2>
-              <p className="mt-3 text-sm leading-7 text-slate-700 dark:text-slate-200">{section.body}</p>
+              <p className="mt-3 text-sm leading-7 text-slate-700">{section.body}</p>
             </article>
           ))}
         </div>
 
         <div className="mt-6 flex items-start gap-3 rounded-2xl border border-border bg-muted p-5 text-sm text-foreground">
-          <LockKeyhole className="mt-0.5 h-5 w-5 shrink-0 text-amber-700 dark:text-amber-300" />
-          <p className="leading-7">لمزيد من التفاصيل حول شروط الحجز والضمان والعمولات، راجع <Link href="/terms" className="font-bold text-amber-700 underline dark:text-amber-300">شروط الاستخدام</Link> أو تواصل مع <Link href="/support-tickets" className="font-bold text-amber-700 underline dark:text-amber-300">الدعم الفني</Link>.</p>
+          <LockKeyhole className="mt-0.5 h-5 w-5 shrink-0 text-amber-700" />
+          <p className="leading-7">لمزيد من التفاصيل حول شروط الحجز والضمان والعمولات، راجع <Link href="/terms" className="font-bold text-amber-700 underline">شروط الاستخدام</Link> أو تواصل مع <Link href="/support-tickets" className="font-bold text-amber-700 underline">الدعم الفني</Link>.</p>
         </div>
       </section>
     </div>

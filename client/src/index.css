@@ -53,8 +53,9 @@
     --accent-green-s: rgba(5, 150, 105, 0.12);
     --accent-red:    #DC2626;
     --accent-red-s:  rgba(220, 38, 38, 0.10);
-    --accent-amber:  #B45309;
-    --accent-amber-s: rgba(180, 83, 9, 0.12);
+    --accent-amber:    #B45309;
+    --accent-amber-h:  #92400E;
+    --accent-amber-s:  rgba(180, 83, 9, 0.12);
 
     /* Border Tokens — crisp hairlines */
     --border-subtle:  #EBEBEB;
@@ -180,59 +181,59 @@
 /* ── 2. Tailwind v4 Semantic Token Mapping ─────────────────────────────────── */
 @theme inline {
   /* shadcn/ui semantic aliases */
-  --color-background:       hsl(from var(--bg-base) h s l);
-  --color-foreground:       hsl(from var(--ink-primary) h s l);
-  --color-card:             hsl(from var(--bg-surface) h s l);
-  --color-card-foreground:  hsl(from var(--ink-primary) h s l);
-  --color-popover:          hsl(from var(--bg-elevated) h s l);
-  --color-popover-foreground: hsl(from var(--ink-primary) h s l);
-  --color-primary:          hsl(from var(--accent-primary) h s l);
+  --color-background:       hsl(from var(--bg-base) h s l / alpha);
+  --color-foreground:       hsl(from var(--ink-primary) h s l / alpha);
+  --color-card:             hsl(from var(--bg-surface) h s l / alpha);
+  --color-card-foreground:  hsl(from var(--ink-primary) h s l / alpha);
+  --color-popover:          hsl(from var(--bg-elevated) h s l / alpha);
+  --color-popover-foreground: hsl(from var(--ink-primary) h s l / alpha);
+  --color-primary:          hsl(from var(--accent-primary) h s l / alpha);
   --color-primary-foreground: #FFFFFF;
-  --color-secondary:        hsl(from var(--bg-muted) h s l);
-  --color-secondary-foreground: hsl(from var(--ink-secondary) h s l);
-  --color-muted:            hsl(from var(--bg-muted) h s l);
-  --color-muted-foreground: hsl(from var(--ink-tertiary) h s l);
-  --color-accent:           hsl(from var(--accent-primary-s) h s l);
-  --color-accent-foreground: hsl(from var(--accent-primary) h s l);
-  --color-destructive:      hsl(from var(--accent-red) h s l);
+  --color-secondary:        hsl(from var(--bg-muted) h s l / alpha);
+  --color-secondary-foreground: hsl(from var(--ink-secondary) h s l / alpha);
+  --color-muted:            hsl(from var(--bg-muted) h s l / alpha);
+  --color-muted-foreground: hsl(from var(--ink-tertiary) h s l / alpha);
+  --color-accent:           hsl(from var(--accent-primary-s) h s l / alpha);
+  --color-accent-foreground: hsl(from var(--accent-primary) h s l / alpha);
+  --color-destructive:      hsl(from var(--accent-red) h s l / alpha);
   --color-destructive-foreground: #FFFFFF;
-  --color-border:           hsl(from var(--border-subtle) h s l);
-  --color-input:            hsl(from var(--border-default) h s l);
-  --color-ring:             hsl(from var(--accent-primary) h s l);
+  --color-border:           hsl(from var(--border-subtle) h s l / alpha);
+  --color-input:            hsl(from var(--border-default) h s l / alpha);
+  --color-ring:             hsl(from var(--accent-primary) h s l / alpha);
 
   /* bespoke surface + ink tokens */
-  --color-bg-base:          hsl(from var(--bg-base) h s l);
-  --color-bg-surface:       hsl(from var(--bg-surface) h s l);
-  --color-bg-muted:         hsl(from var(--bg-muted) h s l);
-  --color-bg-elevated:      hsl(from var(--bg-elevated) h s l);
-  --color-ink-primary:      hsl(from var(--ink-primary) h s l);
-  --color-ink-secondary:    hsl(from var(--ink-secondary) h s l);
-  --color-ink-tertiary:     hsl(from var(--ink-tertiary) h s l);
-  --color-accent-clay:      hsl(from var(--accent-primary) h s l);
-  --color-accent-clay-hover: hsl(from var(--accent-primary-h) h s l);
-  --color-accent-clay-soft:  hsl(from var(--accent-primary-s) h s l);
-  --color-accent-warm:      hsl(from var(--accent-warm) h s l);
-  --color-accent-warm-hover: hsl(from var(--accent-warm-h) h s l);
-  --color-accent-warm-soft:  hsl(from var(--accent-warm-s) h s l);
-  --color-accent-green:     hsl(from var(--accent-green) h s l);
-  --color-accent-green-soft:  hsl(from var(--accent-green-s) h s l);
-  --color-accent-red:       hsl(from var(--accent-red) h s l);
-  --color-accent-red-soft:    hsl(from var(--accent-red-s) h s l);
-  --color-accent-amber:     hsl(from var(--accent-amber) h s l);
-  --color-accent-amber-soft:  hsl(from var(--accent-amber-s) h s l);
-  --color-border-subtle:    hsl(from var(--border-subtle) h s l);
-  --color-border-default:   hsl(from var(--border-default) h s l);
-  --color-border-strong:    hsl(from var(--border-strong) h s l);
-  --color-skeleton-from:    hsl(from var(--skeleton-from) h s l);
-  --color-skeleton-to:      hsl(from var(--skeleton-to) h s l);
+  --color-bg-base:          hsl(from var(--bg-base) h s l / alpha);
+  --color-bg-surface:       hsl(from var(--bg-surface) h s l / alpha);
+  --color-bg-muted:         hsl(from var(--bg-muted) h s l / alpha);
+  --color-bg-elevated:      hsl(from var(--bg-elevated) h s l / alpha);
+  --color-ink-primary:      hsl(from var(--ink-primary) h s l / alpha);
+  --color-ink-secondary:    hsl(from var(--ink-secondary) h s l / alpha);
+  --color-ink-tertiary:     hsl(from var(--ink-tertiary) h s l / alpha);
+  --color-accent-clay:      hsl(from var(--accent-primary) h s l / alpha);
+  --color-accent-clay-hover: hsl(from var(--accent-primary-h) h s l / alpha);
+  --color-accent-clay-soft:  hsl(from var(--accent-primary-s) h s l / alpha);
+  --color-accent-warm:      hsl(from var(--accent-warm) h s l / alpha);
+  --color-accent-warm-hover: hsl(from var(--accent-warm-h) h s l / alpha);
+  --color-accent-warm-soft:  hsl(from var(--accent-warm-s) h s l / alpha);
+  --color-accent-green:     hsl(from var(--accent-green) h s l / alpha);
+  --color-accent-green-soft:  hsl(from var(--accent-green-s) h s l / alpha);
+  --color-accent-red:       hsl(from var(--accent-red) h s l / alpha);
+  --color-accent-red-soft:    hsl(from var(--accent-red-s) h s l / alpha);
+  --color-accent-amber:     hsl(from var(--accent-amber) h s l / alpha);
+  --color-accent-amber-soft:  hsl(from var(--accent-amber-s) h s l / alpha);
+  --color-border-subtle:    hsl(from var(--border-subtle) h s l / alpha);
+  --color-border-default:   hsl(from var(--border-default) h s l / alpha);
+  --color-border-strong:    hsl(from var(--border-strong) h s l / alpha);
+  --color-skeleton-from:    hsl(from var(--skeleton-from) h s l / alpha);
+  --color-skeleton-to:      hsl(from var(--skeleton-to) h s l / alpha);
 
   /* backward-compatible accent aliases consumed by existing components */
-  --color-accent-indigo:     hsl(from var(--accent-primary) h s l);
-  --color-accent-indigo-hover: hsl(from var(--accent-primary-h) h s l);
-  --color-accent-indigo-soft:  hsl(from var(--accent-primary-s) h s l);
-  --color-accent-brass:      hsl(from var(--accent-warm) h s l);
-  --color-accent-brass-hover: hsl(from var(--accent-warm-h) h s l);
-  --color-accent-brass-soft:  hsl(from var(--accent-warm-s) h s l);
+  --color-accent-indigo:     hsl(from var(--accent-primary) h s l / alpha);
+  --color-accent-indigo-hover: hsl(from var(--accent-primary-h) h s l / alpha);
+  --color-accent-indigo-soft:  hsl(from var(--accent-primary-s) h s l / alpha);
+  --color-accent-brass:      hsl(from var(--accent-warm) h s l / alpha);
+  --color-accent-brass-hover: hsl(from var(--accent-warm-h) h s l / alpha);
+  --color-accent-brass-soft:  hsl(from var(--accent-warm-s) h s l / alpha);
 
   /* radius scale — sharp, architectural */
   --radius-sm:  var(--radius-sm);
@@ -266,14 +267,14 @@
   --font-mono:    'Fraunces', ui-monospace, SFMono-Regular, Menlo, monospace;
 
   /* sidebar */
-  --color-sidebar:                 hsl(from var(--bg-muted) h s l);
-  --color-sidebar-foreground:      hsl(from var(--ink-primary) h s l);
-  --color-sidebar-primary:         hsl(from var(--accent-primary) h s l);
+  --color-sidebar:                 hsl(from var(--bg-muted) h s l / alpha);
+  --color-sidebar-foreground:      hsl(from var(--ink-primary) h s l / alpha);
+  --color-sidebar-primary:         hsl(from var(--accent-primary) h s l / alpha);
   --color-sidebar-primary-foreground: #FFFFFF;
-  --color-sidebar-accent:          hsl(from var(--accent-primary-s) h s l);
-  --color-sidebar-accent-foreground: hsl(from var(--ink-primary) h s l);
-  --color-sidebar-border:          hsl(from var(--border-subtle) h s l);
-  --color-sidebar-ring:            hsl(from var(--accent-primary) h s l);
+  --color-sidebar-accent:          hsl(from var(--accent-primary-s) h s l / alpha);
+  --color-sidebar-accent-foreground: hsl(from var(--ink-primary) h s l / alpha);
+  --color-sidebar-border:          hsl(from var(--border-subtle) h s l / alpha);
+  --color-sidebar-ring:            hsl(from var(--accent-primary) h s l / alpha);
 }
 
 /* ── 3. Base Element Styles ─────────────────────────────────────────────────── */
@@ -385,9 +386,9 @@
 
   /* Leaflet chrome follows the theme */
   .leaflet-control-zoom a {
-    background: hsl(from var(--bg-surface) h s l) !important;
-    color: hsl(from var(--ink-primary) h s l) !important;
-    border-color: hsl(from var(--border-subtle) h s l) !important;
+    background: hsl(from var(--bg-surface) h s l / alpha) !important;
+    color: hsl(from var(--ink-primary) h s l / alpha) !important;
+    border-color: hsl(from var(--border-subtle) h s l / alpha) !important;
     width: 2.25rem !important;
     height: 2.25rem !important;
     line-height: 2.25rem !important;
@@ -395,23 +396,23 @@
     transition: background var(--dur-fast) var(--ease-smooth) !important;
   }
   .leaflet-control-zoom a:hover {
-    background: hsl(from var(--bg-muted) h s l) !important;
+    background: hsl(from var(--bg-muted) h s l / alpha) !important;
   }
   .leaflet-control-attribution {
     background: hsl(from var(--bg-base) / 0.8) !important;
-    color: hsl(from var(--ink-tertiary) h s l) !important;
+    color: hsl(from var(--ink-tertiary) h s l / alpha) !important;
     padding: 0.25rem 0.5rem !important;
     font-size: 10px !important;
   }
   .leaflet-control-attribution a {
-    color: hsl(from var(--accent-primary) h s l) !important;
+    color: hsl(from var(--accent-primary) h s l / alpha) !important;
   }
   .dark .leaflet-popup-content-wrapper {
-    background: hsl(from var(--bg-surface) h s l);
-    color: hsl(from var(--ink-primary) h s l);
+    background: hsl(from var(--bg-surface) h s l / alpha);
+    color: hsl(from var(--ink-primary) h s l / alpha);
   }
   .dark .leaflet-popup-tip {
-    background: hsl(from var(--bg-surface) h s l);
+    background: hsl(from var(--bg-surface) h s l / alpha);
   }
   .map-marker {
     transition: transform var(--dur-standard) var(--ease-smooth);
@@ -575,7 +576,7 @@
   .b2-segmented-control {
     display: flex;
     border-radius: var(--radius-sm);
-    background: hsl(from var(--bg-muted) h s l);
+    background: hsl(from var(--bg-muted) h s l / alpha);
     padding: 0.175rem;
     gap: 0.175rem;
   }
@@ -964,4 +965,17 @@
   --color-rose-700: var(--ramp-d-700);
   --color-rose-800: var(--ramp-d-800);
   --color-rose-950: var(--ramp-d-950);
+}
+
+/* ── 9. Dark-Mode Surface Safety-Net ─────────────────────────────────────────
+   The palette kill-switch above inverts the Tailwind ramps inside `.dark`, so
+   legacy un-prefixed `bg-slate-*` / `text-*` / `border-*` utilities theme-shift
+   on their own. `bg-white` is intentionally NOT remapped (it must still sit on
+   dark hero panels and coloured buttons), but that leaves bare card surfaces
+   pure white in dark mode. Map only the opaque `bg-white` surface onto the
+   dark surface token; translucent `bg-white/NN` overlays stay untouched. */
+@layer utilities {
+  .dark .bg-white {
+    background-color: var(--bg-surface);
+  }
 }

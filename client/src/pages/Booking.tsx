@@ -126,12 +126,12 @@ export default function BookingPage() {
               </p>
             </div>
             {kycBlocked ? (
-              <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm space-y-3 dark:border-amber-700 dark:bg-amber-950/30" role="alert">
-                <p className="flex items-center gap-2 font-bold text-amber-800 dark:text-amber-300">
+              <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm space-y-3" role="alert">
+                <p className="flex items-center gap-2 font-bold text-amber-800">
                   <ShieldAlert className="h-4 w-4" />
                   {language === 'ar' ? `التحقق من الهوية مطلوب (${kycStatusLabel})` : `Vérification d'identité requise (${kycStatusLabel})`}
                 </p>
-                <p className="text-xs text-amber-700 dark:text-amber-400">
+                <p className="text-xs text-amber-700">
                   {language === 'ar'
                     ? 'لا يمكن إتمام الحجز قبل الموافقة على وثيقة هويتك. ارفع الوثيقة المناسبة (رخصة القيادة للسيارات، بطاقة التعريف أو جواز السفر للعقارات) ثم عد لهذه الصفحة.'
                     : "La réservation est bloquée jusqu'à la validation de votre pièce d'identité. Téléversez le document requis (permis pour les voitures, CNI ou passeport pour les séjours) puis revenez."}

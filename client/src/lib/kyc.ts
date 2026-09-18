@@ -34,22 +34,22 @@ export const KYC_STATUS_CONFIG = {
   verified: {
     icon: CheckCircle2,
     label: { ar: "تم التحقق", fr: "Vérifié", en: "Verified" },
-    badgeClass: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-400 dark:border-emerald-700",
+    badgeClass: "bg-emerald-100 text-emerald-700 border-emerald-200",
   },
   pending: {
     icon: Clock3,
     label: { ar: "قيد المراجعة", fr: "En cours de révision", en: "Pending Review" },
-    badgeClass: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/40 dark:text-amber-400 dark:border-amber-700",
+    badgeClass: "bg-amber-100 text-amber-700 border-amber-200",
   },
   rejected: {
     icon: XCircle,
     label: { ar: "مرفوضة", fr: "Rejeté", en: "Rejected" },
-    badgeClass: "bg-red-100 text-red-700 border-red-200 dark:bg-red-900/40 dark:text-red-400 dark:border-red-700",
+    badgeClass: "bg-red-100 text-red-700 border-red-200",
   },
   unverified: {
     icon: AlertTriangle,
     label: { ar: "غير موثق", fr: "Non vérifié", en: "Unverified" },
-    badgeClass: "bg-slate-100 text-slate-600 border-slate-300 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-600",
+    badgeClass: "bg-slate-100 text-slate-600 border-slate-300",
   },
 } as const;
 

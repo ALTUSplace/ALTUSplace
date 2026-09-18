@@ -10,8 +10,8 @@ interface ErrorStateProps {
 
 export function ErrorState({ title = "Something went wrong", message = "An unexpected error occurred. Please try again.", onRetry, className }: ErrorStateProps) {
   return (
-    <div className={cn("flex flex-col items-center justify-center rounded-2xl border border-red-200 bg-red-50/50 px-6 py-16 text-center dark:border-red-900/30 dark:bg-red-950/10", className)}>
-      <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/20">
+    <div className={cn("flex flex-col items-center justify-center rounded-2xl border border-red-200 bg-red-50/50 px-6 py-16 text-center", className)}>
+      <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
         <AlertTriangle className="h-7 w-7 text-red-500" />
       </div>
       <h3 className="text-base font-semibold text-ink-primary">{title}</h3>
