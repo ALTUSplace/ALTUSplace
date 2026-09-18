@@ -6,10 +6,10 @@ type Bucket = { count: number; resetAt: number };
 const buckets = new Map<string, Bucket>();
 
 function clientIp(req: Request): string {
-  const forwarded = req.headers["x-forwarded-for"];
-  if (typeof forwarded === "string" && forwarded.length > 0) {
-    return forwarded.split(",")[0]?.trim() || req.ip || "unknown";
-  }
+  // Use Express's trust-proxy resolved address (app.set("trust proxy", 1))
+  // instead of the client-supplied X-Forwarded-For header, whose left-most
+  // entry can be spoofed to rotate the rate-limit bucket and bypass every
+  // limit (auth/payment brute-force included).
   return req.ip || req.socket?.remoteAddress || "unknown";
 }
 

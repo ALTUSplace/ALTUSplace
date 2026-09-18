@@ -80,7 +80,7 @@ export default function BlogPage() {
       <div className="container mx-auto max-w-6xl space-y-12">
         
         {/* WordPress-style Header Banner */}
-        <div className="bg-[#15120D] text-white rounded-3xl p-8 md:p-12 shadow-2xl relative overflow-hidden">
+        <div className="bg-[#1C1C1E] text-white rounded-3xl p-8 md:p-12 shadow-2xl relative overflow-hidden">
           <div className="absolute left-0 bottom-0 w-96 h-96 bg-accent-clay-soft rounded-full blur-3xl pointer-events-none"></div>
           <div className="relative z-10 max-w-2xl space-y-4">
             <span className="bg-accent-clay text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-widest inline-block">
@@ -102,11 +102,11 @@ export default function BlogPage() {
             <input 
               type="text" 
               placeholder="ابحث في المقالات والأخبار..." 
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 pr-10 pl-4 text-xs focus:outline-none focus:border-[#15120D]"
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 pr-10 pl-4 text-xs focus:outline-none focus:border-[#1C1C1E]"
             />
           </div>
           <div className="flex gap-2 w-full md:w-auto overflow-x-auto">
-            <Button variant="outline" className="text-xs font-bold rounded-xl border-[#15120D] text-[#15120D]">الكل</Button>
+            <Button variant="outline" className="text-xs font-bold rounded-xl border-[#1C1C1E] text-[#1C1C1E]">الكل</Button>
             <Button variant="ghost" className="text-xs font-bold rounded-xl text-slate-600">دليل السفر</Button>
             <Button variant="ghost" className="text-xs font-bold rounded-xl text-slate-600">استثمار عقاري</Button>
             <Button variant="ghost" className="text-xs font-bold rounded-xl text-slate-600">نصائح قيادة</Button>
@@ -133,7 +133,7 @@ export default function BlogPage() {
                     <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> {article.date}</span>
                     <span className="flex items-center gap-1"><User className="w-3.5 h-3.5" /> {article.author}</span>
                   </div>
-                  <h3 className="text-lg font-black text-[#15120D] leading-snug group-hover:text-accent-clay transition-colors">
+                  <h3 className="text-lg font-black text-[#1C1C1E] leading-snug group-hover:text-accent-clay transition-colors">
                     {article.title}
                   </h3>
                   <p className="text-slate-600 text-xs leading-relaxed line-clamp-3">
@@ -142,7 +142,7 @@ export default function BlogPage() {
                 </div>
                 <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
                   <span className="text-xs font-semibold text-slate-400">{article.readTime}</span>
-                  <Button variant="link" className="text-[#15120D] font-bold p-0 h-auto flex items-center gap-1 text-xs hover:text-accent-clay">
+                  <Button variant="link" className="text-[#1C1C1E] font-bold p-0 h-auto flex items-center gap-1 text-xs hover:text-accent-clay">
                     <span>قراءة المقال</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </Button>

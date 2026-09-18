@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { Link } from "wouter";
+import { Link, Redirect } from "wouter";
 import { Building2, CalendarCheck, Check, Plus, TrendingUp, X, Trash2, WalletCards, Pencil, MessageCircle, RefreshCw, Copy, Eye, Phone, Power, BarChart3, Download } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -8,8 +8,6 @@ import { AdvancedMediaUpload } from "@/components/AdvancedMediaUpload";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { CitySelect } from "@/components/CitySelect";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { startLogin } from "@/const";
 
 const labels = {
   office: "مكتب مستقل",
@@ -37,8 +35,7 @@ export default function HostDashboard() {
   const syncIcal = trpc.listings.syncIcalNow.useMutation({ onSuccess: async (result) => { await listings.refetch(); toast.success(result.synced ? `تم استيراد ${result.count ?? 0} فترة من التقويم` : "لا يوجد رابط iCal مضبوط"); }, onError: (error) => toast.error(error.message) });
   const financials = trpc.admin.ownerFinancials.useQuery(undefined, { enabled: !!user && (user.role === "owner" || user.role === "admin") });
   const requestPayout = trpc.payouts.request.useMutation({ onSuccess: async () => { toast.success("تم إرسال طلب السحب للمراجعة"); await financials.refetch(); setPayoutAmount(""); }, onError: (error) => toast.error(error.message) });
-  const becomeAgency = trpc.auth.becomeAgency.useMutation({ onSuccess: async () => { toast.success("تم التسجيل كوكالة تأجير — مرحباً بك!"); await refresh(); }, onError: (error) => toast.error(error.message) });
-  const [agencyNameOnboard, setAgencyNameOnboard] = useState("");
+
   const [form, setForm] = useState({ title: "", city: "الدار البيضاء", officeType: "office", rentalPeriod: "monthly", price: "", description: "", amenities: [] as string[], imageUrl: "", imageVerificationProof: "" });
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -95,7 +92,7 @@ export default function HostDashboard() {
 
   if (loading) return <div className="container py-24 text-center">جاري تحميل لوحة المالك...</div>;
   if (!user) return <div className="container py-24 text-center">يرجى تسجيل الدخول للوصول إلى لوحة المالك.</div>;
-  if (user.role !== "owner" && user.role !== "admin") return <PartnerOnboarding agencyName={agencyNameOnboard} onAgencyNameChange={setAgencyNameOnboard} onSubmit={(event) => { event.preventDefault(); if (!agencyNameOnboard.trim()) return toast.error("أدخل اسم الوكالة"); becomeAgency.mutate({ agencyName: agencyNameOnboard.trim() }); }} isPending={becomeAgency.isPending} />;
+  if (user.role !== "owner" && user.role !== "admin" && user.role !== "SUPER_ADMIN") return <Redirect to="/become-agency" />;
 
   const submit = (event: React.FormEvent) => {
     event.preventDefault();
@@ -127,42 +124,6 @@ export default function HostDashboard() {
     <section className="space-y-4"><h2 className="text-xl font-bold">مزامنة التقويم الخارجي (iCal)</h2><p className="text-sm text-muted-foreground">الصق رابط iCal الخاص بإعلانك من Airbnb أو Booking.com لاستيراد الفترات المحجوبة. رابط التصدير يمكن إضافته داخل المنصة الخارجية.</p>{listings.data?.map((listing) => <div key={`ical-${listing.id}`} className="rounded-2xl border bg-card p-5"><div className="mb-3 flex flex-wrap items-center justify-between gap-2"><div><p className="font-bold">{listing.title}</p><p className="text-sm text-muted-foreground">الحالة: {listing.icalSyncStatus === "ok" ? "متزامن" : listing.icalSyncStatus === "error" ? `خطأ: ${listing.icalSyncError ?? "تعذر الجلب"}` : "لم تتم المزامنة بعد"}{listing.icalLastSyncedAt ? ` · آخر تحديث ${new Date(listing.icalLastSyncedAt).toLocaleString("fr-MA")}` : ""}</p></div><div className="flex gap-2"><Button size="sm" variant="outline" onClick={() => syncIcal.mutate({ listingId: listing.id })} disabled={syncIcal.isPending}><RefreshCw className="ml-1 h-4 w-4" />مزامنة الآن</Button></div></div><div className="grid gap-3 md:grid-cols-[1fr_auto]"><input dir="ltr" className="rounded-xl border bg-background p-3 text-left" placeholder="https://.../calendar.ics" value={icalDrafts[listing.id] ?? listing.icalImportUrl ?? ""} onChange={(event) => setIcalDrafts((current) => ({ ...current, [listing.id]: event.target.value }))} /><Button onClick={() => saveIcal.mutate({ listingId: listing.id, importUrl: (icalDrafts[listing.id] ?? listing.icalImportUrl ?? "").trim() || null })} disabled={saveIcal.isPending}>حفظ الرابط</Button></div>{listing.icalExportToken && <div className="mt-3 flex flex-col gap-2 rounded-xl bg-muted/50 p-3 text-sm"><span>رابط تصدير حجوزات ALTUSplace:</span><div className="flex items-center gap-2"><code dir="ltr" className="min-w-0 flex-1 overflow-x-auto text-xs">{`${window.location.origin}/api/ical/export/${listing.icalExportToken}`}</code><Button size="sm" variant="outline" onClick={() => navigator.clipboard.writeText(`${window.location.origin}/api/ical/export/${listing.icalExportToken}`)}><Copy className="ml-1 h-4 w-4" />نسخ</Button></div></div>}</div>)}</section>
     <section className="space-y-4"><h2 className="text-xl font-bold">طلبات الحجز</h2>{bookings.data?.length ? bookings.data.map((booking) => <div key={booking.id} className="flex flex-col gap-4 rounded-2xl border bg-card p-5 md:flex-row md:items-center md:justify-between"><div><p className="font-bold">{booking.listingTitle ?? "مكتب"}</p><p className="text-sm text-muted-foreground">{booking.renterName ?? "مستأجر"} · {booking.status} · {Number(booking.totalPrice ?? 0).toLocaleString("fr-MA")} MAD</p></div>{booking.status === "Pending" && <div className="flex gap-2"><Button size="sm" onClick={() => updateStatus.mutate({ bookingId: booking.id, status: "Confirmed" })}><Check className="ml-1 h-4 w-4" />قبول</Button><Button size="sm" variant="outline" onClick={() => updateStatus.mutate({ bookingId: booking.id, status: "Cancelled" })}><X className="ml-1 h-4 w-4" />رفض</Button></div>}</div>) : <div className="rounded-2xl border border-dashed p-8 text-center text-muted-foreground">لا توجد حجوزات واردة حالياً.</div>}</section>
   </div>;
-}
-
-function PartnerOnboarding({ agencyName, onAgencyNameChange, onSubmit, isPending }: { agencyName: string; onAgencyNameChange: (value: string) => void; onSubmit: (event: React.FormEvent) => void; isPending: boolean }) {
-  const { t } = useLanguage();
-  const [mode, setMode] = useState<"register" | "login">("register");
-  return (
-    <div className="container py-16 sm:py-24" dir="rtl">
-      <div className="mx-auto max-w-2xl text-center">
-        <h1 className="text-3xl font-black sm:text-4xl">{t("partnerJoinTitle")}</h1>
-        <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground">{t("partnerJoinSubtitle")}</p>
-
-        <div role="tablist" aria-label={t("partnerJoinTitle")} className="mx-auto mt-8 inline-flex rounded-full border bg-card p-1 shadow-sm">
-          <button type="button" role="tab" aria-selected={mode === "register"} onClick={() => setMode("register")} className={`rounded-full px-5 py-2 text-sm font-bold transition ${mode === "register" ? "bg-[var(--brand-amber)] text-white shadow" : "text-muted-foreground hover:text-foreground"}`}>{t("partnerRegisterNew")}</button>
-          <button type="button" role="tab" aria-selected={mode === "login"} onClick={() => setMode("login")} className={`rounded-full px-5 py-2 text-sm font-bold transition ${mode === "login" ? "bg-[var(--brand-amber)] text-white shadow" : "text-muted-foreground hover:text-foreground"}`}>{t("partnerExistingLogin")}</button>
-        </div>
-
-        {mode === "register" ? (
-          <form className="mx-auto mt-6 max-w-md space-y-3 rounded-2xl border bg-card p-5 text-start" onSubmit={onSubmit}>
-            <input className="w-full rounded-xl border bg-background p-3 text-center" placeholder="اسم الوكالة / الشركة" value={agencyName} onChange={(event) => onAgencyNameChange(event.target.value)} />
-            <Button type="submit" className="w-full" disabled={isPending}>{isPending ? "جاري التسجيل..." : "التسجيل كوكالة تأجير"}</Button>
-            <p className="text-xs text-muted-foreground">بعد التسجيل يتحول حسابك إلى حساب مالك: تظهر لك سياراتك وحجوزاتك فقط، ولا يطلع أي وكالة أخرى على بياناتك.</p>
-          </form>
-        ) : (
-          <div className="mx-auto mt-6 max-w-md space-y-4 rounded-2xl border bg-card p-6 text-start">
-            <p className="text-sm leading-relaxed text-muted-foreground">{t("partnerExistingDesc")}</p>
-            <Link href="/agency-dashboard"><Button className="w-full bg-[var(--brand-amber)] text-white">{t("partnerGoToDashboard")}</Button></Link>
-            <button type="button" onClick={() => startLogin()} className="w-full text-center text-xs font-bold text-[var(--brand-amber)] hover:underline">{t("partnerExistingLogin")}</button>
-          </div>
-        )}
-
-        <div className="mt-8 flex justify-center">
-          <Link href="/my-bookings"><Button variant="outline">إلغاء — الانتقال إلى حجوزاتي</Button></Link>
-        </div>
-      </div>
-    </div>
-  );
 }
 
 function bookingContactHref(rows: Array<{ listingId: number; renterName?: string | null; status: string }> | undefined, listingId: number) { const booking = rows?.find((item) => item.listingId === listingId && item.status === "Confirmed"); return booking ? `https://wa.me/?text=${encodeURIComponent(`مرحباً، بخصوص حجز ${booking.renterName ?? "المستأجر"} في هذا المكتب`)}` : null; }

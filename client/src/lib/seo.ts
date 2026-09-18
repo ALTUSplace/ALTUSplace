@@ -1,39 +1,72 @@
 /**
  * Lightweight client-side SEO manager.
  *
- * Updates the document title plus description/OG/Twitter meta tags on every
- * route and re-renders the JSON-LD script blocks so shared listings stay
- * indexable without a server-side rendering step.
+ * Updates the document title plus description/Open Graph/Twitter meta tags and
+ * the canonical link on every route, then (re)renders JSON-LD script blocks so
+ * shared listings stay indexable without a server-side rendering step.
+ *
+ * Single-language-per-URL model: until locale subpaths ship (see
+ * docs/SEO_PLAN.md, Phase 1) each URL is canonical to itself and exposes a
+ * single `x-default` alternate. We intentionally never emit `hreflang` for
+ * `/ar`, `/fr` or `/en` because those routes do not exist yet.
  */
 
-const BASE_URL = "https://altusplace.vercel.app";
+type SeoLanguage = "ar" | "fr" | "en";
 
-const SEO_META_MAP: Record<string, { selector: string; attr: string }> = {
-  description: { selector: 'meta[name="description"]', attr: "content" },
-  "og:title": { selector: 'meta[property="og:title"]', attr: "content" },
-  "og:description": { selector: 'meta[property="og:description"]', attr: "content" },
-  "og:url": { selector: 'meta[property="og:url"]', attr: "content" },
-  "twitter:title": { selector: 'meta[name="twitter:title"]', attr: "content" },
-  "twitter:description": { selector: 'meta[name="twitter:description"]', attr: "content" },
-};
-
-function setMetaTag(name: string, value: string): void {
-  const config = SEO_META_MAP[name];
-  if (!config) return;
-  let el = document.querySelector<HTMLMetaElement>(config.selector);
-  if (!el) {
-    el = document.createElement("meta");
-    el.setAttribute(config.attr === "content" && name.startsWith("og:") ? "property" : "name", name);
-    document.head.appendChild(el);
+function readEnvSiteUrl(): string | undefined {
+  try {
+    const env = (import.meta as ImportMeta & { env?: Record<string, string | undefined> }).env;
+    return env?.VITE_SITE_URL;
+  } catch {
+    return undefined;
   }
-  el.setAttribute(config.attr, value);
 }
 
-function setLinkRel(rel: string, href: string): void {
-  let el = document.querySelector<HTMLLinkElement>(`link[rel="${rel}"]`);
+export const SITE_URL = (readEnvSiteUrl() || "https://altusplace.ma").replace(/\/+$/, "");
+
+/** @deprecated Use `SITE_URL`. Kept for existing imports. */
+export const BASE_URL = SITE_URL;
+
+const OPEN_GRAPH_LOCALES: Record<SeoLanguage, string> = {
+  ar: "ar_MA",
+  fr: "fr_MA",
+  en: "en_GB",
+};
+
+/** Normalizes a route path into an absolute canonical URL (no query/hash). */
+export function canonicalUrl(path = "/"): string {
+  const withoutQuery = (path || "/").split(/[?#]/)[0] || "/";
+  const withLeadingSlash = withoutQuery.startsWith("/") ? withoutQuery : `/${withoutQuery}`;
+  const trimmed = withLeadingSlash === "/" ? "/" : withLeadingSlash.replace(/\/+$/, "");
+  return `${SITE_URL}${trimmed}`;
+}
+
+function toAbsoluteUrl(value: string): string {
+  if (/^https?:\/\//i.test(value)) return value;
+  return `${SITE_URL}${value.startsWith("/") ? value : `/${value}`}`;
+}
+
+function upsertMeta(attr: "name" | "property", key: string, content: string): void {
+  if (typeof document === "undefined" || !content) return;
+  let el = document.head.querySelector<HTMLMetaElement>(`meta[${attr}="${key}"]`);
+  if (!el) {
+    el = document.createElement("meta");
+    el.setAttribute(attr, key);
+    document.head.appendChild(el);
+  }
+  el.setAttribute("content", content);
+}
+
+function upsertLink(rel: string, href: string, hreflang?: string): void {
+  if (typeof document === "undefined") return;
+  const selector = hreflang
+    ? `link[rel="${rel}"][hreflang="${hreflang}"]`
+    : `link[rel="${rel}"]:not([hreflang])`;
+  let el = document.head.querySelector<HTMLLinkElement>(selector);
   if (!el) {
     el = document.createElement("link");
     el.rel = rel;
+    if (hreflang) el.hreflang = hreflang;
     document.head.appendChild(el);
   }
   el.href = href;
@@ -41,36 +74,74 @@ function setLinkRel(rel: string, href: string): void {
 
 /**
  * Keeps canonical + localized alternates pointing at the same resource so the
- * French/Arabic routes do not fragment search ranking.
+ * language toggle does not fragment search ranking. Emits `x-default` only;
+ * per-locale `hreflang` entries are deferred to the locale-subpath phase.
  */
-export function applyLocales(pathLang: "ar" | "fr" | "en", path = "/"): void {
-  setLinkRel("canonical", `${BASE_URL}${path}`);
-  setLinkRel("alternate", `${BASE_URL}/en`);
-  setLinkRel("alternate", `${BASE_URL}/ar`);
-  setLinkRel("alternate", `${BASE_URL}/fr`);
-  const el = Array.from(document.querySelectorAll<HTMLLinkElement>('link[rel="alternate"]')).find((node) => node.hreflang === "x-default");
-  if (el) el.href = `${BASE_URL}/`;
-  void pathLang;
+export function applyLocales(language: SeoLanguage = "ar", path = "/"): void {
+  if (typeof document === "undefined") return;
+  document
+    .querySelectorAll<HTMLLinkElement>('link[rel="alternate"][hreflang]:not([hreflang="x-default"])')
+    .forEach((node) => node.remove());
+  const canonical = canonicalUrl(path);
+  upsertLink("canonical", canonical);
+  upsertLink("alternate", canonical, "x-default");
+  upsertMeta("property", "og:locale", OPEN_GRAPH_LOCALES[language] ?? OPEN_GRAPH_LOCALES.ar);
 }
 
 export type SeoInput = {
   title: string;
   description: string;
   path?: string;
-  language?: "ar" | "fr" | "en";
+  language?: SeoLanguage;
+  /** Absolute or root-relative social image. */
+  image?: string;
+  /** Open Graph type, e.g. "website" | "product" | "article" | "place". */
+  type?: string;
+  /** Full robots directive, e.g. "noindex, follow". */
+  robots?: string;
+  /** Override the canonical path when the visible URL contains filters. */
+  canonicalPath?: string;
 };
 
+const DEFAULT_ROBOTS = "index, follow, max-image-preview:large";
+
 /** Set the page title + description and mirror them into social cards. */
-export function useSEO({ title, description, path, language = "ar" }: SeoInput): void {
+export function useSEO({
+  title,
+  description,
+  path,
+  language = "ar",
+  image,
+  type = "website",
+  robots = DEFAULT_ROBOTS,
+  canonicalPath,
+}: SeoInput): void {
   if (typeof document === "undefined") return;
+
+  const resolvedPath = canonicalPath ?? path ?? "/";
+  const url = canonicalUrl(resolvedPath);
+
   document.title = title;
-  setMetaTag("description", description);
-  setMetaTag("og:title", title);
-  setMetaTag("og:description", description);
-  setMetaTag("og:url", `${BASE_URL}${path ?? "/"}`);
-  setMetaTag("twitter:title", title);
-  setMetaTag("twitter:description", description);
-  applyLocales(language, path ?? "/");
+  upsertMeta("name", "description", description);
+  upsertMeta("property", "og:type", type);
+  upsertMeta("property", "og:site_name", "ALTUSplace");
+  upsertMeta("property", "og:title", title);
+  upsertMeta("property", "og:description", description);
+  upsertMeta("property", "og:url", url);
+  upsertMeta("name", "twitter:title", title);
+  upsertMeta("name", "twitter:description", description);
+
+  if (image) {
+    const absoluteImage = toAbsoluteUrl(image);
+    upsertMeta("property", "og:image", absoluteImage);
+    upsertMeta("name", "twitter:image", absoluteImage);
+    upsertMeta("name", "twitter:card", "summary_large_image");
+  } else {
+    upsertMeta("name", "twitter:card", "summary");
+  }
+
+  upsertMeta("name", "robots", robots);
+  applyLocales(language, resolvedPath);
 }
 
 type JsonLdEntry = { "@context": string } & Record<string, unknown>;
@@ -89,5 +160,3 @@ export function renderJsonLd<T extends JsonLdEntry>(id: string, entry: T): void 
   script.textContent = JSON.stringify(entry);
   document.head.appendChild(script);
 }
-
-export { BASE_URL };

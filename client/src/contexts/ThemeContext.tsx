@@ -46,7 +46,7 @@ function applyThemeToDocument(theme: Theme): void {
     root.style.colorScheme = "light";
   }
   const themeMeta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
-  themeMeta?.setAttribute("content", theme === "dark" ? "#15120D" : "#F3EFE6");
+  themeMeta?.setAttribute("content", theme === "dark" ? "#0F1115" : "#FFFFFF");
 }
 
 export function ThemeProvider({

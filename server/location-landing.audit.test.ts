@@ -61,7 +61,7 @@ describe("location landing pages audit", () => {
   });
 
   it("lists every city landing page in the sitemap", () => {
-    const sitemap = read("client/public/sitemap.xml");
+    const sitemap = read("client/public/sitemap-cities.xml");
     expect(sitemap).toContain("locations/casablanca");
     expect(sitemap).toContain("locations/marrakech");
     expect(sitemap).toContain("locations/agadir");

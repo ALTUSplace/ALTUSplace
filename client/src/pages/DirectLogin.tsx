@@ -185,14 +185,14 @@ export default function DirectLogin() {
           ) : null}
 
           {mode !== "loading" && mode !== "unavailable" ? (
-            <Button type="submit" disabled={!canSubmit || loading} className="mt-5 w-full gap-2 bg-[#15120D] text-white hover:bg-accent-clay-hover">
+            <Button type="submit" disabled={!canSubmit || loading} className="mt-5 w-full gap-2 bg-[#1C1C1E] text-white hover:bg-accent-clay-hover">
               <KeyRound className="h-4 w-4" />
               {loading ? (isSetup ? "Setting up…" : "Signing in…") : isSetup ? "Set password & sign in" : "Sign in"}
             </Button>
           ) : null}
         </form>
 
-        <Link href="/" className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-[#15120D] hover:text-amber-700">
+        <Link href="/" className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-[#1C1C1E] hover:text-amber-700">
           <ArrowLeft className="h-4 w-4" />
           Back
         </Link>

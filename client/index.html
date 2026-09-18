@@ -3,52 +3,85 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#15120D" />
-    <meta name="description" content="ALTUSplace: منصة الوساطة الأولى لتأجير السيارات في المغرب — الدار البيضاء، مراكش، أكادير. La première plateforme de location de voitures au Maroc avec paiement sécurisé et assurance." />
+    <meta name="theme-color" content="#FFFFFF" />
+    <meta name="description" content="ALTUSplace: كراء السيارات والعقارات في المغرب — الدار البيضاء، مراكش، أكادير. أسعار واضحة، وكالات موثوقة، ودفع آمن. Location de voitures et de biens immobiliers au Maroc avec paiement sécurisé." />
     <link rel="icon" href="/favicon.ico" sizes="48x48" />
     <link rel="icon" type="image/png" sizes="192x192" href="/images/icon-192.png" />
     <link rel="apple-touch-icon" href="/images/icon-192.png" />
     <link rel="manifest" href="/manifest.json" />
-    <title>ALTUSplace | منصة الوساطة الأولى لتأجير السيارات في المغرب</title>
+    <title>كراء السيارات والعقارات في المغرب | ALTUSplace</title>
 
-    <!-- Canonical + hreflang (English first as the neutral default) -->
-    <link rel="alternate" hreflang="en" href="https://altusplace.vercel.app/en" />
-    <link rel="alternate" hreflang="ar" href="https://altusplace.vercel.app/ar" />
-    <link rel="alternate" hreflang="fr" href="https://altusplace.vercel.app/fr" />
-    <link rel="alternate" hreflang="x-default" href="https://altusplace.vercel.app/" />
-    <link rel="canonical" href="https://altusplace.vercel.app/" />
+    <!-- Canonical + x-default. Per-locale hreflang ships with the locale-subpath
+         phase (see docs/SEO_PLAN.md) — never point hreflang at routes that 404. -->
+    <link rel="alternate" hreflang="x-default" href="https://altusplace.ma/" />
+    <link rel="canonical" href="https://altusplace.ma/" />
 
     <!-- Geo / local SEO: Morocco-wide rental coverage -->
     <meta name="geo.region" content="MA" />
     <meta name="geo.placename" content="Casablanca, Morocco" />
     <meta name="robots" content="index, follow, max-image-preview:large" />
-    <meta name="keywords" content="location voiture Maroc, تأجير سيارات في المغرب, Carlocation Casablanca Marrakech Agadir, car rental Morocco, CMI, assurance auto Maroc" />
+    <meta name="keywords" content="location voiture Maroc, كراء السيارات في المغرب, عقارات للكراء في المغرب, location appartement Maroc, تأجير سيارات الدار البيضاء مراكش أكادير, car rental Morocco, immobilier Maroc, CMI, assurance auto Maroc" />
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="ALTUSplace" />
-    <meta property="og:title" content="ALTUSplace — تأجير السيارات في المغرب" />
-    <meta property="og:description" content="احجز سيارات فاخرة في المغرب بضمان المنصة ودفع آمن. Réservez des voitures au Maroc avec paiement sécurisé." />
-    <meta property="og:url" content="https://altusplace.vercel.app/" />
-    <meta property="og:image" content="https://altusplace.vercel.app/images/logo.png" />
+    <meta property="og:title" content="كراء السيارات والعقارات في المغرب | ALTUSplace" />
+    <meta property="og:description" content="احجز سيارات وعقارات للكراء في المغرب بضمان المنصة ودفع آمن: أسعار واضحة ووكالات محلية موثوقة." />
+    <meta property="og:url" content="https://altusplace.ma/" />
+    <meta property="og:image" content="https://altusplace.ma/images/logo.png" />
     <meta property="og:image:width" content="1000" />
     <meta property="og:image:height" content="558" />
-    <meta property="og:image:alt" content="ALTUSplace — منصة تأجير السيارات" />
+    <meta property="og:image:alt" content="ALTUSplace — كراء السيارات والعقارات في المغرب" />
     <meta property="og:locale" content="ar_MA" />
     <meta property="og:locale:alternate" content="fr_MA" />
     <meta property="og:locale:alternate" content="en_GB" />
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="ALTUSplace — تأجير السيارات في المغرب" />
-    <meta name="twitter:description" content="احجز سيارات فاخرة في المغرب بضمان المنصة ودفع آمن." />
-    <meta name="twitter:image" content="https://altusplace.vercel.app/images/logo.png" />
+    <meta name="twitter:title" content="كراء السيارات والعقارات في المغرب | ALTUSplace" />
+    <meta name="twitter:description" content="احجز سيارات وعقارات للكراء في المغرب بضمان المنصة ودفع آمن." />
+    <meta name="twitter:image" content="https://altusplace.ma/images/logo.png" />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "WebSite",
+            "@id": "https://altusplace.ma/#website",
+            "url": "https://altusplace.ma/",
+            "name": "ALTUSplace",
+            "inLanguage": "ar-MA",
+            "potentialAction": {
+              "@type": "SearchAction",
+              "target": { "@type": "EntryPoint", "urlTemplate": "https://altusplace.ma/search?q={search_term_string}" },
+              "query-input": "required name=search_term_string"
+            }
+          },
+          {
+            "@type": "Organization",
+            "@id": "https://altusplace.ma/#organization",
+            "name": "ALTUSplace",
+            "url": "https://altusplace.ma/",
+            "logo": "https://altusplace.ma/images/logo.png",
+            "areaServed": { "@type": "Country", "name": "Morocco" },
+            "knowsLanguage": ["ar", "fr", "en"],
+            "contactPoint": {
+              "@type": "ContactPoint",
+              "contactType": "customer support",
+              "availableLanguage": ["ar", "fr", "en"]
+            }
+          }
+        ]
+      }
+    </script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400..800;1,400..700&family=Tajawal:wght@300;400;500;700;800&family=Cairo:wght@200..900&family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&display=swap" rel="stylesheet">
     <style>
-      body { font-family: 'Plus Jakarta Sans', 'Tajawal', 'Cairo', system-ui, sans-serif; }
+      body { font-family: 'Plus Jakarta Sans', 'Tajawal', 'Cairo', system-ui, sans-serif; background-color: #FFFFFF; color: #1C1C1E; }
+      .dark body { background-color: #0F1115; color: #F2F3F5; }
     </style>
     <script>
       // Anti-FOUC: apply the persisted (or OS-preferred) theme before first
@@ -68,14 +101,14 @@
             root.style.colorScheme = "light";
           }
           var meta = document.querySelector('meta[name="theme-color"]');
-          if (meta) meta.setAttribute("content", theme === "dark" ? "#15120D" : "#F3EFE6");
+          if (meta) meta.setAttribute("content", theme === "dark" ? "#0F1115" : "#FFFFFF");
         } catch (e) {
           /* ignore — storage unavailable */
         }
       })();
     </script>
   </head>
-  <body class="bg-[#F3EFE6] text-[#1E1B14] antialiased">
+  <body class="antialiased">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

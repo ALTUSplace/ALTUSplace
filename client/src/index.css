@@ -2,18 +2,20 @@
 @import "tw-animate-css";
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   ALTUSplace — "Tanger Clay" Editorial Design System (Tailwind v4)
+   ALTUSplace — "Tanger Clay 2.0 · Deep Trust Blue" Design System (Tailwind v4)
    ─────────────────────────────────────────────────────────────────────────────
-   A bespoke, warm editorial identity: matte paper neutrals, a single clay
-   terracotta accent, and ink typography built on Plus Jakarta Sans (Latin
-   display/numerals), Tajawal (Arabic UI) and Fraunces (editorial serif accents).
+   A clean, modern marketplace identity: pure white surfaces, a cool neutral
+   grey scale, a single deep trust-blue action colour and confident ink
+   typography built on Plus Jakarta Sans (Latin display/numerals), Tajawal
+   (Arabic UI) and Fraunces (editorial serif accents). The earlier "Tanger
+   Clay" warmth survives only as a muted amber for ratings and premium hints —
+   never as the primary action colour.
 
    Principles
-   · One accent colour, used deliberately — clay. Everything else is a warm
-     neutral or a muted semantic status colour.
-   · Architectural, slightly sharp corners with a signature "cut corner" detail
-     — no generic pill-everything UI.
-   · Layered, matte shadows with a warm tint instead of single heavy drops.
+   · One action colour, used deliberately — deep trust blue. Everything else is
+     a cool neutral or a muted semantic status colour.
+   · Generous rounding on cards, buttons and inputs; no sheared corners.
+   · Soft, neutral, layered shadows instead of heavy drops.
    · Motion is restrained, tactile and interruptible; never bouncy clutter.
    · Arabic-first: zero negative letter-spacing on Arabic type.
    ───────────────────────────────────────────────────────────────────────────── */
@@ -25,62 +27,62 @@
   :root {
     color-scheme: light;
 
-    /* Surface Tokens — warm matte paper */
-    --bg-base:        #F3EFE6; /* stone paper        */
-    --bg-surface:     #FCFAF5; /* warm white         */
-    --bg-muted:       #EAE4D6; /* oat                */
-    --bg-elevated:    #FFFDF8;
+    /* Surface Tokens — clean white canvas */
+    --bg-base:        #FFFFFF;
+    --bg-surface:     #FFFFFF;
+    --bg-muted:       #F7F7F8;
+    --bg-elevated:    #FFFFFF;
 
-    /* Ink Tokens — warm charcoal scale */
-    --ink-primary:    #1E1B14;
-    --ink-secondary:  #5D574A;
-    --ink-tertiary:   #948B79;
+    /* Ink Tokens — cool charcoal scale */
+    --ink-primary:    #1C1C1E;
+    --ink-secondary:  #6E6E73;
+    --ink-tertiary:   #8A8A90;
 
-    /* Accent Tokens — a single clay terracotta */
-    --accent-primary:   #A63A20;
-    --accent-primary-h: #8B2F18;
-    --accent-primary-s: rgba(166, 58, 32, 0.11);
+    /* Accent Tokens — a single deep trust blue */
+    --accent-primary:   #1A56DB;
+    --accent-primary-h: #1546B4;
+    --accent-primary-s: rgba(26, 86, 219, 0.10);
 
-    /* Warm secondary tone (premium hints, gold ink on matte) */
-    --accent-warm:   #97703A;
-    --accent-warm-h: #7C5A2C;
-    --accent-warm-s: rgba(151, 112, 58, 0.14);
+    /* Warm secondary tone (ratings, premium hints) */
+    --accent-warm:   #B7791F;
+    --accent-warm-h: #9A6518;
+    --accent-warm-s: rgba(183, 121, 31, 0.12);
 
-    /* Muted semantic status colours */
-    --accent-green:  #3E7C59;
-    --accent-green-s: rgba(62, 124, 89, 0.12);
-    --accent-red:    #AE4A3B;
-    --accent-red-s:  rgba(174, 74, 59, 0.12);
-    --accent-amber:  #A8792E;
-    --accent-amber-s: rgba(168, 121, 46, 0.14);
+    /* Semantic status colours */
+    --accent-green:  #059669;
+    --accent-green-s: rgba(5, 150, 105, 0.12);
+    --accent-red:    #DC2626;
+    --accent-red-s:  rgba(220, 38, 38, 0.10);
+    --accent-amber:  #B45309;
+    --accent-amber-s: rgba(180, 83, 9, 0.12);
 
-    /* Border Tokens — hairlines, not boxes */
-    --border-subtle:  #E5DECE;
-    --border-default: #D6CDB9;
-    --border-strong:  #B3A78C;
+    /* Border Tokens — crisp hairlines */
+    --border-subtle:  #EBEBEB;
+    --border-default: #E0E0E4;
+    --border-strong:  #C7C7CC;
 
     /* Skeleton Tokens */
-    --skeleton-from:  #EDE7D8;
-    --skeleton-to:    #E3DBC8;
+    --skeleton-from:  #F2F2F3;
+    --skeleton-to:    #E9E9EB;
 
-    /* Shadow Tokens — layered, matte, warm-tinted */
-    --shadow-xs:  0 1px 2px rgba(52, 40, 23, 0.05), 0 1px 3px rgba(52, 40, 23, 0.04);
-    --shadow-sm:  0 1px 2px rgba(52, 40, 23, 0.06), 0 2px 6px rgba(52, 40, 23, 0.05);
-    --shadow-md:  0 2px 4px rgba(52, 40, 23, 0.06), 0 8px 20px rgba(52, 40, 23, 0.07);
-    --shadow-lg:  0 2px 5px rgba(52, 40, 23, 0.08), 0 14px 34px rgba(52, 40, 23, 0.10);
-    --shadow-xl:  0 4px 8px rgba(52, 40, 23, 0.09), 0 24px 52px rgba(52, 40, 23, 0.13);
-    --shadow-clay:    0 2px 4px rgba(166, 58, 32, 0.14), 0 10px 24px rgba(166, 58, 32, 0.18);
-    --shadow-card-hover: 0 2px 5px rgba(52, 40, 23, 0.08), 0 18px 44px rgba(52, 40, 23, 0.13);
-    --shadow-button: 0 2px 4px rgba(166, 58, 32, 0.2), 0 8px 18px rgba(166, 58, 32, 0.26);
+    /* Shadow Tokens — soft, neutral, layered */
+    --shadow-xs:  0 1px 2px rgba(16, 24, 40, 0.05);
+    --shadow-sm:  0 1px 2px rgba(16, 24, 40, 0.06), 0 2px 6px rgba(16, 24, 40, 0.05);
+    --shadow-md:  0 2px 4px rgba(16, 24, 40, 0.06), 0 8px 20px rgba(16, 24, 40, 0.07);
+    --shadow-lg:  0 2px 5px rgba(16, 24, 40, 0.07), 0 14px 34px rgba(16, 24, 40, 0.10);
+    --shadow-xl:  0 4px 8px rgba(16, 24, 40, 0.08), 0 24px 52px rgba(16, 24, 40, 0.12);
+    --shadow-clay:    0 2px 4px rgba(26, 86, 219, 0.14), 0 10px 24px rgba(26, 86, 219, 0.18);
+    --shadow-card-hover: 0 2px 5px rgba(16, 24, 40, 0.08), 0 18px 44px rgba(16, 24, 40, 0.13);
+    --shadow-button: 0 2px 4px rgba(26, 86, 219, 0.2), 0 8px 18px rgba(26, 86, 219, 0.26);
 
-    /* Radius Tokens — architectural, slightly sharp */
-    --radius-xs:   0.125rem;
-    --radius-sm:   0.25rem;
-    --radius-md:   0.375rem;
-    --radius-lg:   0.5rem;
-    --radius-xl:   0.75rem;
+    /* Radius Tokens — soft, modern */
+    --radius-xs:   0.25rem;
+    --radius-sm:   0.375rem;
+    --radius-md:   0.5rem;
+    --radius-lg:   0.625rem;
+    --radius-xl:   0.875rem;
     --radius-2xl:  1rem;
-    --radius-3xl:  1.375rem;
+    --radius-3xl:  1.25rem;
     --radius-full: 9999px;
 
     /* Component Tokens */
@@ -128,50 +130,50 @@
     --space-section: clamp(3rem, 8vw, 6rem);
   }
 
-  /* ── Dark Theme — warm charcoal night ────────────────────────────────────── */
+  /* ── Dark Theme — cool graphite night ────────────────────────────────────── */
   .dark {
     color-scheme: dark;
 
-    --bg-base:        #15120D;
-    --bg-surface:     #1C1812;
-    --bg-muted:       #262116;
-    --bg-elevated:    #2C261A;
+    --bg-base:        #0F1115;
+    --bg-surface:     #16181D;
+    --bg-muted:       #1E2127;
+    --bg-elevated:    #22252C;
 
-    --ink-primary:    #F2EDE2;
-    --ink-secondary:  #B9B0A0;
-    --ink-tertiary:   #80775F;
+    --ink-primary:    #F2F3F5;
+    --ink-secondary:  #A8ABB2;
+    --ink-tertiary:   #71757D;
 
-    --accent-primary:   #E27752;
-    --accent-primary-h: #EF9A7C;
-    --accent-primary-s: rgba(226, 119, 82, 0.16);
+    --accent-primary:   #4F86F7;
+    --accent-primary-h: #6EA0F8;
+    --accent-primary-s: rgba(79, 134, 247, 0.18);
 
-    --accent-warm:   #C89B5E;
-    --accent-warm-h: #D9B374;
-    --accent-warm-s: rgba(200, 155, 94, 0.18);
+    --accent-warm:   #D9A441;
+    --accent-warm-h: #E3B65E;
+    --accent-warm-s: rgba(217, 164, 65, 0.18);
 
-    --accent-green:  #7FBF9B;
-    --accent-green-s: rgba(127, 191, 155, 0.16);
-    --accent-red:    #E08A7A;
-    --accent-red-s:  rgba(224, 138, 122, 0.16);
-    --accent-amber:  #DFB681;
-    --accent-amber-h: #EBC684;
-    --accent-amber-s: rgba(223, 182, 129, 0.16);
+    --accent-green:  #34D399;
+    --accent-green-s: rgba(52, 211, 153, 0.16);
+    --accent-red:    #F87171;
+    --accent-red-s:  rgba(248, 113, 113, 0.16);
+    --accent-amber:  #FBBF24;
+    --accent-amber-h: #FCD34D;
+    --accent-amber-s: rgba(251, 191, 36, 0.16);
 
-    --border-subtle:  rgba(242, 237, 226, 0.08);
-    --border-default: rgba(242, 237, 226, 0.14);
-    --border-strong:  rgba(242, 237, 226, 0.24);
+    --border-subtle:  rgba(242, 243, 245, 0.08);
+    --border-default: rgba(242, 243, 245, 0.14);
+    --border-strong:  rgba(242, 243, 245, 0.24);
 
-    --skeleton-from:  rgba(242, 237, 226, 0.08);
-    --skeleton-to:    rgba(242, 237, 226, 0.03);
+    --skeleton-from:  rgba(242, 243, 245, 0.08);
+    --skeleton-to:    rgba(242, 243, 245, 0.03);
 
     --shadow-xs:  0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.35);
     --shadow-sm:  0 1px 2px rgba(0, 0, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.4);
     --shadow-md:  0 2px 4px rgba(0, 0, 0, 0.5), 0 8px 20px rgba(0, 0, 0, 0.45);
     --shadow-lg:  0 2px 5px rgba(0, 0, 0, 0.55), 0 14px 34px rgba(0, 0, 0, 0.5);
     --shadow-xl:  0 4px 8px rgba(0, 0, 0, 0.6), 0 24px 52px rgba(0, 0, 0, 0.55);
-    --shadow-clay:    0 2px 6px rgba(0, 0, 0, 0.45), 0 12px 28px rgba(226, 119, 82, 0.16);
+    --shadow-clay:    0 2px 6px rgba(0, 0, 0, 0.45), 0 12px 28px rgba(79, 134, 247, 0.18);
     --shadow-card-hover: 0 2px 5px rgba(0, 0, 0, 0.5), 0 18px 44px rgba(0, 0, 0, 0.55);
-    --shadow-button: 0 2px 4px rgba(0, 0, 0, 0.45), 0 10px 22px rgba(226, 119, 82, 0.24);
+    --shadow-button: 0 2px 4px rgba(0, 0, 0, 0.45), 0 10px 22px rgba(79, 134, 247, 0.26);
   }
 }
 
@@ -185,7 +187,7 @@
   --color-popover:          hsl(from var(--bg-elevated) h s l);
   --color-popover-foreground: hsl(from var(--ink-primary) h s l);
   --color-primary:          hsl(from var(--accent-primary) h s l);
-  --color-primary-foreground: #FFF8F0;
+  --color-primary-foreground: #FFFFFF;
   --color-secondary:        hsl(from var(--bg-muted) h s l);
   --color-secondary-foreground: hsl(from var(--ink-secondary) h s l);
   --color-muted:            hsl(from var(--bg-muted) h s l);
@@ -193,7 +195,7 @@
   --color-accent:           hsl(from var(--accent-primary-s) h s l);
   --color-accent-foreground: hsl(from var(--accent-primary) h s l);
   --color-destructive:      hsl(from var(--accent-red) h s l);
-  --color-destructive-foreground: #FFF8F0;
+  --color-destructive-foreground: #FFFFFF;
   --color-border:           hsl(from var(--border-subtle) h s l);
   --color-input:            hsl(from var(--border-default) h s l);
   --color-ring:             hsl(from var(--accent-primary) h s l);
@@ -267,7 +269,7 @@
   --color-sidebar:                 hsl(from var(--bg-muted) h s l);
   --color-sidebar-foreground:      hsl(from var(--ink-primary) h s l);
   --color-sidebar-primary:         hsl(from var(--accent-primary) h s l);
-  --color-sidebar-primary-foreground: #FFF8F0;
+  --color-sidebar-primary-foreground: #FFFFFF;
   --color-sidebar-accent:          hsl(from var(--accent-primary-s) h s l);
   --color-sidebar-accent-foreground: hsl(from var(--ink-primary) h s l);
   --color-sidebar-border:          hsl(from var(--border-subtle) h s l);
@@ -425,27 +427,6 @@
   .brand-logo { display: block; }
 }
 
-/* Paper grain — a fixed, barely-there film that keeps every matte surface
-   feeling printed rather than flat. Pure decoration; ignored by AT. */
-@media screen {
-  body::after {
-    content: "";
-    position: fixed;
-    inset: 0;
-    z-index: 9990;
-    pointer-events: none;
-    opacity: 0.045;
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/></svg>");
-    background-repeat: repeat;
-  }
-  .dark body::after {
-    opacity: 0.06;
-  }
-  @media (prefers-reduced-motion: reduce) {
-    body::after { content: none; }
-  }
-}
-
 /* ── 4. Keyframe Animations ─────────────────────────────────────────────────── */
 @keyframes fade-up {
   from { opacity: 0; transform: translateY(10px); }
@@ -509,12 +490,15 @@
   .card-hover { transition: var(--transition-interactive); }
   .card-hover:hover { animation: card-lift var(--dur-standard) var(--ease-smooth) forwards; }
 
-  /* Signature "cut corner" detail — a sheared paper corner instead of a round one */
+  /* Legacy "cut corner" hook — now a soft rounded corner. Kept so existing
+     markup keeps its silhouette without the sheared edge. */
   .corner-cut {
-    clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%);
+    clip-path: none;
+    border-radius: var(--radius-2xl);
   }
   .corner-cut-sm {
-    clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%);
+    clip-path: none;
+    border-radius: var(--radius-xl);
   }
 
   /* Tactile press feedback — a quiet 1px settle, no bounce */
@@ -630,11 +614,11 @@
 /* ── 7. Legacy Brand Token Aliases ────────────────────────────────────────────
    Keeps existing consumers (Footer, HostDashboard, AgencySettings, etc.)
    working while markup migrates to the semantic tokens. --brand-amber is the
-   primary clay action colour. */
+   primary deep trust-blue action colour. */
 @layer base {
   :root {
-    --brand-navy:         var(--bg-base);
-    --brand-navy-deep:    var(--bg-surface);
+    --brand-navy:         #0B1220;
+    --brand-navy-deep:    #060A12;
     --brand-blue:         var(--accent-primary);
     --brand-blue-dark:    var(--accent-primary-h);
     --brand-blue-soft:    var(--accent-primary-s);
@@ -681,8 +665,8 @@
     --ease-out:           var(--ease-smooth);
   }
   .dark {
-    --brand-navy:         var(--bg-base);
-    --brand-navy-deep:    var(--bg-surface);
+    --brand-navy:         #0B1220;
+    --brand-navy-deep:    #060A12;
     --brand-blue:         var(--accent-primary);
     --brand-blue-dark:    var(--accent-primary-h);
     --brand-blue-soft:    var(--accent-primary-s);
@@ -711,145 +695,146 @@
   }
 }
 
-/* ── 8. Palette Kill-Switch — Default Tailwind Colors → Tanger Clay ───────────
-   The Airbnb/Kayak-inspired identity is now the ONLY palette. Every utility
-   class that used to resolve to Tailwind's stock palette is re-pointed at the
-   design-system ramps below, so legacy classes (bg-slate-950, text-amber-500,
-   border-blue-500, …) can NEVER reintroduce the old navy/amber or rainbow
-   brand. Semantic hues are preserved (green = success, red = destructive,
-   amber = warning) but are now the muted matte tones of this system.
+/* ── 8. Palette Kill-Switch — Default Tailwind Colors → Deep Trust Blue ───────
+   The clean marketplace identity (Airbnb/Booking/Kayak-inspired) is the ONLY
+   palette. Every utility class that used to resolve to Tailwind's stock
+   palette is re-pointed at the design-system ramps below, so legacy classes
+   (bg-slate-950, text-amber-500, border-blue-500, …) can NEVER reintroduce the
+   old navy/amber or rainbow brand. Semantic hues are preserved
+   (green = success, red = destructive, amber = warning) but as clean,
+   accessible tones.
 
-   Ramp bridge tokens — five warm ramps derived from the design tokens:
-     neutral (paper→ink), clay (brand), gold (warm secondary),
+   Ramp bridge tokens — five ramps derived from the design tokens:
+     neutral (cool grey), blue (brand), gold (warm secondary),
      green (success), red (destructive). */
 @layer base {
   :root {
-    /* neutral — warm paper → warm ink */
-    --ramp-n-50:  #FCFAF5;
-    --ramp-n-100: #EAE4D6;
-    --ramp-n-200: #E5DECE;
-    --ramp-n-300: #D6CDB9;
-    --ramp-n-400: #B3A78C;
-    --ramp-n-500: #948B79;
-    --ramp-n-600: #6E6657;
-    --ramp-n-700: #5D574A;
-    --ramp-n-800: #3A362C;
-    --ramp-n-900: #1E1B14;
-    --ramp-n-950: #15120D;
+    /* neutral — cool grey scale */
+    --ramp-n-50:  #F8F8F9;
+    --ramp-n-100: #F1F1F3;
+    --ramp-n-200: #E8E8EB;
+    --ramp-n-300: #D6D6DB;
+    --ramp-n-400: #B0B0B8;
+    --ramp-n-500: #8A8A90;
+    --ramp-n-600: #6E6E73;
+    --ramp-n-700: #48484D;
+    --ramp-n-800: #2C2C2E;
+    --ramp-n-900: #1C1C1E;
+    --ramp-n-950: #111113;
 
-    /* clay — the single brand accent */
-    --ramp-c-50:  #F8EBE6;
-    --ramp-c-100: #F3DBD2;
-    --ramp-c-200: #E9B5A6;
-    --ramp-c-300: #DE8F7A;
-    --ramp-c-400: #D06A50;
-    --ramp-c-500: #A63A20;
-    --ramp-c-600: #8B2F18;
-    --ramp-c-700: #7A2815;
-    --ramp-c-800: #68220F;
-    --ramp-c-900: #571B0D;
-    --ramp-c-950: #451405;
+    /* blue — the single brand accent */
+    --ramp-c-50:  #EBF0FE;
+    --ramp-c-100: #DBE5FD;
+    --ramp-c-200: #BDCDFB;
+    --ramp-c-300: #93AEF8;
+    --ramp-c-400: #6A8CF4;
+    --ramp-c-500: #1A56DB;
+    --ramp-c-600: #1546B4;
+    --ramp-c-700: #123A93;
+    --ramp-c-800: #103175;
+    --ramp-c-900: #0D285E;
+    --ramp-c-950: #0A1F49;
 
     /* gold — warm secondary (premium hints) */
-    --ramp-g-50:  #F6EFE3;
-    --ramp-g-100: #EDE0C8;
-    --ramp-g-200: #E2CCA6;
-    --ramp-g-300: #D2B57F;
-    --ramp-g-400: #C4A05B;
-    --ramp-g-500: #97703A;
-    --ramp-g-600: #825C2D;
-    --ramp-g-700: #7C5A2C;
-    --ramp-g-800: #6B4C26;
-    --ramp-g-900: #5A3F20;
-    --ramp-g-950: #4A331A;
+    --ramp-g-50:  #FBF4E8;
+    --ramp-g-100: #F7E8CE;
+    --ramp-g-200: #EFD3A3;
+    --ramp-g-300: #E3B871;
+    --ramp-g-400: #D19E44;
+    --ramp-g-500: #B7791F;
+    --ramp-g-600: #9A6518;
+    --ramp-g-700: #7E5214;
+    --ramp-g-800: #654111;
+    --ramp-g-900: #4F330E;
+    --ramp-g-950: #3B260A;
 
-    /* green — muted success */
-    --ramp-s-50:  #EAF2ED;
-    --ramp-s-100: #D7E8DD;
-    --ramp-s-200: #B4D1C1;
-    --ramp-s-300: #8CB9A1;
-    --ramp-s-400: #639A7E;
-    --ramp-s-500: #3E7C59;
-    --ramp-s-600: #336649;
-    --ramp-s-700: #2A543D;
-    --ramp-s-800: #224332;
-    --ramp-s-900: #1A3527;
-    --ramp-s-950: #12281E;
+    /* green — success */
+    --ramp-s-50:  #ECFDF5;
+    --ramp-s-100: #D1FAE5;
+    --ramp-s-200: #A7F3D0;
+    --ramp-s-300: #6EE7B7;
+    --ramp-s-400: #34D399;
+    --ramp-s-500: #10B981;
+    --ramp-s-600: #059669;
+    --ramp-s-700: #047857;
+    --ramp-s-800: #065F46;
+    --ramp-s-900: #064E3B;
+    --ramp-s-950: #022C22;
 
-    /* red — muted destructive */
-    --ramp-d-50:  #F7EBE9;
-    --ramp-d-100: #F0DCD7;
-    --ramp-d-200: #E2BBB3;
-    --ramp-d-300: #D4978B;
-    --ramp-d-400: #C47061;
-    --ramp-d-500: #AE4A3B;
-    --ramp-d-600: #933D31;
-    --ramp-d-700: #7D342A;
-    --ramp-d-800: #682B23;
-    --ramp-d-900: #55231C;
-    --ramp-d-950: #411B16;
+    /* red — destructive */
+    --ramp-d-50:  #FEF2F2;
+    --ramp-d-100: #FEE2E2;
+    --ramp-d-200: #FECACA;
+    --ramp-d-300: #FCA5A5;
+    --ramp-d-400: #F87171;
+    --ramp-d-500: #EF4444;
+    --ramp-d-600: #DC2626;
+    --ramp-d-700: #B91C1C;
+    --ramp-d-800: #991B1B;
+    --ramp-d-900: #7F1D1D;
+    --ramp-d-950: #450A0A;
   }
 
   .dark {
-    --ramp-n-50:  #2C261A;
-    --ramp-n-100: #262116;
-    --ramp-n-200: #312B20;
-    --ramp-n-300: #3A3326;
-    --ramp-n-400: #4A4232;
-    --ramp-n-500: #80775F;
-    --ramp-n-600: #A39A88;
-    --ramp-n-700: #B9B0A0;
-    --ramp-n-800: #D8D0C1;
-    --ramp-n-900: #F2EDE2;
-    --ramp-n-950: #F7F3EA;
+    --ramp-n-50:  #23262D;
+    --ramp-n-100: #1E2127;
+    --ramp-n-200: #2A2E36;
+    --ramp-n-300: #343941;
+    --ramp-n-400: #454B54;
+    --ramp-n-500: #71757D;
+    --ramp-n-600: #9CA0A8;
+    --ramp-n-700: #A8ABB2;
+    --ramp-n-800: #C7CAD0;
+    --ramp-n-900: #F2F3F5;
+    --ramp-n-950: #F8F9FA;
 
-    --ramp-c-50:  #2C1510;
-    --ramp-c-100: #3A1A12;
-    --ramp-c-200: #4C2015;
-    --ramp-c-300: #63301F;
-    --ramp-c-400: #9E4526;
-    --ramp-c-500: #E27752;
-    --ramp-c-600: #EF9A7C;
-    --ramp-c-700: #F2AC90;
-    --ramp-c-800: #F6BFA8;
-    --ramp-c-900: #F9D0BE;
-    --ramp-c-950: #FCDDD0;
+    --ramp-c-50:  #101B33;
+    --ramp-c-100: #14223F;
+    --ramp-c-200: #1B2D52;
+    --ramp-c-300: #223A69;
+    --ramp-c-400: #2F52A0;
+    --ramp-c-500: #4F86F7;
+    --ramp-c-600: #6EA0F8;
+    --ramp-c-700: #8FB5FA;
+    --ramp-c-800: #B0CAFB;
+    --ramp-c-900: #CFDEFD;
+    --ramp-c-950: #E4EDFE;
 
-    --ramp-g-50:  #2E2517;
-    --ramp-g-100: #3A2E1C;
-    --ramp-g-200: #4A3A24;
-    --ramp-g-300: #604828;
-    --ramp-g-400: #9B743C;
-    --ramp-g-500: #C89B5E;
-    --ramp-g-600: #D9B374;
-    --ramp-g-700: #E2C08B;
-    --ramp-g-800: #EACAA0;
-    --ramp-g-900: #F2D9B8;
-    --ramp-g-950: #F8E7CE;
+    --ramp-g-50:  #2A2110;
+    --ramp-g-100: #352A14;
+    --ramp-g-200: #44361A;
+    --ramp-g-300: #5A4620;
+    --ramp-g-400: #8C6B2A;
+    --ramp-g-500: #D9A441;
+    --ramp-g-600: #E3B65E;
+    --ramp-g-700: #EAC77F;
+    --ramp-g-800: #F0D6A2;
+    --ramp-g-900: #F5E3C2;
+    --ramp-g-950: #FAEFDC;
 
-    --ramp-s-50:  #152219;
-    --ramp-s-100: #1C2C21;
-    --ramp-s-200: #263927;
-    --ramp-s-300: #2F4A33;
-    --ramp-s-400: #4D7057;
-    --ramp-s-500: #7FBF9B;
-    --ramp-s-600: #96CBB0;
-    --ramp-s-700: #A8D4BD;
-    --ramp-s-800: #BADCC9;
-    --ramp-s-900: #CCE5D6;
-    --ramp-s-950: #DDEDE3;
+    --ramp-s-50:  #0C2A20;
+    --ramp-s-100: #103528;
+    --ramp-s-200: #164232;
+    --ramp-s-300: #1D5440;
+    --ramp-s-400: #2A7A5C;
+    --ramp-s-500: #34D399;
+    --ramp-s-600: #5FDFAC;
+    --ramp-s-700: #86E7C0;
+    --ramp-s-800: #AEEFD4;
+    --ramp-s-900: #D2F7E6;
+    --ramp-s-950: #E9FBF3;
 
-    --ramp-d-50:  #2B1713;
-    --ramp-d-100: #391D18;
-    --ramp-d-200: #4A251F;
-    --ramp-d-300: #5E2E26;
-    --ramp-d-400: #9C4F40;
-    --ramp-d-500: #E08A7A;
-    --ramp-d-600: #E79C8F;
-    --ramp-d-700: #EBAFA4;
-    --ramp-d-800: #F0C1B8;
-    --ramp-d-900: #F4D3CC;
-    --ramp-d-950: #F8E4DF;
+    --ramp-d-50:  #2C1414;
+    --ramp-d-100: #3A1A1A;
+    --ramp-d-200: #4A2121;
+    --ramp-d-300: #5E2A2A;
+    --ramp-d-400: #9C3A3A;
+    --ramp-d-500: #F87171;
+    --ramp-d-600: #FA8E8E;
+    --ramp-d-700: #FBA8A8;
+    --ramp-d-800: #FCC3C3;
+    --ramp-d-900: #FDDADA;
+    --ramp-d-950: #FEEBEB;
   }
 }
 
@@ -881,7 +866,7 @@
   --color-stone-800:  var(--ramp-n-800);
   --color-stone-900:  var(--ramp-n-900);
 
-  /* brand families: amber ⟶ clay (matches the --brand-amber alias) */
+  /* brand families: amber ⟶ deep trust blue (matches the --brand-amber alias) */
   --color-amber-50:   var(--ramp-c-50);
   --color-amber-100:  var(--ramp-c-100);
   --color-amber-200:  var(--ramp-c-200);
@@ -899,7 +884,7 @@
   --color-yellow-500: var(--ramp-g-500);
   --color-orange-400: var(--ramp-g-400);
 
-  /* former blue/purple brand accent families ⟶ clay */
+  /* former blue/purple brand accent families ⟶ deep trust blue */
   --color-blue-50:    var(--ramp-c-50);
   --color-blue-300:   var(--ramp-c-300);
   --color-blue-400:   var(--ramp-c-400);

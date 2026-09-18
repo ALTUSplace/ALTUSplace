@@ -6,7 +6,7 @@ import { sdk } from "./sdk";
 import { ENV } from "./env";
 import { logger } from "./logger";
 import { normalizeSecret } from "./secretUtils";
-import { isOwnerConfigured, setOwnerPassword, verifyOwnerPassword } from "./ownerAuth";
+import { claimOwnerPassword, isOwnerConfigured, verifyOwnerPassword } from "./ownerAuth";
 
 // Stable openId used for the fallback owner account when OWNER_OPEN_ID is not
 // configured. The account is always persisted as SUPER_ADMIN.
@@ -115,7 +115,11 @@ export function registerDirectAuthRoutes(app: Express) {
     }
 
     try {
-      await setOwnerPassword(provided);
+      const claimed = await claimOwnerPassword(provided);
+      if (!claimed) {
+        res.status(403).json({ error: "Owner login is already configured.", reason: "already_configured" });
+        return;
+      }
       await issueOwnerSession(req, res);
       logger.warn("[DirectAuth] owner password set via first-run setup");
       res.json({ success: true, role: "SUPER_ADMIN", redirectTo: "/admin/super/dashboard" });

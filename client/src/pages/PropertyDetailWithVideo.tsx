@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { trpc } from "@/lib/trpc";
 import { calculateRentalDays, calculateRentalSubtotal } from "@/lib/pricing";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useSEO } from "@/lib/seo";
 import { LISTINGS, type ListingItem } from "@/data/altusplace";
 import { toast } from "sonner";
 import { OptimizedImage } from "@/components/OptimizedImage";
@@ -134,6 +135,24 @@ export default function PropertyDetailWithVideo() {
     }
     return "درهم / ليلة";
   }, [listing, staticItem, language]);
+
+  // SEO runs before the loading/not-found early returns so stale or invalid
+  // listing ids still get a canonical + noindex instead of inheriting the hub's.
+  const seoTitle = listing ? `${title} — ${listing.city} | ALTUSplace` : "ALTUSplace";
+  const seoDescription = listing
+    ? description
+    : language === "fr"
+      ? "Découvrez des biens immobiliers à louer partout au Maroc avec ALTUSplace."
+      : "اكتشف عقارات للإيجار في جميع مدن المغرب عبر ALTUSplace.";
+  useSEO({
+    title: seoTitle,
+    description: seoDescription,
+    path: `/property/${params.id}`,
+    language,
+    image: imageUrl || undefined,
+    type: "place",
+    robots: listing ? "index, follow, max-image-preview:large" : "noindex, follow",
+  });
 
   // Booking state
   const [startDate, setStartDate] = useState(() => {

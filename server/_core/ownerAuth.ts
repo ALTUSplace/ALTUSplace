@@ -1,7 +1,7 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
 import { platformSettings } from "../../drizzle/schema";
-import { getDb } from "../db";
+import { getDb, withTransaction } from "../db";
 import { ENV } from "./env";
 import { normalizeSecret, safeEqual } from "./secretUtils";
 
@@ -62,6 +62,37 @@ export async function setOwnerPassword(password: string): Promise<void> {
   } else {
     await db.insert(platformSettings).values({ ownerPasswordHash: passwordHash, ownerPasswordSalt: salt });
   }
+}
+
+/**
+ * Atomically claim first-run ownership: sets the owner password only if no
+ * credential exists yet. Concurrent callers are serialized with a Postgres
+ * advisory transaction lock so two racing /api/auth/owner-setup requests can
+ * never both succeed (prevents an attacker from claiming SUPER_ADMIN during
+ * the deploy window). Returns true when this call stored the credential.
+ */
+export async function claimOwnerPassword(password: string): Promise<boolean> {
+  return withTransaction(async (tx) => {
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(918273645)`);
+    const rows = await tx
+      .select({ id: platformSettings.id, hash: platformSettings.ownerPasswordHash })
+      .from(platformSettings)
+      .limit(1);
+    const existing = rows[0];
+    if (existing?.hash) return false;
+
+    const salt = randomBytes(16).toString("hex");
+    const passwordHash = scryptSync(password, salt, SCRYPT_KEYLEN).toString("hex");
+    if (existing?.id != null) {
+      await tx
+        .update(platformSettings)
+        .set({ ownerPasswordHash: passwordHash, ownerPasswordSalt: salt })
+        .where(eq(platformSettings.id, existing.id));
+    } else {
+      await tx.insert(platformSettings).values({ ownerPasswordHash: passwordHash, ownerPasswordSalt: salt });
+    }
+    return true;
+  });
 }
 
 /**

@@ -15,6 +15,7 @@ import { ErrorState } from '@/components/ui/ErrorState';
 import { isCarCategory, isPropertyCategory } from '@/lib/categories';
 import { CitySelect } from '@/components/CitySelect';
 import { resolveCitySlug } from '@/data/moroccoCities';
+import { useSEO } from '@/lib/seo';
 
 const listingRoute = (item: ListingItem) => (item.type === 'property' ? `/property/${item.id}` : `/car/${item.id}`);
 
@@ -189,6 +190,31 @@ export default function Search() {
       return 0;
     });
   }, [serverListings, cityFilter, typeFilter, maxPrice, sortBy, searchQuery, brandParam, categoryParam, excellenceOnly]);
+
+  // Thin-content guard: filtered/sorted/map/empty result states are `noindex`
+  // and canonicalize to the clean /search hub so they never compete with it.
+  const hasActiveFilters =
+    cityFilter !== 'all' ||
+    typeFilter !== 'all' ||
+    searchQuery.trim() !== '' ||
+    Boolean(brandParam || categoryParam) ||
+    maxPrice !== 4000 ||
+    sortBy !== 'recommended' ||
+    viewMode === 'map';
+  const resultsEmpty = !listingsQuery.isLoading && !listingsQuery.error && filteredListings.length === 0;
+  const isThinSearch = hasActiveFilters || resultsEmpty;
+  useSEO({
+    title: language === 'fr'
+      ? 'Location de voitures et immobilier au Maroc | ALTUSplace'
+      : 'كراء السيارات والعقارات في المغرب | ALTUSplace',
+    description: language === 'fr'
+      ? 'Comparez les voitures et biens à louer dans toutes les villes du Maroc, avec prix transparents et réservation en ligne sécurisée.'
+      : 'قارن عروض كراء السيارات والعقارات في جميع مدن المغرب بأسعار واضحة وحجز آمن عبر الإنترنت.',
+    path: '/search',
+    canonicalPath: '/search',
+    language,
+    robots: isThinSearch ? 'noindex, follow' : 'index, follow, max-image-preview:large',
+  });
 
   const [isSearching, setIsSearching] = useState(false);
 

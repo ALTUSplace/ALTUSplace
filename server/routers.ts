@@ -130,19 +130,29 @@ export const appRouter = router({
           throw new TRPCError({ code: "CONFLICT", message: "أنت مسجل بالفعل كوكالة تأجير أو مشرف." });
         }
         const beforeRole = ctx.user!.role;
-        await db.update(users).set({
-          role: 'owner',
-          agencyName: input.agencyName,
-          commercialRegister: input.commercialRegister?.trim() || null,
-        }).where(eq(users.id, ctx.user!.id));
-        await writeAuditLog({
-          actorId: ctx.user!.id,
-          action: "auth.become_agency",
-          entityType: "user",
-          entityId: ctx.user!.id,
-          beforeData: { role: beforeRole },
-          afterData: { role: 'owner', agencyName: input.agencyName },
-        });
+        try {
+          await db.update(users).set({
+            role: 'owner',
+            agencyName: input.agencyName,
+            commercialRegister: input.commercialRegister?.trim() || null,
+          }).where(eq(users.id, ctx.user!.id));
+        } catch (error) {
+          console.error("[becomeAgency] Failed to promote user", { userId: ctx.user!.id, error });
+          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "تعذر إتمام التسجيل. حاول مرة أخرى أو تواصل مع الدعم." });
+        }
+        try {
+          await writeAuditLog({
+            actorId: ctx.user!.id,
+            action: "auth.become_agency",
+            entityType: "user",
+            entityId: ctx.user!.id,
+            beforeData: { role: beforeRole },
+            afterData: { role: 'owner', agencyName: input.agencyName },
+          });
+        } catch (error) {
+          // Audit logging must never roll back a successful registration.
+          console.warn("[becomeAgency] Audit log failed", { userId: ctx.user!.id, error });
+        }
         return { success: true as const, role: 'owner' as const };
       }),
     logout: publicProcedure.mutation(({ ctx }) => {

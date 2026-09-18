@@ -59,9 +59,9 @@ export default function MyBookings() {
   }, [contractQuery.data, contractQuery.isError]);
 
   return (
-    <div className="min-h-screen bg-[#15120D] text-slate-100 py-12" dir={direction}>
+    <div className="min-h-screen bg-[#1C1C1E] text-slate-100 py-12" dir={direction}>
       <div className="container mx-auto px-4 max-w-4xl space-y-8">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#15120D] border border-slate-800 p-8 rounded-3xl shadow-xl">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#1C1C1E] border border-slate-800 p-8 rounded-3xl shadow-xl">
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 bg-amber-500/15 border border-amber-500/30 rounded-2xl flex items-center justify-center text-amber-400">
               <BookmarkCheck className="w-7 h-7" />
@@ -77,9 +77,9 @@ export default function MyBookings() {
         </div>
 
         {authLoading ? (
-          <div className="bg-[#15120D] border border-slate-800 rounded-3xl p-10 text-center text-slate-400 flex items-center justify-center gap-2"><Loader2 className="w-4 h-4 animate-spin text-amber-400" /> جاري التحقق من الجلسة...</div>
+          <div className="bg-[#1C1C1E] border border-slate-800 rounded-3xl p-10 text-center text-slate-400 flex items-center justify-center gap-2"><Loader2 className="w-4 h-4 animate-spin text-amber-400" /> جاري التحقق من الجلسة...</div>
         ) : !isAuthenticated ? (
-          <div className="bg-[#15120D] border border-slate-800 rounded-3xl p-10 text-center space-y-4">
+          <div className="bg-[#1C1C1E] border border-slate-800 rounded-3xl p-10 text-center space-y-4">
             <div className="mx-auto w-12 h-12 bg-amber-500/15 border border-amber-500/30 rounded-2xl flex items-center justify-center text-amber-400"><AlertTriangle className="w-6 h-6" /></div>
             <p className="text-slate-300 font-bold">تسجيل الدخول مطلوب لعرض حجوزاتك</p>
             <p className="text-slate-500 text-sm">قم بتسجيل الدخول أولاً للاطلاع على سجل حجوزاتك السابقة والحالية.</p>
@@ -88,9 +88,9 @@ export default function MyBookings() {
             </Button>
           </div>
         ) : bookingsLoading ? (
-          <div className="bg-[#15120D] border border-slate-800 rounded-3xl p-10 text-center text-slate-400 flex items-center justify-center gap-2"><Loader2 className="w-4 h-4 animate-spin text-amber-400" /> جاري تحميل الحجوزات...</div>
+          <div className="bg-[#1C1C1E] border border-slate-800 rounded-3xl p-10 text-center text-slate-400 flex items-center justify-center gap-2"><Loader2 className="w-4 h-4 animate-spin text-amber-400" /> جاري تحميل الحجوزات...</div>
         ) : bookingsError ? (
-          <div className="bg-[#15120D] border border-slate-800 rounded-3xl p-10 text-center space-y-4">
+          <div className="bg-[#1C1C1E] border border-slate-800 rounded-3xl p-10 text-center space-y-4">
             <div className="mx-auto w-12 h-12 bg-rose-500/15 border border-rose-500/30 rounded-2xl flex items-center justify-center text-rose-400"><AlertTriangle className="w-6 h-6" /></div>
             <p className="text-slate-300 font-bold">تعذر تحميل الحجوزات</p>
             <p className="text-slate-500 text-sm">حدث خلل أثناء جلب حجوزاتك. حاول مرة أخرى في بضع ثوانٍ.</p>
@@ -99,15 +99,15 @@ export default function MyBookings() {
             </Button>
           </div>
         ) : dbBookings.length === 0 ? (
-          <div className="bg-[#15120D] border border-slate-800 rounded-3xl p-10 text-center text-slate-400">لا توجد حجوزات مرتبطة بحسابك حالياً.</div>
+          <div className="bg-[#1C1C1E] border border-slate-800 rounded-3xl p-10 text-center text-slate-400">لا توجد حجوزات مرتبطة بحسابك حالياً.</div>
         ) : (
           <div className="space-y-6">
             {dbBookings.map((booking) => {
               const listing = listingById.get(booking.listingId);
               const isContractLoading = contractBookingId === booking.id && contractQuery.isFetching;
               return (
-                <div key={booking.id} className="bg-[#15120D] border border-slate-800 rounded-3xl p-6 shadow-xl flex flex-col md:flex-row items-center gap-6">
-                  <div className="w-full md:w-48 h-32 rounded-2xl overflow-hidden border border-slate-800 shrink-0 bg-[#15120D]">
+                <div key={booking.id} className="bg-[#1C1C1E] border border-slate-800 rounded-3xl p-6 shadow-xl flex flex-col md:flex-row items-center gap-6">
+                  <div className="w-full md:w-48 h-32 rounded-2xl overflow-hidden border border-slate-800 shrink-0 bg-[#1C1C1E]">
                     {listing?.imageUrl && <OptimizedImage src={listing.imageUrl} alt={listing.title} width={640} height={320} widthHint={640} sizes="(max-width: 768px) 100vw, 192px" className="w-full h-full object-cover" />}
                   </div>
                   <div className="flex-1 space-y-3 text-right w-full">
@@ -145,7 +145,7 @@ export default function MyBookings() {
                         <Receipt className="w-4 h-4" /> الفاتورة PDF
                       </Button>
                     )}
-                    <Link href={`/messages/${booking.id}`} className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-[#15120D] hover:bg-[#15120D]/90 text-white px-4 py-2.5 rounded-xl text-xs font-semibold">
+                    <Link href={`/messages/${booking.id}`} className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-[#1C1C1E] hover:bg-[#1C1C1E]/90 text-white px-4 py-2.5 rounded-xl text-xs font-semibold">
                       <MessageCircle className="w-4 h-4" /> مراسلة الطرف الآخر
                     </Link>
                     <a href="/support-tickets" className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-white px-4 py-2.5 rounded-xl text-xs font-semibold">

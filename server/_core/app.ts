@@ -1,4 +1,4 @@
-import express from "express";
+import express, { type Request } from "express";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
 import { registerDirectAuthRoutes } from "./directAuth";
@@ -14,6 +14,8 @@ import {
 } from "../payments/webhooks";
 import { ENV } from "./env";
 import { registerStorageProxy } from "./storageProxy";
+import { registerSitemapRoutes, SEO_SITE_URL } from "./sitemap";
+import { injectPrerenderMetadata } from "./prerender";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { leaseEndReminderHandler } from "../leaseReminder";
@@ -23,6 +25,18 @@ import { icalSyncHandler } from "../cron/icalSync";
 import { leaseRemindersHandler } from "../cron/leaseReminders";
 import { demoCleanupHandler } from "../cron/demoCleanup";
 import { logger } from "./logger";
+
+/**
+ * Origin used only to fetch the SPA shell for prerendering. Restricted to
+ * first-party hosts so the request host cannot become an SSRF vector.
+ */
+function prerenderFetchOrigin(req: Request): string {
+  const host = (req.get("x-forwarded-host") || req.get("host") || "").split(",")[0].trim();
+  const proto = (req.get("x-forwarded-proto") || "https").split(",")[0].trim();
+  const allowed = /^([a-z0-9-]+\.)*(altusplace\.ma|vercel\.app|localhost)(:\d+)?$/i;
+  if (host && allowed.test(host)) return `${proto}://${host}`;
+  return SEO_SITE_URL;
+}
 
 /**
  * Builds the Express application (all middleware + routes), without binding a
@@ -138,6 +152,30 @@ export function createApp() {
     res.json({ status: "ok", timestamp: new Date().toISOString() });
   });
   app.get("/api/ical/export/:token", icalExportHandler);
+  // Sitemap sub-indexes generated from live inventory (static parts are built
+  // by scripts/generate-sitemap.ts into client/public).
+  registerSitemapRoutes(app);
+  // Prerender proxy target for edge middleware: returns the SPA shell with
+  // route-specific meta tags so crawlers/social bots get real previews.
+  app.get("/api/prerender", async (req, res) => {
+    const requested = typeof req.query.path === "string" ? req.query.path : "/";
+    const targetPath = requested.startsWith("/") ? requested : `/${requested}`;
+    try {
+      const indexResponse = await fetch(`${prerenderFetchOrigin(req)}/index.html`);
+      if (!indexResponse.ok) throw new Error(`index responded ${indexResponse.status}`);
+      const template = await indexResponse.text();
+      const html = await injectPrerenderMetadata(template, targetPath, SEO_SITE_URL);
+      res.setHeader("Content-Type", "text/html; charset=utf-8");
+      res.setHeader("Cache-Control", "public, max-age=300, s-maxage=3600");
+      res.status(200).send(html);
+    } catch (error) {
+      logger.warn("Prerender request failed", {
+        error: error instanceof Error ? error.message : String(error),
+        path: targetPath,
+      });
+      res.status(502).json({ error: "prerender_unavailable" });
+    }
+  });
   app.use(
     "/api/trpc",
     createExpressMiddleware({

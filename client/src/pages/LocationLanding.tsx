@@ -63,14 +63,14 @@ function BespokeLocationPage({ location }: { location: LocationKey }) {
   return (
     <div className="min-h-screen bg-slate-50 px-4 py-12" dir={isArabic ? "rtl" : "ltr"}>
       <div className="mx-auto max-w-5xl space-y-8">
-        <section className="rounded-3xl bg-[#15120D] p-8 text-white shadow-xl md:p-12">
+        <section className="rounded-3xl bg-[#1C1C1E] p-8 text-white shadow-xl md:p-12">
           <div className="mb-4 flex items-center gap-2 text-amber-300"><MapPin className="h-5 w-5" /><span>ALTUSplace Morocco</span></div>
           <h1 className="max-w-3xl text-3xl font-black leading-tight md:text-5xl">{content.title}</h1>
           <p className="mt-5 max-w-2xl text-base leading-8 text-slate-200">{content.description}</p>
           <Link href={`/search?city=${encodeURIComponent(content.city)}`} className="mt-7 inline-flex items-center gap-2 rounded-xl bg-amber-500 px-5 py-3 font-bold text-slate-950 hover:bg-amber-400"><Car className="h-5 w-5" />{isArabic ? "شاهد السيارات المتاحة" : language === "fr" ? "Voir les voitures disponibles" : "View available cars"}<ArrowRight className="h-4 w-4" /></Link>
         </section>
         <FeatureCards isArabic={isArabic} language={language} />
-        <nav className="flex flex-wrap gap-3 text-sm"><Link href="/locations/marrakech-car-rental" className="text-[#15120D] underline">Marrakech</Link><Link href="/locations/mohammed-v-airport-car-rental" className="text-[#15120D] underline">Mohammed V Airport</Link><Link href="/locations" className="text-[#15120D] underline">{isArabic ? "كل مدن المغرب" : "Toutes les villes du Maroc"}</Link><Link href="/search" className="text-[#15120D] underline">{isArabic ? "كل العروض" : language === "fr" ? "Toutes les offres" : "All listings"}</Link></nav>
+        <nav className="flex flex-wrap gap-3 text-sm"><Link href="/locations/marrakech-car-rental" className="text-[#1C1C1E] underline">Marrakech</Link><Link href="/locations/mohammed-v-airport-car-rental" className="text-[#1C1C1E] underline">Mohammed V Airport</Link><Link href="/locations" className="text-[#1C1C1E] underline">{isArabic ? "كل مدن المغرب" : "Toutes les villes du Maroc"}</Link><Link href="/search" className="text-[#1C1C1E] underline">{isArabic ? "كل العروض" : language === "fr" ? "Toutes les offres" : "All listings"}</Link></nav>
       </div>
     </div>
   );
@@ -102,7 +102,16 @@ function CityLocationPage({ city }: { city: string }) {
       ? `Trouvez des voitures et des biens à louer à ${cityNameFr} sur ALTUSplace : agences locales, prix transparents et réservation en ligne.`
       : `Find rental cars and properties in ${cityNameFr} with ALTUSplace: local agencies, clear pricing and easy online booking.`;
 
-  useSEO({ title, description, path: `/locations/${slug}`, language });
+  const isEmptyCity = !isLoading && !isError && cityListings.length === 0;
+
+  useSEO({
+    title,
+    description,
+    path: `/locations/${slug}`,
+    canonicalPath: `/locations/${slug}`,
+    language,
+    robots: isEmptyCity ? "noindex, follow" : "index, follow, max-image-preview:large",
+  });
 
   useEffect(() => {
     renderJsonLd("locations-breadcrumb-jsonld", {
@@ -133,7 +142,7 @@ function CityLocationPage({ city }: { city: string }) {
   return (
     <div className="min-h-screen bg-slate-50 px-4 py-12" dir={isArabic ? "rtl" : "ltr"}>
       <div className="mx-auto max-w-5xl space-y-8">
-        <section className="rounded-3xl bg-[#15120D] p-8 text-white shadow-xl md:p-12">
+        <section className="rounded-3xl bg-[#1C1C1E] p-8 text-white shadow-xl md:p-12">
           <div className="mb-4 flex flex-wrap items-center gap-2 text-amber-300"><MapPin className="h-5 w-5" /><span>ALTUSplace Morocco</span><span className="text-white/60">·</span><span>{isArabic ? city : cityNameFr}</span></div>
           <h1 className="max-w-3xl text-3xl font-black leading-tight md:text-5xl">{title}</h1>
           <p className="mt-5 max-w-2xl text-base leading-8 text-slate-200">{description}</p>
@@ -182,12 +191,12 @@ function CityLocationPage({ city }: { city: string }) {
             <div className="rounded-2xl bg-white p-10 text-center shadow-sm">
               <MapPin className="mx-auto mb-3 h-8 w-8 text-slate-300" />
               <p className="text-muted-foreground">{isArabic ? "لا توجد عروض نشطة في هذه المدينة بعد — تصفح مناطق أخرى أو تواصل مع وكالاة محلية." : language === "fr" ? "Aucune offre active dans cette ville pour le moment — explorez d'autres régions ou contactez une agence locale." : "No active listings in this city yet — explore other regions or reach out to a local agency."}</p>
-              <Link href="/locations" className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#15120D] px-5 py-3 text-sm font-bold text-white hover:opacity-90">{isArabic ? "تصفح كل المدن" : language === "fr" ? "Explorer toutes les villes" : "Browse all cities"}<ArrowRight className="h-4 w-4" /></Link>
+              <Link href="/locations" className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#1C1C1E] px-5 py-3 text-sm font-bold text-white hover:opacity-90">{isArabic ? "تصفح كل المدن" : language === "fr" ? "Explorer toutes les villes" : "Browse all cities"}<ArrowRight className="h-4 w-4" /></Link>
             </div>
           )}
         </section>
 
-        <nav className="flex flex-wrap gap-3 text-sm"><Link href="/locations" className="text-[#15120D] underline">{isArabic ? "كل مدن المغرب" : "Toutes les villes du Maroc"}</Link><Link href="/locations/marrakech-car-rental" className="text-[#15120D] underline">Marrakech</Link><Link href="/locations/mohammed-v-airport-car-rental" className="text-[#15120D] underline">Mohammed V Airport</Link><Link href="/search" className="text-[#15120D] underline">{isArabic ? "كل العروض" : language === "fr" ? "Toutes les offres" : "All listings"}</Link></nav>
+        <nav className="flex flex-wrap gap-3 text-sm"><Link href="/locations" className="text-[#1C1C1E] underline">{isArabic ? "كل مدن المغرب" : "Toutes les villes du Maroc"}</Link><Link href="/locations/marrakech-car-rental" className="text-[#1C1C1E] underline">Marrakech</Link><Link href="/locations/mohammed-v-airport-car-rental" className="text-[#1C1C1E] underline">Mohammed V Airport</Link><Link href="/search" className="text-[#1C1C1E] underline">{isArabic ? "كل العروض" : language === "fr" ? "Toutes les offres" : "All listings"}</Link></nav>
       </div>
     </div>
   );
@@ -222,7 +231,7 @@ function LocationsHub({ knownSlugSeen }: { knownSlugSeen?: boolean }) {
   return (
     <div className="min-h-screen bg-slate-50 px-4 py-12" dir={isArabic ? "rtl" : "ltr"}>
       <div className="mx-auto max-w-5xl space-y-8">
-        <section className="rounded-3xl bg-[#15120D] p-8 text-white shadow-xl md:p-12">
+        <section className="rounded-3xl bg-[#1C1C1E] p-8 text-white shadow-xl md:p-12">
           <div className="mb-4 flex items-center gap-2 text-amber-300"><MapPin className="h-5 w-5" /><span>ALTUSplace Morocco</span></div>
           <h1 className="max-w-3xl text-3xl font-black leading-tight md:text-5xl">{isArabic ? "مدن المغرب: سيارات وعقارات للكراء" : language === "fr" ? "Villes du Maroc : voitures et immobilier à louer" : "Moroccan cities: cars and properties for rent"}</h1>
           <p className="mt-5 max-w-2xl text-base leading-8 text-slate-200">{isArabic ? "اختر مدينة لعرض الإعلانات النشطة على ALTUSplace. تغطي المنصة جميع جهات المغرب الاثنتي عشرة." : language === "fr" ? "Choisissez une ville pour voir les annonces actives sur ALTUSplace. La plateforme couvre les douze régions du Maroc." : "Choose a city to view active listings on ALTUSplace. The platform covers all twelve regions of Morocco."}</p>
@@ -236,7 +245,7 @@ function LocationsHub({ knownSlugSeen }: { knownSlugSeen?: boolean }) {
               <ul className="mt-4 space-y-2">
                 {region.cities.map((city) => (
                   <li key={city}>
-                    <Link href={`/locations/${slugForCity(city)}`} className="flex items-center gap-2 text-sm font-medium text-[#15120D] hover:text-amber-600">
+                    <Link href={`/locations/${slugForCity(city)}`} className="flex items-center gap-2 text-sm font-medium text-[#1C1C1E] hover:text-amber-600">
                       <MapPin className="h-3.5 w-3.5 text-slate-300" />{isArabic ? city : cityLabelFr(city)}
                     </Link>
                   </li>
@@ -246,7 +255,7 @@ function LocationsHub({ knownSlugSeen }: { knownSlugSeen?: boolean }) {
           ))}
         </section>
 
-        <nav className="flex flex-wrap gap-3 text-sm"><Link href="/locations/marrakech-car-rental" className="text-[#15120D] underline">Marrakech</Link><Link href="/locations/mohammed-v-airport-car-rental" className="text-[#15120D] underline">Mohammed V Airport</Link><Link href="/search" className="text-[#15120D] underline">{isArabic ? "كل العروض" : language === "fr" ? "Toutes les offres" : "All listings"}</Link></nav>
+        <nav className="flex flex-wrap gap-3 text-sm"><Link href="/locations/marrakech-car-rental" className="text-[#1C1C1E] underline">Marrakech</Link><Link href="/locations/mohammed-v-airport-car-rental" className="text-[#1C1C1E] underline">Mohammed V Airport</Link><Link href="/search" className="text-[#1C1C1E] underline">{isArabic ? "كل العروض" : language === "fr" ? "Toutes les offres" : "All listings"}</Link></nav>
       </div>
     </div>
   );

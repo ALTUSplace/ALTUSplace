@@ -12,11 +12,19 @@ import { ListingCard } from '@/components/ui/ListingCard';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { isCarCategory, isPropertyCategory } from '@/lib/categories';
 import { CitySelect } from '@/components/CitySelect';
+import { useSEO } from '@/lib/seo';
 import { toast } from 'sonner';
 
 export default function Home() {
   const [, setLocation] = useLocation();
   const { t, direction } = useLanguage();
+
+  useSEO({
+    title: 'كراء السيارات والعقارات في المغرب | ALTUSplace',
+    description: 'احجز سيارات وعقارات للكراء في المغرب بضمان المنصة ودفع آمن: أسعار واضحة ووكالات محلية موثوقة.',
+    path: '/',
+    type: 'website',
+  });
 
   // Search states for Cars
   const [carCity, setCarCity] = useState('الدار البيضاء');
