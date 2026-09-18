@@ -16,6 +16,7 @@ import { lazy, Suspense } from "react";
 import { useAuth } from "./_core/hooks/useAuth";
 import { startLogin } from "./const";
 import { Button } from "@/components/ui/button";
+import { Toaster } from "@/components/ui/sonner";
 
 // Lazy-loaded pages and global widgets keep the initial mobile bundle small.
 const HostDashboard = lazy(() => import("./pages/HostDashboard"));
@@ -189,6 +190,7 @@ export default function App() {
                     <AIChatWidget />
                   </Suspense>
                 </div>
+                <Toaster />
               </TooltipProvider>
             </CurrencyProvider>
           </LanguageProvider>
