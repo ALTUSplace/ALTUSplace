@@ -2,9 +2,13 @@ import { listings, users } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
 import { getDb } from "./db";
 import { logger } from "./_core/logger";
+import { CATALOG_ITEMS } from "../client/src/data/catalog";
 
 /**
- * Demo catalog seed — mirrors the static LISTINGS in client/src/data/altusplace.ts.
+ * Demo catalog seed — mirrors the static LISTINGS in client/src/data/altusplace.ts
+ * and supplements them with the structured CATALOG_ITEMS dataset
+ * (client/src/data/catalog.ts) — the 5 modern showcase entries (apartments,
+ * offices, Dacia Duster 2026, Renault Clio 2026, Jeep Wrangler 2025).
  *
  * Runs once per boot when the `listings` table is empty and a DATABASE_URL is
  * configured, so the marketplace (Search, filtering, car detail, and real
@@ -18,7 +22,7 @@ const DEMO_OWNER_NAME = "فريق المنصة ALTUSplace";
 
 type DemoListingRow = Omit<typeof listings.$inferInsert, "ownerId">;
 
-const DEMO_LISTINGS: DemoListingRow[] = [
+const EXISTING_DEMO_LISTINGS: DemoListingRow[] = [
   {
     title: "رينو كليو",
     description: "سيارة اقتصادية ومريحة، ممتازة للتنقل في المدن المغربية والمطارات.",
@@ -77,6 +81,33 @@ const DEMO_LISTINGS: DemoListingRow[] = [
     pricePerMonth: 9000,
   },
 ];
+
+/** Catalog showcase rows (client/src/data/catalog.ts) mapped to DB columns. */
+const CATALOG_ROWS: DemoListingRow[] = CATALOG_ITEMS.map((item) => ({
+  title: item.title,
+  description: item.description,
+  category: item.category,
+  pricePerDay: item.pricePerDay,
+  imageUrl: item.imageUrl,
+  images: item.images,
+  city: item.city,
+  lat: item.lat,
+  lng: item.lng,
+  pricePerMonth: item.pricePerMonth,
+  rentalPeriod: item.rentalPeriod,
+  propertyType: item.propertyType,
+  officeType: item.officeType,
+  rooms: item.rooms,
+  area: item.area,
+  floor: item.floor,
+  seats: item.seats,
+  year: item.year,
+  transmission: item.transmission,
+  fuelType: item.fuelType,
+  amenities: item.features.join(", "),
+}));
+
+const DEMO_LISTINGS: DemoListingRow[] = [...EXISTING_DEMO_LISTINGS, ...CATALOG_ROWS];
 
 let seedPromise: Promise<void> | null = null;
 
