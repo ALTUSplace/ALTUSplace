@@ -1040,3 +1040,27 @@
       color var(--dur-fast) var(--ease-smooth);
   }
 }
+
+/* ── Floating WhatsApp contact button ─────────────────────────────────────────
+   Expanding pulse ring, triggered every 3 s while the listing detail pages are
+   open. The ring stays hidden behind the solid button fill at scale(1) and only
+   becomes visible as it expands past the 50px/60px circle. */
+@keyframes wa-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.4;
+  }
+  60% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+.wa-pulse-ring {
+  pointer-events: none;
+  animation: wa-pulse 3s ease-in-out infinite;
+}

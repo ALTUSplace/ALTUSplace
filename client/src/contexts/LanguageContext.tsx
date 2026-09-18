@@ -248,6 +248,9 @@ const translations: Record<Language, Record<string, string>> = {
     rabatDistricts: "الرباط",
     whatsappChat: "محادثة واتساب",
     whatsappChatLabel: "تواصل مباشرة عبر واتساب",
+    waContactAgency: "تواصل مع الوكالة عبر واتساب",
+    waContactSupport: "تواصل مع دعم ALTUSplace",
+    waMessage: "مرحبا، أنا مهتم بـ {title} في {city}. هل يمكنني الحصول على مزيد من المعلومات؟",
   },
   fr: {
     searchCityOdgency: "Ville ou agence",
@@ -513,6 +516,9 @@ const translations: Record<Language, Record<string, string>> = {
     rabatDistricts: "Rabat",
     whatsappChat: "Chat WhatsApp",
     whatsappChatLabel: "Discuter directement sur WhatsApp",
+    waContactAgency: "Contacter l'agence sur WhatsApp",
+    waContactSupport: "Contacter le support ALTUSplace",
+    waMessage: "Bonjour, je suis intéressé par {title} à {city}. Puis-je avoir plus d'informations ?",
   },
   en: {
     searchCityOdgency: "City or Agency",
@@ -778,6 +784,9 @@ const translations: Record<Language, Record<string, string>> = {
     rabatDistricts: "Rabat",
     whatsappChat: "WhatsApp chat",
     whatsappChatLabel: "Chat directly on WhatsApp",
+    waContactAgency: "Contact the agency on WhatsApp",
+    waContactSupport: "Contact ALTUSplace support",
+    waMessage: "Hello, I am interested in {title} in {city}. Could I get more information?",
   },
 };
 

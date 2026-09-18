@@ -13,6 +13,7 @@ import { BABY_SEAT_FEE_PER_DAY, calculateRentalDays, calculateRentalSubtotal, IN
 import { RENTAL_TERMS } from '@/lib/rentalTerms';
 import CommentSection from '@/components/CommentSection';
 import { BookingWidget } from '@/components/ui/BookingWidget';
+import { FloatingWhatsAppButton } from '@/components/FloatingWhatsAppButton';
 
 const isIsoDay = (value: string | null): value is string => /^\d{4}-\d{2}-\d{2}$/.test(value ?? '');
 
@@ -477,6 +478,17 @@ export default function CarDetails() {
         </div>
 
       </div>
+
+      <FloatingWhatsAppButton
+        phone={listing?.agencyPhone ?? listing?.whatsappPhone}
+        title={car.name}
+        city={car.cityName}
+        onContact={() => {
+          if (numericListingId !== null) {
+            trackWhatsAppMutation.mutate({ listingId: numericListingId, eventType: "whatsapp_click" });
+          }
+        }}
+      />
     </div>
   );
 }
