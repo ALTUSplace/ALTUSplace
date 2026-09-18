@@ -10,6 +10,7 @@ import { SmartRecommendations } from '@/components/SmartRecommendations';
 import { FAQSection } from '@/components/FAQSection';
 import { ListingCard } from '@/components/ui/ListingCard';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { CatalogShowcase } from '@/components/CatalogShowcase';
 import { isCarCategory, isPropertyCategory } from '@/lib/categories';
 import { CitySelect } from '@/components/CitySelect';
 import { useSEO } from '@/lib/seo';
@@ -281,6 +282,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* ── Static 2026 catalog showcase (always visible, DB-independent) ── */}
+      <CatalogShowcase />
 
       {/* ── Bento Grid Section (Separating Cars and Properties cleanly) ── */}
       <section className="py-10 md:py-16 px-4 container mx-auto max-w-6xl">
