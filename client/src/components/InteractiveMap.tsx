@@ -209,6 +209,7 @@ export function InteractiveMap({
                   <img
                     src={listing.image}
                     alt={listing.title}
+                    loading="lazy"
                     className="w-16 h-16 object-cover rounded-lg flex-shrink-0"
                   />
                   <div className="flex-1 min-w-0">
@@ -255,6 +256,7 @@ export function InteractiveMap({
               <img
                 src={selectedListing.image}
                 alt={selectedListing.title}
+                loading="lazy"
                 className="w-20 h-20 object-cover rounded-xl flex-shrink-0"
               />
               <div className="space-y-1 flex-1 min-w-0">

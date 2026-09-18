@@ -370,7 +370,7 @@ function ModerationSection({ rows, loading, onDecision }: {
             <div key={row.id} className="flex flex-col gap-3 rounded-xl border border-slate-800 dark:border-[#2C2C2E] bg-slate-950/50 dark:bg-[#111113]/50 p-4 sm:flex-row sm:items-center">
               <div className="grid h-20 w-36 shrink-0 place-items-center overflow-hidden rounded-lg bg-slate-800/60 dark:bg-[#2C2C2E]/60">
                 {row.imageUrl ? (
-                  <img src={row.imageUrl} alt={row.title} className="h-full w-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                  <img src={row.imageUrl} alt={row.title} loading="lazy" className="h-full w-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                 ) : (
                   <Car className="h-8 w-8 text-slate-600" />
                 )}

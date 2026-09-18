@@ -120,12 +120,6 @@ export default function CarDetails() {
     return <div className="min-h-screen flex items-center justify-center bg-[#1C1C1E] text-slate-200">جاري تحميل تفاصيل الإعلان...</div>;
   }
   
-  // Log error details for debugging
-  if (listingQuery.isError) {
-    console.error('Error fetching car listing:', listingQuery.error);
-    console.error('Listing ID being fetched:', numericListingId);
-  }
-  
   // Missing or invalid listing ID — show friendly message before query
   if (numericListingId === null && !staticCar) {
     return (

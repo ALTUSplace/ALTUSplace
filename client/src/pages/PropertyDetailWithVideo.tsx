@@ -212,12 +212,6 @@ export default function PropertyDetailWithVideo() {
     return <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-600">{t("loading")}</div>;
   }
   
-  // Log error details for debugging
-  if (listingQuery.isError) {
-    console.error('Error fetching property listing:', listingQuery.error);
-    console.error('Listing ID being fetched:', listingId);
-  }
-  
   // Missing or invalid listing ID — show friendly message before query
   if (listingId === null && !staticItem) {
     return (

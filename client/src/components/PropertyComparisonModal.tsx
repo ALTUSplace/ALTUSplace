@@ -59,6 +59,7 @@ export default function PropertyComparisonModal({ isOpen, onClose, comparedPrope
                       <img 
                         src={prop.image || "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=600"} 
                         alt={prop.title}
+                        loading="lazy"
                         className="w-full h-24 object-cover rounded-lg mb-2 border"
                       />
                       <h4 className="font-bold text-slate-900 text-xs truncate">{prop.title}</h4>
