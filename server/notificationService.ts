@@ -1,5 +1,5 @@
-import { and, eq } from "drizzle-orm";
-import { notifications } from "../drizzle/schema";
+import { and, eq, inArray } from "drizzle-orm";
+import { notifications, users } from "../drizzle/schema";
 import { getDb } from "./db";
 import { normalizeWhatsAppNumber } from "./whatsappNumber";
 
@@ -142,6 +142,62 @@ export async function safeNotifyUser(input: NotificationInput): Promise<number |
   } catch (error) {
     console.error("[Notification] Failed to create notification:", error);
     return null;
+  }
+}
+
+/**
+ * Admin inbox that receives partner/listing alerts. Defaults to the platform's
+ * operations address; override with ADMIN_ALERT_EMAIL.
+ */
+export function adminAlertEmail(): string {
+  return process.env.ADMIN_ALERT_EMAIL?.trim() || "altussplace@gmail.com";
+}
+
+export type AdminAlertInput = {
+  title: string;
+  message: string;
+  href?: string;
+  type?: NotificationType;
+  entityType?: string;
+  entityId?: number;
+  dedupeKey?: string;
+};
+
+/**
+ * Lightweight admin alert: emits ONE transactional email (Resend) to the admin
+ * inbox and persists an in-app notification for every operator account.
+ * Never throws — alerts must never block the business flow (mirrors the
+ * audit-logging contract).
+ */
+export async function alertAdmins(input: AdminAlertInput): Promise<void> {
+  try {
+    await sendTransactionalEmail({
+      to: adminAlertEmail(),
+      subject: input.title,
+      ...buildEmailContent(input.title, input.message, input.href),
+    });
+
+    const db = await getDb();
+    if (!db) return;
+    const admins = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(inArray(users.role, ["admin", "SUPER_ADMIN"]))
+      .limit(50);
+    for (const admin of admins) {
+      await safeNotifyUser({
+        userId: admin.id,
+        type: input.type ?? "system",
+        title: input.title,
+        message: input.message,
+        href: input.href,
+        entityType: input.entityType,
+        entityId: input.entityId,
+        dedupeKey: input.dedupeKey ? `admin:${input.dedupeKey}` : undefined,
+      });
+    }
+  } catch (error) {
+    console.error("[AdminAlert] failed:", error instanceof Error ? error.message : String(error));
   }
 }
 

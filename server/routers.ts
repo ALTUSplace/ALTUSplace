@@ -10,7 +10,7 @@ import { getDb } from "./db";
 import { listings, listingAnalyticsEvents, listingComments, bookings, reviews, users, commercialLeaseContracts, notifications, platformSettings, commissionTiers, escrowEntries, payoutRequests, disputes, disputeAttachments, supportTickets, payments, invoices, kycSubmissions, bookingVouchers, bookingMessages, auditLogs, refundRequests, transactions } from "../drizzle/schema";
 import { eq, and, lte, gte, lt, gt, asc, desc, count, isNull, inArray, ne, or, not, ilike, sql, type SQL } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
-import { safeNotifyUser, buildEmailContent, sendWhatsAppText, normalizeWhatsAppNumber } from "./notificationService";
+import { safeNotifyUser, buildEmailContent, sendWhatsAppText, normalizeWhatsAppNumber, alertAdmins } from "./notificationService";
 import { generateCarRentalContractPdf } from "./carRentalPdf";
 import { z } from "zod";
 import { storageGet, storagePut } from "./storage";
@@ -1854,6 +1854,16 @@ export const appRouter = router({
           dedupeKey: `listing-approved:${ctx.user!.id}:${listingId}`,
           email: ctx.user!.email ? { to: ctx.user!.email, subject: notificationTitle, ...buildEmailContent(notificationTitle, notificationMessage, "/host") } : undefined,
         });
+        // Notify the admin inbox + operator accounts about the new submission.
+        await alertAdmins({
+          type: "system",
+          title: "إعلان جديد / Nouvelle annonce",
+          message: `أضاف ${ctx.user!.name ?? "شريك"} إعلان «${input.title}» (${input.city}) للمراجعة والنشر.`,
+          href: "/admin",
+          entityType: "listing",
+          entityId: listingId,
+          dedupeKey: `listing-submitted:${listingId}`,
+        });
         return { success: true, listingId };
       }),
 
@@ -1928,6 +1938,16 @@ export const appRouter = router({
         }
         await db.update(listings).set({ title: input.title, description: input.description, pricePerDay: input.pricePerDay, city: input.city, imageUrl: input.imageUrl, officeType: input.officeType, rentalPeriod: input.rentalPeriod, amenities: input.amenities?.join(',') || null, status: "Pending" }).where(eq(listings.id, input.id));
         await writeAuditLog({ actorId: ctx.user!.id, action: "listing.resubmitted", entityType: "listing", entityId: input.id, afterData: { status: "Pending" } });
+        // Notify the admin inbox + operator accounts that a listing is back for review.
+        await alertAdmins({
+          type: "system",
+          title: "إعلان أعيد إرساله للمراجعة / Annonce redéposée",
+          message: `أعاد ${ctx.user!.name ?? "شريك"} إرسال «${input.title}» للمراجعة.`,
+          href: "/admin",
+          entityType: "listing",
+          entityId: input.id,
+          dedupeKey: `listing-resubmitted:${input.id}`,
+        });
         return { success: true as const, status: "Pending" as const };
       }),
 

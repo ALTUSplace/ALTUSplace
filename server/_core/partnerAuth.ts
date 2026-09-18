@@ -9,6 +9,7 @@ import { getSessionCookieOptions } from "./cookies";
 import { logger } from "./logger";
 import { sdk } from "./sdk";
 import { sanitizeUserContent } from "./security";
+import { alertAdmins } from "../notificationService";
 import { normalizeWhatsAppNumber } from "../whatsappNumber";
 
 /** Mirror of the client-side agency-name bounds (AgencyOnboarding.tsx). */
@@ -98,6 +99,7 @@ export function registerPartnerAuthRoutes(app: Express) {
     const storedCity = sanitizeUserContent(city, 120);
     const salt = randomBytes(16).toString("hex");
     const passwordHash = scryptSync(password, salt, SCRYPT_KEYLEN).toString("hex");
+    let registeredUserId: number | null = null;
 
     try {
       let persisted = false;
@@ -114,7 +116,7 @@ export function registerPartnerAuthRoutes(app: Express) {
           .where(eq(users.openId, partnerOpenId(email)))
           .limit(1);
         if (existing[0] || alreadyOpenId[0]) return;
-        await tx.insert(users).values({
+        const [inserted] = await tx.insert(users).values({
           openId: partnerOpenId(email),
           name: storedName,
           email,
@@ -127,7 +129,8 @@ export function registerPartnerAuthRoutes(app: Express) {
           role: "partner",
           accountStatus: "active",
           lastSignedIn: new Date(),
-        });
+        }).returning({ id: users.id });
+        registeredUserId = Number(inserted?.id ?? 0) || null;
         persisted = true;
       });
       if (!persisted) {
@@ -143,6 +146,16 @@ export function registerPartnerAuthRoutes(app: Express) {
     }
 
     await issuePartnerSession(req, res, partnerOpenId(email), storedName);
+    // Notify the admin inbox + operator accounts (never blocks registration).
+    await alertAdmins({
+      type: "system",
+      title: "شريك جديد سجّل في المنصة / Nouveau partenaire inscrit",
+      message: `سجّل حساب شريك جديد: «${storedName}» — ${storedCity} — ${email} — ${normalizedPhone}.`,
+      href: "/admin",
+      entityType: "user",
+      entityId: registeredUserId ?? undefined,
+      dedupeKey: `partner-registered:${email}`,
+    });
     logger.warn("[PartnerAuth] new partner registered");
     res.json({ success: true, role: "partner", redirectTo: "/agency-dashboard" });
   });
