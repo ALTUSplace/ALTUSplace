@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useLocation } from 'wouter';
 import { ListingItem } from '@/data/altusplace';
 import { trpc } from '@/lib/trpc';
@@ -229,6 +229,27 @@ export default function Search() {
 
   const [isSearching, setIsSearching] = useState(false);
 
+  // Filters are reflected into the URL (replace, no history spam) so results
+  // stay shareable/bookmarkable. Skips the initial mount to keep clean URLs.
+  const isFirstFiltersRender = useRef(true);
+  useEffect(() => {
+    if (isFirstFiltersRender.current) {
+      isFirstFiltersRender.current = false;
+      return;
+    }
+    const params = new URLSearchParams();
+    if (cityFilter !== 'all') params.set('city', cityFilter);
+    if (typeFilter !== 'all') params.set('type', typeFilter);
+    if (searchQuery.trim()) params.set('q', searchQuery.trim());
+    if (maxPrice !== 4000) params.set('maxPrice', String(maxPrice));
+    if (sortBy !== 'recommended') params.set('sort', sortBy);
+    if (viewMode !== 'grid') params.set('view', viewMode);
+    const searchString = params.toString();
+    const next = searchString ? `/search?${searchString}` : '/search';
+    const current = window.location.pathname + window.location.search;
+    if (next !== current) setLocation(next, { replace: true });
+  }, [cityFilter, typeFilter, searchQuery, maxPrice, sortBy, viewMode, setLocation]);
+
   const categoryPills = [
     { key: 'catAll', type: 'all', q: '' },
     { key: 'catSuv', type: 'car', q: 'SUV' },
@@ -287,7 +308,7 @@ export default function Search() {
               key={pill.key}
               type="button"
               onClick={() => applyCategoryPill(pill)}
-              className={`shrink-0 rounded-full border px-4 py-2 text-xs font-bold transition-colors ${
+              className={`shrink-0 min-h-[44px] flex items-center justify-center rounded-full border px-4 py-2 text-xs font-bold transition-colors ${
                 activeCategoryKey === pill.key
                   ? 'border-accent-clay bg-accent-clay text-white shadow-[var(--shadow-clay)]'
                   : 'border-border-default bg-bg-surface text-ink-secondary hover:border-accent-clay hover:text-accent-clay'
@@ -311,6 +332,9 @@ export default function Search() {
                   setTypeFilter('all');
                   setMaxPrice(4000);
                   setExcellenceOnly(false);
+                  setSearchQuery('');
+                  setSortBy('recommended');
+                  setViewMode('grid');
                 }}
                 className="text-xs text-accent-clay hover:underline"
               >
@@ -347,7 +371,7 @@ export default function Search() {
                     key={value}
                     type="button"
                     onClick={() => setTypeFilter(value)}
-                    className={`px-3 py-2 rounded-lg text-xs font-bold transition-all ${
+                    className={`min-h-[44px] px-3 py-2 rounded-lg text-xs font-bold transition-all ${
                       typeFilter === value ? 'bg-accent-clay text-white shadow-lg' : 'text-ink-secondary hover:text-ink-primary'
                     }`}
                   >
@@ -384,7 +408,7 @@ export default function Search() {
                 <div className="flex items-center bg-bg-muted border border-border-default rounded-xl p-1">
                   <button
                     onClick={() => setViewMode('grid')}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                    className={`flex items-center gap-1.5 min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                       viewMode === 'grid'
                         ? 'bg-accent-clay text-white shadow-lg'
                         : 'text-ink-secondary hover:text-ink-primary'
@@ -395,7 +419,7 @@ export default function Search() {
                   </button>
                   <button
                     onClick={() => setViewMode('map')}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                    className={`flex items-center gap-1.5 min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                       viewMode === 'map'
                         ? 'bg-accent-clay text-white shadow-lg'
                         : 'text-ink-secondary hover:text-ink-primary'
