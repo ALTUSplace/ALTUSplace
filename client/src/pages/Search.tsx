@@ -40,6 +40,8 @@ const toListingItem = (item: {
   pricePerDay: number;
   imageUrl: string | null;
   images?: string[] | null;
+  averageRating?: number | null;
+  reviewCount?: number | null;
   city: string;
   fuelType: string | null;
   transmission: string | null;
@@ -69,6 +71,8 @@ const toListingItem = (item: {
     unitLabel,
     image: item.images?.[0] || item.imageUrl || '',
     images: item.images?.length ? item.images : item.imageUrl ? [item.imageUrl] : [],
+    rating: item.averageRating ?? 0,
+    reviewCount: item.reviewCount ?? 0,
     features: [item.fuelType, item.transmission, ...amenities].filter((value): value is string => Boolean(value)),
     description: item.description || '',
     specs: {
@@ -450,8 +454,10 @@ export default function Search() {
                     city={item.city}
                     pricePerDay={item.pricePerUnit}
                     unitLabel={item.unitLabel}
-                    images={item.image ? [item.image] : []}
+                    images={item.images?.length ? item.images : item.image ? [item.image] : []}
                     type={item.type === 'car' ? 'car' : 'property'}
+                    rating={item.rating}
+                    reviewCount={item.reviewCount}
                     startDate={startDateParam}
                     endDate={endDateParam}
                     specs={{
@@ -459,6 +465,8 @@ export default function Search() {
                       fuel: item.specs?.fuel,
                       seats: item.specs?.seats ? Number(item.specs.seats) : undefined,
                       rooms: item.specs?.rooms ? Number(item.specs.rooms) : undefined,
+                      area: item.specs?.area,
+                      year: item.specs?.year,
                     }}
                     className={`stagger-${Math.min(index + 1, 8)} animate-fade-up`}
                   />

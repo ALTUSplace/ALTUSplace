@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Zap, MapPin, ArrowRight } from "lucide-react";
+import { Zap, MapPin, ArrowRight, Star } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -102,7 +102,13 @@ export function SmartRecommendations() {
                   <div className="mb-3 inline-block corner-cut-sm rounded-sm bg-bg-muted px-2 py-1 text-xs text-ink-tertiary">{reason}</div>
                   <div className="mb-2 flex items-center justify-between gap-3">
                     <h3 className="line-clamp-1 text-lg font-bold text-ink-primary group-hover:text-accent-clay transition-colors">{item.title}</h3>
-                    <span className="shrink-0 text-xs text-ink-tertiary">{t("noVerifiedReviews")}</span>
+                    {item.reviewCount && item.reviewCount > 0 ? (
+                      <span className="flex shrink-0 items-center gap-1 text-xs font-bold text-accent-clay">
+                        <Star className="h-3.5 w-3.5 fill-accent-warm text-accent-warm" />
+                        {item.averageRating?.toFixed?.(1) ?? item.averageRating}
+                        <span className="font-medium text-ink-tertiary">({item.reviewCount})</span>
+                      </span>
+                    ) : null}
                   </div>
                   <div className="mt-4 flex items-center justify-between border-t border-border-subtle pt-4">
                     <div>

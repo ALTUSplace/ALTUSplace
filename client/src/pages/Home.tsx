@@ -55,6 +55,8 @@ export default function Home() {
     city: item.city || 'الدار البيضاء',
     providerName: t('providerNamePlaceholder'),
     year: item.year ?? undefined,
+    rating: item.averageRating ?? 0,
+    reviewCount: item.reviewCount ?? 0,
     specs: {
       transmission: item.transmission || t('transmissionAutomatic'),
       fuel: item.fuelType || t('fuelDieselPetrol'),
@@ -75,6 +77,8 @@ export default function Home() {
       city: item.city || 'الدار البيضاء',
       providerName: item.ownerName || 'وكالة عقارية',
       year: item.year ?? undefined,
+      rating: item.averageRating ?? 0,
+      reviewCount: item.reviewCount ?? 0,
       specs: {
         rooms: item.rooms && item.rooms > 0 ? String(item.rooms) : undefined,
         area: item.area && item.area > 0 ? `${item.area} m²` : undefined,
@@ -122,7 +126,7 @@ export default function Home() {
 
               <div className="flex flex-wrap items-center gap-4">
                 <Button
-                  onClick={() => window.open('/slides_project/cover_slide.html', '_blank')}
+                  onClick={() => setLocation('/search')}
                   variant="outline"
                   className="b2-press corner-cut-sm rounded-sm border border-border-default bg-bg-surface px-6 py-2.5 text-sm font-bold text-ink-primary hover:border-accent-clay hover:text-accent-clay shadow-xs"
                 >
@@ -335,6 +339,8 @@ export default function Home() {
               pricePerDay={item.pricePerUnit}
               images={item.images}
               type="car"
+              rating={item.rating}
+              reviewCount={item.reviewCount}
               startDate={pickupDate || undefined}
               endDate={dropoffDate || undefined}
               specs={{
@@ -368,6 +374,8 @@ export default function Home() {
                 pricePerDay={item.pricePerUnit}
                 images={item.images}
                 type="property"
+                rating={item.rating}
+                reviewCount={item.reviewCount}
                 startDate={pickupDate || undefined}
                 endDate={dropoffDate || undefined}
                 specs={{

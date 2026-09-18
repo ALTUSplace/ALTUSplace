@@ -24,6 +24,8 @@ export interface ListingItem {
   unitLabel: string; // "درهم / يوم" or "درهم / ليلة"
   image: string;
   images: string[];
+  rating?: number;
+  reviewCount?: number;
   features: string[];
   description: string;
   descriptionFr?: string;

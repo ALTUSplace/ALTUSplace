@@ -1438,6 +1438,17 @@ export const appRouter = router({
           ? await db.select({ listingId: bookings.listingId, start: bookings.startDate, end: bookings.endDate }).from(bookings).where(eq(bookings.status, "Confirmed"))
           : [];
 
+        const reviewAgg = await db
+          .select({
+            listingId: reviews.listingId,
+            average: sql<number>`round(avg(${reviews.rating})::numeric, 1)::float8`,
+            count: sql<number>`count(*)::int4`,
+          })
+          .from(reviews)
+          .where(inArray(reviews.listingId, allListings.map(({ listing: item }) => item.id)))
+          .groupBy(reviews.listingId);
+        const reviewStats = new Map(reviewAgg.map((row) => [row.listingId, row]));
+
         // Dynamic Pricing Engine calculation
         return allListings.filter(({ listing: item }) => {
           if (!requestedRange) return true;
@@ -1470,6 +1481,8 @@ export const appRouter = router({
             ...item,
             ownerName: ownerName ?? null,
             dynamicPricePerDay: adjustedPrice,
+            averageRating: reviewStats.get(item.id)?.average ?? 0,
+            reviewCount: reviewStats.get(item.id)?.count ?? 0,
           });
         });
       }),
@@ -1561,6 +1574,17 @@ export const appRouter = router({
           ? await db.select({ listingId: bookings.listingId, start: bookings.startDate, end: bookings.endDate }).from(bookings).where(eq(bookings.status, "Confirmed"))
           : [];
 
+        const reviewAgg = await db
+          .select({
+            listingId: reviews.listingId,
+            average: sql<number>`round(avg(${reviews.rating})::numeric, 1)::float8`,
+            count: sql<number>`count(*)::int4`,
+          })
+          .from(reviews)
+          .where(inArray(reviews.listingId, rows.map(({ listing: item }) => item.id)))
+          .groupBy(reviews.listingId);
+        const reviewStats = new Map(reviewAgg.map((row) => [row.listingId, row]));
+
         const enriched = rows
           .filter(({ listing: item }) => {
             if (!requestedRange) return true;
@@ -1576,6 +1600,8 @@ export const appRouter = router({
               ...item,
               ownerName: ownerName ?? null,
               distanceKm: origin && item.lat !== null && item.lng !== null ? haversineKm(origin.lat, origin.lng, item.lat, item.lng) : null,
+              averageRating: reviewStats.get(item.id)?.average ?? 0,
+              reviewCount: reviewStats.get(item.id)?.count ?? 0,
             }),
           );
 
@@ -2991,6 +3017,22 @@ export const appRouter = router({
           .where(eq(reviews.listingId, input.listingId))
           .orderBy(desc(reviews.createdAt));
         return result;
+      }),
+
+    summary: publicProcedure
+      .input(z.object({ listingId: z.number() }))
+      .query(async ({ input }) => {
+        const db = await getDb();
+        if (!db) return { average: 0, count: 0 };
+        const [row] = await db
+          .select({
+            average: sql<number>`round(avg(${reviews.rating})::numeric, 1)::float8`,
+            count: sql<number>`count(*)::int4`,
+          })
+          .from(reviews)
+          .where(eq(reviews.listingId, input.listingId))
+          .limit(1);
+        return { average: row?.average ?? 0, count: row?.count ?? 0 };
       }),
 
     create: protectedProcedure

@@ -108,8 +108,13 @@ export default function CarDetails() {
     { listingId: numericListingId! },
     { enabled: numericListingId !== null && Boolean(car) },
   );
+  const summaryQuery = trpc.reviews.summary.useQuery(
+    { listingId: numericListingId! },
+    { enabled: numericListingId !== null && Boolean(car) },
+  );
   const trackWhatsAppMutation = trpc.listings.trackEvent.useMutation();
   const reviews = reviewsQuery.data ?? [];
+  const summary = summaryQuery.data ?? { average: 0, count: 0 };
 
   if (listingQuery.isLoading) {
     return <div className="min-h-screen flex items-center justify-center bg-[#1C1C1E] text-slate-200">جاري تحميل تفاصيل الإعلان...</div>;
@@ -254,7 +259,8 @@ export default function CarDetails() {
                 {reviews.length > 0 && (
                   <div className="absolute top-4 left-4 bg-[#1C1C1E]/95 backdrop-blur-md text-white px-3 py-1.5 rounded-2xl text-xs flex items-center gap-1.5 font-bold shadow-lg">
                     <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
-                    <span>{reviews.length} مراجعة موثقة</span>
+                    <span>{summary.average.toFixed(1)}</span>
+                    <span className="text-slate-300">({reviews.length})</span>
                   </div>
                 )}
                 {galleryImages.length > 1 && (
@@ -353,24 +359,23 @@ export default function CarDetails() {
                 </div>
 
                 {/* Reviews Section */}
-                <div className="space-y-6 pt-6 border-t border-slate-800">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                      <Star className="w-5 h-5 text-amber-400 fill-amber-400" />
-                      <span>تقييمات ومراجعات العملاء ({reviews.length})</span>
-                    </h3>
-                  </div>
+                {(reviewsQuery.isLoading || reviews.length > 0) && (
+                  <div className="space-y-6 pt-6 border-t border-slate-800">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                        <Star className="w-5 h-5 text-amber-400 fill-amber-400" />
+                        <span>تقييمات ومراجعات العملاء {reviews.length > 0 && (<span className="text-amber-400">({summary.average.toFixed(1)} ★ · {reviews.length})</span>)}</span>
+                      </h3>
+                    </div>
 
-                  <p className="text-xs text-slate-400">تظهر هنا المراجعات المرتبطة بحجوزات مؤكدة ومنتهية فقط.</p>
+                    <p className="text-xs text-slate-400">تظهر هنا المراجعات المرتبطة بحجوزات مؤكدة ومنتهية فقط.</p>
 
-                  <div className="space-y-4">
-                    {reviewsQuery.isLoading ? (
-                      <div className="bg-[#1C1C1E] border border-slate-800 p-6 rounded-3xl text-sm text-slate-400">جاري تحميل المراجعات...</div>
-                    ) : reviewsQuery.isError ? (
-                      <div className="bg-rose-950/30 border border-rose-800/60 p-6 rounded-3xl text-sm text-rose-200">تعذر تحميل المراجعات حالياً.</div>
-                    ) : reviews.length === 0 ? (
-                      <div className="bg-[#1C1C1E] border border-slate-800 p-6 rounded-3xl text-sm text-slate-400">لا توجد مراجعات موثقة لهذا العرض بعد.</div>
-                    ) : reviews.map((rev) => (
+                    <div className="space-y-4">
+                      {reviewsQuery.isLoading ? (
+                        <div className="bg-[#1C1C1E] border border-slate-800 p-6 rounded-3xl text-sm text-slate-400">جاري تحميل المراجعات...</div>
+                      ) : reviewsQuery.isError ? (
+                        <div className="bg-rose-950/30 border border-rose-800/60 p-6 rounded-3xl text-sm text-rose-200">تعذر تحميل المراجعات حالياً.</div>
+                      ) : reviews.map((rev) => (
                       <div key={rev.id} className="bg-[#1C1C1E] border border-slate-800 p-6 rounded-3xl space-y-2">
                         <div className="flex items-center justify-between">
                           <span className="font-bold text-white text-sm">{rev.userName || 'مستخدم ALTUSplace'}</span>
@@ -386,7 +391,8 @@ export default function CarDetails() {
                     ))}
                   </div>
 
-                </div>
+                  </div>
+                )}
 
                 {numericListingId !== null && <CommentSection listingId={numericListingId} />}
 

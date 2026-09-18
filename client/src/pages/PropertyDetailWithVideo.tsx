@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link, useLocation, useParams, useSearch } from "wouter";
-import { ArrowRight, Bath, Bed, Building2, CheckCircle2, Heart, MapPin, Share2, Video, Calendar, Lock, ShieldCheck, MessageCircle, Ruler } from "lucide-react";
+import { ArrowRight, Bath, Bed, Building2, CheckCircle2, Heart, MapPin, Share2, Video, Calendar, Lock, ShieldCheck, MessageCircle, Ruler, Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -109,7 +109,11 @@ export default function PropertyDetailWithVideo() {
   const listingId = Number.isInteger(parsedId) && parsedId > 0 ? parsedId : null;
   const listingQuery = trpc.listings.getById.useQuery({ id: listingId! }, { enabled: listingId !== null });
   const bookedDatesQuery = trpc.listings.getBookedDates.useQuery({ listingId: listingId! }, { enabled: listingId !== null });
+  const reviewListQuery = trpc.reviews.listByListing.useQuery({ listingId: listingId! }, { enabled: listingId !== null });
+  const summaryQuery = trpc.reviews.summary.useQuery({ listingId: listingId! }, { enabled: listingId !== null });
   const trackWhatsAppMutation = trpc.listings.trackEvent.useMutation();
+  const propertyReviews = reviewListQuery.data ?? [];
+  const summary = summaryQuery.data ?? { average: 0, count: 0 };
   const staticItem = listingId === null ? LISTINGS.find((item) => item.id === params.id && item.type !== "car") : undefined;
   const listing = (listingQuery.data ?? (staticItem ? mapStaticToDetail(staticItem) : undefined)) as PropertyDetailShape | undefined;
   const amenities = useMemo(() => parseAmenities(listing?.amenities), [listing?.amenities]);
@@ -291,7 +295,7 @@ export default function PropertyDetailWithVideo() {
         </div>
 
         <header className="space-y-2">
-          <div className="flex flex-wrap items-center gap-2"><Badge className="bg-amber-500">{({ Published: "منشور", Available: "متاح", Pending: "قيد المراجعة", Unavailable: "غير متاح", Rejected: "مرفوض" } as Record<string, string>)[listing.status] ?? listing.status}</Badge><span className="text-xs text-slate-500">{language === "fr" ? "Aucun avis vérifié pour le moment" : "لا توجد مراجعات موثقة بعد"}</span></div>
+          <div className="flex flex-wrap items-center gap-2"><Badge className="bg-amber-500">{({ Published: "منشور", Available: "متاح", Pending: "قيد المراجعة", Unavailable: "غير متاح", Rejected: "مرفوض" } as Record<string, string>)[listing.status] ?? listing.status}</Badge>{summary.count > 0 ? (<span className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-600"><Star className="h-3.5 w-3.5 fill-amber-500 text-amber-500" />{summary.average.toFixed(1)} <span className="font-medium text-slate-500">({summary.count})</span></span>) : null}</div>
           <h1 className="text-2xl sm:text-4xl font-bold text-slate-900">{title}</h1>
           {language === "fr" && arabicTitle && title !== arabicTitle && <p className="text-sm text-slate-500 font-medium">{arabicTitle}</p>}
           <p className="flex items-center gap-1.5 text-sm text-slate-600"><MapPin className="w-4 h-4 text-amber-600" />{listing.city}</p>
@@ -394,6 +398,25 @@ export default function PropertyDetailWithVideo() {
         </div>
 
         <Card><CardContent className="p-5 space-y-4"><h2 className="text-xl font-bold text-slate-900">{language === "fr" ? "Description" : "الوصف"}</h2><p className="text-slate-600 leading-7">{description}</p></CardContent></Card>
+        {propertyReviews.length > 0 && (
+          <Card><CardContent className="p-5 space-y-4"><h2 className="flex items-center gap-2 text-xl font-bold text-slate-900"><Star className="h-5 w-5 fill-amber-500 text-amber-500" />{language === "fr" ? "Avis clients" : "تقييمات ومراجعات العملاء"}</h2>
+            <p className="flex items-center gap-2 text-sm text-amber-700"><Star className="h-4 w-4 fill-amber-500 text-amber-500" /><span className="font-bold">{summary.average.toFixed(1)}</span><span className="text-slate-500">({summary.count} {language === "fr" ? "avis" : "مراجعات"})</span></p>
+            <div className="space-y-4">
+              {propertyReviews.map((rev) => (
+                <div key={rev.id} className="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-bold text-slate-800">{rev.userName || (language === "fr" ? "Utilisateur ALTUSplace" : "مستخدم ALTUSplace")}</span>
+                    <span className="text-xs text-slate-500">{new Date(rev.createdAt).toLocaleDateString(language === "fr" ? "fr-MA" : "ar-MA")}</span>
+                  </div>
+                  <div className="flex items-center gap-1 text-amber-500">
+                    {Array.from({ length: rev.rating }).map((_, i) => (<Star key={i} className="h-3.5 w-3.5 fill-current" />))}
+                  </div>
+                  <p className="text-sm text-slate-600 leading-relaxed">{rev.comment}</p>
+                </div>
+              ))}
+            </div>
+          </CardContent></Card>
+        )}
         <Card><CardContent className="p-5 space-y-4"><h2 className="text-xl font-bold text-slate-900">{language === "fr" ? "Équipements et visite vidéo" : "التجهيزات وجولة الفيديو"}</h2>{amenities.length ? <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">{amenities.map((item) => <div key={item} className="flex items-center gap-2 text-sm text-slate-700"><CheckCircle2 className="w-4 h-4 text-emerald-600" />{item}</div>)}</div> : <p className="text-sm text-slate-500">{language === "fr" ? "Aucun équipement renseigné." : "لم تُسجل تجهيزات لهذا الإعلان بعد."}</p>}<div className="border-t pt-4 flex items-center gap-3 text-sm text-slate-500"><Video className="w-5 h-5 text-slate-400" />{language === "fr" ? "Aucune vidéo vérifiée n’est disponible pour cette annonce." : "لا يوجد فيديو موثق متاح لهذا الإعلان حالياً."}</div></CardContent></Card>
         {listingId !== null && <CommentSection listingId={listingId} />}
       </div>
