@@ -48,7 +48,7 @@ export default function RenterDashboard() {
         <Tabs defaultValue="bookings" className="space-y-6">
           <TabsList className="bg-card p-1 rounded-xl border border-border grid grid-cols-3 max-w-md">
             <TabsTrigger value="bookings" className="rounded-lg gap-2">
-              <Calendar className="w-4 h-4" /> حجزاتي
+              <Calendar className="w-4 h-4" /> حجوزاتي
             </TabsTrigger>
             <TabsTrigger value="invoices" className="rounded-lg gap-2">
               <FileText className="w-4 h-4" /> الفواتير والعقود

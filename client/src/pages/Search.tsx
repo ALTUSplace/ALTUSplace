@@ -639,7 +639,7 @@ export default function Search() {
             </button>
             <div className="text-center space-y-2">
               <span className="text-accent-clay text-xs font-bold uppercase tracking-widest">مقارنة تفصيلية</span>
-              <h2 className="text-2xl font-black text-ink-primary">مقارنة جنباً إلى جنب (Side-by-Side)</h2>
+              <h2 className="text-2xl font-black text-ink-primary">مقارنة جنباً إلى جنب</h2>
             </div>
 
             <div className="grid grid-cols-2 gap-6">

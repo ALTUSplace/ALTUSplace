@@ -56,7 +56,7 @@ export default function Register() {
 
           <Button onClick={continueToAuth} disabled={!accepted} className="mt-5 w-full gap-2 bg-[#1C1C1E] text-white hover:bg-accent-clay-hover sm:w-auto">
             <CheckCircle2 className="h-4 w-4" />
-            {t("bookNow")}
+            {t("continue")}
           </Button>
         </div>
 

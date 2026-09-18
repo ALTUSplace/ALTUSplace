@@ -18,7 +18,7 @@ export default function TermsOfService() {
               <span>{lang === 'ar' ? 'النظام القانوني وحقوق الوساطة' : 'Cadre Juridique et Médiation'}</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-              {lang === 'ar' ? 'شروط الاستخدام وسياسة الضمان (Escrow)' : "Conditions d'Utilisation & Politique d'Escrow"}
+              {lang === 'ar' ? 'شروط الاستخدام وسياسة الضمان' : "Conditions d'Utilisation & Politique d'Escrow"}
             </h1>
           </div>
 
@@ -48,7 +48,7 @@ export default function TermsOfService() {
             <section className="space-y-3">
               <h2 className="text-xl font-bold text-foreground flex items-center gap-2 border-b pb-2">
                 <ShieldCheck className="w-5 h-5 text-emerald-600" />
-                1. مقدمة ونطاق الوساطة (Scope of Brokerage)
+                1. مقدمة ونطاق الوساطة
               </h2>
               <p>
                 منصة <strong>ALTUSplace</strong> هي منصة إعلانية ووسيط تقني فقط، تربط بين مزودي الخدمات المعتمدين (شركات كراء السيارات وأصحاب العقارات والمنعشين العقاريين) وبين الزبائن والباحثين عن الإيجار في المملكة المغربية. لا تمتلك المنصة السيارة أو العقار ولا تديرهما، ولا تحل محل الشريك في معاينة الأصل أو تسليمه.
@@ -61,7 +61,7 @@ export default function TermsOfService() {
             <section className="space-y-3">
               <h2 className="text-xl font-bold text-foreground flex items-center gap-2 border-b pb-2">
                 <FileText className="w-5 h-5 text-accent-clay" />
-                2. عمولة المنصة ورسوم الوساطة (Platform Commission)
+                2. عمولة المنصة ورسوم الوساطة
               </h2>
               <p>
                 تتقاضى منصة ALTUSplace عمولة ثابتة قدرها <strong>10%</strong> من إجمالي قيمة مبلغ الحجز المؤكد مقابل خدمات الوساطة التقنية وتوفير العقود الرقمية ونظام الضمان. يتم اقتطاع هذه العمولة تلقائياً عند إتمام الدفع، وتظهر بوضوح في الفاتورة الرسمية الصادرة عبر النظام بصيغة PDF.
@@ -71,7 +71,7 @@ export default function TermsOfService() {
             <section className="space-y-3">
               <h2 className="text-xl font-bold text-foreground flex items-center gap-2 border-b pb-2">
                 <Lock className="w-5 h-5 text-amber-600" />
-                3. نظام الضمان المالي والحجز (Escrow & Payment Security)
+                3. نظام الضمان المالي والحجز
               </h2>
               <p>
                 تُحفظ أموال الحجوزات في حساب الضمان الآمن للمنصة ولا يتم تحويلها إلى حساب الشريك (الوكالة أو صاحب العقار) إلا بعد مرور 24 ساعة على بدء فترة الإيجار بنجاح ودون تسجيل أي نزاع رسمي عبر مركز حل النزاعات.
@@ -81,7 +81,7 @@ export default function TermsOfService() {
             <section className="space-y-3">
               <h2 className="text-xl font-bold text-foreground flex items-center gap-2 border-b pb-2">
                 <Scale className="w-5 h-5 text-red-600" />
-                4. مسؤولية الأطراف ومحاربة الاحتيال (Anti-Fraud Policy)
+                4. مسؤولية الأطراف ومحاربة الاحتيال
               </h2>
               <p>
                 يلتزم الشركاء بتقديم بيانات صحيحة ووثائق قانونية موثقة (السجل التجاري، البطاقة الوطنية). تتحمل الوكالة أو صاحب العقار المسؤولية القانونية الكاملة عن مطابقة الأصول المعروضة للواقع. تحظر المنصة تماماً أي تعاملات مالية خارج النظام وتعرض المخالفين للحظر الفوري والمساءلة القانونية.

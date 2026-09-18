@@ -17,6 +17,12 @@ const statusLabel: Record<string, string> = {
   Confirmed: "مؤكد",
   Cancelled: "ملغى",
   Issued: "صادرة",
+  Completed: "مكتمل",
+  Succeeded: "تم الدفع",
+  Paid: "تم الدفع",
+  Failed: "فشل الدفع",
+  Void: "ملغي",
+  Rejected: "مرفوض",
 };
 
 export default function Profile() {
@@ -177,7 +183,7 @@ export default function Profile() {
               <div>
                 <div className="flex items-center gap-2 mb-2"><span className="font-bold text-amber-600">{invoice.invoiceNumber}</span><span className={`text-xs rounded-full px-2 py-1 ${invoice.status === "Issued" ? "bg-emerald-500/10 text-emerald-700" : "bg-amber-500/10 text-amber-700"}`}>{statusLabel[invoice.status] || invoice.status}</span></div>
                 <p className="text-sm">حجز #{invoice.bookingId} · {invoice.listingTitle || "إعلان تأجير"}</p>
-                <p className="text-xs text-muted-foreground mt-1">TVA {invoice.vatRateBasisPoints / 100}% · الدفع: {invoice.paymentStatus} · {date(invoice.issuedAt)}</p>
+                <p className="text-xs text-muted-foreground mt-1">TVA {invoice.vatRateBasisPoints / 100}% · الدفع: {statusLabel[invoice.paymentStatus] || invoice.paymentStatus} · {date(invoice.issuedAt)}</p>
               </div>
               <div className="flex items-center gap-4"><strong className="text-lg">{money(invoice.total, invoice.currency)}</strong><Button type="button" className="bg-amber-500 text-slate-950 hover:bg-amber-400 font-bold" onClick={() => downloadInvoice(invoice)}><Download className="w-4 h-4 ml-1" /> تنزيل PDF</Button></div>
             </div>) : <EmptyState text="لا توجد فواتير لهذا الحساب بعد. ستظهر هنا بعد تسجيل الدفع." />}

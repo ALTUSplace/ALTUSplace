@@ -116,7 +116,7 @@ export default function MyBookings() {
                       {booking.status === 'Confirmed' ? (
                         <span className="inline-flex items-center gap-1 bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 px-3 py-1 rounded-full text-xs font-semibold"><CheckCircle className="w-3.5 h-3.5" /> مؤكد</span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 bg-amber-500/15 border border-amber-500/30 text-amber-400 px-3 py-1 rounded-full text-xs font-semibold"><Clock className="w-3.5 h-3.5" /> {booking.status}</span>
+                        <span className="inline-flex items-center gap-1 bg-amber-500/15 border border-amber-500/30 text-amber-400 px-3 py-1 rounded-full text-xs font-semibold"><Clock className="w-3.5 h-3.5" /> {({ Pending: "قيد المراجعة", Completed: "مكتمل", Cancelled: "ملغي", Rejected: "مرفوض" } as Record<string, string>)[booking.status] ?? booking.status}</span>
                       )}
                     </div>
                     <h3 className="text-lg font-bold text-white">{listing?.title || `الإعلان رقم ${booking.listingId}`}</h3>

@@ -26,7 +26,7 @@ export default function VoucherPage() {
 
   return <section className="min-h-[70vh] bg-slate-50 px-4 py-8 sm:px-6">
     <div className="mx-auto max-w-5xl">
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3"><div><p className="text-sm font-semibold uppercase tracking-[0.18em] text-amber-700">ALTUSplace Morocco</p><h1 className="mt-1 text-3xl font-black text-[#1C1C1E]">الوصول الذكي · Smart Access</h1></div><Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100"><CheckCircle2 className="mr-1 h-4 w-4" /> تذكرة صالحة</Badge></div>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3"><div><p className="text-sm font-semibold uppercase tracking-[0.18em] text-amber-700">ALTUSplace Morocco</p><h1 className="mt-1 text-3xl font-black text-[#1C1C1E]">الوصول الذكي</h1></div><Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100"><CheckCircle2 className="mr-1 h-4 w-4" /> تذكرة صالحة</Badge></div>
       <div className="grid gap-6 lg:grid-cols-[1.2fr_.8fr]">
         <Card className="border-0 shadow-sm"><CardHeader><CardTitle className="flex items-center gap-2 text-[#1C1C1E]"><Ticket className="h-5 w-5 text-amber-600" /> تفاصيل الحجز</CardTitle></CardHeader><CardContent className="space-y-5">
           {data.listingImageUrl && <OptimizedImage src={data.listingImageUrl} alt={data.listingTitle} width={900} height={300} widthHint={900} sizes="(max-width: 1024px) 100vw, 60vw" className="h-48 w-full rounded-xl object-cover" />}

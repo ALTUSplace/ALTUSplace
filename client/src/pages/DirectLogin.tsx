@@ -18,12 +18,103 @@ async function readJson(response: Response): Promise<{ configured?: boolean; rea
 }
 
 export default function DirectLogin() {
-  const { direction } = useLanguage();
+  const { direction, language } = useLanguage();
   const [mode, setMode] = useState<Mode>("loading");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const str = (key: string): string => {
+    const t: Record<string, Record<string, string>> = {
+      ar: {
+        title: "ALTUSplace — مالك المنصة",
+        headingSetup: "إنشاء حساب مالك المنصة",
+        headingLogin: "تسجيل الدخول المباشر",
+        setupDesc: "لم يتم تحديد كلمة مرور لمالك المنصة بعد. اختر كلمة مرور الآن لتفعيل الحساب. تُخزَّن كلمة المرور في قاعدة البيانات فقط — ولا تُحفظ أبداً في المستودع — ولا يمكن تحديدها إلا مرة واحدة.",
+        loginDesc: "دخول احتياطي لمالك المنصة عند تعذّر الوصول إلى بوابة المصادقة الخارجية.",
+        checking: "جاري التحقق من حالة دخول المالك…",
+        unreachable: "تعذّر الاتصال بالخادم. يرجى تحديث الصفحة وإعادة المحاولة.",
+        passwordShort: "اختر كلمة مرور مكوّنة من 8 أحرف على الأقل.",
+        passwordMismatch: "كلمتا المرور غير متطابقتين.",
+        alreadyConfigured: "تم تحديد كلمة المرور مسبقاً. يرجى تسجيل الدخول.",
+        tooManyAttempts: "محاولات كثيرة. يرجى الانتظار دقيقة ثم إعادة المحاولة.",
+        weakPassword: "اختر كلمة مرور مكوّنة من 8 أحرف على الأقل.",
+        missingPassword: "لم يستقبل الخادم كلمة المرور. يرجى إعادة المحاولة.",
+        serverError: "خطأ في الخادم. راجع سجلات Vercel الوظيفية للبحث عن [DirectAuth].",
+        notConfigured: "لم يتم تحديد كلمة مرور بعد. اختر واحدة لتفعيل هذا الحساب.",
+        passwordMismatchLogin: "كلمة المرور غير صحيحة. يرجى إعادة المحاولة.",
+        genericError: "حدث خطأ ما. يرجى إعادة المحاولة.",
+        networkError: "خطأ في الشبكة. يرجى إعادة المحاولة.",
+        newPasswordLabel: "كلمة المرور الجديدة",
+        passwordLabel: "كلمة المرور",
+        confirmLabel: "تأكيد كلمة المرور",
+        settingUp: "جاري الإعداد…",
+        signingIn: "جاري تسجيل الدخول…",
+        setupButton: "تحديد كلمة المرور وتسجيل الدخول",
+        signInButton: "تسجيل الدخول",
+        back: "رجوع",
+      },
+      fr: {
+        title: "ALTUSplace — Propriétaire de la plateforme",
+        headingSetup: "Créer le compte propriétaire",
+        headingLogin: "Connexion directe",
+        setupDesc: "Aucun mot de passe propriétaire n'est défini. Choisissez-en un maintenant pour activer le compte. Il est stocké uniquement en base de données — jamais dans le dépôt — et ne peut être défini qu'une fois.",
+        loginDesc: "Accès de secours pour le propriétaire de la plateforme lorsque le portail OAuth externe est indisponible.",
+        checking: "Vérification de l'état de connexion…",
+        unreachable: "Impossible de joindre le serveur. Actualisez la page et réessayez.",
+        passwordShort: "Choisissez un mot de passe d'au moins 8 caractères.",
+        passwordMismatch: "Les deux mots de passe ne correspondent pas.",
+        alreadyConfigured: "Ce mot de passe a déjà été défini. Connectez-vous.",
+        tooManyAttempts: "Trop de tentatives. Attendez une minute puis réessayez.",
+        weakPassword: "Choisissez un mot de passe d'au moins 8 caractères.",
+        missingPassword: "Le serveur n'a pas reçu le mot de passe. Réessayez.",
+        serverError: "Erreur serveur. Consultez les journaux Vercel pour [DirectAuth].",
+        notConfigured: "Aucun mot de passe défini. Choisissez-en un pour activer ce compte.",
+        passwordMismatchLogin: "Mot de passe incorrect. Réessayez.",
+        genericError: "Une erreur est survenue. Réessayez.",
+        networkError: "Erreur réseau. Réessayez.",
+        newPasswordLabel: "Nouveau mot de passe",
+        passwordLabel: "Mot de passe",
+        confirmLabel: "Confirmer le mot de passe",
+        settingUp: "Configuration…",
+        signingIn: "Connexion…",
+        setupButton: "Définir le mot de passe et se connecter",
+        signInButton: "Se connecter",
+        back: "Retour",
+      },
+      en: {
+        title: "ALTUSplace — Platform Owner",
+        headingSetup: "Set up owner login",
+        headingLogin: "Direct login",
+        setupDesc: "No owner password is set yet. Choose one now to claim the platform-owner account. It is stored only in the database — never in the repository — and can be set just once here.",
+        loginDesc: "Fallback access for the platform owner when the external OAuth portal is unavailable.",
+        checking: "Checking owner login status…",
+        unreachable: "Could not reach the server. Please refresh the page and try again.",
+        passwordShort: "Choose a password with at least 8 characters.",
+        passwordMismatch: "The two passwords do not match.",
+        alreadyConfigured: "This owner login has already been set up. Please sign in.",
+        tooManyAttempts: "Too many attempts. Please wait a minute and try again.",
+        weakPassword: "Choose a password with at least 8 characters.",
+        missingPassword: "The server did not receive the password. Please try again.",
+        serverError: "Server error. Check the Vercel function logs for [DirectAuth].",
+        notConfigured: "No owner password is set yet. Choose one to claim this account.",
+        passwordMismatchLogin: "Incorrect password. Please try again.",
+        genericError: "Something went wrong. Please try again.",
+        networkError: "Network error. Please try again.",
+        newPasswordLabel: "New owner password",
+        passwordLabel: "Owner password",
+        confirmLabel: "Confirm password",
+        settingUp: "Setting up…",
+        signingIn: "Signing in…",
+        setupButton: "Set password & sign in",
+        signInButton: "Sign in",
+        back: "Back",
+      },
+    };
+    const lang = (["ar", "fr", "en"] as const).includes(language as "ar" | "fr" | "en") ? (language as "ar" | "fr" | "en") : "ar";
+    return t[lang][key] ?? t.ar[key] ?? key;
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -33,7 +124,7 @@ export default function DirectLogin() {
         const data = await readJson(response);
         if (!data) {
           setMode("unavailable");
-          setError("The API is not reachable on this deployment (it returned a web page instead of JSON).");
+          setError(str("unreachable"));
           return;
         }
         setMode(data.configured ? "login" : "setup");
@@ -57,11 +148,11 @@ export default function DirectLogin() {
 
     if (mode === "setup") {
       if (password.length < 8) {
-        setError("Choose a password with at least 8 characters.");
+        setError(str("passwordShort"));
         return;
       }
       if (password !== confirm) {
-        setError("The two passwords do not match.");
+        setError(str("passwordMismatch"));
         return;
       }
     } else if (!password) {
@@ -84,7 +175,7 @@ export default function DirectLogin() {
       });
       const payload = await readJson(response);
       if (!payload) {
-        setError("The API is not reachable on this deployment (it returned a web page instead of JSON).");
+        setError(str("unreachable"));
         return;
       }
       if (response.ok) {
@@ -94,25 +185,25 @@ export default function DirectLogin() {
       const reason = payload.reason;
       if (reason === "already_configured") {
         setMode("login");
-        setError("This owner login has already been set up. Please sign in.");
+        setError(str("alreadyConfigured"));
       } else if (response.status === 429) {
-        setError("Too many attempts. Please wait a minute and try again.");
+        setError(str("tooManyAttempts"));
       } else if (reason === "weak_password") {
-        setError("Choose a password with at least 8 characters.");
+        setError(str("weakPassword"));
       } else if (reason === "missing_password") {
-        setError("The server did not receive the password. Please try again.");
+        setError(str("missingPassword"));
       } else if (reason === "server_error") {
-        setError("Server error. Check the Vercel function logs for [DirectAuth].");
+        setError(str("serverError"));
       } else if (reason === "not_configured") {
         setMode("setup");
-        setError("No owner password is set yet. Choose one to claim this account.");
+        setError(str("notConfigured"));
       } else if (reason === "password_mismatch") {
-        setError("Incorrect password. Please try again.");
+        setError(str("passwordMismatchLogin"));
       } else {
-        setError("Something went wrong. Please try again.");
+        setError(str("genericError"));
       }
     } catch {
-      setError("Network error. Please try again.");
+      setError(str("networkError"));
     } finally {
       setLoading(false);
     }
@@ -127,27 +218,25 @@ export default function DirectLogin() {
         <form onSubmit={submit} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
           <div className="mb-2 flex items-center gap-2 text-sm font-bold text-amber-700">
             <ShieldCheck className="h-5 w-5" />
-            <span>ALTUSplace — Platform Owner</span>
+            <span>{str("title")}</span>
           </div>
-          <h1 className="text-2xl font-black text-slate-950">{isSetup ? "Set up owner login" : "Direct login"}</h1>
+          <h1 className="text-2xl font-black text-slate-950">{isSetup ? str("headingSetup") : str("headingLogin")}</h1>
           <p className="mt-3 text-sm leading-7 text-slate-600">
-            {isSetup
-              ? "No owner password is set yet. Choose one now to claim the platform-owner account. It is stored only in the database — never in the repository — and can be set just once here."
-              : "Fallback access for the platform owner when the external OAuth portal is unavailable."}
+            {isSetup ? str("setupDesc") : str("loginDesc")}
           </p>
 
           {mode === "loading" ? (
-            <p className="mt-6 text-sm font-semibold text-slate-500">Checking owner login status…</p>
+            <p className="mt-6 text-sm font-semibold text-slate-500">{str("checking")}</p>
           ) : mode === "unavailable" ? (
             error ? null : (
               <p className="mt-6 text-sm font-semibold text-slate-500">
-                Could not reach the server. Please refresh the page and try again.
+                {str("unreachable")}
               </p>
             )
           ) : (
             <>
               <label htmlFor="direct-password" className="mt-6 block text-sm font-semibold text-slate-800">
-                {isSetup ? "New owner password" : "Owner password"}
+                {isSetup ? str("newPasswordLabel") : str("passwordLabel")}
               </label>
               <input
                 id="direct-password"
@@ -162,7 +251,7 @@ export default function DirectLogin() {
               {isSetup ? (
                 <>
                   <label htmlFor="direct-password-confirm" className="mt-4 block text-sm font-semibold text-slate-800">
-                    Confirm password
+                    {str("confirmLabel")}
                   </label>
                   <input
                     id="direct-password-confirm"
@@ -187,14 +276,14 @@ export default function DirectLogin() {
           {mode !== "loading" && mode !== "unavailable" ? (
             <Button type="submit" disabled={!canSubmit || loading} className="mt-5 w-full gap-2 bg-[#1C1C1E] text-white hover:bg-accent-clay-hover">
               <KeyRound className="h-4 w-4" />
-              {loading ? (isSetup ? "Setting up…" : "Signing in…") : isSetup ? "Set password & sign in" : "Sign in"}
+              {loading ? (isSetup ? str("settingUp") : str("signingIn")) : isSetup ? str("setupButton") : str("signInButton")}
             </Button>
           ) : null}
         </form>
 
         <Link href="/" className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-[#1C1C1E] hover:text-amber-700">
           <ArrowLeft className="h-4 w-4" />
-          Back
+          {str("back")}
         </Link>
       </section>
     </main>

@@ -281,7 +281,7 @@ export default function PropertyDetailWithVideo() {
         </div>
 
         <header className="space-y-2">
-          <div className="flex flex-wrap items-center gap-2"><Badge className="bg-amber-500">{listing.status}</Badge><span className="text-xs text-slate-500">{language === "fr" ? "Aucun avis vérifié pour le moment" : "لا توجد مراجعات موثقة بعد"}</span></div>
+          <div className="flex flex-wrap items-center gap-2"><Badge className="bg-amber-500">{({ Published: "منشور", Available: "متاح", Pending: "قيد المراجعة", Unavailable: "غير متاح", Rejected: "مرفوض" } as Record<string, string>)[listing.status] ?? listing.status}</Badge><span className="text-xs text-slate-500">{language === "fr" ? "Aucun avis vérifié pour le moment" : "لا توجد مراجعات موثقة بعد"}</span></div>
           <h1 className="text-2xl sm:text-4xl font-bold text-slate-900">{title}</h1>
           {language === "fr" && arabicTitle && title !== arabicTitle && <p className="text-sm text-slate-500 font-medium">{arabicTitle}</p>}
           <p className="flex items-center gap-1.5 text-sm text-slate-600"><MapPin className="w-4 h-4 text-amber-600" />{listing.city}</p>

@@ -210,7 +210,7 @@ export default function CheckoutPage() {
   const residencyOption = RESIDENCY_OPTIONS.find((option) => option.value === residency) ?? RESIDENCY_OPTIONS[0];
   const identityLabel = residencyOption.sublabel;
   const identityShortLabel = residency === 'resident' ? 'البطاقة الوطنية CIN' : 'جواز السفر';
-  const residencyLabel = residency === 'resident' ? 'مقيم بالمغرب (Resident)' : 'أجنبي (Foreigner)';
+  const residencyLabel = residency === 'resident' ? 'مقيم بالمغرب' : 'أجنبي';
   const missingDocumentLabels: string[] = [];
   if (!isPropertyBooking && !driverLicenseFile) missingDocumentLabels.push('رخصة السياقة (البيرمي)');
   if (!identityFile) missingDocumentLabels.push(identityLabel);
