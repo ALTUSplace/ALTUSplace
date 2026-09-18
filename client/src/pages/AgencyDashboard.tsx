@@ -18,6 +18,7 @@ import {
   Gauge,
   Home,
   BedDouble,
+  Loader2,
   Pencil,
   Plane,
   Plus,
@@ -44,6 +45,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { AdvancedMediaUpload } from "@/components/AdvancedMediaUpload";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { operationError, withTimeout } from "@/lib/mutationGuards";
 import { isPropertyCategory } from "@/lib/categories";
 import { CitySelect } from "@/components/CitySelect";
 import { cityFromSlug } from "@/data/moroccoCities";
@@ -611,7 +613,6 @@ export default function AgencyDashboard() {
       bookings.refetch();
       toast.success("تم تحديث حالة الحجز.");
     },
-    onError: (error) => toast.error(error.message),
   });
   const createCar = trpc.listings.create.useMutation({
     onSuccess: () => {
@@ -619,7 +620,6 @@ export default function AgencyDashboard() {
       closeActiveForm();
       toast.success("تم نشر الإعلان بعد اجتياز فحص الصور.");
     },
-    onError: (error) => toast.error(error.message),
   });
   const updateCar = trpc.listings.update.useMutation({
     onSuccess: () => {
@@ -627,22 +627,24 @@ export default function AgencyDashboard() {
       closeActiveForm();
       toast.success("تم تحديث بيانات الإعلان.");
     },
-    onError: (error) => toast.error(error.message),
   });
   const setFleetStatus = trpc.listings.setFleetStatus.useMutation({
     onSuccess: () => {
       fleet.refetch();
       toast.success("تم تحديث حالة الإعلان.");
     },
-    onError: (error) => toast.error(error.message),
   });
   const generateContract = trpc.rentalContracts.createForBooking.useMutation({
     onSuccess: (result) => {
       if (result.pdfUrl) window.open(result.pdfUrl, "_blank", "noopener,noreferrer");
       toast.success("تم توليد عقد كراء السيارة (Contrat de Location) وحفظه في التخزين الآمن.");
     },
-    onError: (error) => toast.error(error.message),
   });
+
+  const [busyBookingId, setBusyBookingId] = useState<number | null>(null);
+  const [busyContractId, setBusyContractId] = useState<number | null>(null);
+  const [busyStatusId, setBusyStatusId] = useState<number | null>(null);
+  const [busyForm, setBusyForm] = useState<"car" | "property" | null>(null);
 
   const [docBooking, setDocBooking] = useState<OwnerBookingRow | null>(null);
   const [statusFilter, setStatusFilter] = useState<"all" | "Pending" | "Confirmed" | "Cancelled">("all");
@@ -749,13 +751,38 @@ export default function AgencyDashboard() {
     );
   }
 
-  const confirm = (bookingId: number) => {
+  const confirm = async (bookingId: number) => {
     if (!window.confirm("هل تؤكد هذا الحجز بعد فحص وثائق المستأجر؟")) return;
-    updateStatus.mutate({ bookingId, status: "Confirmed" });
+    setBusyBookingId(bookingId);
+    try {
+      await withTimeout(updateStatus.mutateAsync({ bookingId, status: "Confirmed" }));
+    } catch (error) {
+      toast.error(operationError(error));
+    } finally {
+      setBusyBookingId(null);
+    }
   };
-  const decline = (bookingId: number) => {
+  const decline = async (bookingId: number) => {
     if (!window.confirm("هل تريد رفض هذا الحجز؟")) return;
-    updateStatus.mutate({ bookingId, status: "Cancelled" });
+    setBusyBookingId(bookingId);
+    try {
+      await withTimeout(updateStatus.mutateAsync({ bookingId, status: "Cancelled" }));
+    } catch (error) {
+      toast.error(operationError(error));
+    } finally {
+      setBusyBookingId(null);
+    }
+  };
+
+  const handleGenerateContract = async (bookingId: number) => {
+    setBusyContractId(bookingId);
+    try {
+      await withTimeout(generateContract.mutateAsync({ bookingId }));
+    } catch (error) {
+      toast.error(operationError(error));
+    } finally {
+      setBusyContractId(null);
+    }
   };
 
   const openDocsEnabled = !!docBooking && (docBooking.drivingLicenseKey || docBooking.identityDocumentKey);
@@ -783,8 +810,9 @@ export default function AgencyDashboard() {
     setCarFormOpen(true);
   };
 
-  const submitCar = (event: React.FormEvent) => {
+  const submitCar = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (busyForm) return;
     const numericPrice = Number(carForm.price);
     if (!carForm.title.trim()) {
       toast.error("يرجى إدخال موديل السيارة (مثال: Renault Clio).");
@@ -794,39 +822,53 @@ export default function AgencyDashboard() {
       toast.error("يرجى إدخال سعر يومي بالدرهم أكبر من صفر.");
       return;
     }
-    if (editingCar) {
-      updateCar.mutate({
-        id: editingCar.id,
+    setBusyForm("car");
+    try {
+      if (editingCar) {
+        await withTimeout(updateCar.mutateAsync({
+          id: editingCar.id,
+          title: carForm.title.trim(),
+          city: carForm.city,
+          pricePerDay: numericPrice,
+          description: carForm.description.trim() || undefined,
+          transmission: carForm.transmission,
+          fuelType: carForm.fuelType,
+          ...(carImageUrl && carImageProof ? { imageUrl: carImageUrl, imageVerificationProof: carImageProof } : {}),
+        }));
+        return;
+      }
+      if (!carImageUrl || !carImageProof) {
+        toast.error("يرجى رفع صورة أصلية للسيارة واجتياز الفحص قبل إضافتها.");
+        return;
+      }
+      await withTimeout(createCar.mutateAsync({
         title: carForm.title.trim(),
+        category: "car",
         city: carForm.city,
         pricePerDay: numericPrice,
         description: carForm.description.trim() || undefined,
-        transmission: carForm.transmission,
         fuelType: carForm.fuelType,
-        ...(carImageUrl && carImageProof ? { imageUrl: carImageUrl, imageVerificationProof: carImageProof } : {}),
-      });
-      return;
+        transmission: carForm.transmission,
+        imageUrl: carImageUrl,
+        imageVerificationProof: carImageProof,
+      }));
+    } catch (error) {
+      toast.error(operationError(error));
+    } finally {
+      setBusyForm(null);
     }
-    if (!carImageUrl || !carImageProof) {
-      toast.error("يرجى رفع صورة أصلية للسيارة واجتياز الفحص قبل إضافتها.");
-      return;
-    }
-    createCar.mutate({
-      title: carForm.title.trim(),
-      category: "car",
-      city: carForm.city,
-      pricePerDay: numericPrice,
-      description: carForm.description.trim() || undefined,
-      fuelType: carForm.fuelType,
-      transmission: carForm.transmission,
-      imageUrl: carImageUrl,
-      imageVerificationProof: carImageProof,
-    });
   };
 
-  const changeCarStatus = (car: FleetCar, next: FleetStatus) => {
-    if (next === toFleetStatus(car.status)) return;
-    setFleetStatus.mutate({ listingId: car.id, status: toServerStatus(next) });
+  const changeCarStatus = async (car: FleetCar, next: FleetStatus) => {
+    if (next === toFleetStatus(car.status) || busyStatusId !== null) return;
+    setBusyStatusId(car.id);
+    try {
+      await withTimeout(setFleetStatus.mutateAsync({ listingId: car.id, status: toServerStatus(next) }));
+    } catch (error) {
+      toast.error(operationError(error));
+    } finally {
+      setBusyStatusId(null);
+    }
   };
 
   const openAddProperty = () => {
@@ -853,8 +895,9 @@ export default function AgencyDashboard() {
     setPropertyFormOpen(true);
   };
 
-  const submitProperty = (event: React.FormEvent) => {
+  const submitProperty = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (busyForm) return;
     const numericPrice = Number(propertyForm.price);
     const numericMonthly = propertyForm.monthlyPrice.trim() ? Number(propertyForm.monthlyPrice) : 0;
     if (!propertyForm.title.trim()) {
@@ -874,45 +917,59 @@ export default function AgencyDashboard() {
       toast.error("يرجى إدخال عدد غرف صحيح.");
       return;
     }
-    if (editingProperty) {
-      updateCar.mutate({
-        id: editingProperty.id,
+    setBusyForm("property");
+    try {
+      if (editingProperty) {
+        await withTimeout(updateCar.mutateAsync({
+          id: editingProperty.id,
+          title: propertyForm.title.trim(),
+          city: propertyForm.city,
+          pricePerDay: numericPrice,
+          pricePerMonth: numericMonthly > 0 ? numericMonthly : null,
+          propertyType: propertyForm.propertyType,
+          rooms: propertyForm.rooms.trim() ? roomsCount : undefined,
+          description: propertyForm.description.trim() || undefined,
+          ...(propertyImageUrl && propertyImageProof ? { imageUrl: propertyImageUrl, imageVerificationProof: propertyImageProof } : {}),
+        }));
+        return;
+      }
+      if (!propertyImageUrl || !propertyImageProof) {
+        toast.error("يرجى رفع صورة أصلية للعقار واجتياز الفحص قبل إضافته.");
+        return;
+      }
+      await withTimeout(createCar.mutateAsync({
         title: propertyForm.title.trim(),
+        category: "property",
         city: propertyForm.city,
         pricePerDay: numericPrice,
-        pricePerMonth: numericMonthly > 0 ? numericMonthly : null,
+        pricePerMonth: numericMonthly > 0 ? numericMonthly : undefined,
         propertyType: propertyForm.propertyType,
         rooms: propertyForm.rooms.trim() ? roomsCount : undefined,
         description: propertyForm.description.trim() || undefined,
-        ...(propertyImageUrl && propertyImageProof ? { imageUrl: propertyImageUrl, imageVerificationProof: propertyImageProof } : {}),
-      });
-      return;
+        imageUrl: propertyImageUrl,
+        imageVerificationProof: propertyImageProof,
+      }));
+    } catch (error) {
+      toast.error(operationError(error));
+    } finally {
+      setBusyForm(null);
     }
-    if (!propertyImageUrl || !propertyImageProof) {
-      toast.error("يرجى رفع صورة أصلية للعقار واجتياز الفحص قبل إضافته.");
-      return;
-    }
-    createCar.mutate({
-      title: propertyForm.title.trim(),
-      category: "property",
-      city: propertyForm.city,
-      pricePerDay: numericPrice,
-      pricePerMonth: numericMonthly > 0 ? numericMonthly : undefined,
-      propertyType: propertyForm.propertyType,
-      rooms: propertyForm.rooms.trim() ? roomsCount : undefined,
-      description: propertyForm.description.trim() || undefined,
-      imageUrl: propertyImageUrl,
-      imageVerificationProof: propertyImageProof,
-    });
   };
 
-  const changePropertyStatus = (property: FleetCar, next: FleetStatus) => {
-    if (next === toFleetStatus(property.status)) return;
-    setFleetStatus.mutate({ listingId: property.id, status: toServerStatus(next) });
+  const changePropertyStatus = async (property: FleetCar, next: FleetStatus) => {
+    if (next === toFleetStatus(property.status) || busyStatusId !== null) return;
+    setBusyStatusId(property.id);
+    try {
+      await withTimeout(setFleetStatus.mutateAsync({ listingId: property.id, status: toServerStatus(next) }));
+    } catch (error) {
+      toast.error(operationError(error));
+    } finally {
+      setBusyStatusId(null);
+    }
   };
 
-  const propertyBusy = createCar.isPending || updateCar.isPending;
-  const carBusy = createCar.isPending || updateCar.isPending;
+  const propertyBusy = busyForm === "property";
+  const carBusy = busyForm === "car";
 
   return (
     <div className="container mx-auto max-w-6xl space-y-6 p-4 sm:p-6">
@@ -1067,19 +1124,19 @@ export default function AgencyDashboard() {
                         <td className="px-3 py-3">
                           {booking.status === "Pending" ? (
                             <div className="flex gap-2">
-                              <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => confirm(booking.id)} disabled={updateStatus.isPending}>
-                                <Check className="ml-1 h-4 w-4" />
-                                قبول
+                              <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => confirm(booking.id)} disabled={busyBookingId !== null}>
+                                {busyBookingId === booking.id ? <Loader2 className="ml-1 h-4 w-4 animate-spin" /> : <Check className="ml-1 h-4 w-4" />}
+                                {busyBookingId === booking.id ? "جارٍ التأكيد..." : "قبول"}
                               </Button>
-                              <Button size="sm" variant="outline" className="text-red-600 border-red-300 hover:bg-red-50" onClick={() => decline(booking.id)} disabled={updateStatus.isPending}>
-                                <X className="ml-1 h-4 w-4" />
-                                رفض
+                              <Button size="sm" variant="outline" className="text-red-600 border-red-300 hover:bg-red-50" onClick={() => decline(booking.id)} disabled={busyBookingId !== null}>
+                                {busyBookingId === booking.id ? <Loader2 className="ml-1 h-4 w-4 animate-spin" /> : <X className="ml-1 h-4 w-4" />}
+                                {busyBookingId === booking.id ? "جارٍ..." : "رفض"}
                               </Button>
                             </div>
                           ) : booking.status === "Confirmed" ? (
-                            <Button size="sm" variant="outline" onClick={() => generateContract.mutate({ bookingId: booking.id })} disabled={generateContract.isPending}>
-                              <FileText className="ml-1 h-3.5 w-3.5" />
-                              عقد PDF
+                            <Button size="sm" variant="outline" onClick={() => handleGenerateContract(booking.id)} disabled={busyContractId !== null}>
+                              {busyContractId === booking.id ? <Loader2 className="ml-1 h-3.5 w-3.5 animate-spin" /> : <FileText className="ml-1 h-3.5 w-3.5" />}
+                              {busyContractId === booking.id ? "جارٍ..." : "عقد PDF"}
                             </Button>
                           ) : (
                             <span className="text-xs text-slate-400">—</span>
@@ -1196,7 +1253,7 @@ export default function AgencyDashboard() {
                                 value={status}
                                 onChange={(event) => changeCarStatus(car, event.target.value as FleetStatus)}
                                 className="rounded-lg border bg-background px-2.5 py-1.5 text-xs font-semibold"
-                                disabled={setFleetStatus.isPending}
+                                disabled={busyStatusId !== null}
                               >
                                 {(Object.keys(fleetStatusLabel) as FleetStatus[]).map((option) => (
                                   <option key={option} value={option}>
@@ -1204,6 +1261,7 @@ export default function AgencyDashboard() {
                                   </option>
                                 ))}
                               </select>
+                              {busyStatusId === car.id && <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />}
                               <Button size="sm" variant="outline" onClick={() => openEditCar(car)}>
                                 <Pencil className="ml-1 h-3.5 w-3.5" />
                                 تعديل
@@ -1323,7 +1381,7 @@ export default function AgencyDashboard() {
                                 value={status}
                                 onChange={(event) => changePropertyStatus(property, event.target.value as FleetStatus)}
                                 className="rounded-lg border bg-background px-2.5 py-1.5 text-xs font-semibold"
-                                disabled={setFleetStatus.isPending}
+                                disabled={busyStatusId !== null}
                               >
                                 {(Object.keys(fleetStatusLabel) as FleetStatus[]).map((option) => (
                                   <option key={option} value={option}>
@@ -1331,6 +1389,7 @@ export default function AgencyDashboard() {
                                   </option>
                                 ))}
                               </select>
+                              {busyStatusId === property.id && <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />}
                               <Button size="sm" variant="outline" onClick={() => openEditProperty(property)}>
                                 <Pencil className="ml-1 h-3.5 w-3.5" />
                                 تعديل
@@ -1425,13 +1484,13 @@ export default function AgencyDashboard() {
 
               {docBooking.status === "Pending" && (
                 <DialogFooter className="flex flex-wrap gap-2 sm:justify-end">
-                  <Button variant="outline" className="text-red-600 border-red-300 hover:bg-red-50" onClick={() => decline(docBooking.id)} disabled={updateStatus.isPending}>
-                    <X className="ml-1 h-4 w-4" />
-                    رفض الطلب
+                  <Button variant="outline" className="text-red-600 border-red-300 hover:bg-red-50" onClick={() => decline(docBooking.id)} disabled={busyBookingId !== null}>
+                    {busyBookingId === docBooking.id ? <Loader2 className="ml-1 h-4 w-4 animate-spin" /> : <X className="ml-1 h-4 w-4" />}
+                    {busyBookingId === docBooking.id ? "جارٍ الرفض..." : "رفض الطلب"}
                   </Button>
-                  <Button className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => confirm(docBooking.id)} disabled={updateStatus.isPending}>
-                    <Check className="ml-1 h-4 w-4" />
-                    قبول وتأكيد الحجز
+                  <Button className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => confirm(docBooking.id)} disabled={busyBookingId !== null}>
+                    {busyBookingId === docBooking.id ? <Loader2 className="ml-1 h-4 w-4 animate-spin" /> : <Check className="ml-1 h-4 w-4" />}
+                    {busyBookingId === docBooking.id ? "جارٍ التأكيد..." : "قبول وتأكيد الحجز"}
                   </Button>
                 </DialogFooter>
               )}
@@ -1558,7 +1617,7 @@ export default function AgencyDashboard() {
                 إلغاء
               </Button>
               <Button type="submit" disabled={carBusy} className="bg-emerald-600 hover:bg-emerald-700 text-white">
-                {carBusy ? "جارٍ الحفظ..." : editingCar ? "حفظ التعديلات" : "فحص الصور وإضافة السيارة"}
+                {carBusy ? <><Loader2 className="ml-1 h-4 w-4 animate-spin" />جارٍ الحفظ...</> : editingCar ? "حفظ التعديلات" : "فحص الصور وإضافة السيارة"}
               </Button>
             </DialogFooter>
           </form>
@@ -1691,7 +1750,7 @@ export default function AgencyDashboard() {
                 إلغاء
               </Button>
               <Button type="submit" disabled={propertyBusy} className="bg-emerald-600 hover:bg-emerald-700 text-white">
-                {propertyBusy ? "جارٍ الحفظ..." : editingProperty ? "حفظ التعديلات" : "فحص الصور وإضافة العقار"}
+                {propertyBusy ? <><Loader2 className="ml-1 h-4 w-4 animate-spin" />جارٍ الحفظ...</> : editingProperty ? "حفظ التعديلات" : "فحص الصور وإضافة العقار"}
               </Button>
             </DialogFooter>
           </form>

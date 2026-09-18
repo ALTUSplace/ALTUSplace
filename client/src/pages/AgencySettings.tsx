@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { operationError, withTimeout } from "@/lib/mutationGuards";
 
 const initialForm = {
   agencyName: "",
@@ -44,16 +45,17 @@ export default function AgencySettings() {
       await settingsQuery.refetch();
       toast.success("تم حفظ إعدادات الوكالة بنجاح.");
     },
-    onError: (error) => toast.error(error.message),
   });
   const uploadLogo = trpc.storage.uploadAgencyLogo.useMutation({
     onSuccess: async () => {
       await settingsQuery.refetch();
       toast.success("تم تحديث شعار الوكالة.");
     },
-    onError: (error) => toast.error(error.message),
   });
   const [form, setForm] = useState<AgencyForm>(initialForm);
+  const [formSynced, setFormSynced] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [settingsLoadTimedOut, setSettingsLoadTimedOut] = useState(false);
 
   // If the agency settings fetch never settles, stop the spinner and let the
@@ -67,9 +69,11 @@ export default function AgencySettings() {
     return () => clearTimeout(timer);
   }, [settingsQuery.isLoading]);
 
+  // Hydrate the form from the server only once, so background refetches
+  // (e.g. window refocus) never wipe in-progress edits mid-typing.
   useEffect(() => {
     const data = settingsQuery.data;
-    if (!data) return;
+    if (!data || formSynced) return;
     setForm({
       agencyName: data.agencyName ?? "",
       agencyPhone: data.agencyPhone ?? "",
@@ -82,7 +86,8 @@ export default function AgencySettings() {
       commercialRegister: data.commercialRegister ?? "",
       whatsappPhone: data.whatsappPhone ?? "",
     });
-  }, [settingsQuery.data]);
+    setFormSynced(true);
+  }, [settingsQuery.data, formSynced]);
 
   if (authLoading) {
     return <div className="container grid min-h-[50vh] place-items-center" dir="rtl">جاري تحميل إعدادات الوكالة...</div>;
@@ -105,8 +110,9 @@ export default function AgencySettings() {
   }
 
   const updateField = (field: keyof AgencyForm, value: string) => setForm((current) => ({ ...current, [field]: value }));
-  const submit = (event: React.FormEvent) => {
+  const submit = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (saving) return;
     if (form.whatsappPhone.trim()) {
       const digits = form.whatsappPhone.replace(/\D/g, "");
       if (digits.length < 8 || digits.length > 15) {
@@ -114,7 +120,14 @@ export default function AgencySettings() {
         return;
       }
     }
-    updateSettings.mutate(Object.fromEntries(Object.entries(form).map(([key, value]) => [key, value.trim() || null])) as AgencyForm);
+    setSaving(true);
+    try {
+      await withTimeout(updateSettings.mutateAsync(Object.fromEntries(Object.entries(form).map(([key, value]) => [key, value.trim() || null])) as AgencyForm));
+    } catch (error) {
+      toast.error(operationError(error));
+    } finally {
+      setSaving(false);
+    }
   };
   const handleLogo = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -128,10 +141,20 @@ export default function AgencySettings() {
       toast.error("يجب ألا يتجاوز حجم الشعار 3 ميجابايت.");
       return;
     }
+    let contentBase64: string;
     try {
-      uploadLogo.mutate({ fileName: file.name, mimeType: file.type as LogoMime, contentBase64: await fileToBase64(file) });
+      contentBase64 = await fileToBase64(file);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "تعذر تجهيز الشعار.");
+      return;
+    }
+    setUploading(true);
+    try {
+      await withTimeout(uploadLogo.mutateAsync({ fileName: file.name, mimeType: file.type as LogoMime, contentBase64 }));
+    } catch (error) {
+      toast.error(operationError(error));
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -151,7 +174,7 @@ export default function AgencySettings() {
         <div className="grid h-28 w-28 shrink-0 place-items-center overflow-hidden rounded-3xl border-2 border-dashed bg-muted/40">
           {settingsQuery.data?.agencyLogoUrl ? <img src={settingsQuery.data.agencyLogoUrl} alt="شعار الوكالة" className="h-full w-full object-contain" /> : <Building2 className="h-10 w-10 text-muted-foreground" />}
         </div>
-        <div><input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleLogo} /><Button type="button" variant="outline" onClick={() => fileRef.current?.click()} disabled={uploadLogo.isPending}><ImagePlus className="ml-2 h-4 w-4" />{uploadLogo.isPending ? "جاري رفع الشعار..." : "تغيير الشعار"}</Button><p className="mt-2 text-xs text-muted-foreground">JPG أو PNG أو WebP، بحد أقصى 3MB.</p></div>
+        <div><input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleLogo} /><Button type="button" variant="outline" onClick={() => fileRef.current?.click()} disabled={uploading || saving}><ImagePlus className="ml-2 h-4 w-4" />{uploading ? <><Loader2 className="ml-1 h-4 w-4 animate-spin" />جاري رفع الشعار...</> : "تغيير الشعار"}</Button><p className="mt-2 text-xs text-muted-foreground">JPG أو PNG أو WebP، بحد أقصى 3MB.</p></div>
       </div>
     </section>
 
@@ -167,7 +190,7 @@ export default function AgencySettings() {
         <label className="grid gap-2 text-sm font-medium md:col-span-2">العنوان الكامل<textarea value={form.agencyAddress} onChange={(event) => updateField("agencyAddress", event.target.value)} placeholder="المدينة، الشارع، رقم المكتب" className="min-h-24 rounded-xl border bg-background p-3 text-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring" /></label>
       </div>
       <div className="border-t pt-6"><div className="mb-4 flex items-center gap-3"><MapPin className="h-5 w-5 text-[var(--brand-amber)]" /><div><h3 className="font-bold">موقع الوكالة وساعات العمل</h3><p className="text-xs text-muted-foreground">أدخل إحداثيات Google Maps لتسهيل الوصول إلى مقر الوكالة.</p></div></div><div className="grid gap-4 md:grid-cols-2"><Field label="خط العرض" value={form.agencyLatitude} onChange={(value) => updateField("agencyLatitude", value)} placeholder="33.5731" dir="ltr" /><Field label="خط الطول" value={form.agencyLongitude} onChange={(value) => updateField("agencyLongitude", value)} placeholder="-7.5898" dir="ltr" /><label className="grid gap-2 text-sm font-medium md:col-span-2"><span className="flex items-center gap-2"><Clock className="h-4 w-4 text-muted-foreground" />ساعات العمل</span><textarea value={form.agencyHours} onChange={(event) => updateField("agencyHours", event.target.value)} placeholder="الإثنين - السبت: 09:00 - 18:00\nالأحد: مغلق" className="min-h-24 rounded-xl border bg-background p-3 text-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring" /></label></div>{form.agencyLatitude && form.agencyLongitude && <a href={`https://www.google.com/maps?q=${encodeURIComponent(`${form.agencyLatitude},${form.agencyLongitude}`)}`} target="_blank" rel="noreferrer" className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-accent-clay hover:underline"><MapPin className="h-4 w-4" />معاينة الموقع على Google Maps</a>}</div>
-      <div className="flex justify-start"><Button type="submit" disabled={updateSettings.isPending} className="bg-[var(--brand-amber)] text-white hover:opacity-90"><Save className="ml-2 h-4 w-4" />{updateSettings.isPending ? <><Loader2 className="ml-2 h-4 w-4 animate-spin" />جاري الحفظ...</> : "حفظ التغييرات"}</Button></div>
+      <div className="flex justify-start"><Button type="submit" disabled={saving} className="bg-[var(--brand-amber)] text-white hover:opacity-90">{saving ? <><Loader2 className="ml-2 h-4 w-4 animate-spin" />جاري الحفظ...</> : <><Save className="ml-2 h-4 w-4" />حفظ التغييرات</>}</Button></div>
     </form>
   </div>;
 }
