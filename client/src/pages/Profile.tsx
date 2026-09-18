@@ -85,7 +85,7 @@ export default function Profile() {
   return (
     <div className="min-h-screen bg-background text-foreground py-8 px-4" dir={direction}>
       <div className="container max-w-5xl mx-auto space-y-6">
-        <section className="bg-slate-900 text-white rounded-3xl p-6 md:p-8 shadow-xl">
+        <section className="bg-slate-900 dark:bg-[#1C1C1E] text-white rounded-3xl p-6 md:p-8 shadow-xl">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="flex items-center gap-4">
               <div className="w-20 h-20 rounded-2xl bg-amber-500 text-slate-950 flex items-center justify-center font-black text-2xl">{initials}</div>
@@ -94,7 +94,7 @@ export default function Profile() {
                   <ShieldCheck className="w-3.5 h-3.5" /> حساب مصادق عليه
                 </div>
                 <h1 className="text-2xl font-black">{displayName}</h1>
-                <p className="text-sm text-slate-300 flex items-center gap-2 mt-1"><Mail className="w-4 h-4 text-amber-400" />{user.email || "البريد غير متوفر"}</p>
+                <p className="text-sm text-slate-300 dark:text-[#D6D6DB] flex items-center gap-2 mt-1"><Mail className="w-4 h-4 text-amber-400" />{user.email || "البريد غير متوفر"}</p>
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -103,7 +103,7 @@ export default function Profile() {
                 ["bookings", `حجوزاتي (${bookingsQuery.data?.length ?? 0})`, Calendar],
                 ["invoices", `فواتيري (${invoicesQuery.data?.length ?? 0})`, Receipt],
               ] as const).map(([tab, label, Icon]) => (
-                <button key={tab} type="button" onClick={() => setActiveTab(tab)} className={`px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 ${activeTab === tab ? "bg-amber-500 text-slate-950" : "bg-slate-800 text-slate-300 hover:text-white"}`}>
+                <button key={tab} type="button" onClick={() => setActiveTab(tab)} className={`px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 ${activeTab === tab ? "bg-amber-500 text-slate-950" : "bg-slate-800 dark:bg-[#2C2C2E] text-slate-300 dark:text-[#D6D6DB] hover:text-white"}`}>
                   <Icon className="w-3.5 h-3.5" /> {label}
                 </button>
               ))}

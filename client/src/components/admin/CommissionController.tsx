@@ -9,7 +9,7 @@ export type VendorForTier = { id: number; name: string | null; agencyName: strin
 
 const TIER_META: Record<string, { label: string; en: string; color: string }> = {
   bronze: { label: "برونزية", en: "Bronze", color: "text-amber-500" },
-  silver: { label: "فضية", en: "Silver", color: "text-slate-300" },
+  silver: { label: "فضية", en: "Silver", color: "text-slate-300 dark:text-[#D6D6DB]" },
   gold: { label: "ذهبية", en: "Gold", color: "text-yellow-300" },
 };
 
@@ -70,15 +70,15 @@ export default function CommissionController({
     <div>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-lg font-bold text-slate-100">وحدة التحكم بالعمولة</h2>
+          <h2 className="text-lg font-bold text-slate-100 dark:text-[#F1F1F3]">وحدة التحكم بالعمولة</h2>
           <p className="text-xs text-slate-500">Dynamic Platform Commission Controller — يطبق فوراً على الحجز التالي دون إعادة تشغيل</p>
         </div>
         <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-2.5 py-1 text-[11px] font-semibold text-emerald-300"><BadgeDollarSign className="h-3.5 w-3.5" /> Live recalculation</span>
       </div>
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-        <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-4">
-          <div className="mb-3 flex items-center gap-2 text-sm font-bold text-slate-200"><PencilRuler className="h-4 w-4 text-cyan-400" /> النسبة العامة للمنصة / Global Base</div>
+        <div className="rounded-xl border border-slate-800 dark:border-[#2C2C2E] bg-slate-900/50 dark:bg-[#1C1C1E]/50 p-4">
+          <div className="mb-3 flex items-center gap-2 text-sm font-bold text-slate-200 dark:text-[#E8E8EB]"><PencilRuler className="h-4 w-4 text-cyan-400" /> النسبة العامة للمنصة / Global Base</div>
           <RateEditor draft={globalDraft} onChange={(next) => setGlobalDraft(next)} />
           <button type="button" onClick={saveGlobal} disabled={saving === "global"} className="mt-3 rounded-lg bg-cyan-500 px-4 py-2 text-xs font-bold text-slate-950 hover:bg-cyan-400 disabled:opacity-50">
             {saving === "global" ? "جارٍ الحفظ..." : "حفظ العمولة العامة"}
@@ -86,20 +86,20 @@ export default function CommissionController({
           <p className="mt-2 text-[10px] text-slate-500">تُستخدم عندما لا يوجد تجاوز لمستوى المزوّد (Bronze = 10%، Silver = 8%، Gold = 6% افتراضياً).</p>
         </div>
 
-        <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-4">
-          <div className="mb-3 flex items-center gap-2 text-sm font-bold text-slate-200"><Layers className="h-4 w-4 text-violet-400" /> مستويات المزوّدين / Vendor Tiers</div>
+        <div className="rounded-xl border border-slate-800 dark:border-[#2C2C2E] bg-slate-900/50 dark:bg-[#1C1C1E]/50 p-4">
+          <div className="mb-3 flex items-center gap-2 text-sm font-bold text-slate-200 dark:text-[#E8E8EB]"><Layers className="h-4 w-4 text-violet-400" /> مستويات المزوّدين / Vendor Tiers</div>
           <div className="space-y-3">
             {tiers.map((tier) => {
               const draft = tierDrafts[tier.tier];
               const meta = TIER_META[tier.tier];
               if (!draft) return null;
               return (
-                <div key={tier.tier} className="rounded-lg border border-slate-800 bg-slate-950/40 p-3">
+                <div key={tier.tier} className="rounded-lg border border-slate-800 dark:border-[#2C2C2E] bg-slate-950/40 dark:bg-[#111113]/40 p-3">
                   <div className="mb-2 flex items-center justify-between">
-                    <span className="flex items-center gap-1.5 text-xs font-bold text-slate-200"><Medal className={`h-4 w-4 ${meta?.color ?? "text-slate-400"}`} /> {meta?.label ?? tier.tier} <span className="text-[10px] font-medium text-slate-500">({meta?.en ?? ""})</span></span>
-                    <span className="flex items-center gap-1.5 text-[10px] text-slate-400">
+                    <span className="flex items-center gap-1.5 text-xs font-bold text-slate-200 dark:text-[#E8E8EB]"><Medal className={`h-4 w-4 ${meta?.color ?? "text-slate-400 dark:text-[#B0B0B8]"}`} /> {meta?.label ?? tier.tier} <span className="text-[10px] font-medium text-slate-500">({meta?.en ?? ""})</span></span>
+                    <span className="flex items-center gap-1.5 text-[10px] text-slate-400 dark:text-[#B0B0B8]">
                       {tier.active ? <span className="inline-flex items-center gap-0.5 text-emerald-300"><Check className="h-3 w-3" />override</span> : <span className="text-slate-500">global</span>}
-                      <span className="rounded-full bg-slate-800 px-1.5 py-0.5">{tierDistribution[tier.tier] ?? 0} مزوّد</span>
+                      <span className="rounded-full bg-slate-800 dark:bg-[#2C2C2E] px-1.5 py-0.5">{tierDistribution[tier.tier] ?? 0} مزوّد</span>
                     </span>
                   </div>
                   <div className="flex flex-wrap items-end gap-2">
@@ -118,15 +118,15 @@ export default function CommissionController({
       </div>
 
       <div className="mt-5">
-        <h3 className="mb-2 flex items-center gap-2 text-sm font-bold text-slate-200"><Medal className="h-4 w-4 text-amber-300" /> تعيين مستوى المزوّدين ({owners.length})</h3>
+        <h3 className="mb-2 flex items-center gap-2 text-sm font-bold text-slate-200 dark:text-[#E8E8EB]"><Medal className="h-4 w-4 text-amber-300" /> تعيين مستوى المزوّدين ({owners.length})</h3>
         <div className="flex flex-wrap gap-2">
           {owners.map((vendor) => (
-            <div key={vendor.id} className="flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-900/50 px-3 py-2">
-              <span className="max-w-[140px] truncate text-xs text-slate-200">{vendor.agencyName || vendor.name || `#${vendor.id}`}</span>
+            <div key={vendor.id} className="flex items-center gap-2 rounded-lg border border-slate-800 dark:border-[#2C2C2E] bg-slate-900/50 dark:bg-[#1C1C1E]/50 px-3 py-2">
+              <span className="max-w-[140px] truncate text-xs text-slate-200 dark:text-[#E8E8EB]">{vendor.agencyName || vendor.name || `#${vendor.id}`}</span>
               <select
                 value={vendor.vendorTier}
                 onChange={(event) => assignTier.mutate({ userId: vendor.id, tier: event.target.value as "bronze" | "silver" | "gold" })}
-                className="rounded-md border border-slate-700 bg-slate-800 px-2 py-1 text-xs text-slate-200 outline-none"
+                className="rounded-md border border-slate-700 dark:border-[#48484D] bg-slate-800 dark:bg-[#2C2C2E] px-2 py-1 text-xs text-slate-200 dark:text-[#E8E8EB] outline-none"
               >
                 <option value="bronze">Bronze</option>
                 <option value="silver">Silver</option>
@@ -144,22 +144,22 @@ export default function CommissionController({
 function RateEditor({ draft, onChange, compact = false }: { draft: { mode: "percent" | "flat"; percent: number; flat: number }; onChange: (next: { mode: "percent" | "flat"; percent: number; flat: number }) => void; compact?: boolean }) {
   return (
     <div className={`flex flex-wrap items-end gap-2 ${compact ? "" : ""}`}>
-      <label className="text-[11px] font-semibold text-slate-400">
+      <label className="text-[11px] font-semibold text-slate-400 dark:text-[#B0B0B8]">
         {compact ? "النمط" : "نوع الرسوم"}
-        <select value={draft.mode} onChange={(event) => onChange({ ...draft, mode: event.target.value as "percent" | "flat" })} className="mt-0.5 block rounded-md border border-slate-700 bg-slate-800 px-2 py-1.5 text-xs text-slate-200 outline-none">
+        <select value={draft.mode} onChange={(event) => onChange({ ...draft, mode: event.target.value as "percent" | "flat" })} className="mt-0.5 block rounded-md border border-slate-700 dark:border-[#48484D] bg-slate-800 dark:bg-[#2C2C2E] px-2 py-1.5 text-xs text-slate-200 dark:text-[#E8E8EB] outline-none">
           <option value="percent">Percent %</option>
           <option value="flat">Flat فمبلغ</option>
         </select>
       </label>
       {draft.mode === "percent" ? (
-        <label className="text-[11px] font-semibold text-slate-400">
+        <label className="text-[11px] font-semibold text-slate-400 dark:text-[#B0B0B8]">
           النسبة %
-          <input type="number" min={0} max={100} step={0.1} value={String(draft.percent)} onChange={(event) => onChange({ ...draft, percent: Number(event.target.value) })} className="mt-0.5 block w-20 rounded-md border border-slate-700 bg-slate-800 px-2 py-1.5 text-xs text-slate-100 outline-none" />
+          <input type="number" min={0} max={100} step={0.1} value={String(draft.percent)} onChange={(event) => onChange({ ...draft, percent: Number(event.target.value) })} className="mt-0.5 block w-20 rounded-md border border-slate-700 dark:border-[#48484D] bg-slate-800 dark:bg-[#2C2C2E] px-2 py-1.5 text-xs text-slate-100 dark:text-[#F1F1F3] outline-none" />
         </label>
       ) : (
-        <label className="text-[11px] font-semibold text-slate-400">
+        <label className="text-[11px] font-semibold text-slate-400 dark:text-[#B0B0B8]">
           المبلغ (MAD)
-          <input type="number" min={0} step={1} value={String(Math.round(draft.flat))} onChange={(event) => onChange({ ...draft, flat: Number(event.target.value) })} className="mt-0.5 block w-24 rounded-md border border-slate-700 bg-slate-800 px-2 py-1.5 text-xs text-slate-100 outline-none" />
+          <input type="number" min={0} step={1} value={String(Math.round(draft.flat))} onChange={(event) => onChange({ ...draft, flat: Number(event.target.value) })} className="mt-0.5 block w-24 rounded-md border border-slate-700 dark:border-[#48484D] bg-slate-800 dark:bg-[#2C2C2E] px-2 py-1.5 text-xs text-slate-100 dark:text-[#F1F1F3] outline-none" />
         </label>
       )}
     </div>

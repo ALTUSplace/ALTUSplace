@@ -71,7 +71,7 @@ export default function AddCar() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 py-12 px-4" dir={direction}>
+    <div className="min-h-screen bg-slate-950 dark:bg-[#111113] text-slate-100 dark:text-[#F1F1F3] py-12 px-4" dir={direction}>
       <div className="container mx-auto max-w-2xl">
         <button
           onClick={() => setLocation('/host')}
@@ -81,7 +81,7 @@ export default function AddCar() {
           <span>العودة إلى لوحة تحكم المالك</span>
         </button>
 
-        <div className="bg-slate-900 border border-slate-800 p-8 rounded-3xl shadow-2xl space-y-8 relative overflow-hidden">
+        <div className="bg-slate-900 dark:bg-[#1C1C1E] border border-slate-800 dark:border-[#2C2C2E] p-8 rounded-3xl shadow-2xl space-y-8 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
           <div className="space-y-2">
@@ -89,7 +89,7 @@ export default function AddCar() {
               <Car className="w-4 h-4" /> إدارة السيارات والإعلانات
             </span>
             <h1 className="text-3xl font-black text-white">إضافة سيارة جديدة إلى إعلاناتك</h1>
-            <p className="text-slate-400 text-xs leading-relaxed">
+            <p className="text-slate-400 dark:text-[#B0B0B8] text-xs leading-relaxed">
               أدخل تفاصيل المركبة والمواصفات والسعر. سيُنشر الإعلان مباشرة بعد اجتياز فحص الصور الأصلية والواقعية.
             </p>
           </div>
@@ -98,41 +98,41 @@ export default function AddCar() {
             <div className="bg-emerald-500/15 border border-emerald-500/30 p-8 rounded-2xl text-center space-y-4">
               <CheckCircle2 className="w-12 h-12 text-emerald-400 mx-auto animate-bounce" />
               <h2 className="text-xl font-bold text-white">تم نشر المركبة مباشرة بنجاح!</h2>
-              <p className="text-slate-300 text-xs">جاري تحويلك إلى لوحة تحكم المالك...</p>
+              <p className="text-slate-300 dark:text-[#D6D6DB] text-xs">جاري تحويلك إلى لوحة تحكم المالك...</p>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2 text-right">
-                <label className="text-xs font-bold text-slate-300">اسم السيارة / الموديل <span className="text-amber-500">*</span></label>
+                <label className="text-xs font-bold text-slate-300 dark:text-[#D6D6DB]">اسم السيارة / الموديل <span className="text-amber-500">*</span></label>
                 <input
                   type="text"
                   required
                   placeholder="مثال: Range Rover Velar Autobiography 2026"
                   value={carName}
                   onChange={(e) => setCarName(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-amber-500"
+                  className="w-full bg-slate-950 dark:bg-[#111113] border border-slate-800 dark:border-[#2C2C2E] rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-amber-500"
                 />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2 text-right">
-                  <label className="text-xs font-bold text-slate-300">الماركة (Brand) <span className="text-amber-500">*</span></label>
+                  <label className="text-xs font-bold text-slate-300 dark:text-[#D6D6DB]">الماركة (Brand) <span className="text-amber-500">*</span></label>
                   <input
                     type="text"
                     required
                     placeholder="مثال: Land Rover"
                     value={brand}
                     onChange={(e) => setBrand(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-amber-500"
+                    className="w-full bg-slate-950 dark:bg-[#111113] border border-slate-800 dark:border-[#2C2C2E] rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-amber-500"
                   />
                 </div>
 
                 <div className="space-y-2 text-right">
-                  <label className="text-xs font-bold text-slate-300">فئة المركبة</label>
+                  <label className="text-xs font-bold text-slate-300 dark:text-[#D6D6DB]">فئة المركبة</label>
                   <select
                     value={category}
                     onChange={(e) => setCategory(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-amber-500"
+                    className="w-full bg-slate-950 dark:bg-[#111113] border border-slate-800 dark:border-[#2C2C2E] rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-amber-500"
                   >
                     <option value="SUV / سيارة رباعية">SUV / سيارة رباعية دفع رباعي</option>
                     <option value="سيارة فاخرة / Luxury">سيارة فاخرة / Luxury</option>
@@ -144,31 +144,31 @@ export default function AddCar() {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2 text-right">
-                  <label className="text-xs font-bold text-slate-300">السعر اليومي (درهم) <span className="text-amber-500">*</span></label>
+                  <label className="text-xs font-bold text-slate-300 dark:text-[#D6D6DB]">السعر اليومي (درهم) <span className="text-amber-500">*</span></label>
                   <input
                     type="number"
                     required
                     value={price}
                     onChange={(e) => setPrice(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-amber-500"
+                    className="w-full bg-slate-950 dark:bg-[#111113] border border-slate-800 dark:border-[#2C2C2E] rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-amber-500"
                   />
                 </div>
 
                 <div className="space-y-2 text-right">
-                  <label className="text-xs font-bold text-slate-300">المدينة</label>
+                  <label className="text-xs font-bold text-slate-300 dark:text-[#D6D6DB]">المدينة</label>
                   <CitySelect
                     value={city}
                     onChange={setCity}
-                    className="w-full bg-slate-950 border-slate-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-amber-500"
+                    className="w-full bg-slate-950 dark:bg-[#111113] border-slate-800 dark:border-[#2C2C2E] rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-amber-500"
                   />
                 </div>
 
                 <div className="space-y-2 text-right">
-                  <label className="text-xs font-bold text-slate-300">ناقل الحركة</label>
+                  <label className="text-xs font-bold text-slate-300 dark:text-[#D6D6DB]">ناقل الحركة</label>
                   <select
                     value={transmission}
                     onChange={(e) => setTransmission(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-amber-500"
+                    className="w-full bg-slate-950 dark:bg-[#111113] border border-slate-800 dark:border-[#2C2C2E] rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-amber-500"
                   >
                     <option value="أوتوماتيك">أوتوماتيك</option>
                     <option value="عادي">عادي</option>
@@ -177,15 +177,15 @@ export default function AddCar() {
               </div>
 
               <div className="space-y-2 text-right">
-                <label className="text-xs font-bold text-slate-300">صورة السيارة الرئيسية</label>
+                <label className="text-xs font-bold text-slate-300 dark:text-[#D6D6DB]">صورة السيارة الرئيسية</label>
                 <AdvancedMediaUpload onImagesUploaded={(images) => { const first = images[0]; setImageUrl(first?.url ?? ''); setImageVerificationProof(first?.verificationProof ?? ''); }} />
               </div>
 
-              <div className="flex items-start gap-3 rounded-xl border border-slate-700 bg-slate-950/70 p-4 text-right">
+              <div className="flex items-start gap-3 rounded-xl border border-slate-700 dark:border-[#48484D] bg-slate-950/70 dark:bg-[#111113]/70 p-4 text-right">
                 <Checkbox id="listing-legal-consent" checked={acceptedLegal} onCheckedChange={(value) => setAcceptedLegal(value === true)} className="mt-1 border-slate-500 data-[state=checked]:bg-amber-500 data-[state=checked]:text-slate-950" />
-                <label htmlFor="listing-legal-consent" className="text-xs leading-6 text-slate-300 cursor-pointer">
+                <label htmlFor="listing-legal-consent" className="text-xs leading-6 text-slate-300 dark:text-[#D6D6DB] cursor-pointer">
                   أوافق على الشروط والأحكام وسياسة الخصوصية الخاصين بـ ALTUSplace، وأقر بأن معلومات العرض وصوره أصلية ودقيقة.
-                  <span className="block mt-1 text-slate-400"><Link href="/terms" className="text-amber-400 hover:underline">الشروط والأحكام</Link>{' '}و{' '}<Link href="/privacy" className="text-amber-400 hover:underline">سياسة الخصوصية</Link></span>
+                  <span className="block mt-1 text-slate-400 dark:text-[#B0B0B8]"><Link href="/terms" className="text-amber-400 hover:underline">الشروط والأحكام</Link>{' '}و{' '}<Link href="/privacy" className="text-amber-400 hover:underline">سياسة الخصوصية</Link></span>
                 </label>
               </div>
 

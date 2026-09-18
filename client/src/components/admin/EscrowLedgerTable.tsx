@@ -27,7 +27,7 @@ const date = (value: Date) => new Date(value).toLocaleDateString("fr-MA");
 const categoryLabel = (value: string) => (value === "real_estate" ? "عقار / Property" : value === "car" ? "سيارة / Car" : value);
 
 const STATUS_STYLES: Record<EscrowRow["status"], { label: string; className: string }> = {
-  held: { label: "محجوز", className: "bg-slate-700/50 text-slate-300" },
+  held: { label: "محجوز", className: "bg-slate-700/50 dark:bg-[#48484D]/50 text-slate-300 dark:text-[#D6D6DB]" },
   releasable: { label: "قابل للتحويل", className: "bg-cyan-500/15 text-cyan-300" },
   released: { label: "محرَّر", className: "bg-emerald-500/15 text-emerald-300" },
   frozen: { label: "مجمَّد", className: "bg-amber-500/15 text-amber-300" },
@@ -35,7 +35,7 @@ const STATUS_STYLES: Record<EscrowRow["status"], { label: string; className: str
 };
 
 const TRANSFER_STYLES: Record<EscrowRow["stripeTransferStatus"], { label: string; className: string }> = {
-  pending: { label: "Pending", className: "bg-slate-800 text-slate-400" },
+  pending: { label: "Pending", className: "bg-slate-800 dark:bg-[#2C2C2E] text-slate-400 dark:text-[#B0B0B8]" },
   sent: { label: "Sent", className: "bg-sky-500/15 text-sky-300" },
   held: { label: "Held", className: "bg-amber-500/15 text-amber-300" },
   failed: { label: "Failed", className: "bg-rose-500/15 text-rose-300" },
@@ -69,7 +69,7 @@ export default function EscrowLedgerTable({ rows, onChanged }: { rows: EscrowRow
     <div>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-lg font-bold text-slate-100">مراقب الإسكرو والمدفوعات</h2>
+          <h2 className="text-lg font-bold text-slate-100 dark:text-[#F1F1F3]">مراقب الإسكرو والمدفوعات</h2>
           <p className="text-xs text-slate-500">Multi-Vendor Escrow & Ledger Monitor — Stripe Connect split payments</p>
         </div>
         <Badge className="bg-cyan-500/15 text-cyan-300">
@@ -78,10 +78,10 @@ export default function EscrowLedgerTable({ rows, onChanged }: { rows: EscrowRow
         </Badge>
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-slate-800">
+      <div className="overflow-x-auto rounded-xl border border-slate-800 dark:border-[#2C2C2E]">
         <table className="w-full min-w-[1000px] text-sm">
           <thead>
-            <tr className="border-b border-slate-800 bg-slate-900/60 text-left text-[11px] uppercase tracking-wider text-slate-500">
+            <tr className="border-b border-slate-800 dark:border-[#2C2C2E] bg-slate-900/60 dark:bg-[#1C1C1E]/60 text-left text-[11px] uppercase tracking-wider text-slate-500">
               <th className="px-4 py-3">Booking ID</th>
               <th className="px-4 py-3">الضيف / Guest</th>
               <th className="px-4 py-3">المزوّد / Vendor</th>
@@ -156,12 +156,12 @@ function Row({
 
   return (
     <>
-      <tr className="border-b border-slate-800/70 text-slate-300 last:border-0 hover:bg-slate-800/20">
+      <tr className="border-b border-slate-800/70 dark:border-[#2C2C2E]/70 text-slate-300 dark:text-[#D6D6DB] last:border-0 hover:bg-slate-800/20 dark:hover:bg-[#2C2C2E]/20">
         <td className="px-4 py-3 font-mono text-xs font-semibold text-cyan-300">#{row.bookingId}</td>
         <td className="px-4 py-3">{row.guestName ?? `ضيف #${row.guestId ?? ""}`}</td>
         <td className="px-4 py-3">{row.vendorName ?? `مزوّد #${row.vendorId ?? ""}`}</td>
         <td className="px-4 py-3"><span className="text-xs">{categoryLabel(row.listingCategory)}</span></td>
-        <td className="px-4 py-3 font-semibold text-slate-100">{money(row.totalPaid)} MAD</td>
+        <td className="px-4 py-3 font-semibold text-slate-100 dark:text-[#F1F1F3]">{money(row.totalPaid)} MAD</td>
         <td className="px-4 py-3 text-rose-300">{money(row.platformCut)} MAD</td>
         <td className="px-4 py-3 font-semibold text-emerald-300">{money(row.vendorPayoutShare)} MAD</td>
         <td className="px-4 py-3 text-xs"><span className="inline-flex items-center gap-1"><Timer className="h-3.5 w-3.5 text-slate-500" />{date(row.releaseDate)}</span></td>
@@ -194,16 +194,16 @@ function Row({
         </td>
       </tr>
       {expanded && (
-        <tr className="border-b border-slate-800/70 bg-slate-900/40">
+        <tr className="border-b border-slate-800/70 dark:border-[#2C2C2E]/70 bg-slate-900/40 dark:bg-[#1C1C1E]/40">
           <td colSpan={11} className="px-4 py-4">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-end">
-              <label className="flex-1 text-xs font-semibold text-slate-400">
+              <label className="flex-1 text-xs font-semibold text-slate-400 dark:text-[#B0B0B8]">
                 ملاحظة التسوية / Mediation Note
                 <textarea
                   value={mediateNote}
                   onChange={(event) => setMediateNote(event.target.value)}
                   rows={2}
-                  className="mt-1.5 w-full resize-none rounded-lg border border-slate-700 bg-slate-800/70 px-3 py-2 text-sm text-slate-100 outline-none placeholder:text-slate-500 focus:border-violet-500"
+                  className="mt-1.5 w-full resize-none rounded-lg border border-slate-700 dark:border-[#48484D] bg-slate-800/70 dark:bg-[#2C2C2E]/70 px-3 py-2 text-sm text-slate-100 dark:text-[#F1F1F3] outline-none placeholder:text-slate-500 focus:border-violet-500"
                   placeholder="يسجّل قرار الوساطة وتفاصيله (2-2000 حرفاً)..."
                 />
               </label>
@@ -212,7 +212,7 @@ function Row({
                   type="button"
                   disabled={busy || mediateNote.trim().length < 2}
                   onClick={() => setMediateResolution("release_to_vendor")}
-                  className={`rounded-lg px-3 py-2 text-xs font-semibold transition ${mediateResolution === "release_to_vendor" ? "bg-emerald-500 text-slate-950" : "border border-slate-700 text-slate-300 hover:border-emerald-500/40"}`}
+                  className={`rounded-lg px-3 py-2 text-xs font-semibold transition ${mediateResolution === "release_to_vendor" ? "bg-emerald-500 text-slate-950" : "border border-slate-700 dark:border-[#48484D] text-slate-300 dark:text-[#D6D6DB] hover:border-emerald-500/40"}`}
                 >
                   Release to Vendor
                 </button>
@@ -220,7 +220,7 @@ function Row({
                   type="button"
                   disabled={busy || mediateNote.trim().length < 2}
                   onClick={() => setMediateResolution("refund_to_guest")}
-                  className={`rounded-lg px-3 py-2 text-xs font-semibold transition ${mediateResolution === "refund_to_guest" ? "bg-rose-500 text-white" : "border border-slate-700 text-slate-300 hover:border-rose-500/40"}`}
+                  className={`rounded-lg px-3 py-2 text-xs font-semibold transition ${mediateResolution === "refund_to_guest" ? "bg-rose-500 text-white" : "border border-slate-700 dark:border-[#48484D] text-slate-300 dark:text-[#D6D6DB] hover:border-rose-500/40"}`}
                 >
                   Refund to Guest
                 </button>

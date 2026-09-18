@@ -90,7 +90,7 @@ export default function AIChatWidget() {
             </div>
             <button 
               onClick={() => setIsOpen(false)}
-              className="text-slate-300 hover:text-white p-1 rounded-lg hover:bg-white/10 transition-colors"
+              className="text-slate-300 dark:text-[#D6D6DB] hover:text-white p-1 rounded-lg hover:bg-white/10 transition-colors"
             >
               <X className="w-5 h-5" />
             </button>

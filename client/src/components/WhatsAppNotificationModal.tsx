@@ -38,20 +38,20 @@ export function WhatsAppNotificationModal({ isOpen, onClose, bookingDetails }: W
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" dir="rtl">
-      <div className="bg-slate-950 border border-slate-800 rounded-3xl p-8 max-w-md w-full space-y-6 shadow-2xl text-slate-100">
+      <div className="bg-slate-950 dark:bg-[#111113] border border-slate-800 dark:border-[#2C2C2E] rounded-3xl p-8 max-w-md w-full space-y-6 shadow-2xl text-slate-100 dark:text-[#F1F1F3]">
         
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+        <div className="flex items-center justify-between border-b border-slate-800 dark:border-[#2C2C2E] pb-4">
           <div className="flex items-center gap-2">
             <div className="bg-emerald-500/20 p-2 rounded-xl border border-emerald-500/30 text-emerald-400">
               <MessageSquare className="w-5 h-5" />
             </div>
             <div>
               <h3 className="text-base font-extrabold text-white">إرسال إشعار WhatsApp / SMS</h3>
-              <p className="text-[10px] text-slate-400">تواصل فوري وآلي مع الزبون أو الوكالة</p>
+              <p className="text-[10px] text-slate-400 dark:text-[#B0B0B8]">تواصل فوري وآلي مع الزبون أو الوكالة</p>
             </div>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-white text-sm font-bold">✕</button>
+          <button onClick={onClose} className="text-slate-400 dark:text-[#B0B0B8] hover:text-white text-sm font-bold">✕</button>
         </div>
 
         {sent ? (
@@ -60,12 +60,12 @@ export function WhatsAppNotificationModal({ isOpen, onClose, bookingDetails }: W
               <CheckCircle2 className="w-8 h-8" />
             </div>
             <h4 className="text-lg font-bold text-white">تم الإرسال بنجاح عبر الواتساب!</h4>
-            <p className="text-xs text-slate-400">تم توصيل الإشعار وتحديث سجل الحجز.</p>
+            <p className="text-xs text-slate-400 dark:text-[#B0B0B8]">تم توصيل الإشعار وتحديث سجل الحجز.</p>
           </div>
         ) : (
           <div className="space-y-4">
             <div className="space-y-1.5 text-right">
-              <label className="text-xs font-bold text-slate-300">إرسال إلى:</label>
+              <label className="text-xs font-bold text-slate-300 dark:text-[#D6D6DB]">إرسال إلى:</label>
               <div className="grid grid-cols-2 gap-3">
                 <button
                   type="button"
@@ -73,7 +73,7 @@ export function WhatsAppNotificationModal({ isOpen, onClose, bookingDetails }: W
                   className={`py-2.5 px-4 rounded-xl text-xs font-bold border transition-all ${
                     recipient === 'agency'
                       ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400'
-                      : 'bg-slate-900 border-slate-700 text-slate-400 hover:bg-slate-800'
+                      : 'bg-slate-900 dark:bg-[#1C1C1E] border-slate-700 dark:border-[#48484D] text-slate-400 dark:text-[#B0B0B8] hover:bg-slate-800 dark:hover:bg-[#2C2C2E]'
                   }`}
                 >
                   وكالة التأجير / العقارات
@@ -84,7 +84,7 @@ export function WhatsAppNotificationModal({ isOpen, onClose, bookingDetails }: W
                   className={`py-2.5 px-4 rounded-xl text-xs font-bold border transition-all ${
                     recipient === 'customer'
                       ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400'
-                      : 'bg-slate-900 border-slate-700 text-slate-400 hover:bg-slate-800'
+                      : 'bg-slate-900 dark:bg-[#1C1C1E] border-slate-700 dark:border-[#48484D] text-slate-400 dark:text-[#B0B0B8] hover:bg-slate-800 dark:hover:bg-[#2C2C2E]'
                   }`}
                 >
                   المستأجر / العميل
@@ -93,20 +93,20 @@ export function WhatsAppNotificationModal({ isOpen, onClose, bookingDetails }: W
             </div>
 
             <div className="space-y-1.5 text-right">
-              <label className="text-xs font-bold text-slate-300">نص الرسالة التلقائية</label>
+              <label className="text-xs font-bold text-slate-300 dark:text-[#D6D6DB]">نص الرسالة التلقائية</label>
               <textarea
                 rows={4}
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-emerald-500 leading-relaxed resize-none"
+                className="w-full bg-slate-900 dark:bg-[#1C1C1E] border border-slate-700 dark:border-[#48484D] rounded-xl p-3 text-xs text-white focus:outline-none focus:border-emerald-500 leading-relaxed resize-none"
               />
             </div>
 
-            <div className="flex justify-end gap-3 pt-4 border-t border-slate-800">
+            <div className="flex justify-end gap-3 pt-4 border-t border-slate-800 dark:border-[#2C2C2E]">
               <Button
                 type="button"
                 onClick={onClose}
-                className="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold px-5 py-2.5 rounded-xl text-xs"
+                className="bg-slate-800 dark:bg-[#2C2C2E] hover:bg-slate-700 dark:hover:bg-[#48484D] text-slate-300 dark:text-[#D6D6DB] font-bold px-5 py-2.5 rounded-xl text-xs"
               >
                 إلغاء
               </Button>

@@ -1,12 +1,12 @@
 import type { ReactNode } from "react";
 
 function SkeletonBlock({ className = "" }: { className?: string }) {
-  return <div className={`animate-pulse rounded-lg bg-slate-700/40 ${className}`} aria-hidden="true" />;
+  return <div className={`animate-pulse rounded-lg bg-slate-700/40 dark:bg-[#48484D]/40 ${className}`} aria-hidden="true" />;
 }
 
 export function MetricCardSkeleton() {
   return (
-    <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-5">
+    <div className="rounded-2xl border border-slate-800 dark:border-[#2C2C2E] bg-slate-900/70 dark:bg-[#1C1C1E]/70 p-5">
       <div className="mb-4 flex items-center justify-between">
         <SkeletonBlock className="h-5 w-5 rounded-md" />
         <SkeletonBlock className="h-4 w-14" />
@@ -32,10 +32,10 @@ export function ChartSkeleton() {
 
 export function TableRowsSkeleton({ rows = 6, cols = 8 }: { rows?: number; cols?: number }) {
   return (
-    <div className="overflow-hidden rounded-xl border border-slate-800">
-      <div className="flex gap-6 border-b border-slate-800 bg-slate-900/60 px-4 py-3">{Array.from({ length: cols }).map((_, i) => <SkeletonBlock key={i} className="h-4 w-16 flex-1" />)}</div>
+    <div className="overflow-hidden rounded-xl border border-slate-800 dark:border-[#2C2C2E]">
+      <div className="flex gap-6 border-b border-slate-800 dark:border-[#2C2C2E] bg-slate-900/60 dark:bg-[#1C1C1E]/60 px-4 py-3">{Array.from({ length: cols }).map((_, i) => <SkeletonBlock key={i} className="h-4 w-16 flex-1" />)}</div>
       {Array.from({ length: rows }).map((_, row) => (
-        <div key={row} className="flex gap-6 border-b border-slate-800/70 px-4 py-4 last:border-0">
+        <div key={row} className="flex gap-6 border-b border-slate-800/70 dark:border-[#2C2C2E]/70 px-4 py-4 last:border-0">
           {Array.from({ length: cols }).map((_, col) => <SkeletonBlock key={col} className={`h-4 flex-1 ${col === 0 ? "w-10" : "w-16"}`} />)}
         </div>
       ))}
@@ -50,8 +50,8 @@ export function DashboardSkeleton() {
         {Array.from({ length: 4 }).map((_, i) => <MetricCardSkeleton key={i} />)}
       </div>
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-3">
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 xl:col-span-2"><ChartSkeleton /></div>
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5"><div className="space-y-4">{Array.from({ length: 5 }).map((_, i) => <SkeletonBlock key={i} className="h-12 w-full" />)}</div></div>
+        <div className="rounded-2xl border border-slate-800 dark:border-[#2C2C2E] bg-slate-900/60 dark:bg-[#1C1C1E]/60 p-5 xl:col-span-2"><ChartSkeleton /></div>
+        <div className="rounded-2xl border border-slate-800 dark:border-[#2C2C2E] bg-slate-900/60 dark:bg-[#1C1C1E]/60 p-5"><div className="space-y-4">{Array.from({ length: 5 }).map((_, i) => <SkeletonBlock key={i} className="h-12 w-full" />)}</div></div>
       </div>
       <TableRowsSkeleton />
     </div>

@@ -58,15 +58,15 @@ export default function MetricCards({ data }: { data: FinancialOverview }) {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
       {cards.map((card) => (
-        <div key={card.en} className="rounded-2xl border border-slate-800 bg-slate-900/70 p-5 shadow-lg shadow-black/20 ring-1 ring-inset ring-transparent transition hover:border-slate-700">
+        <div key={card.en} className="rounded-2xl border border-slate-800 dark:border-[#2C2C2E] bg-slate-900/70 dark:bg-[#1C1C1E]/70 p-5 shadow-lg shadow-black/20 ring-1 ring-inset ring-transparent transition hover:border-slate-700 dark:hover:border-[#48484D]">
           <div className="mb-4 flex items-center justify-between">
-            <span className={`grid h-10 w-10 place-items-center rounded-xl bg-slate-800/80 ring-1 ${card.ring}`}>
+            <span className={`grid h-10 w-10 place-items-center rounded-xl bg-slate-800/80 dark:bg-[#2C2C2E]/80 ring-1 ${card.ring}`}>
               <card.icon className={`h-5 w-5 ${card.accent}`} />
             </span>
-            <span className="rounded-full bg-slate-800/60 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-slate-400">{card.en}</span>
+            <span className="rounded-full bg-slate-800/60 dark:bg-[#2C2C2E]/60 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-[#B0B0B8]">{card.en}</span>
           </div>
-          <p className="text-sm text-slate-400">{card.label}</p>
-          <p className="mt-1 text-2xl font-black tracking-tight text-slate-100">{card.value}</p>
+          <p className="text-sm text-slate-400 dark:text-[#B0B0B8]">{card.label}</p>
+          <p className="mt-1 text-2xl font-black tracking-tight text-slate-100 dark:text-[#F1F1F3]">{card.value}</p>
           <p className="mt-2 text-[11px] text-slate-500">{card.sub}</p>
         </div>
       ))}

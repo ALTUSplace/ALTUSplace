@@ -24,10 +24,10 @@ export default function KycVerification() {
   return (
     <main dir={direction} lang={language} className="min-h-screen bg-background px-4 py-8 text-foreground">
       <div className="mx-auto max-w-3xl space-y-6">
-        <header className="rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6 text-white shadow-xl">
+        <header className="rounded-3xl bg-gradient-to-br from-slate-900 dark:from-[#1C1C1E] via-slate-800 dark:via-[#2C2C2E] to-slate-900 dark:to-[#1C1C1E] p-6 text-white shadow-xl">
           <div className="flex items-start gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/20"><ShieldCheck className="h-6 w-6 text-amber-400" /></div>
-            <div><h1 className="text-2xl font-black">{t("kycTitle")}</h1><p className="mt-2 text-sm text-slate-300">{t("kycSubtitle")}</p></div>
+            <div><h1 className="text-2xl font-black">{t("kycTitle")}</h1><p className="mt-2 text-sm text-slate-300 dark:text-[#D6D6DB]">{t("kycSubtitle")}</p></div>
           </div>
         </header>
         {/* Live verification state — mirrors the server gate enforced on bookings & payments */}

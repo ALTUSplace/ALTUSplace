@@ -84,20 +84,20 @@ export function TwoFactorAuthModal({ isOpen, onClose, onSuccess }: TwoFactorAuth
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" dir="rtl">
-      <div className="bg-slate-950 border border-slate-800 rounded-3xl p-8 max-w-md w-full space-y-6 shadow-2xl text-slate-100">
+      <div className="bg-slate-950 dark:bg-[#111113] border border-slate-800 dark:border-[#2C2C2E] rounded-3xl p-8 max-w-md w-full space-y-6 shadow-2xl text-slate-100 dark:text-[#F1F1F3]">
         
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+        <div className="flex items-center justify-between border-b border-slate-800 dark:border-[#2C2C2E] pb-4">
           <div className="flex items-center gap-2">
             <div className="bg-amber-500/20 p-2 rounded-xl border border-amber-500/30 text-amber-400">
               <ShieldCheck className="w-5 h-5" />
             </div>
             <div>
               <h3 className="text-base font-extrabold text-white">المصادقة الثنائية الأمنية (2FA)</h3>
-              <p className="text-[10px] text-slate-400">حماية متقدمة ورموز استرداد للطوارئ</p>
+              <p className="text-[10px] text-slate-400 dark:text-[#B0B0B8]">حماية متقدمة ورموز استرداد للطوارئ</p>
             </div>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-white text-sm font-bold">✕</button>
+          <button onClick={onClose} className="text-slate-400 dark:text-[#B0B0B8] hover:text-white text-sm font-bold">✕</button>
         </div>
 
         {step === 'success' ? (
@@ -106,22 +106,22 @@ export function TwoFactorAuthModal({ isOpen, onClose, onSuccess }: TwoFactorAuth
               <CheckCircle2 className="w-8 h-8" />
             </div>
             <h4 className="text-lg font-bold text-white">تم تأمين الحساب وحفظ الرموز!</h4>
-            <p className="text-xs text-slate-400">أصبح حسابك الإداري محمياً بأعلى معايير الأمان.</p>
+            <p className="text-xs text-slate-400 dark:text-[#B0B0B8]">أصبح حسابك الإداري محمياً بأعلى معايير الأمان.</p>
           </div>
         ) : step === 'recovery' ? (
           <div className="space-y-4">
             <div className="bg-amber-500/10 border border-amber-500/30 p-4 rounded-2xl flex items-start gap-3">
               <Key className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
-              <div className="text-xs space-y-1 text-slate-300">
+              <div className="text-xs space-y-1 text-slate-300 dark:text-[#D6D6DB]">
                 <p className="font-bold text-white">احتفظ برمز الاسترداد (Recovery Codes):</p>
-                <p className="text-[11px] text-slate-400">يمكنك استخدام هذه الرموز لمرة واحدة في حال فقدان الوصول لهاتفك.</p>
+                <p className="text-[11px] text-slate-400 dark:text-[#B0B0B8]">يمكنك استخدام هذه الرموز لمرة واحدة في حال فقدان الوصول لهاتفك.</p>
               </div>
             </div>
 
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-2">
+            <div className="bg-slate-900 dark:bg-[#1C1C1E] border border-slate-800 dark:border-[#2C2C2E] rounded-2xl p-4 space-y-2">
               <div className="grid grid-cols-1 gap-2 font-mono text-center text-xs text-amber-400">
                 {recoveryCodes.map((rc, idx) => (
-                  <div key={idx} className="bg-slate-950 py-2 px-3 rounded-xl border border-slate-800 tracking-wider flex items-center justify-between">
+                  <div key={idx} className="bg-slate-950 dark:bg-[#111113] py-2 px-3 rounded-xl border border-slate-800 dark:border-[#2C2C2E] tracking-wider flex items-center justify-between">
                     <span className="text-slate-500 text-[10px]">#{idx + 1}</span>
                     <span className="text-amber-400 font-bold">{rc}</span>
                     <span className="w-4" />
@@ -137,7 +137,7 @@ export function TwoFactorAuthModal({ isOpen, onClose, onSuccess }: TwoFactorAuth
                 className={`flex-1 font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 transition-all ${
                   copied
                     ? 'bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20'
-                    : 'bg-slate-800 hover:bg-slate-700 text-slate-200'
+                    : 'bg-slate-800 dark:bg-[#2C2C2E] hover:bg-slate-700 dark:hover:bg-[#48484D] text-slate-200 dark:text-[#E8E8EB]'
                 }`}
               >
                 {copied ? (
@@ -155,14 +155,14 @@ export function TwoFactorAuthModal({ isOpen, onClose, onSuccess }: TwoFactorAuth
               <Button
                 type="button"
                 onClick={handleDownloadCodes}
-                className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-2"
+                className="flex-1 bg-slate-800 dark:bg-[#2C2C2E] hover:bg-slate-700 dark:hover:bg-[#48484D] text-slate-200 dark:text-[#E8E8EB] font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-2"
               >
                 <Download className="w-3.5 h-3.5 text-amber-400" />
                 <span>تحميل كملف</span>
               </Button>
             </div>
 
-            <div className="pt-4 border-t border-slate-800 flex justify-end">
+            <div className="pt-4 border-t border-slate-800 dark:border-[#2C2C2E] flex justify-end">
               <Button
                 type="button"
                 onClick={handleFinish}
@@ -176,35 +176,35 @@ export function TwoFactorAuthModal({ isOpen, onClose, onSuccess }: TwoFactorAuth
           <form onSubmit={handleVerify} className="space-y-4">
             <div className="bg-amber-500/10 border border-amber-500/30 p-4 rounded-2xl flex items-start gap-3">
               <Smartphone className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
-              <div className="text-xs space-y-1 text-slate-300">
+              <div className="text-xs space-y-1 text-slate-300 dark:text-[#D6D6DB]">
                 <p className="font-bold text-white">تم إرسال رمز التحقق إلى هاتفك المرتبط:</p>
                 <p className="font-mono text-amber-400">{displayPhone} (Google Authenticator / SMS)</p>
               </div>
             </div>
 
             <div className="space-y-1.5 text-right">
-              <label className="text-xs font-bold text-slate-300">أدخل رمز التحقق (6 أرقام)</label>
+              <label className="text-xs font-bold text-slate-300 dark:text-[#D6D6DB]">أدخل رمز التحقق (6 أرقام)</label>
               <input
                 type="text"
                 maxLength={6}
                 placeholder="123456"
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-center text-lg tracking-widest font-mono text-white focus:outline-none focus:border-amber-500"
+                className="w-full bg-slate-900 dark:bg-[#1C1C1E] border border-slate-700 dark:border-[#48484D] rounded-xl px-4 py-3 text-center text-lg tracking-widest font-mono text-white focus:outline-none focus:border-amber-500"
                 required
               />
             </div>
 
-            <div className="flex items-center gap-2 text-[11px] text-slate-400 bg-slate-900/80 p-3 rounded-xl border border-slate-800">
+            <div className="flex items-center gap-2 text-[11px] text-slate-400 dark:text-[#B0B0B8] bg-slate-900/80 dark:bg-[#1C1C1E]/80 p-3 rounded-xl border border-slate-800 dark:border-[#2C2C2E]">
               <Lock className="w-4 h-4 text-amber-400 shrink-0" />
               <span>هذه الخطوة إلزامية لضمان أمان العمليات المالية وتعديل الأسطول.</span>
             </div>
 
-            <div className="flex justify-end gap-3 pt-4 border-t border-slate-800">
+            <div className="flex justify-end gap-3 pt-4 border-t border-slate-800 dark:border-[#2C2C2E]">
               <Button
                 type="button"
                 onClick={onClose}
-                className="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold px-5 py-2.5 rounded-xl text-xs"
+                className="bg-slate-800 dark:bg-[#2C2C2E] hover:bg-slate-700 dark:hover:bg-[#48484D] text-slate-300 dark:text-[#D6D6DB] font-bold px-5 py-2.5 rounded-xl text-xs"
               >
                 إلغاء
               </Button>
@@ -215,7 +215,7 @@ export function TwoFactorAuthModal({ isOpen, onClose, onSuccess }: TwoFactorAuth
               >
                 {loading ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
+                    <div className="w-4 h-4 border-2 border-slate-950 dark:border-[#111113] border-t-transparent rounded-full animate-spin" />
                     <span>جاري التحقق...</span>
                   </>
                 ) : (

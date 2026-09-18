@@ -227,7 +227,7 @@ export default function CarDetails() {
             <button onClick={() => handleShare('facebook')} className="bg-accent-clay-soft text-accent-clay hover:bg-accent-clay hover:text-white px-3 py-1 rounded-xl text-xs font-bold transition-all border border-accent-clay/30">
               فيسبوك
             </button>
-            <button onClick={() => handleShare('copy')} className="bg-slate-800 text-slate-300 hover:bg-slate-700 px-3 py-1 rounded-xl text-xs font-bold transition-all border border-slate-700 flex items-center gap-1">
+            <button onClick={() => handleShare('copy')} className="bg-slate-800 dark:bg-[#2C2C2E] text-slate-300 dark:text-[#D6D6DB] hover:bg-slate-700 dark:hover:bg-[#48484D] px-3 py-1 rounded-xl text-xs font-bold transition-all border border-slate-700 dark:border-[#48484D] flex items-center gap-1">
               {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
               <span>{copiedLink ? 'تم النسخ' : 'نسخ الرابط'}</span>
             </button>

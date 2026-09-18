@@ -301,7 +301,7 @@ export default function Success() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100 py-12 px-4 relative">
+    <div className="min-h-screen bg-slate-900 dark:bg-[#1C1C1E] text-slate-100 dark:text-[#F1F1F3] py-12 px-4 relative">
       {voucherCode && !isPending && (
         <div className="mx-auto mb-6 max-w-4xl rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-right shadow-sm">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -311,7 +311,7 @@ export default function Success() {
         </div>
       )}
       <div className="container mx-auto px-4 max-w-2xl text-center space-y-8">
-        <div className="bg-slate-950 border border-slate-800 p-8 rounded-3xl shadow-2xl space-y-6">
+        <div className="bg-slate-950 dark:bg-[#111113] border border-slate-800 dark:border-[#2C2C2E] p-8 rounded-3xl shadow-2xl space-y-6">
           <div className="w-16 h-16 bg-emerald-500/20 border border-emerald-500/40 rounded-full flex items-center justify-center mx-auto text-emerald-400">
             <CheckCircle2 className="w-8 h-8" />
           </div>
@@ -319,7 +319,7 @@ export default function Success() {
           <div className="space-y-2">
             <span className="text-xs font-bold text-amber-400 uppercase tracking-widest">{isPending ? 'تم إرسال طلب الحجز' : 'تم تأكيد الحجز'}</span>
             <h1 className="text-2xl font-extrabold text-white">شكراً لك، {name}!</h1>
-            <p className="text-slate-400 text-xs max-w-md mx-auto">
+            <p className="text-slate-400 dark:text-[#B0B0B8] text-xs max-w-md mx-auto">
               رقم مرجع الحجز الخاص بك هو <span className="text-amber-400 font-bold">{bookingRef}</span>. {isPending ? 'الطلب الآن قيد مراجعة المالك، وسيصلك إشعار عند القبول أو الرفض.' : 'يمكنك توقيع العقد وتنزيل مستندات الحجز.'}
             </p>
           </div>
@@ -346,22 +346,22 @@ export default function Success() {
             </div>
           )}
 
-          <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl text-right space-y-3 text-xs">
-            <div className="flex justify-between border-b border-slate-800 pb-2">
-              <span className="text-slate-400">الرقم المرجعي:</span>
+          <div className="bg-slate-900 dark:bg-[#1C1C1E] border border-slate-800 dark:border-[#2C2C2E] p-6 rounded-2xl text-right space-y-3 text-xs">
+            <div className="flex justify-between border-b border-slate-800 dark:border-[#2C2C2E] pb-2">
+              <span className="text-slate-400 dark:text-[#B0B0B8]">الرقم المرجعي:</span>
               <span className="font-bold text-white">{bookingRef}</span>
             </div>
-            <div className="flex justify-between border-b border-slate-800 pb-2">
-              <span className="text-slate-400">فترة الإيجار:</span>
+            <div className="flex justify-between border-b border-slate-800 dark:border-[#2C2C2E] pb-2">
+              <span className="text-slate-400 dark:text-[#B0B0B8]">فترة الإيجار:</span>
               <span className="font-bold text-white">{start} إلى {end} ({days} أيام)</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-400">المبلغ الإجمالي:</span>
+              <span className="text-slate-400 dark:text-[#B0B0B8]">المبلغ الإجمالي:</span>
               <span className="font-bold text-amber-400">{total} درهم</span>
             </div>
           </div>
 
-          <div className="bg-slate-900 border border-amber-500/30 p-5 rounded-2xl text-right space-y-3">
+          <div className="bg-slate-900 dark:bg-[#1C1C1E] border border-amber-500/30 p-5 rounded-2xl text-right space-y-3">
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2"><Receipt className="w-5 h-5 text-amber-400" /><span className="font-bold text-white">الفاتورة الإلكترونية</span></div>
               {invoice && (
@@ -372,21 +372,21 @@ export default function Success() {
                 />
               )}
             </div>
-            {invoiceQuery.isLoading ? <p className="text-xs text-slate-400">جاري التحقق من الفاتورة المحفوظة...</p> : invoice ? (
+            {invoiceQuery.isLoading ? <p className="text-xs text-slate-400 dark:text-[#B0B0B8]">جاري التحقق من الفاتورة المحفوظة...</p> : invoice ? (
               <>
-                <div className="grid grid-cols-2 gap-3 text-xs"><div><span className="text-slate-400 block">رقم الفاتورة</span><strong className="text-white">{invoice.invoiceNumber}</strong></div><div><span className="text-slate-400 block">حالة الدفع</span><strong className="text-white">{invoice.paymentStatus}</strong></div><div><span className="text-slate-400 block">TVA</span><strong className="text-white">{invoice.vatAmount} {invoice.currency}</strong></div><div><span className="text-slate-400 block">الإجمالي الخادمي</span><strong className="text-amber-300">{invoice.total} {invoice.currency}</strong></div></div>
-                <Button type="button" onClick={handleInvoiceDownload} disabled={isGeneratingPDF} className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold disabled:opacity-50 disabled:cursor-not-allowed">{isGeneratingPDF ? <><div className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin ml-2" /> جاري إنشاء الفاتورة...</> : <><Download className="w-4 h-4 ml-2" /> تنزيل الفاتورة PDF</>}</Button>
+                <div className="grid grid-cols-2 gap-3 text-xs"><div><span className="text-slate-400 dark:text-[#B0B0B8] block">رقم الفاتورة</span><strong className="text-white">{invoice.invoiceNumber}</strong></div><div><span className="text-slate-400 dark:text-[#B0B0B8] block">حالة الدفع</span><strong className="text-white">{invoice.paymentStatus}</strong></div><div><span className="text-slate-400 dark:text-[#B0B0B8] block">TVA</span><strong className="text-white">{invoice.vatAmount} {invoice.currency}</strong></div><div><span className="text-slate-400 dark:text-[#B0B0B8] block">الإجمالي الخادمي</span><strong className="text-amber-300">{invoice.total} {invoice.currency}</strong></div></div>
+                <Button type="button" onClick={handleInvoiceDownload} disabled={isGeneratingPDF} className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold disabled:opacity-50 disabled:cursor-not-allowed">{isGeneratingPDF ? <><div className="w-4 h-4 border-2 border-slate-950 dark:border-[#111113] border-t-transparent rounded-full animate-spin ml-2" /> جاري إنشاء الفاتورة...</> : <><Download className="w-4 h-4 ml-2" /> تنزيل الفاتورة PDF</>}</Button>
               </>
-            ) : <p className="text-xs text-slate-400">{invoiceQuery.isError ? 'تعذر التحقق من الفاتورة لهذا الحجز. يمكنك مراجعة صفحة حجوزاتك.' : `تم تسجيل الدفع، رقم المبلغ المرجعي ${booking?.totalPrice ?? 0} درهم، وسيظهر المستند بعد اكتمال الحفظ.`}</p>}
+            ) : <p className="text-xs text-slate-400 dark:text-[#B0B0B8]">{invoiceQuery.isError ? 'تعذر التحقق من الفاتورة لهذا الحجز. يمكنك مراجعة صفحة حجوزاتك.' : `تم تسجيل الدفع، رقم المبلغ المرجعي ${booking?.totalPrice ?? 0} درهم، وسيظهر المستند بعد اكتمال الحفظ.`}</p>}
           </div>
 
           {!isPending && (
-            <div className="bg-slate-900 border border-slate-800 p-4 rounded-2xl flex items-center justify-between">
+            <div className="bg-slate-900 dark:bg-[#1C1C1E] border border-slate-800 dark:border-[#2C2C2E] p-4 rounded-2xl flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <Stamp className="w-5 h-5 text-amber-400" />
                 <div className="text-right">
                   <div className="text-xs font-bold text-white">إدراج الختم الرقمي الرسمي للوكالة</div>
-                  <div className="text-[10px] text-slate-400">يثبت المصداقية القانونية والاعتماد الرسمي للوكالة</div>
+                  <div className="text-[10px] text-slate-400 dark:text-[#B0B0B8]">يثبت المصداقية القانونية والاعتماد الرسمي للوكالة</div>
                 </div>
               </div>
               <input
@@ -399,9 +399,9 @@ export default function Success() {
           )}
 
           {!isPending && (
-            <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl space-y-3 text-right">
+            <div className="bg-slate-900 dark:bg-[#1C1C1E] border border-slate-800 dark:border-[#2C2C2E] p-6 rounded-2xl space-y-3 text-right">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                <label className="text-xs font-bold text-slate-300 dark:text-[#D6D6DB] flex items-center gap-1.5">
                   <Edit3 className="w-4 h-4 text-amber-400" /> التوقيع الإلكتروني (ارسم توقيعك في المربع أدناه):
                 </label>
                 {hasSigned && (
@@ -411,7 +411,7 @@ export default function Success() {
                 )}
               </div>
 
-              <div className="bg-white rounded-xl overflow-hidden border border-slate-700 relative shadow-inner cursor-crosshair">
+              <div className="bg-white rounded-xl overflow-hidden border border-slate-700 dark:border-[#48484D] relative shadow-inner cursor-crosshair">
                 <canvas
                   ref={canvasRef}
                   width={500}
@@ -426,20 +426,20 @@ export default function Success() {
                   onTouchEnd={stopDrawing}
                 />
                 {!hasSigned && (
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none text-slate-400 text-xs">
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none text-slate-400 dark:text-[#B0B0B8] text-xs">
                     ارسم توقيعك هنا بالإصبع أو الفأرة
                   </div>
                 )}
               </div>
 
               <div className="flex items-center justify-between pt-1">
-                <span className="text-[11px] text-slate-400">
+                <span className="text-[11px] text-slate-400 dark:text-[#B0B0B8]">
                   {hasSigned ? 'التوقيع جاهز للاعتماد في العقد' : 'يرجى رسم التوقيع أعلاه'}
                 </span>
                 <button
                   onClick={clearSignature}
                   type="button"
-                  className="bg-slate-800 hover:bg-slate-700 text-amber-400 px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors border border-amber-500/20"
+                  className="bg-slate-800 dark:bg-[#2C2C2E] hover:bg-slate-700 dark:hover:bg-[#48484D] text-amber-400 px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors border border-amber-500/20"
                 >
                   <Eraser className="w-3.5 h-3.5" /> مسح وإعادة المحاولة
                 </button>
@@ -453,7 +453,7 @@ export default function Success() {
                 <FileCheck className="h-6 w-6 text-amber-400" />
                 <div>
                   <h2 className="text-sm font-bold text-white">عقد الكراء جاهز بعد الاعتماد</h2>
-                  <p className="text-[11px] text-slate-300">سيتم إنشاء العقد تلقائياً عندما يقبل المالك طلب الحجز. لا يوجد عقد نهائي في هذه المرحلة.</p>
+                  <p className="text-[11px] text-slate-300 dark:text-[#D6D6DB]">سيتم إنشاء العقد تلقائياً عندما يقبل المالك طلب الحجز. لا يوجد عقد نهائي في هذه المرحلة.</p>
                 </div>
               </div>
             </div>
@@ -465,7 +465,7 @@ export default function Success() {
                 <FileCheck className="h-6 w-6 text-amber-400" />
                 <div>
                   <h2 className="text-sm font-bold text-white">عقد الكراء {contractType === 'commercial' ? 'التجاري' : 'المهني'}</h2>
-                  <p className="text-[11px] text-slate-300">يتم توليد العقد تلقائياً بعد تأكيد الحجز، ويتضمن بيانات الطرفين والمحل والكراء والالتزامات.</p>
+                  <p className="text-[11px] text-slate-300 dark:text-[#D6D6DB]">يتم توليد العقد تلقائياً بعد تأكيد الحجز، ويتضمن بيانات الطرفين والمحل والكراء والالتزامات.</p>
                 </div>
               </div>
               {isCommercialContractGenerating ? (
@@ -487,7 +487,7 @@ export default function Success() {
               ) : (
                 <p className="text-xs text-rose-300">تعذر إنشاء العقد تلقائياً. يمكنك إعادة تحميل الصفحة للمحاولة مرة أخرى.</p>
               )}
-              <p className="text-[10px] leading-5 text-slate-400">تنبيه: هذا قالب تقني يجب مراجعته واعتماده من طرف محامٍ أو موثق مغربي قبل التوقيع أو الاستعمال الفعلي.</p>
+              <p className="text-[10px] leading-5 text-slate-400 dark:text-[#B0B0B8]">تنبيه: هذا قالب تقني يجب مراجعته واعتماده من طرف محامٍ أو موثق مغربي قبل التوقيع أو الاستعمال الفعلي.</p>
             </div>
           )}
 
@@ -500,7 +500,7 @@ export default function Success() {
             >
               {isGeneratingPDF ? (
                 <>
-                  <div className="w-5 h-5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
+                  <div className="w-5 h-5 border-2 border-slate-950 dark:border-[#111113] border-t-transparent rounded-full animate-spin" />
                   <span>جاري توليد ملف الـ PDF وتجهيز الختم...</span>
                 </>
               ) : (
@@ -537,7 +537,7 @@ export default function Success() {
               onClick={() => setLocation('/')}
               type="button"
               variant="outline"
-              className="w-full border-slate-700 text-slate-200 hover:bg-slate-800 py-3 rounded-xl flex items-center justify-center gap-2 text-xs"
+              className="w-full border-slate-700 dark:border-[#48484D] text-slate-200 dark:text-[#E8E8EB] hover:bg-slate-800 dark:hover:bg-[#2C2C2E] py-3 rounded-xl flex items-center justify-center gap-2 text-xs"
             >
               <Home className="w-4 h-4" />
               <span>العودة إلى الصفحة الرئيسية</span>
@@ -549,10 +549,10 @@ export default function Success() {
       {/* نافذة التأكيد المرئية المنبثقة فور نجاح التحميل */}
       {showDownloadModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div className="bg-slate-900 border border-amber-500/40 p-8 rounded-3xl max-w-md w-full text-center space-y-6 shadow-2xl relative">
+          <div className="bg-slate-900 dark:bg-[#1C1C1E] border border-amber-500/40 p-8 rounded-3xl max-w-md w-full text-center space-y-6 shadow-2xl relative">
             <button
               onClick={() => setShowDownloadModal(false)}
-              className="absolute top-4 left-4 p-2 rounded-full bg-slate-800 text-slate-400 hover:text-white"
+              className="absolute top-4 left-4 p-2 rounded-full bg-slate-800 dark:bg-[#2C2C2E] text-slate-400 dark:text-[#B0B0B8] hover:text-white"
             >
               <X className="w-4 h-4" />
             </button>
@@ -566,7 +566,7 @@ export default function Success() {
                 عملية ناجحة 100%
               </span>
               <h2 className="text-2xl font-extrabold text-white">تم تحميل عقد الإيجار بنجاح!</h2>
-              <p className="text-xs text-slate-400 leading-relaxed">
+              <p className="text-xs text-slate-400 dark:text-[#B0B0B8] leading-relaxed">
                 تم حفظ وثيقة عقد الإيجار الرقمي المذيل بتوقيعك الإلكتروني والختم الرسمي للوكالة على جهازك بنجاح. رقم مرجع العقد: <span className="text-amber-400 font-bold">{bookingRef}</span>
               </p>
             </div>

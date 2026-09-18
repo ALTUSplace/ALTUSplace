@@ -36,16 +36,16 @@ export default function RevenueChart({ data }: { data: RevenuePoint[] }) {
     <div>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-lg font-bold text-slate-100">تحليلات الإيرادات</h2>
+          <h2 className="text-lg font-bold text-slate-100 dark:text-[#F1F1F3]">تحليلات الإيرادات</h2>
           <p className="text-xs text-slate-500">Gross Booking Value (GBV) مقابل صافي إيرادات المنصة — آخر 12 شهراً</p>
         </div>
-        <div className="flex flex-wrap gap-1 rounded-lg bg-slate-800/80 p-1">
+        <div className="flex flex-wrap gap-1 rounded-lg bg-slate-800/80 dark:bg-[#2C2C2E]/80 p-1">
           {FILTERS.map(({ key, label, icon: Icon }) => (
             <button
               key={key}
               type="button"
               onClick={() => setFilter(key)}
-              className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition ${filter === key ? "bg-cyan-500 text-slate-950" : "text-slate-400 hover:text-slate-200"}`}
+              className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition ${filter === key ? "bg-cyan-500 text-slate-950" : "text-slate-400 dark:text-[#B0B0B8] hover:text-slate-200"}`}
             >
               <Icon className="h-3.5 w-3.5" />
               {label}
@@ -71,7 +71,7 @@ export default function RevenueChart({ data }: { data: RevenuePoint[] }) {
               labelStyle={{ color: "#94a3b8" }}
               formatter={(value: number | Array<number>, name: string) => [`${money(Number(value))} MAD`, name === "net" ? "صافي إيرادات المنصة" : "GBV"]}
             />
-            <Legend wrapperStyle={{ fontSize: 12, color: "#94a3b8" }} formatter={(value: string) => <span className="text-slate-400">{value === "net" ? "صافي الإيرادات" : "إجمالي قيمة الحجوزات"}</span>} />
+            <Legend wrapperStyle={{ fontSize: 12, color: "#94a3b8" }} formatter={(value: string) => <span className="text-slate-400 dark:text-[#B0B0B8]">{value === "net" ? "صافي الإيرادات" : "إجمالي قيمة الحجوزات"}</span>} />
             <Bar yAxisId="gbv" dataKey="gbv" name="GBV" fill="url(#gbvFill)" radius={[6, 6, 0, 0]} maxBarSize={38} />
             <Line yAxisId="net" dataKey="net" name="net" stroke="#34d399" strokeWidth={2.5} dot={false} type="monotone" />
           </ComposedChart>

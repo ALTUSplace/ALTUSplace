@@ -58,34 +58,34 @@ export default function Favorites() {
 
           {/* فلاتر الفرز والتصنيف للمفضلة */}
           <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 p-1.5 rounded-2xl text-xs">
-              <span className="text-slate-400 px-2">النوع:</span>
+            <div className="flex items-center gap-2 bg-slate-900 dark:bg-[#1C1C1E] border border-slate-800 dark:border-[#2C2C2E] p-1.5 rounded-2xl text-xs">
+              <span className="text-slate-400 dark:text-[#B0B0B8] px-2">النوع:</span>
               <button
                 onClick={() => setFilterType('all')}
-                className={`px-3 py-1.5 rounded-xl font-bold transition-all ${filterType === 'all' ? 'bg-amber-500 text-slate-950' : 'text-slate-300 hover:text-white'}`}
+                className={`px-3 py-1.5 rounded-xl font-bold transition-all ${filterType === 'all' ? 'bg-amber-500 text-slate-950' : 'text-slate-300 dark:text-[#D6D6DB] hover:text-white'}`}
               >
                 الكل
               </button>
               <button
                 onClick={() => setFilterType('car')}
-                className={`px-3 py-1.5 rounded-xl font-bold transition-all ${filterType === 'car' ? 'bg-amber-500 text-slate-950' : 'text-slate-300 hover:text-white'}`}
+                className={`px-3 py-1.5 rounded-xl font-bold transition-all ${filterType === 'car' ? 'bg-amber-500 text-slate-950' : 'text-slate-300 dark:text-[#D6D6DB] hover:text-white'}`}
               >
                 السيارات
               </button>
               <button
                 onClick={() => setFilterType('property')}
-                className={`px-3 py-1.5 rounded-xl font-bold transition-all ${filterType === 'property' ? 'bg-amber-500 text-slate-950' : 'text-slate-300 hover:text-white'}`}
+                className={`px-3 py-1.5 rounded-xl font-bold transition-all ${filterType === 'property' ? 'bg-amber-500 text-slate-950' : 'text-slate-300 dark:text-[#D6D6DB] hover:text-white'}`}
               >
                 العقارات
               </button>
             </div>
 
-            <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 p-1.5 rounded-2xl text-xs">
+            <div className="flex items-center gap-2 bg-slate-900 dark:bg-[#1C1C1E] border border-slate-800 dark:border-[#2C2C2E] p-1.5 rounded-2xl text-xs">
               <SlidersHorizontal className="w-4 h-4 text-amber-400 mr-2" />
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as any)}
-                className="bg-slate-950 border border-slate-800 text-white rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-amber-500"
+                className="bg-slate-950 dark:bg-[#111113] border border-slate-800 dark:border-[#2C2C2E] text-white rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-amber-500"
               >
                 <option value="price-asc">السعر: من الأرخص للأغلى</option>
                 <option value="price-desc">السعر: من الأغلى للأرخص</option>
@@ -95,10 +95,10 @@ export default function Favorites() {
         </div>
 
         {favoriteItems.length === 0 ? (
-          <div className="bg-slate-950 border border-slate-800 rounded-3xl p-16 text-center space-y-4 max-w-xl mx-auto shadow-xl">
+          <div className="bg-slate-950 dark:bg-[#111113] border border-slate-800 dark:border-[#2C2C2E] rounded-3xl p-16 text-center space-y-4 max-w-xl mx-auto shadow-xl">
             <Heart className="w-16 h-16 text-slate-600 mx-auto" />
             <h3 className="text-xl font-bold text-white">قائمة المفضلة فارغة حالياً</h3>
-            <p className="text-xs text-slate-400">تصفح أسطول السيارات والعقارات وأضف ما يعجبك إلى قائمتك الخاصة لتسهيل الرجوع إليها لاحقاً.</p>
+            <p className="text-xs text-slate-400 dark:text-[#B0B0B8]">تصفح أسطول السيارات والعقارات وأضف ما يعجبك إلى قائمتك الخاصة لتسهيل الرجوع إليها لاحقاً.</p>
             <Link href="/search">
               <Button className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-6 py-3 rounded-xl text-xs">
                 تصفح العروض المتاحة
@@ -108,10 +108,10 @@ export default function Favorites() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {favoriteItems.map(item => (
-              <div key={item.id} className="bg-slate-950 border border-slate-800 rounded-3xl overflow-hidden shadow-xl hover:border-amber-500/50 transition-all flex flex-col group">
-                <div className="relative h-52 overflow-hidden bg-slate-900">
+              <div key={item.id} className="bg-slate-950 dark:bg-[#111113] border border-slate-800 dark:border-[#2C2C2E] rounded-3xl overflow-hidden shadow-xl hover:border-amber-500/50 transition-all flex flex-col group">
+                <div className="relative h-52 overflow-hidden bg-slate-900 dark:bg-[#1C1C1E]">
                   <OptimizedImage src={item.image} alt={item.title} width={640} height={360} widthHint={640} sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                  <div className="absolute top-3 right-3 bg-slate-950/80 backdrop-blur-md text-amber-400 px-3 py-1 rounded-full text-xs font-bold border border-slate-800">
+                  <div className="absolute top-3 right-3 bg-slate-950/80 dark:bg-[#111113]/80 backdrop-blur-md text-amber-400 px-3 py-1 rounded-full text-xs font-bold border border-slate-800 dark:border-[#2C2C2E]">
                     {item.category}
                   </div>
                   <button
@@ -121,22 +121,22 @@ export default function Favorites() {
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
-                  <div className="absolute bottom-3 left-3 bg-slate-950/90 backdrop-blur-md text-white px-3 py-1 rounded-xl text-xs font-extrabold border border-slate-800">
+                  <div className="absolute bottom-3 left-3 bg-slate-950/90 dark:bg-[#111113]/90 backdrop-blur-md text-white px-3 py-1 rounded-xl text-xs font-extrabold border border-slate-800 dark:border-[#2C2C2E]">
                     {item.pricePerUnit} {item.unitLabel}
                   </div>
                 </div>
 
                 <div className="p-6 space-y-4 flex-grow flex flex-col justify-between">
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between text-xs text-slate-400">
+                    <div className="flex items-center justify-between text-xs text-slate-400 dark:text-[#B0B0B8]">
                       <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5 text-amber-500" /> {item.city}</span>
                       <span className="text-amber-400 font-bold">{item.providerName}</span>
                     </div>
                     <h3 className="text-base font-bold text-white group-hover:text-amber-400 transition-colors">{item.title}</h3>
-                    <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed">{item.description}</p>
+                    <p className="text-xs text-slate-400 dark:text-[#B0B0B8] line-clamp-2 leading-relaxed">{item.description}</p>
                   </div>
 
-                  <div className="pt-4 border-t border-slate-800 flex items-center justify-between">
+                  <div className="pt-4 border-t border-slate-800 dark:border-[#2C2C2E] flex items-center justify-between">
                     <div className="text-xs text-slate-500">التقييمات تظهر بعد مراجعة موثقة</div>
                     <Link href={`/car/${item.id}`}>
                       <Button className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs transition-all shadow">

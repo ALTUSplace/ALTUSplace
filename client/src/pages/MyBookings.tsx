@@ -140,7 +140,7 @@ export default function MyBookings() {
                       <Button
                         type="button"
                         onClick={() => downloadInvoice(invoiceByBooking.get(booking.id)!)}
-                        className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-white px-4 py-2.5 rounded-xl text-xs font-semibold"
+                        className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-slate-800 dark:bg-[#2C2C2E] hover:bg-slate-700 dark:hover:bg-[#48484D] text-white px-4 py-2.5 rounded-xl text-xs font-semibold"
                       >
                         <Receipt className="w-4 h-4" /> الفاتورة PDF
                       </Button>
@@ -148,7 +148,7 @@ export default function MyBookings() {
                     <Link href={`/messages/${booking.id}`} className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-[#1C1C1E] hover:bg-[#1C1C1E]/90 text-white px-4 py-2.5 rounded-xl text-xs font-semibold">
                       <MessageCircle className="w-4 h-4" /> مراسلة الطرف الآخر
                     </Link>
-                    <a href="/support-tickets" className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-white px-4 py-2.5 rounded-xl text-xs font-semibold">
+                    <a href="/support-tickets" className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-slate-800 dark:bg-[#2C2C2E] hover:bg-slate-700 dark:hover:bg-[#48484D] text-white px-4 py-2.5 rounded-xl text-xs font-semibold">
                       <Phone className="w-4 h-4" /> الدعم
                     </a>
                   </div>

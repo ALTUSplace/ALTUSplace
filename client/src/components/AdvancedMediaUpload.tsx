@@ -123,7 +123,7 @@ export function AdvancedMediaUpload({ onImagesUploaded }: AdvancedMediaUploadPro
   };
 
   return (
-    <div className="space-y-6 bg-slate-900/60 border border-slate-800 p-6 rounded-3xl" dir="rtl">
+    <div className="space-y-6 bg-slate-900/60 dark:bg-[#1C1C1E]/60 border border-slate-800 dark:border-[#2C2C2E] p-6 rounded-3xl" dir="rtl">
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400">
@@ -131,7 +131,7 @@ export function AdvancedMediaUpload({ onImagesUploaded }: AdvancedMediaUploadPro
           </div>
           <div>
             <h3 className="text-lg font-bold text-white">رفع صور الإعلان</h3>
-            <p className="text-xs text-slate-400">تُفحص الصور تلقائياً للتأكد من أنها واقعية وأصلية قبل حفظها ونشر العرض.</p>
+            <p className="text-xs text-slate-400 dark:text-[#B0B0B8]">تُفحص الصور تلقائياً للتأكد من أنها واقعية وأصلية قبل حفظها ونشر العرض.</p>
           </div>
         </div>
         <div className="hidden sm:flex items-center gap-1.5 text-xs text-cyan-400 bg-cyan-500/10 px-3 py-1.5 rounded-xl border border-cyan-500/20">
@@ -139,7 +139,7 @@ export function AdvancedMediaUpload({ onImagesUploaded }: AdvancedMediaUploadPro
         </div>
       </div>
 
-      <div className="border-2 border-dashed border-slate-700 hover:border-amber-500/50 transition-all rounded-2xl p-8 text-center bg-slate-950/40 relative cursor-pointer group">
+      <div className="border-2 border-dashed border-slate-700 dark:border-[#48484D] hover:border-amber-500/50 transition-all rounded-2xl p-8 text-center bg-slate-950/40 dark:bg-[#111113]/40 relative cursor-pointer group">
         <input
           type="file"
           multiple
@@ -149,22 +149,22 @@ export function AdvancedMediaUpload({ onImagesUploaded }: AdvancedMediaUploadPro
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
         />
         <div className="flex flex-col items-center justify-center space-y-3">
-          <div className="w-16 h-16 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-amber-400 group-hover:scale-105 transition-transform">
+          <div className="w-16 h-16 rounded-full bg-slate-900 dark:bg-[#1C1C1E] border border-slate-800 dark:border-[#2C2C2E] flex items-center justify-center text-amber-400 group-hover:scale-105 transition-transform">
             <ImageIcon className="w-8 h-8" />
           </div>
           <div>
-            <p className="text-sm font-bold text-slate-200">اسحب الصور وأفلتها هنا، أو اضغط للاختيار</p>
-            <p className="text-xs text-slate-400 mt-1">PNG وJPG وWEBP، حتى 5 صور و10 ميجابايت إجمالاً. تُرفض الصور الترويجية أو المولدة آلياً.</p>
+            <p className="text-sm font-bold text-slate-200 dark:text-[#E8E8EB]">اسحب الصور وأفلتها هنا، أو اضغط للاختيار</p>
+            <p className="text-xs text-slate-400 dark:text-[#B0B0B8] mt-1">PNG وJPG وWEBP، حتى 5 صور و10 ميجابايت إجمالاً. تُرفض الصور الترويجية أو المولدة آلياً.</p>
           </div>
         </div>
       </div>
 
       {previews.length > 0 && (
         <div className="space-y-4">
-          <h4 className="text-sm font-bold text-slate-300">معاينة الصور المختارة ({previews.length})</h4>
+          <h4 className="text-sm font-bold text-slate-300 dark:text-[#D6D6DB]">معاينة الصور المختارة ({previews.length})</h4>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             {previews.map((src, idx) => (
-              <div key={`${src}-${idx}`} className="relative group rounded-xl overflow-hidden border border-slate-800 bg-slate-950 aspect-video">
+              <div key={`${src}-${idx}`} className="relative group rounded-xl overflow-hidden border border-slate-800 dark:border-[#2C2C2E] bg-slate-950 dark:bg-[#111113] aspect-video">
                 <img src={src} alt={`معاينة الصورة ${idx + 1}`} className="w-full h-full object-cover" />
                 <button
                   type="button"
@@ -180,12 +180,12 @@ export function AdvancedMediaUpload({ onImagesUploaded }: AdvancedMediaUploadPro
           </div>
 
           {isUploading && (
-            <div className="space-y-2 bg-slate-950 p-4 rounded-2xl border border-slate-800" aria-live="polite">
-              <div className="flex justify-between text-xs font-semibold text-slate-300">
+            <div className="space-y-2 bg-slate-950 dark:bg-[#111113] p-4 rounded-2xl border border-slate-800 dark:border-[#2C2C2E]" aria-live="polite">
+              <div className="flex justify-between text-xs font-semibold text-slate-300 dark:text-[#D6D6DB]">
                 <span>جاري فحص الصور ثم رفعها إلى التخزين الآمن...</span>
                 <span>{uploadProgress}%</span>
               </div>
-              <Progress value={uploadProgress} className="h-2 bg-slate-800" />
+              <Progress value={uploadProgress} className="h-2 bg-slate-800 dark:bg-[#2C2C2E]" />
             </div>
           )}
 
