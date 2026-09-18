@@ -69,6 +69,11 @@ export const listings = pgTable("listings", {
   category: varchar("category", { length: 64 }).notNull(), // car أو real_estate
   pricePerDay: integer("price_per_day").notNull(),
   imageUrl: text("image_url"),
+  images: text("images").array(), // per-listing gallery (public URLs), primary source for rendering
+  seats: integer("seats"), // السيارات — عدد المقاعد
+  year: integer("year"), // السيارات — سنة الصنع
+  area: integer("area"), // العقارات — المساحة بالمتر المربع
+  floor: integer("floor"), // العقارات — الطابق
   status: listingStatusEnum("status").default("Published").notNull(),
   isFeatured: boolean("is_featured").default(false).notNull(),
   city: varchar("city", { length: 64 }).default("الدار البيضاء").notNull(),

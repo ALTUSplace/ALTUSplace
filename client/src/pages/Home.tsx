@@ -50,13 +50,15 @@ export default function Home() {
     category: t('listingCategoryCar'),
     type: 'car' as const,
     pricePerUnit: item.pricePerDay,
-    image: item.imageUrl || 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=800',
+    image: item.images?.[0] || item.imageUrl || '',
+    images: item.images?.length ? item.images : item.imageUrl ? [item.imageUrl] : [],
     city: item.city || 'الدار البيضاء',
     providerName: t('providerNamePlaceholder'),
+    year: item.year ?? undefined,
     specs: {
       transmission: item.transmission || t('transmissionAutomatic'),
       fuel: item.fuelType || t('fuelDieselPetrol'),
-      seats: '5'
+      seats: item.seats ? String(item.seats) : undefined
     }
   })) : LISTINGS;
 
@@ -68,11 +70,14 @@ export default function Home() {
       category: item.category,
       type: 'property' as const,
       pricePerUnit: item.pricePerDay,
-      image: item.imageUrl || 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=800',
+      image: item.images?.[0] || item.imageUrl || '',
+      images: item.images?.length ? item.images : item.imageUrl ? [item.imageUrl] : [],
       city: item.city || 'الدار البيضاء',
       providerName: item.ownerName || 'وكالة عقارية',
+      year: item.year ?? undefined,
       specs: {
         rooms: item.rooms && item.rooms > 0 ? String(item.rooms) : undefined,
+        area: item.area && item.area > 0 ? `${item.area} m²` : undefined,
       }
     })) : [];
 
@@ -328,7 +333,7 @@ export default function Home() {
               title={item.title}
               city={item.city}
               pricePerDay={item.pricePerUnit}
-              images={item.image ? [item.image] : []}
+              images={item.images}
               type="car"
               startDate={pickupDate || undefined}
               endDate={dropoffDate || undefined}
@@ -336,6 +341,7 @@ export default function Home() {
                 transmission: item.specs?.transmission,
                 fuel: item.specs?.fuel,
                 seats: item.specs?.seats ? Number(item.specs.seats) : undefined,
+                year: (item as { year?: number }).year ?? undefined,
               }}
               className={`stagger-${Math.min(index + 1, 8)} animate-fade-up`}
             />
@@ -360,12 +366,14 @@ export default function Home() {
                 title={item.title}
                 city={item.city}
                 pricePerDay={item.pricePerUnit}
-                images={item.image ? [item.image] : []}
+                images={item.images}
                 type="property"
                 startDate={pickupDate || undefined}
                 endDate={dropoffDate || undefined}
                 specs={{
-                  rooms: item.specs.rooms ? Number(item.specs.rooms) : undefined,
+                  rooms: item.specs?.rooms ? Number(item.specs.rooms) : undefined,
+                  area: item.specs?.area,
+                  year: (item as { year?: number }).year ?? undefined,
                 }}
                 className={`stagger-${Math.min(index + 1, 8)} animate-fade-up`}
               />

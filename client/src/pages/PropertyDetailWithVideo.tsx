@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link, useLocation, useParams, useSearch } from "wouter";
-import { ArrowRight, Bath, Bed, Building2, CheckCircle2, Heart, MapPin, Share2, Video, Calendar, Lock, ShieldCheck, MessageCircle } from "lucide-react";
+import { ArrowRight, Bath, Bed, Building2, CheckCircle2, Heart, MapPin, Share2, Video, Calendar, Lock, ShieldCheck, MessageCircle, Ruler } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -30,6 +30,9 @@ type PropertyDetailShape = {
   description: string | null;
   descriptionFr?: string | null;
   imageUrl: string | null;
+  images?: string[] | null;
+  area?: number | null;
+  floor?: number | null;
   city: string;
   status: string;
   pricePerDay: number;
@@ -56,6 +59,7 @@ function mapStaticToDetail(item: ListingItem): PropertyDetailShape {
     description: item.description,
     descriptionFr: item.descriptionFr ?? null,
     imageUrl: item.image,
+    images: item.image ? [item.image] : [],
     city: item.city,
     status: "متاح",
     pricePerDay: item.pricePerUnit,
@@ -109,7 +113,13 @@ export default function PropertyDetailWithVideo() {
   const staticItem = listingId === null ? LISTINGS.find((item) => item.id === params.id && item.type !== "car") : undefined;
   const listing = (listingQuery.data ?? (staticItem ? mapStaticToDetail(staticItem) : undefined)) as PropertyDetailShape | undefined;
   const amenities = useMemo(() => parseAmenities(listing?.amenities), [listing?.amenities]);
-  const imageUrl = listing?.imageUrl || "";
+  const [activeImage, setActiveImage] = useState(0);
+  const galleryImages = listing?.images?.length
+    ? listing.images
+    : listing?.imageUrl
+      ? [listing.imageUrl]
+      : [];
+  const imageUrl = galleryImages.length ? galleryImages[Math.min(activeImage, galleryImages.length - 1)] : "";
   const title = language === "fr" && listing?.titleFr
     ? listing.titleFr
     : (listing?.title || (language === "fr" ? "Détails de l'annonce" : "تفاصيل الإعلان"));
@@ -230,7 +240,7 @@ export default function PropertyDetailWithVideo() {
     "@type": "RealEstateListing",
     name: listing.title,
     description,
-    image: imageUrl ? [imageUrl] : [],
+    image: galleryImages.length ? galleryImages : [],
     address: { "@type": "PostalAddress", addressLocality: listing.city, addressCountry: "MA" },
     offers: { "@type": "Offer", priceCurrency: "MAD", price: safePrice, availability: "https://schema.org/InStock" },
   };
@@ -290,6 +300,15 @@ export default function PropertyDetailWithVideo() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="md:col-span-2 min-h-[280px] sm:min-h-[420px] rounded-2xl overflow-hidden bg-slate-200">
             {imageUrl ? <OptimizedImage src={imageUrl} alt={title} width={1400} height={820} widthHint={1400} sizes="100vw" className="w-full h-full min-h-[280px] sm:min-h-[420px] object-cover" /> : <div className="h-full min-h-[280px] sm:min-h-[420px] flex items-center justify-center text-slate-500">{language === "fr" ? "Aucune image fournie" : "لا توجد صورة مضافة"}</div>}
+            {galleryImages.length > 1 && (
+              <div className="flex flex-wrap justify-center gap-2 p-3">
+                {galleryImages.map((src, i) => (
+                  <button key={`${src}-${i}`} onClick={() => setActiveImage(i)} aria-label={`Photo ${i + 1}`} className="cursor-pointer">
+                    <OptimizedImage src={src} alt={`${title} — photo ${i + 1}`} width={144} height={96} className={"h-14 w-20 rounded-lg object-cover border-2 " + (i === Math.min(activeImage, galleryImages.length - 1) ? "border-amber-500" : "border-slate-200 opacity-70 hover:opacity-100")} />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           <Card className="border-amber-200 shadow-lg shadow-amber-100/50">
             <CardContent className="p-5 space-y-4">
@@ -370,6 +389,8 @@ export default function PropertyDetailWithVideo() {
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[[Building2, language === "fr" ? "Type" : "النوع", listing.officeType ? (language === "fr" ? OFFICE_TYPE_LABEL_FR[listing.officeType] : OFFICE_TYPE_LABEL[listing.officeType]) || listing.officeType : listing.category || "—"], [Bed, language === "fr" ? "Pièces" : "الغرف", listing.rooms ? String(listing.rooms) : "—"], [Bath, language === "fr" ? "Période" : "المدة", listing.rentalPeriod ? (language === "fr" ? RENTAL_LABEL_FR[listing.rentalPeriod] : RENTAL_LABEL[listing.rentalPeriod]) : "—"], [MapPin, language === "fr" ? "Ville" : "المدينة", listing.city]].map(([Icon, label, value]) => <Card key={String(label)}><CardContent className="p-4"><Icon className="w-5 h-5 text-amber-600 mb-2" /><p className="text-xs text-slate-500">{String(label)}</p><p className="font-semibold text-slate-800 truncate">{String(value)}</p></CardContent></Card>)}
+          {listing.area && listing.area > 0 && <Card><CardContent className="p-4"><Ruler className="w-5 h-5 text-amber-600 mb-2" /><p className="text-xs text-slate-500">{language === "fr" ? "Surface" : "المساحة"}</p><p className="font-semibold text-slate-800">{listing.area} m²</p></CardContent></Card>}
+          {listing.floor !== null && listing.floor !== undefined && <Card><CardContent className="p-4"><Building2 className="w-5 h-5 text-amber-600 mb-2" /><p className="text-xs text-slate-500">{language === "fr" ? "Étage" : "الطابق"}</p><p className="font-semibold text-slate-800">{listing.floor}</p></CardContent></Card>}
         </div>
 
         <Card><CardContent className="p-5 space-y-4"><h2 className="text-xl font-bold text-slate-900">{language === "fr" ? "Description" : "الوصف"}</h2><p className="text-slate-600 leading-7">{description}</p></CardContent></Card>

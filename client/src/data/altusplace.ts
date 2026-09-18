@@ -37,6 +37,7 @@ export interface ListingItem {
     rooms?: string;
     area?: string;
     bathrooms?: string;
+    year?: number;
   };
 }
 

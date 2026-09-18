@@ -39,9 +39,13 @@ const toListingItem = (item: {
   category: string;
   pricePerDay: number;
   imageUrl: string | null;
+  images?: string[] | null;
   city: string;
   fuelType: string | null;
   transmission: string | null;
+  seats?: number | null;
+  area?: number | null;
+  year?: number | null;
   rooms: number | null;
   officeType: string | null;
   rentalPeriod: 'daily' | 'monthly' | 'yearly' | null;
@@ -51,7 +55,7 @@ const toListingItem = (item: {
 }): ListingItem => {
   const amenities = parseArrayField(item.amenities);
   const type: ListingItem['type'] = isCarCategory(item.category) ? 'car' : 'property';
-  const unitLabel = 'درهم / يوم';
+  const unitLabel = item.rentalPeriod === "monthly" ? "درهم / شهر" : item.rentalPeriod === "yearly" ? "درهم / سنة" : "درهم / يوم";
   return {
     id: String(item.id),
     providerId: String(item.ownerId),
@@ -63,14 +67,17 @@ const toListingItem = (item: {
     city: item.city,
     pricePerUnit: item.dynamicPricePerDay ?? item.pricePerDay,
     unitLabel,
-    image: item.imageUrl || '',
-    images: item.imageUrl ? [item.imageUrl] : [],
+    image: item.images?.[0] || item.imageUrl || '',
+    images: item.images?.length ? item.images : item.imageUrl ? [item.imageUrl] : [],
     features: [item.fuelType, item.transmission, ...amenities].filter((value): value is string => Boolean(value)),
     description: item.description || '',
     specs: {
       transmission: item.transmission || undefined,
       fuel: item.fuelType || undefined,
       rooms: item.rooms ? String(item.rooms) : undefined,
+      seats: item.seats && item.seats > 0 ? String(item.seats) : undefined,
+      area: item.area && item.area > 0 ? `${item.area} m²` : undefined,
+      year: item.year ?? undefined,
     },
   };
 };

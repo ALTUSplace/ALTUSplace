@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useState, useCallback, useEffect } from "react";
 import { useLocation } from "wouter";
-import { Car, Home, MapPin, Star, Heart, Fuel, Settings, Users, Award, Zap, CheckCircle2 } from "lucide-react";
+import { Car, Home, MapPin, Star, Heart, Fuel, Settings, Users, Award, Zap, CheckCircle2, Calendar, Ruler } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { OptimizedImage } from "@/components/OptimizedImage";
@@ -24,7 +24,7 @@ export interface ListingCardProps {
   hostName?: string;
   isFavorite?: boolean;
   onToggleFavorite?: () => void;
-  specs?: { transmission?: string; fuel?: string; seats?: number; rooms?: number };
+  specs?: { transmission?: string; fuel?: string; seats?: number; rooms?: number; area?: string; year?: number };
   /** Optional search dates carried through to the detail page for 1-tap booking. */
   startDate?: string;
   endDate?: string;
@@ -154,6 +154,8 @@ export function ListingCard(props: ListingCardProps) {
             {specs.fuel && <span className="inline-flex items-center gap-1 rounded-full bg-bg-muted px-2 py-0.5"><Fuel className="h-3 w-3" /> {specs.fuel}</span>}
             {specs.seats && <span className="inline-flex items-center gap-1 rounded-full bg-bg-muted px-2 py-0.5"><Users className="h-3 w-3" /> {specs.seats} seats</span>}
             {specs.rooms && specs.rooms > 0 && <span className="inline-flex items-center gap-1 rounded-full bg-bg-muted px-2 py-0.5"><Home className="h-3 w-3" /> {specs.rooms} rooms</span>}
+            {specs.area && <span className="inline-flex items-center gap-1 rounded-full bg-bg-muted px-2 py-0.5"><Ruler className="h-3 w-3" /> {specs.area}</span>}
+            {specs.year && <span className="inline-flex items-center gap-1 rounded-full bg-bg-muted px-2 py-0.5"><Calendar className="h-3 w-3" /> {specs.year}</span>}
           </div>
         )}
         {hostName && (<div className="mt-auto pt-2 border-t border-border-subtle"><span className="text-[11px] text-ink-tertiary">Hosted by <span className="font-medium text-ink-secondary">{hostName}</span></span></div>)}

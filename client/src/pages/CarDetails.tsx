@@ -39,10 +39,12 @@ export default function CarDetails() {
     brand: listing.title.split(' ')[0] || 'ALTUSplace',
     cityName: listing.city,
     pricePerDay: listing.pricePerDay,
-    image: listing.imageUrl || '',
+    image: listing.images?.[0] || listing.imageUrl || '',
+    images: listing.images?.length ? listing.images : listing.imageUrl ? [listing.imageUrl] : [],
     transmission: listing.transmission || 'غير محدد',
     fuel: listing.fuelType || 'غير محدد',
-    seats: 5,
+    seats: listing.seats && listing.seats > 0 ? listing.seats : 'غير محدد',
+    year: listing.year ? String(listing.year) : 'غير محدد',
     features: listing.amenities ? listing.amenities.split(',').map((item) => item.trim()).filter(Boolean) : [],
     agency: { name: 'المؤجر على ALTUSplace', address: listing.city, whatsapp: '' },
   } : staticCar ? {
@@ -52,9 +54,11 @@ export default function CarDetails() {
     cityName: staticCar.city,
     pricePerDay: staticCar.pricePerUnit,
     image: staticCar.image,
+    images: staticCar.image ? [staticCar.image] : [],
     transmission: staticCar.specs?.transmission || 'غير محدد',
     fuel: staticCar.specs?.fuel || 'غير محدد',
     seats: 5,
+    year: 'غير محدد',
     features: staticCar.features || [],
     agency: { name: staticCar.providerName || 'المؤجر على ALTUSplace', address: staticCar.city, whatsapp: '' },
   } : null;
@@ -94,6 +98,7 @@ export default function CarDetails() {
   const [includeBabySeat, setIncludeBabySeat] = useState(false);
 
   const [copiedLink, setCopiedLink] = useState(false);
+  const [activeImage, setActiveImage] = useState(0);
 
   const { data: bookedDatesData, isLoading: bookedDatesLoading, isError: bookedDatesError } = trpc.listings.getBookedDates.useQuery(
     { listingId: numericListingId! },
@@ -139,6 +144,8 @@ export default function CarDetails() {
 
   const daysCount = calculateRentalDays(startDate, endDate) || 1;
   const dailyPrice = car.pricePerDay;
+  const galleryImages = car.images?.length ? car.images : car.image ? [car.image] : [];
+  const safeActive = galleryImages.length > 1 ? Math.min(activeImage, galleryImages.length - 1) : 0;
   const insurancePrice = includeInsurance ? INSURANCE_FEE_PER_DAY * daysCount : 0;
   const babySeatPrice = includeBabySeat ? BABY_SEAT_FEE_PER_DAY * daysCount : 0;
   const totalPrice = calculateRentalSubtotal(dailyPrice, daysCount) + insurancePrice + babySeatPrice;
@@ -240,7 +247,7 @@ export default function CarDetails() {
           <div className="lg:col-span-2 space-y-8">
             <div className="bg-[#1C1C1E] border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
               <div className="relative h-96">
-                <OptimizedImage src={car.image} alt={car.name} width={1200} height={675} widthHint={1200} sizes="(max-width: 1024px) 100vw, 66vw" className="w-full h-full object-cover" />
+                <OptimizedImage src={galleryImages[safeActive] ?? car.image} alt={car.name} width={1200} height={675} widthHint={1200} sizes="(max-width: 1024px) 100vw, 66vw" className="w-full h-full object-cover" />
                 <div className="absolute top-4 right-4 bg-[#1C1C1E]/90 backdrop-blur-md text-amber-400 font-bold px-4 py-1.5 rounded-2xl text-xs border border-amber-500/30">
                   {car.cityName}
                 </div>
@@ -248,6 +255,15 @@ export default function CarDetails() {
                   <div className="absolute top-4 left-4 bg-[#1C1C1E]/95 backdrop-blur-md text-white px-3 py-1.5 rounded-2xl text-xs flex items-center gap-1.5 font-bold shadow-lg">
                     <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
                     <span>{reviews.length} مراجعة موثقة</span>
+                  </div>
+                )}
+                {galleryImages.length > 1 && (
+                  <div className="absolute bottom-3 inset-x-3 flex justify-center gap-2">
+                    {galleryImages.map((src, i) => (
+                      <button key={`${src}-${i}`} onClick={() => setActiveImage(i)} aria-label={`صورة ${i + 1}`} className="cursor-pointer">
+                        <OptimizedImage src={src} alt={`${car.name} — صورة ${i + 1}`} width={96} height={64} className={"h-12 w-16 rounded-lg object-cover border-2 " + (i === safeActive ? "border-amber-400" : "border-white/30 opacity-70 hover:opacity-100")} />
+                      </button>
+                    ))}
                   </div>
                 )}
               </div>
@@ -271,12 +287,17 @@ export default function CarDetails() {
                   <div className="bg-[#1C1C1E] border border-slate-800 p-4 rounded-2xl text-center space-y-1">
                     <Users className="w-5 h-5 text-amber-400 mx-auto" />
                     <div className="text-[10px] text-slate-400">المقاعد</div>
-                    <div className="text-xs font-bold text-white">{car.seats} مقاعد</div>
+                    <div className="text-xs font-bold text-white">{typeof car.seats === "number" ? `${car.seats} مقاعد` : car.seats}</div>
                   </div>
                   <div className="bg-[#1C1C1E] border border-slate-800 p-4 rounded-2xl text-center space-y-1">
                     <Fuel className="w-5 h-5 text-amber-400 mx-auto" />
                     <div className="text-[10px] text-slate-400">نوع الوقود</div>
                     <div className="text-xs font-bold text-white">{car.fuel}</div>
+                  </div>
+                  <div className="bg-[#1C1C1E] border border-slate-800 p-4 rounded-2xl text-center space-y-1">
+                    <Calendar className="w-5 h-5 text-amber-400 mx-auto" />
+                    <div className="text-[10px] text-slate-400">سنة الصنع</div>
+                    <div className="text-xs font-bold text-white">{car.year}</div>
                   </div>
                   <div className="bg-[#1C1C1E] border border-slate-800 p-4 rounded-2xl text-center space-y-1">
                     <MapPin className="w-5 h-5 text-amber-400 mx-auto" />
