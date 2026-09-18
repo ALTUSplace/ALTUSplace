@@ -10,6 +10,21 @@
 --    numeric primary keys (users.id / owner_id / renter_id / payer_id / user_id).
 --  • An admin endpoint can also issue per-request service tokens; Supabase
 --    service role continues to bypass RLS for server-side cron jobs.
+--
+-- Model equivalence (the app's production access path uses the pooled
+-- postgres.<ref> role, which bypasses RLS; strict isolation is enforced in the
+-- application layer by `ownerProcedure` + `eq(listings.ownerId, ctx.user.id)`):
+--  • "agencies" are `users` rows (agency_name / agency_city / agency_phone /
+--    agency_email / commercial_register; verification = account_status +
+--    kyc_verification_status).
+--  • "profiles" = `users.role` (user_role enum: renter / owner / admin /
+--    partner / user / SUPER_ADMIN).
+--  • "listings" scope to their agency via `owner_id` -> users.id; the policies
+--    below are user-id based and therefore already cover the `partner` role
+--    with zero changes.
+--
+-- These policies become ACTIVE only when requests authenticate through a
+-- non-superuser Postgres role that carries the `app_user_id` claim.
 
 -- Resolve the signed-in platform user id from the request JWT.
 create or replace function public.app_user_id()
