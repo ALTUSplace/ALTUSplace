@@ -24,7 +24,7 @@ export default function HostDashboard() {
   const analyticsTimeline = trpc.agency.analyticsTimeline.useQuery(undefined, { enabled: !!user });
   const analyticsCsv = trpc.agency.exportAnalyticsCsv.useQuery(undefined, { enabled: false });
   const bookings = trpc.bookings.ownerList.useQuery(undefined, { enabled: !!user });
-  const createListing = trpc.listings.create.useMutation({ onSuccess: async () => { await Promise.all([listings.refetch(), overview.refetch()]); toast.success("تم نشر العرض مباشرة بعد اجتياز الفحص."); setShowForm(false); } });
+  const createListing = trpc.listings.create.useMutation({ onSuccess: async () => { await Promise.all([listings.refetch(), overview.refetch()]); toast.success("تم نشر العرض مباشرة بعد اجتياز الفحص."); setShowForm(false); }, onError: (error) => toast.error(error.message) });
   const updateStatus = trpc.bookings.ownerUpdateStatus.useMutation({ onSuccess: () => { bookings.refetch(); toast.success("تم تحديث حالة الحجز"); } });
   const removeListing = trpc.listings.remove.useMutation({ onSuccess: async () => { await Promise.all([listings.refetch(), overview.refetch()]); toast.success("تم حذف الإعلان"); }, onError: (error) => toast.error(error.message) });
   const updateListing = trpc.listings.update.useMutation({ onSuccess: async () => { await Promise.all([listings.refetch(), statusSummary.refetch(), overview.refetch()]); setEditingId(null); toast.success("تم تحديث العرض ونشر التعديلات."); }, onError: (error) => toast.error(error.message) });
