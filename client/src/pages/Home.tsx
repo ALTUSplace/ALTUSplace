@@ -283,7 +283,7 @@ export default function Home() {
 
         {/* Asymmetric bento: full-width fleet panel */}
         <div className="grid grid-cols-1 gap-5">
-          <Link href="/search?type=car" className="md:col-span-3 group relative flex flex-col justify-between overflow-hidden bg-ink-primary text-white p-6 md:p-9 rounded-lg shadow-lg min-h-[26rem]">
+          <Link href="/search?type=car" className="md:col-span-3 group relative flex flex-col justify-between overflow-hidden bg-ink-primary dark:bg-[#1C1C1E] text-white p-6 md:p-9 rounded-lg shadow-lg min-h-[26rem]">
             <div className="absolute -right-16 -top-16 h-56 w-56 rotate-12 corner-cut-sm bg-accent-clay/15" aria-hidden="true" />
             <div className="relative z-10 space-y-5 max-w-lg">
               <div className="w-12 h-12 corner-cut-sm bg-accent-clay flex items-center justify-center text-white shadow-[var(--shadow-clay)]">
@@ -436,7 +436,7 @@ export default function Home() {
       <FAQSection />
 
       {/* Trust & Features Banner */}
-      <section className="py-12 md:py-16 bg-ink-primary text-white">
+      <section className="py-12 md:py-16 bg-ink-primary dark:bg-[#1C1C1E] text-white">
         <div className="container mx-auto max-w-6xl px-4">
           <div className="mb-8 text-center md:mb-12">
             <span className="section-index justify-center text-white/60">ALTUSplace</span>

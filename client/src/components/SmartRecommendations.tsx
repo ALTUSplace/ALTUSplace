@@ -94,7 +94,7 @@ export function SmartRecommendations() {
                     <div className="flex h-full items-center justify-center text-sm text-ink-tertiary">{t("noImage")}</div>
                   )}
                   <div className="absolute inset-x-0 top-0 h-0.5 bg-accent-clay scale-x-0 transition-transform duration-300 ease-out group-hover:scale-x-100" aria-hidden="true" />
-                  <div className="absolute bottom-3 left-3 flex items-center gap-1 corner-cut-sm rounded-sm bg-ink-primary/70 px-2.5 py-1.5 text-xs text-white backdrop-blur-md">
+                  <div className="absolute bottom-3 left-3 flex items-center gap-1 corner-cut-sm rounded-sm bg-ink-primary/70 dark:bg-[#1C1C1E]/70 px-2.5 py-1.5 text-xs text-white backdrop-blur-md">
                     <MapPin className="h-3 w-3 text-accent-clay" /> {item.city}
                   </div>
                 </div>

@@ -33,7 +33,7 @@ export interface ListingCardProps {
 }
 
 const BADGE_CONFIG: Record<string, { label: string; icon: typeof Award; className: string }> = {
-  "top-host": { label: "Top Host", icon: Award, className: "bg-ink-primary/85 text-white" },
+  "top-host": { label: "Top Host", icon: Award, className: "bg-ink-primary/85 dark:bg-[#1C1C1E]/85 text-white" },
   premium: { label: "Premium", icon: Star, className: "bg-accent-clay/90 text-white" },
   "instant-book": { label: "Instant", icon: Zap, className: "bg-accent-green/90 text-white" },
   featured: { label: "Featured", icon: CheckCircle2, className: "bg-accent-warm text-white" },

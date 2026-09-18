@@ -538,7 +538,7 @@ export default function Search() {
 
       {/* نافذة العرض السريع المنبثقة (Quick View Modal) */}
       {quickViewItem && (
-        <div className="fixed inset-0 z-50 bg-ink-primary/60 backdrop-blur-md flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-ink-primary/60 dark:bg-[#1C1C1E]/60 backdrop-blur-md flex items-center justify-center p-4">
           <div className="bg-bg-surface border border-border-subtle rounded-3xl max-w-2xl w-full p-8 space-y-6 shadow-2xl relative animate-in zoom-in-95">
             <button
               onClick={() => setQuickViewItem(null)}
@@ -629,7 +629,7 @@ export default function Search() {
 
       {/* نافذة المقارنة المنبثقة */}
       {showCompareModal && compareList.length === 2 && (
-        <div className="fixed inset-0 z-50 bg-ink-primary/60 backdrop-blur-md flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-ink-primary/60 dark:bg-[#1C1C1E]/60 backdrop-blur-md flex items-center justify-center p-4">
           <div className="bg-bg-surface border border-border-subtle p-8 rounded-3xl max-w-4xl w-full space-y-6 shadow-2xl relative animate-in zoom-in-95">
             <button
               onClick={() => setShowCompareModal(false)}

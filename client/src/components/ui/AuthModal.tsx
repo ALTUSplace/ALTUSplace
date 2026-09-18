@@ -92,7 +92,7 @@ export function AuthModal({ isOpen, onClose, initialView = "signin", onSuccess }
   const errText = "mt-1.5 text-[11px] font-medium text-rose-500";
 
   return (
-    <div className="fixed inset-0 z-[90] flex items-center justify-center bg-ink-primary/60 p-4 backdrop-blur-md" role="presentation" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+    <div className="fixed inset-0 z-[90] flex items-center justify-center bg-ink-primary/60 dark:bg-[#1C1C1E]/60 p-4 backdrop-blur-md" role="presentation" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div ref={modalRef} role="dialog" aria-modal="true" aria-label={view === "signup" ? t("createAccount") : view === "otp" ? t("verifyCode") : t("signIn")} tabIndex={-1} className="w-full max-w-md overflow-hidden rounded-lg bg-white shadow-xl ring-1 ring-stone-900/10 focus:outline-none">
         <div className="flex items-center justify-between border-b border-stone-200/70 px-6 py-4">
           <h2 className="text-lg font-extrabold text-stone-900">{view === "signup" ? t("createAccount") : view === "otp" ? t("enterCode") : t("signIn")}</h2>

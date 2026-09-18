@@ -7,7 +7,7 @@ export default function Footer() {
   const { t, language } = useLanguage();
 
   return (
-    <footer className="bg-ink-primary text-white/75 pt-14 pb-8">
+    <footer className="bg-ink-primary dark:bg-[#1C1C1E] text-white/75 pt-14 pb-8">
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 gap-10 md:grid-cols-12">
           <div className="md:col-span-5">
