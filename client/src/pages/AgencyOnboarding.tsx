@@ -2,16 +2,12 @@ import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
 import {
   ArrowLeft,
-  Banknote,
   Building2,
-  CalendarCheck2,
   CheckCircle2,
   LogIn,
-  Mail,
   ShieldCheck,
   Sparkles,
   TrendingUp,
-  Users,
   WalletCards,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -26,24 +22,45 @@ const AGENCY_NAME_MIN = 2;
 const AGENCY_NAME_MAX = 80;
 const PARTNER_PASSWORD_MIN = 8;
 
+const heroBullets = [
+  "يحصل 45% من المضيفين على حجزهم الأول خلال أسبوع",
+  "اختر الحجز الفوري أو طلب إجراء الحجز",
+  "سهل عمليات الدفع بالنيابة عنك",
+];
+
 const benefits = [
   {
     icon: ShieldCheck,
-    title: "الحماية والأمان",
-    description: "إجراءات تحقق صارمة تحمي عروضك وعملاءك من البداية.",
-    points: ["التحقق من المستأجرين قبل تأكيد الحجز", "فحص صور تلقائي بالذكاء الاصطناعي", "عروضك معزولة تماماً عن أي وكالة أخرى"],
+    title: "حفظ على حمايتك",
+    label: "Safety & Protection",
+    description: "حماية صلبة لعروضك تغطي السيارات والعقارات دون نفقات إضافية.",
+    points: [
+      "الحماية من المسؤولية بمبلغ يصل إلى 1,000,000 $ / € / £ دون أي تكلفة إضافية",
+      "خيار إضافي للحماية من الأضرار",
+      "تقليل المخاطر لكل إعلان تنشره",
+    ],
   },
   {
     icon: WalletCards,
-    title: "التحكم المالي والمدفوعات",
-    description: "متابعة شفافة لأرباحك مع سحوبات سريعة ومرنة.",
-    points: ["تتبع واضح للإيرادات والعمولات", "سحوبات إلى حسابك البنكي أو Cash Plus أو وفاكاش", "لوحة إحصائيات وأرباح محدَّثة لحظياً"],
+    title: "تحكم في أمورك المالية من خلال خدمة «المدفوعات»",
+    label: "Financial Control",
+    description: "إدارة كاملة لأموالك من لوحة واحدة مع سحوبات مرنة.",
+    points: [
+      "دفعات يومية متاحة في أسواق محددة",
+      "حلول شاملة للملكيات المتعددة في مكان واحد",
+      "تقليل المخاطر والامتثال للمعايير المالية",
+    ],
   },
   {
     icon: TrendingUp,
-    title: "التميز في السوق",
-    description: "أبرز عروضك أمام جمهور حقيقي يبحث عن الكراء.",
-    points: ["إبراز الإعلانات أمام آلاف الباحثين", "تصنيف حسب المدينة والمدة (سيارات وعقارات)", "مؤشرات أداء: مشاهدات ونقرات تواصل وتحويل"],
+    title: "تميز في السوق",
+    label: "Market Visibility",
+    description: "أكبر انتشار ممكن للعروض مدعوم بالثقة والتميز.",
+    points: [
+      "انقل تقييماتك السابقة إلى عروضك الجديدة",
+      "شارة «جديد» لتمييز إعلاناتك الأولى",
+      "وصول عالمي إلى 43 لغة و195 دولة وإقليماً",
+    ],
   },
 ] as const;
 
@@ -221,307 +238,307 @@ export default function AgencyOnboarding() {
   const card = "mx-auto mt-6 max-w-md space-y-4 rounded-2xl border bg-card p-6 text-start shadow-sm";
 
   return (
-    <div className="container py-10 sm:py-16" dir="rtl">
+    <div dir="rtl">
       {loading ? (
         <p className="py-24 text-center text-sm font-semibold text-muted-foreground">جاري التحقق من الحساب...</p>
       ) : isPrivileged ? (
-        <div className="mx-auto max-w-2xl text-center">
-          <div className="mb-3 flex items-center justify-center gap-2 text-sm font-bold text-[var(--brand-amber)]">
-            <ShieldCheck className="h-5 w-5" />
-            <span>ALTUSplace — التسجيل كوكالة</span>
-          </div>
-          <h1 className="text-3xl font-black sm:text-4xl">{t("partnerJoinTitle")}</h1>
-          <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground">{t("partnerJoinSubtitle")}</p>
-          <div className={card}>
-            <div className="flex items-start gap-3">
-              <CheckCircle2 className="mt-0.5 h-5 w-5 text-emerald-600" />
-              <div>
-                <p className="font-bold">حسابك مسجل بالفعل كوكالة أو مشرف.</p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {user?.agencyName ? `الوكالة: ${user.agencyName}` : "يمكنك إدارة عروضك وحجوزاتك من لوحة الوكالة."}
-                </p>
-              </div>
+        <div className="container py-16">
+          <div className="mx-auto max-w-2xl text-center">
+            <div className="mb-3 flex items-center justify-center gap-2 text-sm font-bold text-[var(--brand-amber)]">
+              <ShieldCheck className="h-5 w-5" />
+              <span>ALTUSplace — التسجيل كوكالة</span>
             </div>
-            <Link href="/agency-dashboard">
-              <Button className="w-full bg-[var(--brand-amber)] text-white">{t("partnerGoToDashboard")}</Button>
-            </Link>
+            <h1 className="text-3xl font-black sm:text-4xl">{t("partnerJoinTitle")}</h1>
+            <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground">{t("partnerJoinSubtitle")}</p>
+            <div className={card}>
+              <div className="flex items-start gap-3">
+                <CheckCircle2 className="mt-0.5 h-5 w-5 text-emerald-600" />
+                <div>
+                  <p className="font-bold">حسابك مسجل بالفعل كوكالة أو مشرف.</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {user?.agencyName ? `الوكالة: ${user.agencyName}` : "يمكنك إدارة عروضك وحجوزاتك من لوحة الوكالة."}
+                  </p>
+                </div>
+              </div>
+              <Link href="/agency-dashboard">
+                <Button className="w-full bg-[var(--brand-amber)] text-white">{t("partnerGoToDashboard")}</Button>
+              </Link>
+            </div>
           </div>
         </div>
       ) : (
-        <div className="mx-auto max-w-4xl">
-          <section className="text-center">
-            <span className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-black text-[#003580] ring-1 ring-[#003580]/25">
-              <Sparkles className="h-4 w-4" />
-              ALTUSplace — فضاء الشركاء
-            </span>
-            <h1 className="mx-auto mt-4 max-w-2xl text-3xl font-black leading-tight sm:text-4xl lg:text-5xl">{t("partnerJoinTitle")}</h1>
-            <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">{t("partnerJoinSubtitle")}</p>
-
-            <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
-              <Button onClick={() => { setMode("register"); clearErrors(); setEmailStepDone(false); setEmailStepError(null); scrollToCard(); }} className="gap-2 bg-[var(--brand-amber)] text-white">
-                ابدأ الآن
-              </Button>
-              <Button variant="outline" onClick={() => { setMode("login"); clearErrors(); scrollToCard(); }} className="text-[#003580]">
-                تابع عملية التسجيل
-              </Button>
-            </div>
-
-            <div className="mt-7 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-xs font-bold text-muted-foreground">
-              <span className="inline-flex items-center gap-2"><Users className="h-4 w-4 text-[#003580]" />آلاف العملاء يومياً</span>
-              <span className="inline-flex items-center gap-2"><CalendarCheck2 className="h-4 w-4 text-[#003580]" />حجز مباشر وإدارة فورية</span>
-              <span className="inline-flex items-center gap-2"><Banknote className="h-4 w-4 text-[#003580]" />سحوبات منتظمة</span>
-            </div>
-          </section>
-
-          <div id="partner-start" className="mx-auto mt-10 max-w-3xl scroll-mt-24 overflow-hidden rounded-2xl bg-card text-foreground shadow-2xl ring-1 ring-slate-900/10">
-            <div className="h-1.5 bg-[#003580]" />
-            <div className="p-6 sm:p-8">
-              <div role="tablist" aria-label={t("partnerJoinTitle")} className="mx-auto inline-flex rounded-full border bg-muted/60 p-1 shadow-sm">
-                <button type="button" role="tab" aria-selected={mode === "register"} onClick={() => { setMode("register"); clearErrors(); setEmailStepDone(false); }} className={`rounded-full px-5 py-2 text-sm font-bold transition ${mode === "register" ? "bg-[#003580] text-white shadow" : "text-muted-foreground hover:text-foreground"}`}>{t("partnerRegisterNew")}</button>
-                <button type="button" role="tab" aria-selected={mode === "login"} onClick={() => { setMode("login"); clearErrors(); }} className={`rounded-full px-5 py-2 text-sm font-bold transition ${mode === "login" ? "bg-[#003580] text-white shadow" : "text-muted-foreground hover:text-foreground"}`}>{t("partnerExistingLogin")}</button>
-              </div>
-
-              {mode === "register" ? (
-                emailStepDone ? (
-                  <form className={card} onSubmit={submitRegister} noValidate>
-                    <div className="flex items-center gap-2 font-bold">
-                      <Building2 className="h-4 w-4 text-[var(--brand-amber)]" />
-                      <span>بيانات الوكالة</span>
-                    </div>
-                    <div className="space-y-1.5">
-                      <label htmlFor="agency-name" className="block text-sm font-semibold">اسم الوكالة / الشركة</label>
-                      <input
-                        id="agency-name"
-                        className="w-full rounded-xl border bg-background p-3 text-center"
-                        placeholder="اسم الوكالة / الشركة"
-                        value={agencyName}
-                        minLength={AGENCY_NAME_MIN}
-                        maxLength={AGENCY_NAME_MAX}
-                        required
-                        aria-invalid={Boolean(fieldError)}
-                        aria-describedby={fieldError ? "agency-name-error" : undefined}
-                        onChange={(event) => { setAgencyName(event.target.value); clearErrors(); }}
-                      />
-                      {fieldError ? (
-                        <p id="agency-name-error" role="alert" className="rounded-lg border border-red-200 bg-red-50 p-2 text-xs font-semibold text-red-700">{fieldError}</p>
-                      ) : (
-                        <p className="text-xs text-muted-foreground">من {AGENCY_NAME_MIN} إلى {AGENCY_NAME_MAX} حرفاً.</p>
-                      )}
-                    </div>
-                    <div className="space-y-1.5">
-                      <label htmlFor="agency-city" className="block text-sm font-semibold">المدينة</label>
-                      <input
-                        id="agency-city"
-                        className="w-full rounded-xl border bg-background p-3 text-center"
-                        placeholder="مثال: الدار البيضاء"
-                        value={city}
-                        maxLength={120}
-                        required
-                        onChange={(event) => { setCity(event.target.value); clearErrors(); }}
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label htmlFor="agency-phone" className="block text-sm font-semibold">رقم الهاتف <span className="font-normal text-muted-foreground">(بالصيغة الدولية)</span></label>
-                      <input
-                        id="agency-phone"
-                        className="w-full rounded-xl border bg-background p-3 text-center"
-                        placeholder="مثال: +212612345678"
-                        value={phone}
-                        maxLength={32}
-                        required
-                        onChange={(event) => { setPhone(event.target.value); clearErrors(); }}
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label htmlFor="agency-email" className="block text-sm font-semibold">البريد الإلكتروني</label>
-                      <input
-                        id="agency-email"
-                        type="email"
-                        className="w-full rounded-xl border bg-background p-3 text-center"
-                        placeholder="agency@example.com"
-                        value={email}
-                        maxLength={320}
-                        required
-                        onChange={(event) => { setEmail(event.target.value); clearErrors(); }}
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label htmlFor="agency-password" className="block text-sm font-semibold">كلمة المرور</label>
-                      <input
-                        id="agency-password"
-                        type="password"
-                        className="w-full rounded-xl border bg-background p-3 text-center"
-                        placeholder={`${PARTNER_PASSWORD_MIN} أحرف على الأقل`}
-                        value={password}
-                        minLength={PARTNER_PASSWORD_MIN}
-                        required
-                        onChange={(event) => { setPassword(event.target.value); clearErrors(); }}
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label htmlFor="agency-password-confirm" className="block text-sm font-semibold">تأكيد كلمة المرور</label>
-                      <input
-                        id="agency-password-confirm"
-                        type="password"
-                        className="w-full rounded-xl border bg-background p-3 text-center"
-                        placeholder="أعد كتابة كلمة المرور"
-                        value={confirmPassword}
-                        minLength={PARTNER_PASSWORD_MIN}
-                        required
-                        onChange={(event) => { setConfirmPassword(event.target.value); clearErrors(); }}
-                      />
-                    </div>
-                    {serverError ? (
-                      <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-700">{serverError}</p>
-                    ) : null}
-                    <Button type="submit" className="w-full" disabled={submitting}>
-                      {submitting ? "جاري التسجيل..." : "التسجيل كوكالة تأجير"}
-                    </Button>
-                  </form>
-                ) : (
-                  <div className="grid gap-8 lg:grid-cols-[1fr_1.1fr] lg:items-center">
-                    <ul className="space-y-3">
-                      {[
-                        "آلاف العملاء يبحثون عن كراء السيارات والعقارات يومياً",
-                        "تحكم فوري في الحجوزات والتوفر والأسعار",
-                        "سحوبات مالية آمنة: بنكي، Cash Plus أو وفاكاش",
-                        "فحص صور تلقائي لمصداقية عروضك",
-                      ].map((item) => (
+        <div>
+          <div className="bg-[#003580] text-white">
+            <div className="relative overflow-hidden">
+              <div aria-hidden className="pointer-events-none absolute -top-24 right-1/4 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
+              <div aria-hidden className="pointer-events-none absolute -bottom-16 left-10 h-56 w-56 rounded-full bg-amber-400/10 blur-3xl" />
+              <div className="container relative py-12 sm:py-16 lg:py-20">
+                <div className="mx-auto grid max-w-5xl items-center gap-12 lg:grid-cols-2">
+                  <div>
+                    <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-sm font-black text-amber-300">
+                      <Sparkles className="h-4 w-4" />
+                      ALTUSplace — فضاء الشركاء
+                    </span>
+                    <h1 className="mt-5 text-3xl font-black leading-tight sm:text-4xl lg:text-[2.75rem]">سجل عقارك مجاناً</h1>
+                    <p className="mt-3 max-w-md text-sm leading-relaxed text-white/85 sm:text-base">
+                      انضم إلى ALTUSplace واعرض سياراتك وعقاراتك للكراء أمام آلاف الباحثين في المغرب — بدون رسوم إدراج.
+                    </p>
+                    <ul className="mt-6 space-y-3">
+                      {heroBullets.map((item) => (
                         <li key={item} className="flex items-start gap-3">
-                          <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-500" />
-                          <span className="text-sm font-semibold text-foreground">{item}</span>
+                          <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-400" />
+                          <span className="text-sm font-semibold text-white sm:text-base">{item}</span>
                         </li>
                       ))}
                     </ul>
-                    <div className="space-y-4 rounded-2xl border bg-white p-6 shadow-sm dark:border-border dark:bg-card">
-                      <div className="flex items-center gap-2 font-bold">
-                        <Mail className="h-4 w-4 text-[#003580]" />
-                        <span>ابدأ ببريدك الإلكتروني</span>
-                      </div>
-                      <p className="text-sm text-muted-foreground">أدخل عنوان بريدك الإلكتروني ثم اضغط «متابعة» لاستكمال إنشاء حساب وكالتك.</p>
-                      <form onSubmit={submitEmailStep} noValidate>
+                    <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-3">
+                      <Button onClick={() => { setMode("register"); clearErrors(); setEmailStepDone(false); setEmailStepError(null); scrollToCard(); }} className="gap-2 bg-[var(--brand-amber)] text-white">
+                        ابدأ الآن
+                        <ArrowLeft className="h-4 w-4" />
+                      </Button>
+                      <button type="button" onClick={() => { setMode("login"); clearErrors(); scrollToCard(); }} className="text-sm font-bold text-white/90 underline decoration-white/40 underline-offset-4 transition hover:text-white">
+                        قمت ببدء عملية التسجيل مسبقاً؟ تابع عملية تسجيلك
+                      </button>
+                    </div>
+                  </div>
+
+                  <div id="partner-start" className="scroll-mt-24 rounded-2xl bg-card p-6 text-foreground shadow-2xl ring-1 ring-black/5 sm:p-8">
+                    <div className="mb-5 h-1.5 w-16 rounded-full bg-[#003580]" />
+                    <div role="tablist" aria-label={t("partnerJoinTitle")} className="mx-auto inline-flex rounded-full border bg-muted/60 p-1 shadow-sm">
+                      <button type="button" role="tab" aria-selected={mode === "register"} onClick={() => { setMode("register"); clearErrors(); setEmailStepDone(false); }} className={`rounded-full px-5 py-2 text-sm font-bold transition ${mode === "register" ? "bg-[#003580] text-white shadow" : "text-muted-foreground hover:text-foreground"}`}>{t("partnerRegisterNew")}</button>
+                      <button type="button" role="tab" aria-selected={mode === "login"} onClick={() => { setMode("login"); clearErrors(); }} className={`rounded-full px-5 py-2 text-sm font-bold transition ${mode === "login" ? "bg-[#003580] text-white shadow" : "text-muted-foreground hover:text-foreground"}`}>{t("partnerExistingLogin")}</button>
+                    </div>
+
+                    {mode === "register" ? (
+                      emailStepDone ? (
+                        <form className={card} onSubmit={submitRegister} noValidate>
+                          <div className="flex items-center gap-2 font-bold">
+                            <Building2 className="h-4 w-4 text-[var(--brand-amber)]" />
+                            <span>بيانات الوكالة</span>
+                          </div>
+                          <div className="space-y-1.5">
+                            <label htmlFor="agency-name" className="block text-sm font-semibold">اسم الوكالة / الشركة</label>
+                            <input
+                              id="agency-name"
+                              className="w-full rounded-xl border bg-background p-3 text-center"
+                              placeholder="اسم الوكالة / الشركة"
+                              value={agencyName}
+                              minLength={AGENCY_NAME_MIN}
+                              maxLength={AGENCY_NAME_MAX}
+                              required
+                              aria-invalid={Boolean(fieldError)}
+                              aria-describedby={fieldError ? "agency-name-error" : undefined}
+                              onChange={(event) => { setAgencyName(event.target.value); clearErrors(); }}
+                            />
+                            {fieldError ? (
+                              <p id="agency-name-error" role="alert" className="rounded-lg border border-red-200 bg-red-50 p-2 text-xs font-semibold text-red-700">{fieldError}</p>
+                            ) : (
+                              <p className="text-xs text-muted-foreground">من {AGENCY_NAME_MIN} إلى {AGENCY_NAME_MAX} حرفاً.</p>
+                            )}
+                          </div>
+                          <div className="space-y-1.5">
+                            <label htmlFor="agency-city" className="block text-sm font-semibold">المدينة</label>
+                            <input
+                              id="agency-city"
+                              className="w-full rounded-xl border bg-background p-3 text-center"
+                              placeholder="مثال: الدار البيضاء"
+                              value={city}
+                              maxLength={120}
+                              required
+                              onChange={(event) => { setCity(event.target.value); clearErrors(); }}
+                            />
+                          </div>
+                          <div className="space-y-1.5">
+                            <label htmlFor="agency-phone" className="block text-sm font-semibold">رقم الهاتف <span className="font-normal text-muted-foreground">(بالصيغة الدولية)</span></label>
+                            <input
+                              id="agency-phone"
+                              className="w-full rounded-xl border bg-background p-3 text-center"
+                              placeholder="مثال: +212612345678"
+                              value={phone}
+                              maxLength={32}
+                              required
+                              onChange={(event) => { setPhone(event.target.value); clearErrors(); }}
+                            />
+                          </div>
+                          <div className="space-y-1.5">
+                            <label htmlFor="agency-email" className="block text-sm font-semibold">البريد الإلكتروني</label>
+                            <input
+                              id="agency-email"
+                              type="email"
+                              className="w-full rounded-xl border bg-background p-3 text-center"
+                              placeholder="agency@example.com"
+                              value={email}
+                              maxLength={320}
+                              required
+                              onChange={(event) => { setEmail(event.target.value); clearErrors(); }}
+                            />
+                          </div>
+                          <div className="space-y-1.5">
+                            <label htmlFor="agency-password" className="block text-sm font-semibold">كلمة المرور</label>
+                            <input
+                              id="agency-password"
+                              type="password"
+                              className="w-full rounded-xl border bg-background p-3 text-center"
+                              placeholder={`${PARTNER_PASSWORD_MIN} أحرف على الأقل`}
+                              value={password}
+                              minLength={PARTNER_PASSWORD_MIN}
+                              required
+                              onChange={(event) => { setPassword(event.target.value); clearErrors(); }}
+                            />
+                          </div>
+                          <div className="space-y-1.5">
+                            <label htmlFor="agency-password-confirm" className="block text-sm font-semibold">تأكيد كلمة المرور</label>
+                            <input
+                              id="agency-password-confirm"
+                              type="password"
+                              className="w-full rounded-xl border bg-background p-3 text-center"
+                              placeholder="أعد كتابة كلمة المرور"
+                              value={confirmPassword}
+                              minLength={PARTNER_PASSWORD_MIN}
+                              required
+                              onChange={(event) => { setConfirmPassword(event.target.value); clearErrors(); }}
+                            />
+                          </div>
+                          {serverError ? (
+                            <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-700">{serverError}</p>
+                          ) : null}
+                          <Button type="submit" className="w-full" disabled={submitting}>
+                            {submitting ? "جاري التسجيل..." : "التسجيل كوكالة تأجير"}
+                          </Button>
+                        </form>
+                      ) : (
+                        <div className="space-y-4 pt-2">
+                          <div className="text-start">
+                            <h3 className="text-lg font-black text-foreground">أنشئ حساب الشريك الخاص بك</h3>
+                            <p className="mt-1 text-sm text-muted-foreground">أدخل عنوان بريدك الإلكتروني لاستكمال التسجيل مجاناً — لا حاجة لبطاقة ائتمانية.</p>
+                          </div>
+                          <form onSubmit={submitEmailStep} noValidate>
+                            <div className="space-y-1.5">
+                              <label htmlFor="partner-email-entry" className="block text-sm font-semibold text-foreground">عنوان البريد الإلكتروني</label>
+                              <input
+                                id="partner-email-entry"
+                                type="email"
+                                autoComplete="email"
+                                className="w-full rounded-xl border bg-background p-3 text-center focus:border-[#003580] focus:outline-none focus:ring-2 focus:ring-[#003580]/20"
+                                placeholder="agency@example.com"
+                                value={email}
+                                maxLength={320}
+                                required
+                                aria-invalid={Boolean(emailStepError)}
+                                aria-describedby={emailStepError ? "partner-email-entry-error" : undefined}
+                                onChange={(event) => { setEmail(event.target.value); if (emailStepError) setEmailStepError(null); }}
+                              />
+                              {emailStepError ? (
+                                <p id="partner-email-entry-error" role="alert" className="rounded-lg border border-red-200 bg-red-50 p-2 text-xs font-semibold text-red-700">{emailStepError}</p>
+                              ) : null}
+                            </div>
+                            <Button type="submit" className="mt-4 w-full bg-[var(--brand-amber)] text-white" disabled={submitting}>
+                              متابعة
+                            </Button>
+                          </form>
+                          <div className="border-t border-border pt-4 text-center">
+                            <span className="text-xs text-muted-foreground">هل لديك حساب شريك بالفعل؟ </span>
+                            <button type="button" onClick={() => setMode("login")} className="text-xs font-bold text-[#003580] hover:underline">
+                              تسجيل الدخول
+                            </button>
+                        </div>
+                        </div>
+                      )
+                    ) : (
+                      <form className={card} onSubmit={submitLogin} noValidate>
+                        <div className="flex items-center gap-2 font-bold">
+                          <LogIn className="h-4 w-4 text-[var(--brand-amber)]" />
+                          <span>دخول الشريك</span>
+                        </div>
                         <div className="space-y-1.5">
-                          <label htmlFor="partner-email-entry" className="block text-sm font-semibold">عنوان البريد الإلكتروني</label>
+                          <label htmlFor="partner-login-email" className="block text-sm font-semibold">البريد الإلكتروني</label>
                           <input
-                            id="partner-email-entry"
+                            id="partner-login-email"
                             type="email"
-                            autoComplete="email"
-                            className="w-full rounded-xl border bg-background p-3 text-center focus:border-[#003580] focus:outline-none focus:ring-2 focus:ring-[#003580]/20"
+                            className="w-full rounded-xl border bg-background p-3 text-center"
                             placeholder="agency@example.com"
                             value={email}
                             maxLength={320}
                             required
-                            aria-invalid={Boolean(emailStepError)}
-                            aria-describedby={emailStepError ? "partner-email-entry-error" : undefined}
-                            onChange={(event) => { setEmail(event.target.value); if (emailStepError) setEmailStepError(null); }}
+                            onChange={(event) => { setEmail(event.target.value); clearErrors(); }}
                           />
-                          {emailStepError ? (
-                            <p id="partner-email-entry-error" role="alert" className="rounded-lg border border-red-200 bg-red-50 p-2 text-xs font-semibold text-red-700">{emailStepError}</p>
-                          ) : null}
                         </div>
-                        <Button type="submit" className="mt-4 w-full bg-[var(--brand-amber)] text-white" disabled={submitting}>
-                          <span>متابعة</span>
-                          <ArrowLeft className="h-4 w-4" />
+                        <div className="space-y-1.5">
+                          <label htmlFor="partner-login-password" className="block text-sm font-semibold">كلمة المرور</label>
+                          <input
+                            id="partner-login-password"
+                            type="password"
+                            className="w-full rounded-xl border bg-background p-3 text-center"
+                            placeholder="كلمة المرور"
+                            value={password}
+                            required
+                            onChange={(event) => { setPassword(event.target.value); clearErrors(); }}
+                          />
+                        </div>
+                        {serverError ? (
+                          <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-700">{serverError}</p>
+                        ) : null}
+                        <Button type="submit" className="w-full" disabled={submitting}>
+                          {submitting ? "جاري الدخول..." : "دخول"}
                         </Button>
+                        <button type="button" onClick={() => startLogin()} className="w-full text-center text-xs font-bold text-[#003580] hover:underline">
+                          {t("partnerExistingLogin")}
+                        </button>
                       </form>
-                      <div className="relative flex items-center gap-3 py-1">
-                        <div className="h-px flex-1 bg-border" />
-                        <span className="text-xs font-bold text-muted-foreground">أو</span>
-                        <div className="h-px flex-1 bg-border" />
-                      </div>
-                      <button type="button" onClick={() => setMode("login")} className="w-full text-center text-xs font-bold text-[#003580] hover:underline">
-                        لديك حساب بالفعل؟ تسجيل الدخول
-                      </button>
-                    </div>
+                    )}
                   </div>
-                )
-              ) : (
-                <form className={card} onSubmit={submitLogin} noValidate>
-                  <div className="flex items-center gap-2 font-bold">
-                    <LogIn className="h-4 w-4 text-[var(--brand-amber)]" />
-                    <span>دخول الشريك</span>
-                  </div>
-                  <div className="space-y-1.5">
-                    <label htmlFor="partner-login-email" className="block text-sm font-semibold">البريد الإلكتروني</label>
-                    <input
-                      id="partner-login-email"
-                      type="email"
-                      className="w-full rounded-xl border bg-background p-3 text-center"
-                      placeholder="agency@example.com"
-                      value={email}
-                      maxLength={320}
-                      required
-                      onChange={(event) => { setEmail(event.target.value); clearErrors(); }}
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label htmlFor="partner-login-password" className="block text-sm font-semibold">كلمة المرور</label>
-                    <input
-                      id="partner-login-password"
-                      type="password"
-                      className="w-full rounded-xl border bg-background p-3 text-center"
-                      placeholder="كلمة المرور"
-                      value={password}
-                      required
-                      onChange={(event) => { setPassword(event.target.value); clearErrors(); }}
-                    />
-                  </div>
-                  {serverError ? (
-                    <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-700">{serverError}</p>
-                  ) : null}
-                  <Button type="submit" className="w-full" disabled={submitting}>
-                    {submitting ? "جاري الدخول..." : "دخول"}
-                  </Button>
-                  <button type="button" onClick={() => startLogin()} className="w-full text-center text-xs font-bold text-[#003580] hover:underline">
-                    {t("partnerExistingLogin")}
-                  </button>
-                </form>
-              )}
+                </div>
+              </div>
             </div>
           </div>
 
-          <section className="mt-16">
-            <div className="text-center">
-              <h2 className="text-2xl font-black sm:text-3xl">لماذا تصبح شريكاً مع ALTUSplace؟</h2>
-              <p className="mx-auto mt-2 max-w-2xl text-sm text-muted-foreground">
-                بيئة متكاملة تحمي عروضك، تنظّم أموالك، وتُظهرك أمام أكبر عدد من الباحثين عن الكراء في المغرب.
-              </p>
-            </div>
-            <div className="mt-9 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {benefits.map((benefit) => (
-                <div key={benefit.title} className="rounded-2xl border bg-card p-6 shadow-sm">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#003580]/10 text-[#003580]">
-                      <benefit.icon className="h-5 w-5" />
+          <section className="bg-background">
+            <div className="container py-14 sm:py-16">
+              <div className="text-center">
+                <h2 className="text-2xl font-black sm:text-3xl">لماذا تصبح شريكاً مع ALTUSplace؟</h2>
+                <p className="mx-auto mt-2 max-w-2xl text-sm text-muted-foreground">
+                  بيئة متكاملة تحمي عروضك، تنظّم أموالك، وتُظهرك أمام أكبر عدد من الباحثين عن الكراء في المغرب.
+                </p>
+              </div>
+              <div className="mt-9 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {benefits.map((benefit) => (
+                  <div key={benefit.title} className="rounded-2xl border bg-card p-6 shadow-sm">
+                    <div className="flex items-start gap-3">
+                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#003580]/10 text-[#003580]">
+                        <benefit.icon className="h-5 w-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[11px] font-black tracking-wide text-[#003580]">{benefit.label}</p>
+                        <h3 className="font-black leading-snug text-foreground">{benefit.title}</h3>
+                        <p className="mt-1 text-xs text-muted-foreground">{benefit.description}</p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="font-black">{benefit.title}</h3>
-                      <p className="mt-0.5 text-xs text-muted-foreground">{benefit.description}</p>
-                    </div>
+                    <ul className="mt-5 space-y-2.5">
+                      {benefit.points.map((point) => (
+                        <li key={point} className="flex items-start gap-2 text-sm font-semibold">
+                          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                          <span>{point}</span>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
-                  <ul className="mt-5 space-y-2.5">
-                    {benefit.points.map((point) => (
-                      <li key={point} className="flex items-start gap-2 text-sm font-semibold">
-                        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
-                        <span>{point}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </section>
 
-          <div className="mt-12 flex flex-wrap justify-center gap-3">
-            <Link href="/my-bookings">
-              <Button variant="outline">الانتقال إلى حجوزاتي</Button>
-            </Link>
-            <Link href="/">
-              <Button variant="ghost" className="gap-2">
-                <ArrowLeft className="h-4 w-4" />
-                الصفحة الرئيسية
-              </Button>
-            </Link>
+          <div className="container pb-14">
+            <div className="flex flex-wrap justify-center gap-3">
+              <Link href="/my-bookings">
+                <Button variant="outline">الانتقال إلى حجوزاتي</Button>
+              </Link>
+              <Link href="/">
+                <Button variant="ghost" className="gap-2">
+                  <ArrowLeft className="h-4 w-4" />
+                  الصفحة الرئيسية
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       )}
