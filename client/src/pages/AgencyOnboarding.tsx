@@ -248,56 +248,37 @@ export default function AgencyOnboarding() {
           </div>
         </div>
       ) : (
-        <div className="mx-auto max-w-6xl">
-          <section className="grid items-start gap-10 lg:grid-cols-2">
-            <div className="pt-2">
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full border bg-card px-4 py-2 text-sm font-black text-[var(--brand-amber)] shadow-sm">
-                <Sparkles className="h-4 w-4" />
-                <span>ALTUSplace — فضاء الشركاء</span>
-              </div>
-              <h1 className="text-3xl font-black leading-tight sm:text-4xl lg:text-5xl">{t("partnerJoinTitle")}</h1>
-              <p className="mt-4 max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-base">{t("partnerJoinSubtitle")}</p>
+        <div className="mx-auto max-w-4xl">
+          <section className="text-center">
+            <span className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-black text-[#003580] ring-1 ring-[#003580]/25">
+              <Sparkles className="h-4 w-4" />
+              ALTUSplace — فضاء الشركاء
+            </span>
+            <h1 className="mx-auto mt-4 max-w-2xl text-3xl font-black leading-tight sm:text-4xl lg:text-5xl">{t("partnerJoinTitle")}</h1>
+            <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">{t("partnerJoinSubtitle")}</p>
 
-              <ul className="mt-7 space-y-3">
-                {[
-                  "آلاف الباحثين عن كراء السيارات والعقارات يطّلعون على إعلانك",
-                  "تحكم فوري في الحجوزات والتوفر والأسعار من لوحة واحدة",
-                  "سحوبات مالية آمنة إلى حسابك البنكي أو Cash Plus أو وفاكاش",
-                  "فحص صور تلقائي لمصداقية إعلاناتك وثقة أعلى لدى العملاء",
-                ].map((item) => (
-                  <li key={item} className="flex items-start gap-3 text-sm font-semibold text-foreground">
-                    <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-[var(--brand-amber)]" />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <div className="mt-8 flex flex-wrap gap-3">
-                <Button onClick={() => { setMode("register"); clearErrors(); setEmailStepDone(false); setEmailStepError(null); scrollToCard(); }} className="gap-2 bg-[var(--brand-amber)] text-white">
-                  ابدأ الآن
-                </Button>
-                <Button variant="outline" onClick={() => { setMode("login"); clearErrors(); scrollToCard(); }}>
-                  تابع عملية التسجيل
-                </Button>
-              </div>
-
-              <div className="mt-8 flex flex-wrap items-center gap-x-8 gap-y-3 text-xs font-bold text-muted-foreground">
-                <span className="inline-flex items-center gap-2"><Users className="h-4 w-4 text-[var(--brand-amber)]" />آلاف العملاء يومياً</span>
-                <span className="inline-flex items-center gap-2"><CalendarCheck2 className="h-4 w-4 text-[var(--brand-amber)]" />حجز مباشر وإدارة فورية</span>
-                <span className="inline-flex items-center gap-2"><Banknote className="h-4 w-4 text-[var(--brand-amber)]" />سحوبات منتظمة</span>
-              </div>
+            <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
+              <Button onClick={() => { setMode("register"); clearErrors(); setEmailStepDone(false); setEmailStepError(null); scrollToCard(); }} className="gap-2 bg-[var(--brand-amber)] text-white">
+                ابدأ الآن
+              </Button>
+              <Button variant="outline" onClick={() => { setMode("login"); clearErrors(); scrollToCard(); }} className="text-[#003580]">
+                تابع عملية التسجيل
+              </Button>
             </div>
 
-            <div id="partner-start" className="scroll-mt-24 rounded-3xl bg-[var(--brand-navy)] p-5 text-white shadow-2xl sm:p-7">
-              <div className="rounded-2xl border border-white/15 bg-white/5 p-5 sm:p-6">
-                <p className="text-xs font-black tracking-wide text-[var(--brand-amber)]">ALTUSplace — التسجيل كوكالة</p>
-                <h2 className="mt-2 text-xl font-black leading-relaxed">وجّه مكاتبك نحو آلاف الزبائن واربح من أول إعلان.</h2>
-                <div className="mt-4 h-1 w-14 rounded-full bg-[var(--brand-amber)]" />
-              </div>
+            <div className="mt-7 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-xs font-bold text-muted-foreground">
+              <span className="inline-flex items-center gap-2"><Users className="h-4 w-4 text-[#003580]" />آلاف العملاء يومياً</span>
+              <span className="inline-flex items-center gap-2"><CalendarCheck2 className="h-4 w-4 text-[#003580]" />حجز مباشر وإدارة فورية</span>
+              <span className="inline-flex items-center gap-2"><Banknote className="h-4 w-4 text-[#003580]" />سحوبات منتظمة</span>
+            </div>
+          </section>
 
-              <div role="tablist" aria-label={t("partnerJoinTitle")} className="mx-auto mt-6 inline-flex rounded-full border bg-card p-1 shadow-sm">
-                <button type="button" role="tab" aria-selected={mode === "register"} onClick={() => { setMode("register"); clearErrors(); setEmailStepDone(false); }} className={`rounded-full px-5 py-2 text-sm font-bold transition ${mode === "register" ? "bg-[var(--brand-amber)] text-white shadow" : "text-muted-foreground hover:text-foreground"}`}>{t("partnerRegisterNew")}</button>
-                <button type="button" role="tab" aria-selected={mode === "login"} onClick={() => { setMode("login"); clearErrors(); }} className={`rounded-full px-5 py-2 text-sm font-bold transition ${mode === "login" ? "bg-[var(--brand-amber)] text-white shadow" : "text-muted-foreground hover:text-foreground"}`}>{t("partnerExistingLogin")}</button>
+          <div id="partner-start" className="mx-auto mt-10 max-w-3xl scroll-mt-24 overflow-hidden rounded-2xl bg-card text-foreground shadow-2xl ring-1 ring-slate-900/10">
+            <div className="h-1.5 bg-[#003580]" />
+            <div className="p-6 sm:p-8">
+              <div role="tablist" aria-label={t("partnerJoinTitle")} className="mx-auto inline-flex rounded-full border bg-muted/60 p-1 shadow-sm">
+                <button type="button" role="tab" aria-selected={mode === "register"} onClick={() => { setMode("register"); clearErrors(); setEmailStepDone(false); }} className={`rounded-full px-5 py-2 text-sm font-bold transition ${mode === "register" ? "bg-[#003580] text-white shadow" : "text-muted-foreground hover:text-foreground"}`}>{t("partnerRegisterNew")}</button>
+                <button type="button" role="tab" aria-selected={mode === "login"} onClick={() => { setMode("login"); clearErrors(); }} className={`rounded-full px-5 py-2 text-sm font-bold transition ${mode === "login" ? "bg-[#003580] text-white shadow" : "text-muted-foreground hover:text-foreground"}`}>{t("partnerExistingLogin")}</button>
               </div>
 
               {mode === "register" ? (
@@ -398,40 +379,60 @@ export default function AgencyOnboarding() {
                     </Button>
                   </form>
                 ) : (
-                  <div className={card}>
-                    <div className="flex items-center gap-2 font-bold">
-                      <Mail className="h-4 w-4 text-[var(--brand-amber)]" />
-                      <span>ابدأ ببريدك الإلكتروني</span>
-                    </div>
-                    <p className="text-sm text-muted-foreground">أدخل عنوان بريدك الإلكتروني ثم اضغط «متابعة» لاستكمال إنشاء حساب وكالتك.</p>
-                    <form onSubmit={submitEmailStep} noValidate>
-                      <div className="space-y-1.5">
-                        <label htmlFor="partner-email-entry" className="block text-sm font-semibold">عنوان البريد الإلكتروني</label>
-                        <input
-                          id="partner-email-entry"
-                          type="email"
-                          autoComplete="email"
-                          className="w-full rounded-xl border bg-background p-3 text-center"
-                          placeholder="agency@example.com"
-                          value={email}
-                          maxLength={320}
-                          required
-                          aria-invalid={Boolean(emailStepError)}
-                          aria-describedby={emailStepError ? "partner-email-entry-error" : undefined}
-                          onChange={(event) => { setEmail(event.target.value); if (emailStepError) setEmailStepError(null); }}
-                        />
-                        {emailStepError ? (
-                          <p id="partner-email-entry-error" role="alert" className="rounded-lg border border-red-200 bg-red-50 p-2 text-xs font-semibold text-red-700">{emailStepError}</p>
-                        ) : null}
+                  <div className="grid gap-8 lg:grid-cols-[1fr_1.1fr] lg:items-center">
+                    <ul className="space-y-3">
+                      {[
+                        "آلاف العملاء يبحثون عن كراء السيارات والعقارات يومياً",
+                        "تحكم فوري في الحجوزات والتوفر والأسعار",
+                        "سحوبات مالية آمنة: بنكي، Cash Plus أو وفاكاش",
+                        "فحص صور تلقائي لمصداقية عروضك",
+                      ].map((item) => (
+                        <li key={item} className="flex items-start gap-3">
+                          <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-500" />
+                          <span className="text-sm font-semibold text-foreground">{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <div className="space-y-4 rounded-2xl border bg-white p-6 shadow-sm dark:border-border dark:bg-card">
+                      <div className="flex items-center gap-2 font-bold">
+                        <Mail className="h-4 w-4 text-[#003580]" />
+                        <span>ابدأ ببريدك الإلكتروني</span>
                       </div>
-                      <Button type="submit" className="w-full" disabled={submitting}>
-                        <span>متابعة</span>
-                        <ArrowLeft className="h-4 w-4" />
-                      </Button>
-                    </form>
-                    <button type="button" onClick={() => setMode("login")} className="w-full text-center text-xs font-bold text-[var(--brand-amber)] hover:underline">
-                      لديك حساب بالفعل؟ تسجيل الدخول
-                    </button>
+                      <p className="text-sm text-muted-foreground">أدخل عنوان بريدك الإلكتروني ثم اضغط «متابعة» لاستكمال إنشاء حساب وكالتك.</p>
+                      <form onSubmit={submitEmailStep} noValidate>
+                        <div className="space-y-1.5">
+                          <label htmlFor="partner-email-entry" className="block text-sm font-semibold">عنوان البريد الإلكتروني</label>
+                          <input
+                            id="partner-email-entry"
+                            type="email"
+                            autoComplete="email"
+                            className="w-full rounded-xl border bg-background p-3 text-center focus:border-[#003580] focus:outline-none focus:ring-2 focus:ring-[#003580]/20"
+                            placeholder="agency@example.com"
+                            value={email}
+                            maxLength={320}
+                            required
+                            aria-invalid={Boolean(emailStepError)}
+                            aria-describedby={emailStepError ? "partner-email-entry-error" : undefined}
+                            onChange={(event) => { setEmail(event.target.value); if (emailStepError) setEmailStepError(null); }}
+                          />
+                          {emailStepError ? (
+                            <p id="partner-email-entry-error" role="alert" className="rounded-lg border border-red-200 bg-red-50 p-2 text-xs font-semibold text-red-700">{emailStepError}</p>
+                          ) : null}
+                        </div>
+                        <Button type="submit" className="mt-4 w-full bg-[var(--brand-amber)] text-white" disabled={submitting}>
+                          <span>متابعة</span>
+                          <ArrowLeft className="h-4 w-4" />
+                        </Button>
+                      </form>
+                      <div className="relative flex items-center gap-3 py-1">
+                        <div className="h-px flex-1 bg-border" />
+                        <span className="text-xs font-bold text-muted-foreground">أو</span>
+                        <div className="h-px flex-1 bg-border" />
+                      </div>
+                      <button type="button" onClick={() => setMode("login")} className="w-full text-center text-xs font-bold text-[#003580] hover:underline">
+                        لديك حساب بالفعل؟ تسجيل الدخول
+                      </button>
+                    </div>
                   </div>
                 )
               ) : (
@@ -471,13 +472,13 @@ export default function AgencyOnboarding() {
                   <Button type="submit" className="w-full" disabled={submitting}>
                     {submitting ? "جاري الدخول..." : "دخول"}
                   </Button>
-                  <button type="button" onClick={() => startLogin()} className="w-full text-center text-xs font-bold text-[var(--brand-amber)] hover:underline">
+                  <button type="button" onClick={() => startLogin()} className="w-full text-center text-xs font-bold text-[#003580] hover:underline">
                     {t("partnerExistingLogin")}
                   </button>
                 </form>
               )}
             </div>
-          </section>
+          </div>
 
           <section className="mt-16">
             <div className="text-center">
@@ -488,9 +489,9 @@ export default function AgencyOnboarding() {
             </div>
             <div className="mt-9 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {benefits.map((benefit) => (
-                <div key={benefit.title} className="rounded-3xl border bg-card p-6 shadow-sm">
+                <div key={benefit.title} className="rounded-2xl border bg-card p-6 shadow-sm">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[var(--brand-amber-soft)] text-[var(--brand-amber)]">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#003580]/10 text-[#003580]">
                       <benefit.icon className="h-5 w-5" />
                     </div>
                     <div>
@@ -501,7 +502,7 @@ export default function AgencyOnboarding() {
                   <ul className="mt-5 space-y-2.5">
                     {benefit.points.map((point) => (
                       <li key={point} className="flex items-start gap-2 text-sm font-semibold">
-                        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[var(--brand-amber)]" />
+                        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
                         <span>{point}</span>
                       </li>
                     ))}
