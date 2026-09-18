@@ -4,6 +4,7 @@ import {
   ArrowLeft,
   Building2,
   CheckCircle2,
+  Loader2,
   LogIn,
   ShieldCheck,
   Sparkles,
@@ -68,14 +69,32 @@ const benefits = [
  * Self-service partner auth. Both endpoints mint the same `app_session_id`
  * cookie the rest of the platform uses, so refresh() below picks up the new
  * partner session immediately.
+ *
+ * The request is watchdogged with AbortController so a stalled network call
+ * can never leave the submit button stuck mid-flight: after ~20s it aborts and
+ * surfaces the timeout message through the callers' catch/finally.
  */
 async function callPartnerAuth<T>(path: string, body: unknown): Promise<T> {
-  const response = await fetch(path, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-    credentials: "same-origin",
-  });
+  const timeoutMs = 20_000;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  let response: Response;
+  try {
+    response = await fetch(path, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      credentials: "same-origin",
+      signal: controller.signal,
+    });
+  } catch (error) {
+    if (controller.signal.aborted) {
+      throw new Error("انتهت مهلة العملية — تحقق من اتصالك بالإنترنت وحاول مجدداً.");
+    }
+    throw error;
+  } finally {
+    clearTimeout(timer);
+  }
   let payload: { error?: string; reason?: string } | null = null;
   try {
     payload = (await response.json()) as { error?: string; reason?: string };
@@ -403,7 +422,7 @@ export default function AgencyOnboarding() {
                             <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-700">{serverError}</p>
                           ) : null}
                           <Button type="submit" className="w-full" disabled={submitting}>
-                            {submitting ? "جاري التسجيل..." : "التسجيل كوكالة تأجير"}
+                            {submitting ? <><Loader2 className="ml-2 h-4 w-4 animate-spin" />جاري التسجيل...</> : "التسجيل كوكالة تأجير"}
                           </Button>
                         </form>
                       ) : (
@@ -479,7 +498,7 @@ export default function AgencyOnboarding() {
                           <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-700">{serverError}</p>
                         ) : null}
                         <Button type="submit" className="w-full" disabled={submitting}>
-                          {submitting ? "جاري الدخول..." : "دخول"}
+                          {submitting ? <><Loader2 className="ml-2 h-4 w-4 animate-spin" />جاري الدخول...</> : "دخول"}
                         </Button>
                         <button type="button" onClick={() => startLogin()} className="w-full text-center text-xs font-bold text-[#003580] hover:underline">
                           {t("partnerExistingLogin")}
