@@ -128,6 +128,14 @@ export default function Home() {
               <div className="flex flex-wrap items-center gap-4">
                 <Button
                   onClick={() => setLocation('/search')}
+                  className="b2-press bg-[#D4AF37] px-6 py-3 text-sm font-bold text-[#0A192F] shadow-md transition-colors hover:bg-[#c9a228]"
+                  style={{ borderRadius: '6px' }}
+                >
+                  <Search className="w-4 h-4" aria-hidden="true" />
+                  <span>{t('heroSearchCta')}</span>
+                </Button>
+                <Button
+                  onClick={() => setLocation('/search')}
                   variant="outline"
                   className="b2-press corner-cut-sm rounded-sm border border-border-default bg-bg-surface px-6 py-2.5 text-sm font-bold text-ink-primary hover:border-accent-clay hover:text-accent-clay shadow-xs"
                 >
