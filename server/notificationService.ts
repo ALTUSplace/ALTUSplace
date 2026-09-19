@@ -212,8 +212,8 @@ export type WhatsAppDeliveryResult =
  * flow is never blocked.
  */
 export async function sendWhatsAppText(to: string | null | undefined, body: string): Promise<WhatsAppDeliveryResult> {
-  const token = process.env.WHATSAPP_ACCESS_TOKEN;
-  const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
+  const token = process.env.WHATSAPP_ACCESS_TOKEN?.trim();
+  const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID?.trim();
   const normalized = to ? normalizeWhatsAppNumber(to) : null;
   if (!token || !phoneNumberId) {
     return { status: "skipped", reason: "whatsapp_provider_not_configured" };
@@ -238,6 +238,12 @@ export async function sendWhatsAppText(to: string | null | undefined, body: stri
     });
     if (!response.ok) {
       const detail = await response.text().catch(() => "");
+      if (response.status === 401) {
+        console.error(
+          `[WhatsApp] auth rejected (HTTP 401): WHATSAPP_ACCESS_TOKEN is present but Graph refused it — it is expired, revoked, or stale. Replace it with a fresh token from Meta (App > WhatsApp > API Setup).`,
+        );
+        return { status: "failed", reason: "provider_401_invalid_whatsapp_token" };
+      }
       console.warn(`[WhatsApp] Provider rejected message (${response.status})${detail ? `: ${detail.slice(0, 300)}` : ""}`);
       return { status: "failed", reason: `provider_${response.status}` };
     }

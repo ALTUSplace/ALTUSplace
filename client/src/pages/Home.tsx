@@ -63,7 +63,7 @@ export default function Home() {
       fuel: item.fuelType || t('fuelDieselPetrol'),
       seats: item.seats ? String(item.seats) : undefined
     }
-  })) : LISTINGS;
+  })) : LISTINGS.filter(item => item.type === 'car');
 
   const activeProperties = dbListings.length > 0 ? dbListings
     .filter(item => isPropertyCategory(item.category))
@@ -84,7 +84,7 @@ export default function Home() {
         rooms: item.rooms && item.rooms > 0 ? String(item.rooms) : undefined,
         area: item.area && item.area > 0 ? `${item.area} m²` : undefined,
       }
-    })) : [];
+    })) : LISTINGS.filter(item => item.type === 'property');
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();

@@ -21,6 +21,10 @@ export interface CatalogImageCaption {
 export interface CatalogItem {
   /** Stable slug used for referencing the entry in code/docs. */
   slug: string;
+  /** Optional showcase badge shown on the card (أفضل قيمة / فاخرة / 7 مقاعد / 4×4...). */
+  badge?: string;
+  /** Optional French badge label. */
+  badgeFr?: string;
   /** Marketplace listing title (Arabic, shown to renters). */
   title: string;
   /** French listing title. */
@@ -44,6 +48,10 @@ export interface CatalogItem {
   propertyType?: string;
   /** Office layout tag (private / coworking / meeting_room / company_headquarters). */
   officeType?: string;
+  /** Optional neighborhood/district badge shown on the card (e.g. المعاريف). */
+  neighborhood?: string;
+  /** Optional display date the listing was added (DD/MM/YYYY). */
+  dateAdded?: string;
 
   /** Arabic description. */
   description: string;
@@ -68,16 +76,18 @@ export interface CatalogItem {
   rooms?: number;
   area?: number;
   floor?: number;
+  /** Date the listing was added (UTC) — persisted as the `createdAt` column on seed. */
+  createdAt?: Date;
 }
 
 const APARTMENT_BUILDING =
   "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80";
 const APARTMENT_INTERIOR =
   "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80";
-const OFFICE_OPEN_SPACE =
-  "https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1200&q=80";
-const OFFICE_MEETING_ROOM =
-  "https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1200&q=80";
+const KITCHEN_MODERN =
+  "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?auto=format&fit=crop&w=1200&q=80";
+const BATHROOM_MARBLE =
+  "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=1200&q=80";
 const SUV_EXTERIOR =
   "https://images.unsplash.com/photo-1609521263047-f8f205293f24?auto=format&fit=crop&w=1200&q=80";
 const DASHBOARD_TOUCHSCREEN =
@@ -90,162 +100,164 @@ const WRANGLER_EXTERIOR =
   "https://images.unsplash.com/photo-1534445867742-43195f401b6c?auto=format&fit=crop&w=1200&q=80";
 const OFFROAD_ATLAS =
   "https://images.unsplash.com/photo-1590362891991-f776e747a588?auto=format&fit=crop&w=1200&q=80";
+const LUXURY_SEDAN_FRONT =
+  "https://images.unsplash.com/photo-1617531653332-bd46c24f2068?auto=format&fit=crop&w=1200&q=80";
+const PREMIUM_SUV_FRONT =
+  "https://images.unsplash.com/photo-1556189250-72ba954cfc2b?auto=format&fit=crop&w=1200&q=80";
+const LUXURY_GT_FRONT =
+  "https://images.unsplash.com/photo-1542362567-b07e54358753?auto=format&fit=crop&w=1200&q=80";
+const FAMILY_VAN_SIDE =
+  "https://images.unsplash.com/photo-1602143407151-7111542de6e8?auto=format&fit=crop&w=1200&q=80";
+const MINIBUS_TRAVEL =
+  "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=1200&q=80";
+/* Racine furnished apartment (براسين، الدار البيضاء) — local gallery photos. */
+const RACINE_SALON = "/property-photos/45856.jpg";
+const RACINE_KITCHEN = "/property-photos/45857.jpg";
+const RACINE_BEDROOM = "/property-photos/45858.jpg";
+const RACINE_BALCONY = "/property-photos/45861.jpg";
 
 /**
- * The five catalog groups (7 seed-ready rows because apartments and offices
- * ship two city variants each):
+ * The catalog showcase groups (two verified apartments + the car fleet):
  *
- *   1. شقة حديثة (2 غرف) — الدار البيضاء + تطوان
- *   2. مكتب تجاري عصري — الرباط + الدار البيضاء
- *   3. داسيا داستر 2026 — الدار البيضاء
- *   4. رونو كليو 2026 — مراكش
- *   5. جيب رانجلر 2025 — ورزازات
+ *   1. شقة مؤثثة 3 غرف (140 م²) — بوسيجور، الدار البيضاء (كراء يومي)
+ *   2. شقة مفروشة 60 م² — براسين، الدار البيضاء (كراء شهري)
+ *   3. أسطول 11 سيارة — دو مركبات 2024-2026 بأصناف متنوعة:
+ *      سانديرو / كليو 5 / بيجو 208 / توسان / CLA AMG / فان راحة 7 مقاعد /
+ *      أودي Q8 / رينج روفر إيفوك / مينيباص 14 مقعد / رينج روفر سبورت / كايين.
+ *
+ * Channels: property slugs used for real-estate detection (`isRealEstateCategory`),
+ * car slugs for the fleet (`isCarCategory` → shows seats/year/transmission/fuel).
  */
 export const CATALOG_ITEMS: CatalogItem[] = [
-  /* 1 — Modern apartment / شقة حديثة */
+  /* 1 — Verified daily-rental apartment / الشقة المعتمدة للكراء اليومي (بوسيجور) */
   {
-    slug: "modern-apartment-casablanca",
-    title: "شقة حديثة مطلة على شارع الدار البيضاء",
-    titleFr: "Appartement moderne à Casablanca",
+    slug: "beausejour-furnished-apartment-3-rooms",
+    badge: "معتمدة",
+    badgeFr: "Vérifié",
+    title: "شقة مؤثثة 3 غرف 140 م²",
+    titleFr: "Appartement meublé 3 chambres 140 m²",
     category: "شقة",
-    city: "الدار البيضاء",
-    lat: 33.5731,
-    lng: -7.5898,
-    pricePerDay: 400,
-    pricePerMonth: 9000,
-    rentalPeriod: "monthly",
+    city: "بوسيجور، الدار البيضاء",
+    neighborhood: "بوسيجور",
+    lat: 33.5869,
+    lng: -7.6095,
+    pricePerDay: 700,
+    rentalPeriod: "daily",
     propertyType: "شقة",
+    dateAdded: "01/09/2026",
     description:
-      "شقة عصرية فسيحة تضم غرفتي نوم وصالة معيشة واسعة ومطبخًا حديثًا مجهزًا بالكامل. تقع في منطقة راقية بالدار البيضاء على مقربة من المرافق والخدمات، ومثالية للعائلات والكراء الشهري.",
+      "شقة للكراء اليومي في بوسيجور، الدار البيضاء. اكتشفوا هذه الشقة الجميلة المعروضة للكراء اليومي، والواقعة في حي بوسيجور الراقي.",
     descriptionFr:
-      "Appartement moderne et spacieux avec 2 chambres, grand salon et cuisine équipée. Idéalement situé dans un quartier résidentiel de Casablanca, idéal pour les familles et la location mensuelle.",
-    features: ["غرفتا نوم", "صالة معيشة واسعة", "مطبخ عصري مجهز", "واي فاي", "تلفاز ذكي", "مكيف هواء", "موقف خاص"],
-    imageUrl: APARTMENT_BUILDING,
-    images: [APARTMENT_BUILDING, APARTMENT_INTERIOR],
+      "Appartement meublé en location journalière à Beauséjour, Casablanca. Découvrez ce bel appartement disponible à la location à la journée, situé dans le quartier huppé de Beauséjour.",
+    features: [
+      "صالة معيشة واسعة",
+      "مطبخ عصري مجهز بالكامل",
+      "حمام رخام فاخر",
+      "تصميم داخلي عصري راقٍ",
+      "واي فاي",
+      "مكيف هواء",
+      "كراء يومي",
+    ],
+    imageUrl: APARTMENT_INTERIOR,
+    images: [
+      APARTMENT_INTERIOR,
+      KITCHEN_MODERN,
+      BATHROOM_MARBLE,
+      APARTMENT_BUILDING,
+    ],
     imageCaptions: [
       {
-        url: APARTMENT_BUILDING,
-        captionAr: "واجهة عمارة سكنية مغربية عصرية بألوان دافئة ونوافذ كبيرة",
-        captionFr: "Façade d'un immeuble résidentiel marocain moderne",
+        url: APARTMENT_INTERIOR,
+        captionAr: "صالة معيشة واسعة بتصميم داخلي عصري راقٍ ومفروشة بالكامل",
+        captionFr:
+          "Grand salon au design intérieur contemporain, entièrement meublé",
       },
       {
-        url: APARTMENT_INTERIOR,
-        captionAr: "غرفة معيشة حديثة مفروشة بأريكة مريحة وإضاءة طبيعية",
-        captionFr: "Salon moderne entièrement meublé",
+        url: KITCHEN_MODERN,
+        captionAr: "مطبخ عصري مجهز بالكامل بأجهزة حديثة وخزائن راقية",
+        captionFr: "Cuisine moderne entièrement équipée",
       },
-    ],
-    rooms: 2,
-    area: 85,
-    floor: 2,
-  },
-  {
-    slug: "modern-apartment-tetouan",
-    title: "شقة حديثة قرب وسط تطوان",
-    titleFr: "Appartement moderne à Tétouan",
-    category: "شقة",
-    city: "تطوان",
-    lat: 35.5889,
-    lng: -5.3626,
-    pricePerDay: 350,
-    pricePerMonth: 7500,
-    rentalPeriod: "monthly",
-    propertyType: "شقة",
-    description:
-      "شقة عصرية قريبة من وسط تطوان، تضم غرفتي نوم وصالة واسعة ومطبخًا حديثًا. هادئة ومؤثثة بالكامل، مثالية للعائلات والطلاب وللكراء الشهري قرب البحر.",
-    descriptionFr:
-      "Appartement moderne près du centre de Tétouan : 2 chambres, grand salon et cuisine moderne. Calme et entièrement meublé, idéal pour familles, étudiants et location mensuelle.",
-    features: ["غرفتا نوم", "صالة معيشة واسعة", "مطبخ عصري مجهز", "واي فاي", "تلفاز ذكي", "مكيف هواء"],
-    imageUrl: APARTMENT_BUILDING,
-    images: [APARTMENT_BUILDING, APARTMENT_INTERIOR],
-    imageCaptions: [
+      {
+        url: BATHROOM_MARBLE,
+        captionAr: "حمام فاخر بتشطيبات رخامية راقية",
+        captionFr: "Salle de bain de luxe avec finitions en marbre",
+      },
       {
         url: APARTMENT_BUILDING,
-        captionAr: "واجهة عمارة سكنية مغربية عصرية بألوان دافئة ونوافذ كبيرة",
-        captionFr: "Façade d'un immeuble résidentiel marocain moderne",
-      },
-      {
-        url: APARTMENT_INTERIOR,
-        captionAr: "غرفة معيشة حديثة مفروشة بأريكة مريحة وإضاءة طبيعية",
-        captionFr: "Salon moderne entièrement meublé",
+        captionAr: "واجهة العمارة في حي بوسيجور الراقي بالدار البيضاء",
+        captionFr:
+          "Façade de l'immeuble dans le quartier de Beauséjour à Casablanca",
       },
     ],
-    rooms: 2,
-    area: 80,
-    floor: 3,
+    rooms: 3,
+    area: 140,
+    floor: 4,
+    createdAt: new Date("2026-09-01T00:00:00Z"),
   },
 
-  /* 2 — Modern office / مكتب تجاري */
+  /* 2 — Monthly furnished apartment in Racine / شقة مفروشة ببراسين */
   {
-    slug: "modern-office-rabat",
-    title: "مكتب تجاري عصري بجدران زجاجية في الرباط",
-    titleFr: "Bureau moderne avec parois vitrées à Rabat",
-    category: "مكتب",
-    city: "الرباط",
-    lat: 34.0209,
-    lng: -6.8416,
-    pricePerDay: 450,
+    slug: "furnished-apartment-racine-casablanca",
+    badge: "مفروشة بالكامل",
+    badgeFr: "Entièrement meublé",
+    title: "شقة مفروشة للإيجار في براسين (Racine) - 60 م²",
+    titleFr: "Appartement meublé à louer à Racine - 60 m²",
+    category: "شقة",
+    city: "براسين، الدار البيضاء",
+    neighborhood: "براسين",
+    lat: 33.5897,
+    lng: -7.623,
+    pricePerDay: 9500,
     pricePerMonth: 9500,
     rentalPeriod: "monthly",
-    propertyType: "مكتب",
-    officeType: "coworking",
+    propertyType: "شقة",
+    dateAdded: "20/09/2026",
     description:
-      "مكتب تجاري عصري في الرباط بتصميم مفتوح وجدران زجاجية، يشمل قاعة اجتماعات ومساحات عمل مهنية مجهزة بالكامل بمكاتب حديثة وإنترنت فايبر. خيار مثالي للشركات الناشئة والفرق المهنية.",
+      "استئجار شقة براسين. 3 قطع رائعة مفروشة بالكامل. اكتشف هذه الشقة المميزة للإيجار في حي راقي، مع راحة تامة وخدمات متكاملة وإطلالة جميلة من الشرفة.",
     descriptionFr:
-      "Bureau moderne à Rabat en open space avec parois vitrées : salle de réunion, postes de travail équipés, fibre. Idéal pour startups et équipes professionnelles.",
-    features: ["قاعة اجتماعات", "فضاء عمل مفتوح", "جدران زجاجية", "مكاتب مهنية حديثة", "استقبال", "فايبر", "مكيف هواء", "موقف سيارات"],
-    imageUrl: OFFICE_OPEN_SPACE,
-    images: [OFFICE_OPEN_SPACE, OFFICE_MEETING_ROOM],
+      "Location d'un appartement à Racine (Casablanca). 3 pièces magnifiques entièrement meublées. Découvrez cet appartement d'exception dans un quartier huppé, avec un confort total et une belle vue depuis le balcon.",
+    features: [
+      "مفروشة بالكامل",
+      "تكييف مركزي وتدفئة",
+      "حراسة وأمن مع نظام مراقبة",
+      "باب مصفح",
+      "زجاج مزدوج",
+      "مرآب",
+      "مسموح بدخول الحيوانات الأليفة",
+      "مصعد",
+      "شرفة",
+      "مطبخ مجهز بالكامل",
+      "حمام",
+      "صالون أوروبي عصري",
+    ],
+    imageUrl: RACINE_SALON,
+    images: [RACINE_SALON, RACINE_KITCHEN, RACINE_BEDROOM, RACINE_BALCONY],
     imageCaptions: [
       {
-        url: OFFICE_OPEN_SPACE,
-        captionAr: "فضاء عمل مفتوح بجدران زجاجية ومكاتب عمل عصرية",
-        captionFr: "Open space vitré avec postes de travail modernes",
+        url: RACINE_SALON,
+        captionAr: "صالون أوروبي عصري مفروش بأناقة مع إضاءة طبيعية",
+        captionFr: "Salon européen moderne entièrement meublé",
       },
       {
-        url: OFFICE_MEETING_ROOM,
-        captionAr: "قاعة اجتماعات زجاجية مجهزة بكراسي ومكاتب مهنية",
-        captionFr: "Salle de réunion vitrée équipée",
+        url: RACINE_KITCHEN,
+        captionAr: "مطبخ مجهز بالكامل بأجهزة حديثة وخزائن راقية",
+        captionFr: "Cuisine entièrement équipée",
+      },
+      {
+        url: RACINE_BEDROOM,
+        captionAr: "غرفة نوم مريحة مفروشة بسرير عصري وخزانة ملابس",
+        captionFr: "Chambre à coucher meublée et confortable",
+      },
+      {
+        url: RACINE_BALCONY,
+        captionAr: "شرفة بإطلالة جميلة على حي براسين الراقي",
+        captionFr: "Balcon avec vue sur le quartier de Racine",
       },
     ],
-    rooms: 2,
-    area: 120,
-    floor: 4,
-  },
-  {
-    slug: "modern-office-casablanca",
-    title: "مكتب تجاري عصري في قلب الدار البيضاء",
-    titleFr: "Bureau moderne en plein centre de Casablanca",
-    category: "مكتب",
-    city: "الدار البيضاء",
-    lat: 33.5897,
-    lng: -7.6036,
-    pricePerDay: 500,
-    pricePerMonth: 11000,
-    rentalPeriod: "monthly",
-    propertyType: "مكتب",
-    officeType: "coworking",
-    description:
-      "مكتب تجاري راقٍ في وسط الدار البيضاء مصمم بأسلوب مفتوح وجدران زجاجية، يضم قاعة اجتماعات ومساحة عمل مشتركة بمكاتب مهنية عصرية. موقع استراتيجي قرب المؤسسات والأعمال.",
-    descriptionFr:
-      "Bureau haut standing au centre de Casablanca : agencement open space et vitré, salle de réunion et espace partagé avec mobilier professionnel. Emplacement stratégique.",
-    features: ["قاعة اجتماعات", "فضاء عمل مفتوح", "جدران زجاجية", "مكاتب مهنية حديثة", "استقبال", "فايبر", "مكيف هواء", "موقف سيارات"],
-    imageUrl: OFFICE_OPEN_SPACE,
-    images: [OFFICE_OPEN_SPACE, OFFICE_MEETING_ROOM],
-    imageCaptions: [
-      {
-        url: OFFICE_OPEN_SPACE,
-        captionAr: "فضاء عمل مفتوح بجدران زجاجية ومكاتب عمل عصرية",
-        captionFr: "Open space vitré avec postes de travail modernes",
-      },
-      {
-        url: OFFICE_MEETING_ROOM,
-        captionAr: "قاعة اجتماعات زجاجية مجهزة بكراسي ومكاتب مهنية",
-        captionFr: "Salle de réunion vitrée équipée",
-      },
-    ],
-    rooms: 2,
-    area: 140,
-    floor: 5,
+    rooms: 1,
+    area: 60,
+    floor: 3,
+    createdAt: new Date("2026-09-20T00:00:00Z"),
   },
 
   /* 3 — Dacia Duster 2026 / داسيا داستر */
@@ -262,7 +274,14 @@ export const CATALOG_ITEMS: CatalogItem[] = [
       "داسيا داستر 2026 — السيارة الرياضية متعددة الاستعمالات الأكثر شعبية في المغرب. أداء قوي ومتانة عالية، مثالية للطرق الحضرية والرحلات خارج المدينة على حد سواء.",
     descriptionFr:
       "Dacia Duster 2026 — le SUV préféré au Maroc. Performances robustes et fiabilité, idéal aussi bien en ville que pour les escapades hors des villes.",
-    features: ["تكييف هواء", "شاشة لمس", "بلوتوث ونظام صوتي", "حساسات وقوف", "توصيل للمطار", "تأمين شامل"],
+    features: [
+      "تكييف هواء",
+      "شاشة لمس",
+      "بلوتوث ونظام صوتي",
+      "حساسات وقوف",
+      "توصيل للمطار",
+      "تأمين شامل",
+    ],
     imageUrl: SUV_EXTERIOR,
     images: [SUV_EXTERIOR, DASHBOARD_TOUCHSCREEN],
     imageCaptions: [
@@ -284,23 +303,33 @@ export const CATALOG_ITEMS: CatalogItem[] = [
   },
   {
     slug: "renault-clio-2026",
-    title: "رونو كليو 2026",
-    titleFr: "Renault Clio 2026",
+    title: "رونو كليو 5 2026",
+    titleFr: "Renault Clio 5 2026",
+    badge: "أفضل قيمة",
+    badgeFr: "Meilleure valeur",
     category: "سيارة اقتصادية / City",
     city: "مراكش",
     lat: 31.6295,
     lng: -7.9811,
     pricePerDay: 300,
     description:
-      "رونو كليو 2026 — السيارة الحضرية الأكثر طلبًا في المغرب. اقتصادية في الاستهلاك وسهلة القيادة في المدن، ومجهزة بشاشة لمس وأنظمة مساعدة حديثة. مثالية للتنقل اليومي والمطارات.",
+      "رونو كليو 5 2026 — الجيل الخامس من السيارة الحضرية الأكثر طلبًا في المغرب. اقتصادية في الاستهلاك، شاشة لمس ونظام صوتي عالي، مثالية للتنقل اليومي والمطارات. متوفرة بالفئة الأوتوماتيك الجديدة.",
     descriptionFr:
-      "Renault Clio 2026 — la citadine préférée au Maroc. Économique, agile en ville, dotée d'un écran tactile et d'aides à la conduite. Parfaite au quotidien et pour les transferts aéroport.",
-    features: ["اقتصادية في الوقود", "شاشة لمس", "بلوتوث ونظام صوتي", "تكييف هواء", "حساسات وقوف", "توصيل للمطار", "تأمين شامل"],
-    imageUrl: HATCHBACK_EXTERIOR,
-    images: [HATCHBACK_EXTERIOR, DASHBOARD_MODERN],
+      "Renault Clio 5 2026 — la 5e génération de la citadine la plus demandée au Maroc. Économique, écran tactile, système audio. Parfaite au quotidien et pour les transferts aéroport.",
+    features: [
+      "اقتصادية في الوقود",
+      "شاشة لمس",
+      "بلوتوث ونظام صوتي",
+      "تكييف هواء",
+      "حساسات وقوف",
+      "توصيل للمطار",
+      "تأمين شامل",
+    ],
+    imageUrl: SUV_EXTERIOR,
+    images: [SUV_EXTERIOR, DASHBOARD_MODERN],
     imageCaptions: [
       {
-        url: HATCHBACK_EXTERIOR,
+        url: SUV_EXTERIOR,
         captionAr: "الواجهة الخارجية لرونو كليو الفئة الحضرية",
         captionFr: "Extérieur de la Renault Clio (citadine)",
       },
@@ -313,6 +342,141 @@ export const CATALOG_ITEMS: CatalogItem[] = [
     seats: 5,
     year: 2026,
     transmission: "يدوي / أوتوماتيك",
+    fuelType: "بنزين",
+  },
+
+  /* 5 — Peugeot 208 2024 / بيجو 208 */
+  {
+    slug: "peugeot-208-2024",
+    title: "بيجو 208 2024",
+    titleFr: "Peugeot 208 2024",
+    badge: "أفضل قيمة",
+    badgeFr: "Meilleure valeur",
+    category: "سيارة اقتصادية / City",
+    city: "الدار البيضاء",
+    lat: 33.5731,
+    lng: -7.5898,
+    pricePerDay: 320,
+    description:
+      "بيجو 208 2024 — التصميم الفرنسي الأنيق بتقنيات حديثة. مقصورة عصرية بتصميم i-Cockpit، شاشة لمس واقتصادية في الوقود. مثالية للمدينة والضواحي مع أنظمة مساعدة للقيادة.",
+    descriptionFr:
+      "Peugeot 208 2024 — le design français élégant avec technologies modernes. Habitacle i-Cockpit, écran tactile, économique. Idéale en ville et en banlieue.",
+    features: [
+      "تصميم i-Cockpit",
+      "شاشة لمس",
+      "اقتصادية في الوقود",
+      "تكييف هواء",
+      "بلوتوث",
+      "توصيل للمطار",
+      "تأمين شامل",
+    ],
+    imageUrl: HATCHBACK_EXTERIOR,
+    images: [HATCHBACK_EXTERIOR, DASHBOARD_MODERN],
+    imageCaptions: [
+      {
+        url: HATCHBACK_EXTERIOR,
+        captionAr: "الواجهة الخارجية لبيجو 208 بتصميم فرنسي أنيق",
+        captionFr: "Extérieur de la Peugeot 208",
+      },
+      {
+        url: DASHBOARD_MODERN,
+        captionAr: "لوحة قيادة i-Cockpit مع شاشة لمس عصرية",
+        captionFr: "Tableau de bord i-Cockpit avec écran tactile",
+      },
+    ],
+    seats: 5,
+    year: 2024,
+    transmission: "أوتوماتيك",
+    fuelType: "بنزين",
+  },
+
+  /* 6 — Hyundai Tucson 2022 / هيونداي توسان SUV */
+  {
+    slug: "hyundai-tucson-2022",
+    title: "هيونداي توسان 2022",
+    titleFr: "Hyundai Tucson 2022",
+    badge: "4×4 SUV",
+    badgeFr: "4x4 SUV",
+    category: "سيارة رباعية / SUV",
+    city: "الرباط",
+    lat: 34.0209,
+    lng: -6.8416,
+    pricePerDay: 700,
+    description:
+      "هيونداي توسان 2022 — السيارة الرياضية متعددة الاستعمالات بسعة عائلية واسعة. محرك اقتصادي، أنظمة أمان حديثة وتصميم هندسي أنيق. مثالية للرحلات العائلية والطرق الجبلية.",
+    descriptionFr:
+      "Hyundai Tucson 2022 — SUV familial spacieux. Moteur économique, systèmes de sécurité modernes et design anguleux. Parfait pour les escapades en famille.",
+    features: [
+      "دفع رباعي / 4x4",
+      "تكييف هواء",
+      "شاشة لمس",
+      "أنظمة أمان حديثة",
+      "بلوتوث",
+      "توصيل للمطار",
+      "تأمين شامل",
+    ],
+    imageUrl: OFFROAD_ATLAS,
+    images: [OFFROAD_ATLAS, DASHBOARD_TOUCHSCREEN],
+    imageCaptions: [
+      {
+        url: OFFROAD_ATLAS,
+        captionAr: "هيونداي توسان على الطرق الجبلية بفئة الدفع الرباعي",
+        captionFr: "Hyundai Tucson sur routes de montagne (4x4)",
+      },
+      {
+        url: DASHBOARD_TOUCHSCREEN,
+        captionAr: "لوحة قيادة بشاشة لمس ونظام معلومات حديث",
+        captionFr: "Tableau de bord avec écran tactile",
+      },
+    ],
+    seats: 5,
+    year: 2022,
+    transmission: "أوتوماتيك",
+    fuelType: "بنزين",
+  },
+
+  /* 7 — Mercedes CLA AMG 2023 / مرسيدس CLA */
+  {
+    slug: "mercedes-cla-amg-2023",
+    title: "مرسيدس CLA AMG 2023",
+    titleFr: "Mercedes CLA AMG 2023",
+    badge: "فاخرة",
+    badgeFr: "Premium",
+    category: "سيارة فاخرة / Coupé",
+    city: "الدار البيضاء",
+    lat: 33.5731,
+    lng: -7.5898,
+    pricePerDay: 1200,
+    description:
+      "مرسيدس CLA AMG 2023 — الفخامة الرياضية بتصميم كوبيه أنيق وأداء استثنائي لقى 300 حصان. مقصورة مكسوة بالجلد مع تقنيات MBUX. مثالية للمناسبات الخاصة والقيادة الفاخرة.",
+    descriptionFr:
+      "Mercedes CLA AMG 2023 — le luxe sportif en coupé élégant : 300 ch, intérieur cuir, technologie MBUX. Parfaite pour les occasions spéciales.",
+    features: [
+      "300 حصان",
+      "تصميم كوبيه",
+      "مقصورة جلد فاخرة",
+      "شاشة MBUX مزدوجة",
+      "تكييف",
+      "توصيل للمطار",
+      "تأمين شامل",
+    ],
+    imageUrl: OFFROAD_ATLAS,
+    images: [OFFROAD_ATLAS, DASHBOARD_TOUCHSCREEN],
+    imageCaptions: [
+      {
+        url: OFFROAD_ATLAS,
+        captionAr: "الواجهة الأمامية لمرسيدس CLA AMG الفاخرة",
+        captionFr: "Avant de la Mercedes CLA AMG",
+      },
+      {
+        url: DASHBOARD_TOUCHSCREEN,
+        captionAr: "شاشة MBUX مزدوجة ومقصورة فاخرة",
+        captionFr: "Écrans MBUX et habitacle premium",
+      },
+    ],
+    seats: 5,
+    year: 2023,
+    transmission: "أوتوماتيك",
     fuelType: "بنزين",
   },
 
@@ -330,7 +494,14 @@ export const CATALOG_ITEMS: CatalogItem[] = [
       "جيب رانجلر 2025 — مركبة المغامرات الأوف-رود المصممة للمناظر المغربية: جبال الأطلس والصحراء. قدرة دفع رباعي استثنائية مع راحة حديثة، مثالية للرحلات الاستكشافية نحو ورزازات وأيت بن حدو والكثبان الرملية.",
     descriptionFr:
       "Jeep Wrangler 2025 — le 4x4 d'aventure taillé pour les paysages marocains : montagnes de l'Atlas et désert. Capacités hors-piste exceptionnelles, idéale pour les expéditions vers Ouarzazate, Aït Ben Haddou et les dunes.",
-    features: ["دفع رباعي", "تكييف هواء", "شاشة لمس", "بلوتوث", "توصيل للمطار", "تأمين شامل"],
+    features: [
+      "دفع رباعي",
+      "تكييف هواء",
+      "شاشة لمس",
+      "بلوتوث",
+      "توصيل للمطار",
+      "تأمين شامل",
+    ],
     imageUrl: WRANGLER_EXTERIOR,
     images: [WRANGLER_EXTERIOR, OFFROAD_ATLAS],
     imageCaptions: [
@@ -354,5 +525,5 @@ export const CATALOG_ITEMS: CatalogItem[] = [
 
 /** Cover URLs for quick lookups (slug → imageUrl). */
 export const CATALOG_COVER_BY_SLUG: Record<string, string> = Object.fromEntries(
-  CATALOG_ITEMS.map((item) => [item.slug, item.imageUrl]),
+  CATALOG_ITEMS.map(item => [item.slug, item.imageUrl])
 );

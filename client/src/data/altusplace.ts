@@ -125,44 +125,31 @@ export const LISTINGS: ListingItem[] = [
     providerId: 'p4',
     providerName: 'ALTUSplace — كتالوج العرض 2026',
     type: 'property',
-    title: 'شقة حديثة مطلة على شارع الدار البيضاء',
-    titleFr: 'Appartement moderne à Casablanca',
+    title: 'شقة مؤثثة 3 غرف 140 م²',
+    titleFr: 'Appartement meublé 3 chambres 140 m² — Beauséjour, Casablanca',
     category: 'شقة',
-    city: 'الدار البيضاء',
-    pricePerUnit: 9000,
-    unitLabel: 'درهم / شهر',
-    image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80',
+    city: 'بوسيجور، الدار البيضاء',
+    pricePerUnit: 700,
+    unitLabel: 'درهم / يوم',
+    image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80',
     images: [
-      'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80'
+      'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80'
     ],
-    features: ['غرفتا نوم', 'صالة معيشة واسعة', 'مطبخ عصري مجهز', 'واي فاي', 'تلفاز ذكي', 'مكيف هواء', 'موقف خاص'],
-    description: 'شقة عصرية فسيحة تضم غرفتي نوم وصالة معيشة واسعة ومطبخًا حديثًا مجهزًا بالكامل. مثالية للعائلات والكراء الشهري.',
-    rentalTerms: ['monthly'],
-    specs: { rooms: 'غرفتان', area: '85 م²', bathrooms: '1 حمام' }
-  },
-  {
-    id: 'l5',
-    providerId: 'p4',
-    providerName: 'ALTUSplace — كتالوج العرض 2026',
-    type: 'office',
-    title: 'مكتب تجاري عصري بجدران زجاجية في الرباط',
-    titleFr: 'Bureau moderne avec parois vitrées à Rabat',
-    category: 'مكتب',
-    city: 'الرباط',
-    pricePerUnit: 9500,
-    unitLabel: 'درهم / شهر',
-    image: 'https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=800&q=80',
-    images: [
-      'https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=800&q=80'
+    features: [
+      'صالة معيشة واسعة',
+      'مطبخ عصري مجهز بالكامل',
+      'حمام رخام فاخر',
+      'تصميم داخلي عصري راقٍ',
+      'واي فاي',
+      'مكيف هواء',
+      'كراء يومي'
     ],
-    features: ['قاعة اجتماعات', 'فضاء عمل مفتوح', 'جدران زجاجية', 'مكاتب مهنية حديثة', 'استقبال', 'فايبر', 'مكيف هواء', 'موقف سيارات'],
-    description: 'مكتب تجاري عصري في الرباط بتصميم مفتوح وجدران زجاجية، يشمل قاعة اجتماعات ومساحات عمل مهنية مجهزة بالكامل.',
-    officeType: 'coworking',
-    amenities: ['fiber', 'air_conditioning', 'reception', 'parking'],
-    rentalTerms: ['daily', 'monthly', 'yearly'],
-    specs: { area: '120 م²', rooms: 'مكتبان' }
+    description: 'شقة للكراء اليومي في بوسيجور، الدار البيضاء. اكتشفوا هذه الشقة الجميلة المعروضة للكراء اليومي، والواقعة في حي بوسيجور الراقي.',
+    rentalTerms: ['daily'],
+    specs: { rooms: '3 غرف', area: '140 م²', bathrooms: '1 حمام رخام فاخر' }
   },
   {
     id: 'l6',

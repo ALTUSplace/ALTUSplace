@@ -62,7 +62,7 @@ function mapStaticToDetail(item: ListingItem): PropertyDetailShape {
     description: item.description,
     descriptionFr: item.descriptionFr ?? null,
     imageUrl: item.image,
-    images: item.image ? [item.image] : [],
+    images: item.images?.length ? item.images : item.image ? [item.image] : [],
     city: item.city,
     status: "متاح",
     pricePerDay: item.pricePerUnit,

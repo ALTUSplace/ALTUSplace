@@ -7,8 +7,8 @@ import { CATALOG_ITEMS } from "../client/src/data/catalog";
 /**
  * Demo catalog seed — mirrors the static LISTINGS in client/src/data/altusplace.ts
  * and supplements them with the structured CATALOG_ITEMS dataset
- * (client/src/data/catalog.ts) — the 5 modern showcase entries (apartments,
- * offices, Dacia Duster 2026, Renault Clio 2026, Jeep Wrangler 2025).
+ * (client/src/data/catalog.ts) — the single verified daily-rental apartment
+ * (Beauséjour) plus the Dacia Duster 2026, Renault Clio 2026, Jeep Wrangler 2025.
  *
  * Runs once per boot when the `listings` table is empty and a DATABASE_URL is
  * configured, so the marketplace (Search, filtering, car detail, and real
@@ -51,40 +51,27 @@ const EXISTING_DEMO_LISTINGS: DemoListingRow[] = [
     amenities: "اقتصادية جداً في الوقود, حساسات وقوف, بلوتوث ونظام صوتي متطور, تكييف هواء",
   },
   {
-    title: "شقة في الدار البيضاء",
-    description: "شقة مفروشة بالكامل وقريبة من وسط المدينة، مثالية للعائلات والكراء الشهري.",
+    title: "شقة مؤثثة 3 غرف 140 م²",
+    description: "شقة للكراء اليومي في بوسيجور، الدار البيضاء. اكتشفوا هذه الشقة الجميلة المعروضة للكراء اليومي، والواقعة في حي بوسيجور الراقي.",
     category: "شقة",
-    pricePerDay: 800,
-    imageUrl: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80",
+    pricePerDay: 700,
+    imageUrl: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80",
     images: [
+      "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=1200&q=80",
       "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80",
-      "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80",
     ],
-    city: "الدار البيضاء",
+    city: "بوسيجور، الدار البيضاء",
+    lat: 33.5869,
+    lng: -7.6095,
     rooms: 3,
-    area: 95,
-    floor: 2,
+    area: 140,
+    floor: 4,
     propertyType: "شقة",
-    rentalPeriod: "monthly",
-    pricePerMonth: 12000,
-  },
-  {
-    title: "شقة مفروشة بأكادير",
-    description: "شقة واسعة ومريحة، مثالية للإقامات الطويلة والكراء الشهري.",
-    category: "شقة",
-    pricePerDay: 600,
-    imageUrl: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=1200&q=80",
-    images: [
-      "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=1200&q=80",
-      "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80",
-    ],
-    city: "أغادير",
-    rooms: 2,
-    area: 70,
-    floor: 3,
-    propertyType: "شقة",
-    rentalPeriod: "monthly",
-    pricePerMonth: 9000,
+    rentalPeriod: "daily",
+    amenities: "صالة معيشة واسعة, مطبخ عصري مجهز بالكامل, حمام رخام فاخر, تصميم داخلي عصري راقٍ, واي فاي, مكيف هواء, كراء يومي",
+    createdAt: new Date("2026-09-01T00:00:00Z"),
   },
 ];
 
@@ -111,6 +98,7 @@ const CATALOG_ROWS: DemoListingRow[] = CATALOG_ITEMS.map((item) => ({
   transmission: item.transmission,
   fuelType: item.fuelType,
   amenities: item.features.join(", "),
+  ...(item.createdAt ? { createdAt: item.createdAt } : {}),
 }));
 
 const DEMO_LISTINGS: DemoListingRow[] = [...EXISTING_DEMO_LISTINGS, ...CATALOG_ROWS];
