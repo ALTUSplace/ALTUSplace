@@ -148,7 +148,7 @@ function NavSelector({
               className={`flex min-h-9 w-full items-center justify-between gap-2 rounded-sm px-3 text-xs font-bold transition-colors duration-150 ${
                 option.current
                   ? "bg-accent-clay-soft text-accent-clay"
-                  : "text-ink-secondary hover:bg-bg-muted hover:text-ink-primary"
+                  : "text-white/80 hover:bg-white/10 hover:text-white"
               }`}
             >
               <span>{option.label}</span>
@@ -370,12 +370,12 @@ export default function Navbar() {
               ? `flex min-h-11 items-center gap-3 rounded-sm px-4 py-3 text-sm font-bold transition-colors ${
                   active
                     ? "bg-accent-clay text-white"
-                    : "text-ink-secondary hover:bg-bg-muted hover:text-ink-primary"
+                    : "text-white/80 hover:bg-white/10 hover:text-white"
                 }`
               : `flex items-center gap-1.5 rounded-sm border px-2.5 py-2 text-xs font-bold transition-colors ${
                   active
                     ? "border-border-default bg-accent-clay-soft text-accent-clay"
-                    : "border-transparent text-ink-secondary hover:bg-bg-muted hover:text-ink-primary"
+                    : "border-transparent text-white/65 hover:bg-white/10 hover:text-white"
                 }`
           }
           aria-current={active ? "page" : undefined}
@@ -389,7 +389,7 @@ export default function Navbar() {
   return (
     <>
       <header
-        className="sticky top-0 z-50 border-b border-border-subtle bg-bg-base/85 text-ink-primary shadow-xs backdrop-blur-xl supports-[backdrop-filter]:bg-bg-base/75"
+        className="sticky top-0 z-50 border-b border-white/10 bg-[var(--brand-navy)] text-white shadow-xs backdrop-blur-xl supports-[backdrop-filter]:bg-[var(--brand-navy)]/90"
         dir={direction}
       >
         <div className="container mx-auto flex h-16 sm:h-20 items-center justify-between gap-2 sm:gap-4 px-3 sm:px-4">
@@ -633,7 +633,7 @@ export default function Navbar() {
                 <p className="mb-2 flex items-center gap-1.5 text-xs font-bold text-ink-secondary"><Coins className="h-3.5 w-3.5 text-accent-clay" /> {t("currency")}</p>
                 <div className="b2-segmented-control w-full">
                   {(["MAD", "EUR", "USD"] as Currency[]).map((item) => (
-                    <button key={item} type="button" aria-pressed={currency === item} onClick={() => selectCurrency(item)} className={currency === item ? "bg-accent-clay text-white" : "text-ink-secondary hover:bg-bg-muted hover:text-ink-primary"}>{item}</button>
+                    <button key={item} type="button" aria-pressed={currency === item} onClick={() => selectCurrency(item)} className={currency === item ? "bg-accent-clay text-white" : "text-white/80 hover:bg-white/10 hover:text-white"}>{item}</button>
                   ))}
                 </div>
               </div>
@@ -642,7 +642,7 @@ export default function Navbar() {
                 <p className="mb-2 flex items-center gap-1.5 text-xs font-bold text-ink-secondary"><Globe className="h-3.5 w-3.5 text-accent-clay" /> {t("language")}</p>
                 <div className="b2-segmented-control w-full">
                   {(["ar", "fr", "en"] as const).map((item) => (
-                    <button key={item} type="button" aria-pressed={language === item} onClick={() => selectLanguage(item)} className={language === item ? "bg-accent-clay text-white" : "text-ink-secondary hover:bg-bg-muted hover:text-ink-primary"}>{item === "ar" ? t("arabic") : item === "fr" ? t("french") : t("english")}</button>
+                    <button key={item} type="button" aria-pressed={language === item} onClick={() => selectLanguage(item)} className={language === item ? "bg-accent-clay text-white" : "text-white/80 hover:bg-white/10 hover:text-white"}>{item === "ar" ? t("arabic") : item === "fr" ? t("french") : t("english")}</button>
                   ))}
                 </div>
               </div>
