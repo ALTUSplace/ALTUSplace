@@ -114,14 +114,14 @@ function CatalogCard({ item }: { item: CatalogItem }) {
           ))}
         </div>
 
+        <span className="absolute start-3 top-3 inline-flex items-center rounded-full bg-bg-surface/95 px-3 py-1 text-[11px] font-extrabold text-ink-primary shadow-sm border border-border-subtle">
+          {car ? "سيارة · Car" : "عقار · Property"}
+        </span>
         {item.badge && (
-          <span className="absolute start-3 top-3 inline-flex items-center rounded-full bg-accent-clay px-3 py-1 text-[11px] font-extrabold text-white shadow-sm">
+          <span className="absolute end-3 top-3 inline-flex items-center rounded-full bg-accent-clay px-3 py-1 text-[11px] font-extrabold text-white shadow-sm">
             {item.badge}
           </span>
         )}
-        <span className="absolute end-3 top-3 inline-flex items-center rounded-full bg-bg-surface/95 px-3 py-1 text-[11px] font-extrabold text-ink-primary shadow-sm border border-border-subtle">
-          {car ? "سيارة · Car" : "عقار · Property"}
-        </span>
 
         {/* Prominent price badge */}
         <div className="absolute bottom-3 left-3 inline-flex items-baseline gap-1.5 rounded-full bg-bg-surface/92 px-3.5 py-1.5 shadow-lg backdrop-blur-md ring-1 ring-white/25">
