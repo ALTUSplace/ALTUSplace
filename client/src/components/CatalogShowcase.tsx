@@ -126,7 +126,7 @@ function CatalogCard({ item }: { item: CatalogItem }) {
         {/* Prominent price badge */}
         <div className="absolute bottom-3 left-3 inline-flex items-baseline gap-1.5 rounded-full bg-bg-surface/92 px-3.5 py-1.5 shadow-lg backdrop-blur-md ring-1 ring-white/25">
           <span className="text-lg font-extrabold leading-none text-accent-clay">
-            {price.amount.toLocaleString("fr-MA")}
+            {price?.amount?.toLocaleString("fr-MA") ?? "0"}
           </span>
           <span className="text-[11px] font-bold text-ink-primary">
             {price.unit}
