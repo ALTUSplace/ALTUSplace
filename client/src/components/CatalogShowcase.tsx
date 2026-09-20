@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { Link } from "wouter";
 import { MapPin, ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
 import { CATALOG_ITEMS, type CatalogItem } from "@/data/catalog";
@@ -8,7 +8,7 @@ import { OptimizedImage } from "@/components/OptimizedImage";
 /**
  * Static showcase of the ALTUSplace 2026 catalog (client/src/data/catalog.ts).
  *
- * Rendered directly from the local dataset — not from the database — so the
+ * Rendered directly from the local dataset â€” not from the database â€” so the
  * modern showcase entries (apartments, Duster 2026, Clio 2026,
  * Wrangler 2025) are ALWAYS visible on the homepage regardless of seeding or
  * database availability. Cards deep-link to the search experience.
@@ -21,13 +21,13 @@ export function CatalogShowcase() {
   return (
     <section className="py-10 md:py-16 px-4 container mx-auto max-w-6xl">
       <div className="mb-8 md:mb-10 flex flex-col gap-2">
-        <span className="section-index">Catalog 2026 · كتالوج 2026</span>
+        <span className="section-index">Catalog 2026 Â· ÙƒØªØ§Ù„ÙˆØ¬ 2026</span>
         <h2 className="text-2xl md:text-3xl font-bold text-ink-primary">
-          أحدث عروض كتالوج ALTUSplace
+          Ø£Ø­Ø¯Ø« Ø¹Ø±ÙˆØ¶ ÙƒØªØ§Ù„ÙˆØ¬ ALTUSplace
         </h2>
         <p className="text-ink-secondary text-sm leading-relaxed max-w-2xl">
-          شقة معتمدة للكراء اليومي وسيارات 2026 محدثة — مواقع دقيقة ومواصفات
-          دقيقة وصور حية.
+          Ø´Ù‚Ø© Ù…Ø¹ØªÙ…Ø¯Ø© Ù„Ù„ÙƒØ±Ø§Ø¡ Ø§Ù„ÙŠÙˆÙ…ÙŠ ÙˆØ³ÙŠØ§Ø±Ø§Øª 2026 Ù…Ø­Ø¯Ø«Ø© â€” Ù…ÙˆØ§Ù‚Ø¹ Ø¯Ù‚ÙŠÙ‚Ø© ÙˆÙ…ÙˆØ§ØµÙØ§Øª
+          Ø¯Ù‚ÙŠÙ‚Ø© ÙˆØµÙˆØ± Ø­ÙŠØ©.
         </p>
       </div>
 
@@ -69,12 +69,12 @@ function CatalogCard({ item }: { item: CatalogItem }) {
   );
   const activeImage = images[safeSlide];
   const altText =
-    item.imageCaptions.find(caption => caption.url === activeImage)
+    (item.imageCaptions ?? []).find((caption) => caption.url === activeImage)
       ?.captionAr ?? item.title;
   const price =
     property && !!item.pricePerMonth
-      ? { amount: item.pricePerMonth, unit: "درهم / شهر" }
-      : { amount: item.pricePerDay, unit: "درهم / يوم" };
+      ? { amount: item.pricePerMonth, unit: "Ø¯Ø±Ù‡Ù… / Ø´Ù‡Ø±" }
+      : { amount: item.pricePerDay, unit: "Ø¯Ø±Ù‡Ù… / ÙŠÙˆÙ…" };
 
   return (
     <article
@@ -98,7 +98,7 @@ function CatalogCard({ item }: { item: CatalogItem }) {
                 <OptimizedImage
                   src={src}
                   alt={
-                    item.imageCaptions.find(caption => caption.url === src)
+                    (item.imageCaptions ?? []).find((caption) => caption.url === src)
                       ?.captionAr ?? item.title
                   }
                   widthHint={760}
@@ -115,7 +115,7 @@ function CatalogCard({ item }: { item: CatalogItem }) {
         </div>
 
         <span className="absolute start-3 top-3 inline-flex items-center rounded-full bg-bg-surface/95 px-3 py-1 text-[11px] font-extrabold text-ink-primary shadow-sm border border-border-subtle">
-          {car ? "سيارة · Car" : "عقار · Property"}
+          {car ? "Ø³ÙŠØ§Ø±Ø© Â· Car" : "Ø¹Ù‚Ø§Ø± Â· Property"}
         </span>
         {item.badge && (
           <span className="absolute end-3 top-3 inline-flex items-center rounded-full bg-accent-clay px-3 py-1 text-[11px] font-extrabold text-white shadow-sm">
@@ -141,7 +141,7 @@ function CatalogCard({ item }: { item: CatalogItem }) {
                 e.stopPropagation();
                 goTo(-1);
               }}
-              aria-label="الصورة السابقة"
+              aria-label="Ø§Ù„ØµÙˆØ±Ø© Ø§Ù„Ø³Ø§Ø¨Ù‚Ø©"
               className="absolute left-2 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-bg-surface/85 shadow-sm backdrop-blur-sm transition-all duration-200 opacity-0 group-hover:opacity-100 hover:bg-bg-surface hover:scale-110"
             >
               <ChevronLeft className="h-4 w-4 text-ink-primary" />
@@ -152,7 +152,7 @@ function CatalogCard({ item }: { item: CatalogItem }) {
                 e.stopPropagation();
                 goTo(1);
               }}
-              aria-label="الصورة التالية"
+              aria-label="Ø§Ù„ØµÙˆØ±Ø© Ø§Ù„ØªØ§Ù„ÙŠØ©"
               className="absolute right-2 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-bg-surface/85 shadow-sm backdrop-blur-sm transition-all duration-200 opacity-0 group-hover:opacity-100 hover:bg-bg-surface hover:scale-110"
             >
               <ChevronRight className="h-4 w-4 text-ink-primary" />
@@ -166,7 +166,7 @@ function CatalogCard({ item }: { item: CatalogItem }) {
                     e.stopPropagation();
                     setActiveSlide(i);
                   }}
-                  aria-label={`الانتقال إلى الصورة ${i + 1}`}
+                  aria-label={`Ø§Ù„Ø§Ù†ØªÙ‚Ø§Ù„ Ø¥Ù„Ù‰ Ø§Ù„ØµÙˆØ±Ø© ${i + 1}`}
                   className={`h-1.5 rounded-full transition-all duration-300 ${i === safeSlide ? "w-4 bg-white" : "w-1.5 bg-white/50 hover:bg-white/80"}`}
                 />
               ))}
@@ -207,21 +207,21 @@ function CatalogCard({ item }: { item: CatalogItem }) {
         <div className="mt-auto space-y-2 pt-1">
           {car && (
             <p className="text-[11px] font-bold text-ink-tertiary">
-              {item.transmission} · {item.seats} مقاعد · {item.fuelType}
+              {item.transmission} Â· {item.seats} Ù…Ù‚Ø§Ø¹Ø¯ Â· {item.fuelType}
             </p>
           )}
           {property && (
             <p className="text-[11px] font-bold text-ink-tertiary">
-              {!!item.rooms && item.rooms > 0 ? `${item.rooms} غرف · ` : ""}
-              {!!item.area && item.area > 0 ? `${item.area} m² · ` : ""}
-              {!!item.floor && item.floor > 0 ? `الطابق ${item.floor}` : "شقة"}
+              {!!item.rooms && item.rooms > 0 ? `${item.rooms} ØºØ±Ù Â· ` : ""}
+              {!!item.area && item.area > 0 ? `${item.area} mÂ² Â· ` : ""}
+              {!!item.floor && item.floor > 0 ? `Ø§Ù„Ø·Ø§Ø¨Ù‚ ${item.floor}` : "Ø´Ù‚Ø©"}
             </p>
           )}
           <Link
             href={property ? "/search?type=property" : "/search?type=car"}
             className="b2-press mt-1 inline-flex w-full items-center justify-center gap-2 rounded-full bg-accent-clay px-4 py-2.5 text-xs font-extrabold text-white shadow-[var(--shadow-clay)] transition-colors hover:bg-accent-clay-hover"
           >
-            {property ? "عرض التفاصيل والحجز" : "التفاصيل والحجز"}
+            {property ? "Ø¹Ø±Ø¶ Ø§Ù„ØªÙØ§ØµÙŠÙ„ ÙˆØ§Ù„Ø­Ø¬Ø²" : "Ø§Ù„ØªÙØ§ØµÙŠÙ„ ÙˆØ§Ù„Ø­Ø¬Ø²"}
             <ArrowLeft className="h-3.5 w-3.5" />
           </Link>
         </div>
