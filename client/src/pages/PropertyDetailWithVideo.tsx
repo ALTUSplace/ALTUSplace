@@ -71,7 +71,7 @@ function mapStaticToDetail(item: ListingItem): PropertyDetailShape {
     propertyType: null,
     category: item.category,
     rooms: Number.isNaN(roomsNumber) ? null : roomsNumber,
-    rentalPeriod: item.rentalTerms?.[0] ?? null,
+    rentalPeriod: (["daily", "monthly", "yearly"] as const).find((p) => p === item.rentalTerms?.[0]) ?? null,
     amenities,
   };
 }

@@ -24,7 +24,7 @@ export interface ListingItem {
   id: string;
   providerId: string;
   providerName: string;
-  type: 'property';
+  type: 'property' | 'car';
   title: string;
   titleFr?: string;
   category: string;
@@ -35,10 +35,21 @@ export interface ListingItem {
   images: string[];
   features: string[];
   description: string;
+  rating?: number;
+  reviewCount?: number;
+  amenities?: string[];
+  descriptionFr?: string;
+  officeType?: string;
+  rentalTerms?: string;
   specs: {
     rooms?: string;
     area?: string;
     bathrooms?: string;
+    transmission?: string;
+    fuel?: string;
+    fuelType?: string;
+    seats?: string | number;
+    year?: number;
   };
 }
 

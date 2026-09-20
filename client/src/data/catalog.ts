@@ -22,7 +22,7 @@ export type PropertyType =
 export interface CatalogItem {
   id: string;
   slug: string;
-  type: "property";
+  type: "property" | "car";
   propertyType: PropertyType;
   title: string;
   titleFr: string;
@@ -36,6 +36,17 @@ export interface CatalogItem {
   description: string;
   descriptionFr?: string;
   features: string[];
+  imageUrl?: string;
+  transmission?: string;
+  seats?: number | string;
+  fuelType?: string;
+  imageCaptions?: { url: string; captionAr?: string }[];
+  pricePerMonth?: number;
+  pricePerDay?: number;
+  badge?: string;
+  rooms?: number;
+  area?: number;
+  floor?: number;
   specs: {
     rooms: string;
     area: string;
