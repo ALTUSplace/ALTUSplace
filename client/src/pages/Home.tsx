@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { Link, useLocation } from 'wouter';
 import { trpc } from '@/lib/trpc';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -63,7 +63,7 @@ export default function Home() {
       fuel: item.fuelType || t('fuelDieselPetrol'),
       seats: item.seats ? String(item.seats) : undefined
     }
-  })) : LISTINGS.filter(item => item.type === 'car');
+  })) : [];
 
   const activeProperties = dbListings.length > 0 ? dbListings
     .filter(item => isPropertyCategory(item.category))
@@ -351,14 +351,14 @@ export default function Home() {
               pricePerDay={item.pricePerUnit}
               images={item.images}
               type="car"
-              rating={item.rating}
-              reviewCount={item.reviewCount}
+              rating={(item as { rating?: number }).rating ?? 0}
+              reviewCount={(item as { reviewCount?: number }).reviewCount ?? 0}
               startDate={pickupDate || undefined}
               endDate={dropoffDate || undefined}
               specs={{
-                transmission: item.specs?.transmission,
-                fuel: item.specs?.fuel,
-                seats: item.specs?.seats ? Number(item.specs.seats) : undefined,
+                transmission: (item as { specs?: { transmission?: string } }).specs?.transmission,
+                fuel: (item as { specs?: { fuel?: string } }).specs?.fuel,
+                seats: (item as { specs?: { seats?: string } }).specs?.seats ? Number((item as { specs?: { seats?: string } }).specs?.seats) : undefined,
                 year: (item as { year?: number }).year ?? undefined,
               }}
               className={`stagger-${Math.min(index + 1, 8)} animate-fade-up`}
@@ -386,8 +386,8 @@ export default function Home() {
                 pricePerDay={item.pricePerUnit}
                 images={item.images}
                 type="property"
-                rating={item.rating}
-                reviewCount={item.reviewCount}
+                rating={(item as { rating?: number }).rating ?? 0}
+                reviewCount={(item as { reviewCount?: number }).reviewCount ?? 0}
                 startDate={pickupDate || undefined}
                 endDate={dropoffDate || undefined}
                 specs={{
