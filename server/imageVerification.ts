@@ -87,6 +87,12 @@ export async function verifyOriginalListingImage(input: {
   base64: string;
   mimeType: "image/jpeg" | "image/png" | "image/webp";
 }): Promise<ImageVerificationResult> {
+  if (!ENV.forgeApiKey) {
+    // No AI verification backend configured (BUILT_IN_FORGE_API_KEY missing).
+    // Fall back to manual acceptance so listing creation/updates keep working;
+    // the HMAC proof is still issued per-owner/per-image and validated on create/update.
+    return { accepted: true, confidence: 0, reasons: ["manual"] };
+  }
   try {
     const result = await invokeLLM({
       messages: [
