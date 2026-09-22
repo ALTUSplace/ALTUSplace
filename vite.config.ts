@@ -150,7 +150,16 @@ function vitePluginManusDebugCollector(): Plugin {
   };
 }
 
-const plugins = [react(), tailwindcss(), vitePluginManusRuntime(), vitePluginManusDebugCollector()];
+const plugins = [
+  react(),
+  tailwindcss(),
+  // Manus debug runtime: a dev-only preview/debug overlay (inline React error
+  // catcher, console error/telemetry reporting for the Manus host, screenshot and
+  // direct-edit helpers) that used to inflate production index.html by ~108 kB
+  // gzip. Excluded from builds; still active in the dev server.
+  { ...vitePluginManusRuntime(), apply: "serve" } as Plugin,
+  vitePluginManusDebugCollector(),
+];
 
 export default defineConfig({
   plugins,

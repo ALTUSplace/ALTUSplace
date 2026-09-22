@@ -5,7 +5,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "cross-env NODE_ENV=development tsx watch server/_core/index.ts",
-    "build": "tsx scripts/generate-sitemap.ts && vite build && esbuild server/_core/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist && esbuild server/_core/api-handler.ts --platform=node --packages=external --bundle --format=esm --target=node20 --outfile=dist/api-handler.mjs",
+    "build": "tsx scripts/generate-sitemap.ts && vite build && esbuild server/_core/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist && esbuild server/_core/api-handler.ts --platform=node --packages=external --bundle --format=esm --target=node20 --outfile=dist/api-handler.mjs && node scripts/verify-inline-script-hash.mjs",
     "start": "cross-env NODE_ENV=production node dist/index.js",
     "check": "tsc --noEmit",
     "format": "prettier --write .",
