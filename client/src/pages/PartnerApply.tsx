@@ -388,6 +388,11 @@ export default function PartnerApply() {
                   <input className={inputClass} type="number" min="0" value={propertyCount} onChange={(event) => setPropertyCount(event.target.value)} placeholder="مثال: 15" />
                 </label>
               )}
+              {isCar && Number(fleetSize) > 0 && vehicles.filter((v) => v.name.trim() || v.pricePerDay.trim()).length === 0 ? (
+                <p className="rounded-lg bg-amber-50 p-2 text-xs text-amber-700 sm:col-span-2">
+                  أُدخل حجم الأسطول ({fleetSize}) دون تسجيل تفاصيل المركبات في قسم «مركبات الأسطول» أعلاه — لن تُنشر أي سيارات تلقائياً بعد الموافقة إلا إذا أدرجت مركباتك.
+                </p>
+              ) : null}
               <label className="text-sm font-semibold">
                 الموقع الإلكتروني (اختياري)
                 <input className={inputClass} type="url" dir="ltr" value={website} onChange={(event) => setWebsite(event.target.value)} placeholder="https://example.com" />

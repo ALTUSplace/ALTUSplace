@@ -7,6 +7,7 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { adminProcedure, ownerProcedure, publicProcedure, protectedProcedure, router, superAdminProcedure } from "./_core/trpc";
 import { getDb, withTransaction } from "./db";
+import { logger } from "./_core/logger";
 import { listings, listingAnalyticsEvents, listingComments, bookings, reviews, users, commercialLeaseContracts, notifications, platformSettings, commissionTiers, escrowEntries, payoutRequests, disputes, disputeAttachments, supportTickets, payments, invoices, kycSubmissions, bookingVouchers, bookingMessages, auditLogs, refundRequests, transactions, partnerApplications } from "../drizzle/schema";
 import { eq, and, lte, gte, lt, gt, asc, desc, count, isNull, inArray, ne, or, not, ilike, sql, type SQL } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
@@ -681,11 +682,29 @@ export const appRouter = router({
           // listing manager immediately. The whole approval is atomic: if any
           // insert fails, the partner account and its listings roll back.
           const submittedVehicles = Array.isArray(application.vehicles) ? application.vehicles : [];
-          const fleetVehicles =
-            application.type === "car_rental"
-              ? submittedVehicles.filter((vehicle) => vehicle.name.trim() && Number.isInteger(vehicle.pricePerDay) && vehicle.pricePerDay > 0)
-              : [];
+          const rawFleet = application.type === "car_rental" ? submittedVehicles : [];
+          // Normalize instead of silently filtering: a vehicle that fails
+          // validation aborts the approval with a clear error instead of
+          // silently producing zero listings (the bug seen when payloads carry
+          // no vehicles at all — formerly a silent no-op).
+          const fleetVehicles = rawFleet.map((vehicle): { name: string; pricePerDay: number; year: number | null; seats: number | null; fuelType: string | undefined; transmission: string | undefined } => {
+            if (!vehicle || typeof vehicle.name !== "string" || !vehicle.name.trim()) {
+              throw new TRPCError({ code: "BAD_REQUEST", message: "بيانات مركبة غير مكتملة في الطلب (الاسم مطلوب) — لا يمكن اعتماد الطلب." });
+            }
+            if (!Number.isInteger(vehicle.pricePerDay) || vehicle.pricePerDay <= 0) {
+              throw new TRPCError({ code: "BAD_REQUEST", message: `السعر اليومي لمركبة «${vehicle.name.trim().slice(0, 80)}» غير صالح — لا يمكن اعتماد الطلب.` });
+            }
+            return {
+              name: vehicle.name.trim().slice(0, 120),
+              pricePerDay: vehicle.pricePerDay,
+              year: typeof vehicle.year === "number" && Number.isInteger(vehicle.year) && vehicle.year >= 1900 && vehicle.year <= 2100 ? vehicle.year : null,
+              seats: typeof vehicle.seats === "number" && Number.isInteger(vehicle.seats) && vehicle.seats > 0 ? vehicle.seats : null,
+              fuelType: typeof vehicle.fuelType === "string" && vehicle.fuelType.trim() ? vehicle.fuelType.trim().slice(0, 32) : undefined,
+              transmission: typeof vehicle.transmission === "string" && vehicle.transmission.trim() ? vehicle.transmission.trim().slice(0, 32) : undefined,
+            };
+          });
           let partnerUserId: number | null = null;
+          const createdListingIds: number[] = [];
           await withTransaction(async (tx) => {
             const [createdUser] = await tx.insert(users).values({
               openId: partnerOpenId(application.email),
@@ -707,25 +726,47 @@ export const appRouter = router({
             partnerUserId = Number(createdUser?.id ?? 0) || null;
             if (!partnerUserId) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "تعذر إنشاء حساب الشريك — حاول مرة أخرى." });
             for (const vehicle of fleetVehicles) {
-              await tx.insert(listings).values({
-                ownerId: partnerUserId,
-                title: vehicle.name.trim().slice(0, 120),
-                description: `سيارة من أسطول «${application.agencyName}» — منشورة تلقائياً بعد اعتماد طلب الشراكة.`,
-                category: "car",
-                pricePerDay: vehicle.pricePerDay,
-                city: application.city,
-                seats: vehicle.seats && vehicle.seats > 0 ? vehicle.seats : null,
-                year: vehicle.year ?? null,
-                fuelType: vehicle.fuelType?.trim() ? vehicle.fuelType.trim() : undefined,
-                transmission: vehicle.transmission?.trim() ? vehicle.transmission.trim() : undefined,
-                status: "Published",
-              });
+              try {
+                const [insertedListing] = await tx.insert(listings).values({
+                  ownerId: partnerUserId,
+                  title: vehicle.name,
+                  description: `سيارة من أسطول «${application.agencyName}» — منشورة تلقائياً بعد اعتماد طلب الشراكة.`,
+                  category: "car",
+                  pricePerDay: vehicle.pricePerDay,
+                  city: application.city,
+                  seats: vehicle.seats,
+                  year: vehicle.year,
+                  fuelType: vehicle.fuelType,
+                  transmission: vehicle.transmission,
+                  status: "Published",
+                }).returning({ id: listings.id });
+                createdListingIds.push(Number(insertedListing?.id ?? 0));
+              } catch (insertError) {
+                logger.error("[PartnerApproval] listing insert failed — transaction will roll back", {
+                  applicationId: input.id,
+                  partnerUserId,
+                  agencyName: application.agencyName,
+                  vehicle: { ...vehicle, name: vehicle.name.slice(0, 120) },
+                  error: insertError instanceof Error ? insertError.message : String(insertError),
+                });
+                throw insertError;
+              }
             }
             await tx.update(partnerApplications).set({ status: "approved", adminNote: input.adminNote || null, reviewedAt: new Date() }).where(eq(partnerApplications.id, input.id));
           });
-          await writeAuditLog({ actorId: ctx.user.id, action: "partner_application.approved", entityType: "partner_application", entityId: input.id, beforeData: { status: application.status }, afterData: { status: "approved", adminNote: input.adminNote || null, vehiclesCreated: fleetVehicles.length } });
-          await alertAdmins({ type: "system", title: "تمت الموافقة على طلب شريك / Partenaire approuvé", message: `تم إنشاء حساب الشريك «${application.agencyName}» (${application.email})${fleetVehicles.length ? ` مع نشر ${fleetVehicles.length} سيارة` : ""}. يمكنه الآن تسجيل الدخول من فضاء الشركاء.`, href: "/admin", entityType: "partner_application", entityId: input.id, dedupeKey: `partner-application-approved:${input.id}` });
-          return { success: true as const, partnerUserId, vehiclesCreated: fleetVehicles.length };
+          logger.info("[PartnerApproval] application approved", { applicationId: input.id, partnerUserId, vehiclesCreated: createdListingIds.length, listingIds: createdListingIds, agencyName: application.agencyName, type: application.type });
+          if (application.type === "car_rental" && fleetVehicles.length === 0) {
+            logger.warn("[PartnerApproval] car_rental application approved with zero vehicles — no listings created (payload had no usable vehicles)", {
+              applicationId: input.id,
+              email: application.email,
+              agencyName: application.agencyName,
+              fleetSize: application.fleetSize ?? null,
+              payloadVehicleCount: submittedVehicles.length,
+            });
+          }
+          await writeAuditLog({ actorId: ctx.user.id, action: "partner_application.approved", entityType: "partner_application", entityId: input.id, beforeData: { status: application.status }, afterData: { status: "approved", adminNote: input.adminNote || null, vehiclesCreated: createdListingIds.length, listingIds: createdListingIds } });
+          await alertAdmins({ type: "system", title: "تمت الموافقة على طلب شريك / Partenaire approuvé", message: `تم إنشاء حساب الشريك «${application.agencyName}» (${application.email})${createdListingIds.length ? ` مع نشر ${createdListingIds.length} سيارة` : " — لم تُسجل أي مركبات في الطلب، لذلك لم تُنشر سيارات تلقائياً"}. يمكنه الآن تسجيل الدخول من فضاء الشركاء.`, href: "/admin", entityType: "partner_application", entityId: input.id, dedupeKey: `partner-application-approved:${input.id}` });
+          return { success: true as const, partnerUserId, vehiclesCreated: createdListingIds.length, listingIds: createdListingIds };
         } else {
           await db.update(partnerApplications).set({ status: "rejected", adminNote: input.adminNote || null, reviewedAt: new Date() }).where(eq(partnerApplications.id, input.id));
           await writeAuditLog({ actorId: ctx.user.id, action: "partner_application.rejected", entityType: "partner_application", entityId: input.id, beforeData: { status: application.status }, afterData: { status: "rejected", adminNote: input.adminNote || null } });
