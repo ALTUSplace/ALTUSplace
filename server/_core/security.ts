@@ -1,5 +1,6 @@
 import type { Express, NextFunction, Request, Response } from "express";
 import { createHmac, timingSafeEqual } from "node:crypto";
+import { CSP_HEADER_VALUE } from "../../shared/security/csp";
 
 type RateLimitOptions = { windowMs: number; max: number; message?: string };
 type Bucket = { count: number; resetAt: number };
@@ -131,16 +132,9 @@ export function securityHeaders(_req: Request, res: Response, next: NextFunction
   res.setHeader("Cross-Origin-Resource-Policy", "same-origin");
   res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=(self), payment=()");
   res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
-  res.setHeader(
-    "Content-Security-Policy",
-    "default-src 'self'; base-uri 'self'; object-src 'none'; " +
-      "script-src 'self' 'unsafe-inline' https://maps.googleapis.com https://maps.gstatic.com https://www.google.com; " +
-      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
-      "font-src 'self' https://fonts.gstatic.com data:; " +
-      "img-src 'self' data: blob: https: http:; " +
-      "connect-src 'self' https: wss: ws:; " +
-      "frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests"
-  );
+  // Single source of truth: identical to the vercel.json edge policy so server
+  // and edge responses can never drift (enforced by server/cspParity.test.ts).
+  res.setHeader("Content-Security-Policy", CSP_HEADER_VALUE);
   res.removeHeader("X-Powered-By");
   next();
 }

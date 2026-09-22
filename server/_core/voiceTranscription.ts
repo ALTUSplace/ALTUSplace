@@ -26,6 +26,10 @@
  * ```
  */
 import { ENV } from "./env";
+import { fetchExternalBytes, validateExternalUrl } from "../security/urlGuard";
+
+/** Maximum accepted audio size (5 MB) enforced while streaming, before download completes. */
+export const VOICE_AUDIO_MAX_BYTES = 5 * 1024 * 1024;
 
 export type TranscribeOptions = {
   audioUrl: string; // URL to the audio file (e.g., S3 URL)
@@ -90,36 +94,39 @@ export async function transcribeAudio(
       };
     }
 
-    // Step 2: Download audio from URL
+    // Step 2: Validate + download audio from URL (SSRF-guarded bounded fetch).
+    // The caller-supplied audioUrl is treated as untrusted input: HTTPS-only,
+    // private/reserved hostnames rejected, 5s timeout, 5MB streamed cap.
     let audioBuffer: Buffer;
     let mimeType: string;
     try {
-      const response = await fetch(options.audioUrl);
-      if (!response.ok) {
-        return {
-          error: "Failed to download audio file",
-          code: "INVALID_FORMAT",
-          details: `HTTP ${response.status}: ${response.statusText}`
-        };
-      }
-      
-      audioBuffer = Buffer.from(await response.arrayBuffer());
-      mimeType = response.headers.get('content-type') || 'audio/mpeg';
-      
-      // Check file size (16MB limit)
-      const sizeMB = audioBuffer.length / (1024 * 1024);
-      if (sizeMB > 16) {
+      await validateExternalUrl(options.audioUrl);
+    } catch (error) {
+      return {
+        error: "Audio URL is not allowed (HTTPS only; no private or internal hosts)",
+        code: "INVALID_FORMAT",
+        details: error instanceof Error ? error.message : "Invalid audio URL",
+      };
+    }
+    try {
+      const { buffer, contentType } = await fetchExternalBytes(options.audioUrl, {
+        maxBytes: VOICE_AUDIO_MAX_BYTES,
+      });
+      audioBuffer = buffer;
+      mimeType = contentType || "audio/mpeg";
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unknown error";
+      if (message.includes("size limit")) {
         return {
           error: "Audio file exceeds maximum size limit",
           code: "FILE_TOO_LARGE",
-          details: `File size is ${sizeMB.toFixed(2)}MB, maximum allowed is 16MB`
+          details: `Maximum allowed is ${VOICE_AUDIO_MAX_BYTES / (1024 * 1024)}MB`,
         };
       }
-    } catch (error) {
       return {
-        error: "Failed to fetch audio file",
+        error: "Failed to download audio file",
         code: "SERVICE_ERROR",
-        details: error instanceof Error ? error.message : "Unknown error"
+        details: message,
       };
     }
 

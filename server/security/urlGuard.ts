@@ -108,3 +108,62 @@ export async function fetchExternalText(url: URL | string, headers?: Record<stri
     clearTimeout(timer);
   }
 }
+
+/**
+ * SSRF-guarded bounded binary fetch (voice transcription audio, etc.).
+ * Validates the URL with the same guard as iCal before connecting, then reads
+ * the body in chunks so the response can never exceed `maxBytes` in memory.
+ *
+ * The ICAL_ALLOWED_HOSTS allowlist is intentionally NOT applied here — it is
+ * scoped to iCal feeds and would reject legitimate audio/storage hosts
+ * (e.g. Supabase) whenever it is configured. HTTPS-only and private/reserved
+ * IP rejection still apply.
+ */
+export async function fetchExternalBytes(
+  value: string,
+  options: { timeoutMs?: number; maxBytes: number },
+): Promise<{ buffer: Buffer; contentType: string }> {
+  await validateExternalUrl(value, { allowedHosts: "" });
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), options.timeoutMs ?? ICAL_FETCH_TIMEOUT_MS);
+  try {
+    const response = await fetch(value, { signal: controller.signal });
+    if (!response.ok) throw new Error(`External fetch HTTP ${response.status}`);
+    const declaredLength = Number(response.headers.get("content-length") ?? 0);
+    if (declaredLength > options.maxBytes) throw new Error("External resource exceeds size limit");
+    const chunks: Uint8Array[] = [];
+    let total = 0;
+    if (response.body) {
+      const reader = response.body.getReader();
+      try {
+        for (;;) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          if (value) {
+            total += value.length;
+            if (total > options.maxBytes) throw new Error("External resource exceeds size limit");
+            chunks.push(value);
+          }
+        }
+      } finally {
+        reader.releaseLock();
+      }
+    } else {
+      const body = new Uint8Array(await response.arrayBuffer());
+      if (body.length > options.maxBytes) throw new Error("External resource exceeds size limit");
+      chunks.push(body);
+    }
+    return {
+      buffer: Buffer.concat(chunks),
+      contentType: response.headers.get("content-type") ?? "",
+    };
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      throw new Error("External fetch timed out");
+    }
+    throw error;
+  } finally {
+    clearTimeout(timer);
+  }
+}

@@ -47,9 +47,13 @@ describe("final readiness security audit", () => {
 
   it("ships hardened secure headers (helmet-grade: CSP, DENY framing, HSTS preload)", () => {
     const security = read("server/_core/security.ts");
+    // The CSP value lives in shared/security/csp.ts (single source of truth,
+    // byte-parity with vercel.json enforced by server/cspParity.test.ts).
+    const csp = read("shared/security/csp.ts");
     expect(security).toContain("Content-Security-Policy");
     expect(security).toContain('X-Frame-Options", "DENY"');
-    expect(security).toContain("frame-ancestors 'none'");
+    expect(csp).toContain("frame-ancestors 'none'");
+    expect(csp).toContain("upgrade-insecure-requests");
     expect(security).toContain("Strict-Transport-Security");
     expect(security).toContain("preload");
   });
