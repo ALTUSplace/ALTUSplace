@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import CommentSection from "@/components/CommentSection";
 import { FloatingWhatsAppButton } from "@/components/FloatingWhatsAppButton";
+import { PartnerVerifiedBadge } from "@/components/ui/PartnerVerifiedBadge";
 
 function parseAmenities(value: string | null | undefined): string[] {
   if (!value) return [];
@@ -46,6 +47,8 @@ type PropertyDetailShape = {
   amenities: string | null;
   agencyPhone?: string | null;
   whatsappPhone?: string | null;
+  /** Owner role drives the partner-verified badge; only `partner` accounts verify. */
+  ownerRole?: string | null;
 };
 
 function mapStaticToDetail(item: ListingItem): PropertyDetailShape {
@@ -313,7 +316,10 @@ export default function PropertyDetailWithVideo() {
 
         <header className="space-y-2">
           <div className="flex flex-wrap items-center gap-2"><Badge className="bg-amber-500">{({ Published: "منشور", Available: "متاح", Pending: "قيد المراجعة", Unavailable: "غير متاح", Rejected: "مرفوض" } as Record<string, string>)[listing.status] ?? listing.status}</Badge>{summary.count > 0 ? (<span className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-600"><Star className="h-3.5 w-3.5 fill-amber-500 text-amber-500" />{summary.average.toFixed(1)} <span className="font-medium text-slate-500">({summary.count})</span></span>) : null}</div>
-          <h1 className="text-2xl sm:text-4xl font-bold text-slate-900">{title}</h1>
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="text-2xl sm:text-4xl font-bold text-slate-900">{title}</h1>
+            {listing?.ownerRole === "partner" && <PartnerVerifiedBadge />}
+          </div>
           {language === "fr" && arabicTitle && title !== arabicTitle && <p className="text-sm text-slate-500 font-medium">{arabicTitle}</p>}
           <p className="flex items-center gap-1.5 text-sm text-slate-600"><MapPin className="w-4 h-4 text-amber-600" />{listing.city}</p>
         </header>

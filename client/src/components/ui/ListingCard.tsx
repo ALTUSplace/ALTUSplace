@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { PartnerVerifiedBadge } from "@/components/ui/PartnerVerifiedBadge";
 
 export interface ListingCardProps {
   id: string;
@@ -19,6 +20,8 @@ export interface ListingCardProps {
   images: string[];
   type: "car" | "property";
   badges?: Array<"top-host" | "premium" | "instant-book" | "featured" | "superhost">;
+  /** True when the listing owner is an onboarded ALTUSplace partner account. */
+  providerVerified?: boolean;
   rating?: number;
   reviewCount?: number;
   hostName?: string;
@@ -42,7 +45,7 @@ const BADGE_CONFIG: Record<string, { label: string; icon: typeof Award; classNam
 
 export function ListingCard(props: ListingCardProps) {
   const { id, title, titleFr, city, pricePerDay, unitLabel = "/ day", currency = "MAD", images, type,
-    badges, rating, reviewCount, hostName, isFavorite, onToggleFavorite, specs, startDate, endDate, className, style } = props;
+    badges, providerVerified, rating, reviewCount, hostName, isFavorite, onToggleFavorite, specs, startDate, endDate, className, style } = props;
   const [, setLocation] = useLocation();
   const { language } = useLanguage();
   const [activeSlide, setActiveSlide] = useState(0);
@@ -109,9 +112,10 @@ export function ListingCard(props: ListingCardProps) {
           ))}
         </div>
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-ink-primary/35 via-transparent to-transparent" />
-        {badges && badges.length > 0 && (
+        {(providerVerified || (badges && badges.length > 0)) && (
           <div className="absolute left-3 top-3 flex flex-wrap gap-1.5">
-            {badges.slice(0, 2).map((badge) => {
+            {providerVerified && <PartnerVerifiedBadge />}
+            {badges && badges.length > 0 && badges.slice(0, 2).map((badge) => {
               const cfg = BADGE_CONFIG[badge];
               const Icon = cfg.icon;
               return (<span key={badge} className={cn("inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide shadow-md ring-1 ring-white/20 backdrop-blur-md", cfg.className)}><Icon className="h-3 w-3" />{cfg.label}</span>);

@@ -1661,7 +1661,7 @@ export const appRouter = router({
       .query(async ({ input }) => {
         const db = await getDb();
         if (!db) return [];
-        const allListings = await db.select({ listing: listings, ownerName: users.name }).from(listings).leftJoin(users, eq(listings.ownerId, users.id)).where(inArray(listings.status, ['Published', 'Available', 'Approved'])).orderBy(desc(listings.createdAt));
+        const allListings = await db.select({ listing: listings, ownerName: users.name, ownerRole: users.role }).from(listings).leftJoin(users, eq(listings.ownerId, users.id)).where(inArray(listings.status, ['Published', 'Available', 'Approved'])).orderBy(desc(listings.createdAt));
         const requestedRange = input?.startDate && input?.endDate ? parseDateRange(input.startDate, input.endDate) : null;
         const confirmedRanges = requestedRange
           ? await db.select({ listingId: bookings.listingId, start: bookings.startDate, end: bookings.endDate }).from(bookings).where(eq(bookings.status, "Confirmed"))
@@ -1687,7 +1687,7 @@ export const appRouter = router({
             ...confirmedRanges.filter((range) => range.listingId === item.id).map((range) => ({ start: new Date(range.start), end: new Date(range.end) })),
           ];
           return isRangeAvailable(requestedRange, blockedRanges);
-        }).map(({ listing: item, ownerName }) => {
+        }).map(({ listing: item, ownerName, ownerRole }) => {
           let adjustedPrice = item.pricePerDay;
           if (requestedRange) {
             const { start, end } = requestedRange;
@@ -1709,6 +1709,7 @@ export const appRouter = router({
           return toPublicListing({
             ...item,
             ownerName: ownerName ?? null,
+            ownerRole: ownerRole ?? null,
             dynamicPricePerDay: adjustedPrice,
             averageRating: reviewStats.get(item.id)?.average ?? 0,
             reviewCount: reviewStats.get(item.id)?.count ?? 0,
@@ -1792,7 +1793,7 @@ export const appRouter = router({
 
         const baseFilter = and(...conds);
         const rows = await db
-          .select({ listing: listings, ownerName: users.name })
+          .select({ listing: listings, ownerName: users.name, ownerRole: users.role })
           .from(listings)
           .leftJoin(users, eq(listings.ownerId, users.id))
           .where(baseFilter)
@@ -1824,10 +1825,11 @@ export const appRouter = router({
             ];
             return isRangeAvailable(requestedRange, blockedRanges);
           })
-          .map(({ listing: item, ownerName }) =>
+          .map(({ listing: item, ownerName, ownerRole }) =>
             toPublicListing({
               ...item,
               ownerName: ownerName ?? null,
+              ownerRole: ownerRole ?? null,
               distanceKm: origin && item.lat !== null && item.lng !== null ? haversineKm(origin.lat, origin.lng, item.lat, item.lng) : null,
               averageRating: reviewStats.get(item.id)?.average ?? 0,
               reviewCount: reviewStats.get(item.id)?.count ?? 0,
@@ -1870,6 +1872,7 @@ export const appRouter = router({
           .select({
             listing: listings,
             ownerName: users.name,
+            ownerRole: users.role,
             agencyName: users.agencyName,
             agencyPhone: users.agencyPhone,
             whatsappPhone: users.whatsappPhone,
@@ -1885,7 +1888,7 @@ export const appRouter = router({
           return null;
         }
 
-        const { listing, ownerName, agencyName, agencyPhone, whatsappPhone } = result[0];
+        const { listing, ownerName, ownerRole, agencyName, agencyPhone, whatsappPhone } = result[0];
         const sourceLanguage = "ar" as const;
         const targetLanguage = input.language ?? sourceLanguage;
 
@@ -1907,13 +1910,14 @@ export const appRouter = router({
               descriptionProvider: translated.descriptionProvider,
             },
             ownerName,
+            ownerRole,
             agencyName,
             agencyPhone,
             whatsappPhone,
           });
         }
 
-        return toPublicListing({ ...listing, _translationMeta: null, ownerName, agencyName, agencyPhone, whatsappPhone });
+        return toPublicListing({ ...listing, _translationMeta: null, ownerName, ownerRole, agencyName, agencyPhone, whatsappPhone });
       }),
 
     getBookedDates: publicProcedure

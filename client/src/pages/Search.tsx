@@ -3,89 +3,24 @@ import { useLocation } from 'wouter';
 import { ListingItem } from '@/data/altusplace';
 import { trpc } from '@/lib/trpc';
 import { Button } from '@/components/ui/button';
-import { Filter, Star, ShieldCheck, Users, Car as CarIcon, ArrowUpDown, Award, MapPin, Scale, X, Eye, Home, Map, LayoutGrid, Search as SearchIcon } from 'lucide-react';
+import { Filter, Star, Users, Car as CarIcon, ArrowUpDown, Award, MapPin, Scale, X, Eye, Home, Map, LayoutGrid, Search as SearchIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { MapboxSearchMap } from '@/components/MapboxSearchMap';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { MOROCCO_CENTER, cityToCoords, resolveListingCoords } from '@/lib/mapbox';
 import { OptimizedImage } from '@/components/OptimizedImage';
 import { ListingCard, ListingCardSkeleton } from '@/components/ui/ListingCard';
+import { PartnerVerifiedBadge } from '@/components/ui/PartnerVerifiedBadge';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { isCarCategory, isPropertyCategory } from '@/lib/categories';
 import { CitySelect } from '@/components/CitySelect';
 import { SearchBar, type SearchBarValues } from '@/components/SearchBar';
+import { toListingItem } from '@/lib/listingMappers';
 import { resolveCitySlug } from '@/data/moroccoCities';
 import { useSEO } from '@/lib/seo';
 
 const listingRoute = (item: ListingItem) => (item.type === 'property' ? `/property/${item.id}` : `/car/${item.id}`);
-
-const parseArrayField = (value: string | null | undefined): string[] => {
-  if (!value) return [];
-  try {
-    const parsed = JSON.parse(value);
-    if (Array.isArray(parsed)) return parsed.filter((entry): entry is string => typeof entry === 'string');
-  } catch {
-    // Legacy rows may contain comma-separated amenities.
-  }
-  return value.split(',').map((entry) => entry.trim()).filter(Boolean);
-};
-
-const toListingItem = (item: {
-  id: number;
-  ownerId: number;
-  title: string;
-  titleFr?: string | null;
-  description: string | null;
-  category: string;
-  pricePerDay: number;
-  imageUrl: string | null;
-  images?: string[] | null;
-  averageRating?: number | null;
-  reviewCount?: number | null;
-  city: string;
-  fuelType: string | null;
-  transmission: string | null;
-  seats?: number | null;
-  area?: number | null;
-  year?: number | null;
-  rooms: number | null;
-  officeType: string | null;
-  rentalPeriod: 'daily' | 'monthly' | 'yearly' | null;
-  amenities: string | null;
-  dynamicPricePerDay?: number;
-  ownerName?: string | null;
-}): ListingItem => {
-  const amenities = parseArrayField(item.amenities);
-  const type: ListingItem['type'] = isCarCategory(item.category) ? 'car' : 'property';
-  const unitLabel = item.rentalPeriod === "monthly" ? "درهم / شهر" : item.rentalPeriod === "yearly" ? "درهم / سنة" : "درهم / يوم";
-  return {
-    id: String(item.id),
-    providerId: String(item.ownerId),
-    providerName: item.ownerName || `مالك الإعلان #${item.ownerId}`,
-    type,
-    title: item.title,
-    titleFr: item.titleFr ?? undefined,
-    category: item.category,
-    city: item.city,
-    pricePerUnit: item.dynamicPricePerDay ?? item.pricePerDay,
-    unitLabel,
-    image: item.images?.[0] || item.imageUrl || '',
-    images: item.images?.length ? item.images : item.imageUrl ? [item.imageUrl] : [],
-    rating: item.averageRating ?? 0,
-    reviewCount: item.reviewCount ?? 0,
-    features: [item.fuelType, item.transmission, ...amenities].filter((value): value is string => Boolean(value)),
-    description: item.description || '',
-    specs: {
-      transmission: item.transmission || undefined,
-      fuel: item.fuelType || undefined,
-      rooms: item.rooms ? String(item.rooms) : undefined,
-      seats: item.seats && item.seats > 0 ? String(item.seats) : undefined,
-      area: item.area && item.area > 0 ? `${item.area} m²` : undefined,
-      year: item.year ?? undefined,
-    },
-  };
-};
 
 export default function Search() {
   const [, setLocation] = useLocation();
@@ -278,6 +213,11 @@ export default function Search() {
     setActiveDates({ startDate: values.startDate, endDate: values.endDate });
   };
 
+  // Hub heading follows the active vertical: cars, properties, or the generic
+  // guide when no type filter is applied.
+  const hubTitleKey = typeFilter === 'car' ? 'searchHubTitleCars' : typeFilter === 'property' ? 'searchHubTitleProperties' : 'searchHubTitle';
+  const hubSubtitleKey = typeFilter === 'car' ? 'searchHubSubtitleCars' : typeFilter === 'property' ? 'searchHubSubtitleProperties' : 'searchHubSubtitle';
+
   return (
     <div className="min-h-screen bg-background text-foreground pb-20" dir={direction}>
       <div className="container mx-auto px-4 space-y-8">
@@ -313,8 +253,8 @@ export default function Search() {
 
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div className="space-y-2">
-            <h1 className="text-3xl font-extrabold tracking-tight text-ink-primary">{t('searchHubTitle')}</h1>
-            <p className="text-ink-secondary text-sm leading-relaxed">{t('searchHubSubtitle')}</p>
+            <h1 className="text-3xl font-extrabold tracking-tight text-ink-primary">{t(hubTitleKey)}</h1>
+            <p className="text-ink-secondary text-sm leading-relaxed">{t(hubSubtitleKey)}</p>
           </div>
         </div>
 
@@ -492,6 +432,7 @@ export default function Search() {
                     id={String(item.id)}
                     title={item.title}
                     titleFr={item.titleFr}
+                    providerVerified={item.providerVerified}
                     city={item.city}
                     pricePerDay={item.pricePerUnit}
                     unitLabel={item.unitLabel}
@@ -568,7 +509,10 @@ export default function Search() {
                               className="w-16 h-16 object-cover rounded-lg flex-shrink-0"
                             />
                             <div className="flex-1 min-w-0 space-y-1">
-                              <h5 className="text-xs font-bold text-ink-primary line-clamp-1">{li.title}</h5>
+                              <div className="flex items-center gap-1.5">
+                                <h5 className="text-xs font-bold text-ink-primary line-clamp-1 flex-1">{li.title}</h5>
+                                {li.providerVerified && <PartnerVerifiedBadge className="shrink-0 px-2 py-0.5 text-[9px]" />}
+                              </div>
                               <p className="text-[11px] text-ink-secondary flex items-center gap-1">
                                 <MapPin className="w-3 h-3" /> {li.city}
                               </p>

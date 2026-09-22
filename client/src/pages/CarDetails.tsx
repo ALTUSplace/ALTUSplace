@@ -14,6 +14,7 @@ import { RENTAL_TERMS } from '@/lib/rentalTerms';
 import CommentSection from '@/components/CommentSection';
 import { BookingWidget } from '@/components/ui/BookingWidget';
 import { FloatingWhatsAppButton } from '@/components/FloatingWhatsAppButton';
+import { PartnerVerifiedBadge } from '@/components/ui/PartnerVerifiedBadge';
 
 const isIsoDay = (value: string | null): value is string => /^\d{4}-\d{2}-\d{2}$/.test(value ?? '');
 
@@ -63,6 +64,9 @@ export default function CarDetails() {
     features: staticCar.features || [],
     agency: { name: staticCar.providerName || 'المؤجر على ALTUSplace', address: staticCar.city, whatsapp: '' },
   } : null;
+
+  // Partner-verified badge: only onboarded `partner` accounts get the gold badge.
+  const providerVerified = listing?.ownerRole === "partner" || Boolean(staticCar?.providerVerified);
 
   // SEO must be computed before the loading/not-found early returns so crawlers
   // always receive a canonical + robots directive, even for stale listing ids.
@@ -294,7 +298,10 @@ export default function CarDetails() {
 
               <div className="p-8 space-y-6">
                 <div className="space-y-2 border-b border-slate-800 pb-6">
-                  <div className="text-xs text-amber-400 font-bold uppercase tracking-wider">{car.brand}</div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="text-xs text-amber-400 font-bold uppercase tracking-wider">{car.brand}</div>
+                    {providerVerified && <PartnerVerifiedBadge />}
+                  </div>
                   <h1 className="text-3xl font-black text-white">{car.name}</h1>
                   <p className="text-slate-300 text-sm leading-relaxed">
                     سيارة مجهزة بالكامل لتلبية كافة احتياجاتك في السفر والتنقل داخل المدن والمطارات المغربية بأعلى معايير الأمان والرفاهية.

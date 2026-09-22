@@ -39,6 +39,8 @@ export interface ListingItem {
   reviewCount?: number;
   amenities?: string[];
   descriptionFr?: string;
+  /** True when the listing owner is an onboarded ALTUSplace partner/agency account. */
+  providerVerified?: boolean;
   officeType?: string;
   rentalTerms?: string;
   specs: {
