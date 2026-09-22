@@ -8,7 +8,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { adminProcedure, ownerProcedure, publicProcedure, protectedProcedure, router, superAdminProcedure } from "./_core/trpc";
 import { getDb, withTransaction } from "./db";
 import { logger } from "./_core/logger";
-import { listings, listingAnalyticsEvents, listingComments, bookings, reviews, users, commercialLeaseContracts, notifications, platformSettings, commissionTiers, escrowEntries, payoutRequests, disputes, disputeAttachments, supportTickets, payments, invoices, kycSubmissions, bookingVouchers, bookingMessages, auditLogs, refundRequests, transactions, partnerApplications } from "../drizzle/schema";
+import { listings, listingAnalyticsEvents, listingComments, bookings, reviews, users, commercialLeaseContracts, notifications, platformSettings, commissionTiers, escrowEntries, payoutRequests, disputes, disputeAttachments, supportTickets, payments, invoices, kycSubmissions, bookingVouchers, bookingMessages, auditLogs, refundRequests, transactions, partnerApplications, translations } from "../drizzle/schema";
 import { eq, and, lte, gte, lt, gt, asc, desc, count, isNull, inArray, ne, or, not, ilike, sql, type SQL } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { safeNotifyUser, buildEmailContent, sendWhatsAppText, normalizeWhatsAppNumber, alertAdmins } from "./notificationService";
@@ -773,6 +773,113 @@ export const appRouter = router({
           await alertAdmins({ type: "system", title: "رُفض طلب شريك", message: `تم رفض طلب «${application.agencyName}» (${application.email}).`, href: "/admin", entityType: "partner_application", entityId: input.id, dedupeKey: `partner-application-rejected:${input.id}` });
         }
         return { success: true as const };
+      }),
+    partners: adminProcedure.query(async () => {
+      const db = await getDb();
+      if (!db) return [];
+      const rows = await db.select({
+        id: users.id, name: users.name, email: users.email, role: users.role,
+        accountStatus: users.accountStatus, kycVerificationStatus: users.kycVerificationStatus,
+        agencyName: users.agencyName, agencyCity: users.agencyCity, agencyPhone: users.agencyPhone,
+        loginMethod: users.loginMethod, createdAt: users.createdAt, lastSignedIn: users.lastSignedIn,
+      }).from(users).where(or(eq(users.role, 'partner'), eq(users.role, 'owner'))).orderBy(desc(users.createdAt)).limit(200);
+      if (!rows.length) return [];
+      const ids = rows.map((row) => row.id);
+      const listingCounts = await db.select({ ownerId: listings.ownerId, n: count() }).from(listings).where(inArray(listings.ownerId, ids)).groupBy(listings.ownerId);
+      const bookingCounts = await db.select({ ownerId: listings.ownerId, n: count() }).from(bookings).innerJoin(listings, eq(bookings.listingId, listings.id)).where(inArray(listings.ownerId, ids)).groupBy(listings.ownerId);
+      const listingsByOwner = new Map<number, number>(listingCounts.map((row) => [row.ownerId, row.n] as const));
+      const bookingsByOwner = new Map<number, number>(bookingCounts.map((row) => [row.ownerId, row.n] as const));
+      return rows.map((row) => ({ ...row, listingCount: listingsByOwner.get(row.id) ?? 0, bookingCount: bookingsByOwner.get(row.id) ?? 0 }));
+    }),
+    deletePartner: adminProcedure
+      .input(z.object({ partnerUserId: z.number().int().positive() }))
+      .mutation(async ({ ctx, input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'قاعدة البيانات غير متاحة.' });
+        if (input.partnerUserId === ctx.user.id) throw new TRPCError({ code: 'BAD_REQUEST', message: 'لا يمكنك حذف حسابك الإداري بنفسك.' });
+        const [partner] = await db.select().from(users).where(eq(users.id, input.partnerUserId)).limit(1);
+        if (!partner) throw new TRPCError({ code: 'NOT_FOUND', message: 'حساب الوكالة غير موجود.' });
+        if (partner.role !== 'partner' && partner.role !== 'owner') throw new TRPCError({ code: 'BAD_REQUEST', message: 'الحساب ليس وكالة شريكة — لا يمكن حذفه بهذه العملية.' });
+
+        const summary = await withTransaction(async (tx) => {
+          const partnerListings = await tx.select({ id: listings.id }).from(listings).where(eq(listings.ownerId, input.partnerUserId));
+          const listingIds = partnerListings.map((row: { id: number }) => row.id);
+          const bookingRows = await tx.select({ id: bookings.id }).from(bookings)
+            .where(or(
+              inArray(bookings.listingId, listingIds.length ? listingIds : [-1]),
+              inArray(bookings.secondaryListingId, listingIds.length ? listingIds : [-1]),
+            ));
+          const bookingIds = bookingRows.map((row: { id: number }) => row.id);
+          const disputeRows = bookingIds.length
+            ? await tx.select({ id: disputes.id }).from(disputes).where(inArray(disputes.bookingId, bookingIds))
+            : [];
+          const disputeIds = disputeRows.map((row: { id: number }) => row.id);
+
+          // Booking children — child-first so no orphaned rows survive.
+          if (disputeIds.length) await tx.delete(disputeAttachments).where(inArray(disputeAttachments.disputeId, disputeIds));
+          const paymentsRemoved = bookingIds.length ? (await tx.delete(payments).where(inArray(payments.bookingId, bookingIds)).returning({ id: payments.id })).length : 0;
+          const transactionsRemoved = bookingIds.length ? (await tx.delete(transactions).where(inArray(transactions.bookingId, bookingIds)).returning({ id: transactions.id })).length : 0;
+          const messagesRemoved = bookingIds.length ? (await tx.delete(bookingMessages).where(inArray(bookingMessages.bookingId, bookingIds)).returning({ id: bookingMessages.id })).length : 0;
+          const vouchersRemoved = bookingIds.length ? (await tx.delete(bookingVouchers).where(inArray(bookingVouchers.bookingId, bookingIds)).returning({ id: bookingVouchers.id })).length : 0;
+          const escrowRemoved = bookingIds.length ? (await tx.delete(escrowEntries).where(inArray(escrowEntries.bookingId, bookingIds)).returning({ id: escrowEntries.id })).length : 0;
+          const refundsRemoved = bookingIds.length ? (await tx.delete(refundRequests).where(inArray(refundRequests.bookingId, bookingIds)).returning({ id: refundRequests.id })).length : 0;
+          const leasesRemoved = bookingIds.length ? (await tx.delete(commercialLeaseContracts).where(inArray(commercialLeaseContracts.bookingId, bookingIds)).returning({ id: commercialLeaseContracts.id })).length : 0;
+          const invoicesRemoved = bookingIds.length ? (await tx.delete(invoices).where(inArray(invoices.bookingId, bookingIds)).returning({ id: invoices.id })).length : 0;
+          const disputesRemoved = disputeIds.length ? (await tx.delete(disputes).where(inArray(disputes.id, disputeIds)).returning({ id: disputes.id })).length : 0;
+          const reviewsRemoved = (await tx.delete(reviews).where(or(
+            inArray(reviews.bookingId, bookingIds.length ? bookingIds : [-1]),
+            inArray(reviews.listingId, listingIds.length ? listingIds : [-1]),
+            eq(reviews.userId, input.partnerUserId),
+          )).returning({ id: reviews.id })).length;
+          const bookingsRemoved = (await tx.delete(bookings).where(or(
+            inArray(bookings.listingId, listingIds.length ? listingIds : [-1]),
+            inArray(bookings.secondaryListingId, listingIds.length ? listingIds : [-1]),
+          )).returning({ id: bookings.id })).length;
+
+          // Listing children.
+          const analyticsRemoved = listingIds.length ? (await tx.delete(listingAnalyticsEvents).where(inArray(listingAnalyticsEvents.listingId, listingIds)).returning({ id: listingAnalyticsEvents.id })).length : 0;
+          const commentsRemoved = (await tx.delete(listingComments).where(or(
+            inArray(listingComments.listingId, listingIds.length ? listingIds : [-1]),
+            eq(listingComments.authorId, input.partnerUserId),
+          )).returning({ id: listingComments.id })).length;
+          const translationsRemoved = listingIds.length ? (await tx.delete(translations).where(inArray(translations.listingId, listingIds))).length : 0;
+          const listingsRemoved = listingIds.length ? (await tx.delete(listings).where(inArray(listings.id, listingIds)).returning({ id: listings.id })).length : 0;
+
+          // Account-scoped rows.
+          const kycRemoved = (await tx.delete(kycSubmissions).where(eq(kycSubmissions.userId, input.partnerUserId)).returning({ id: kycSubmissions.id })).length;
+          const notificationsRemoved = (await tx.delete(notifications).where(eq(notifications.userId, input.partnerUserId)).returning({ id: notifications.id })).length;
+          const ticketsRemoved = (await tx.delete(supportTickets).where(eq(supportTickets.userId, input.partnerUserId)).returning({ id: supportTickets.id })).length;
+          const payoutsRemoved = (await tx.delete(payoutRequests).where(eq(payoutRequests.ownerId, input.partnerUserId)).returning({ id: payoutRequests.id })).length;
+          const applicationsRemoved = (await tx.delete(partnerApplications).where(eq(partnerApplications.email, partner.email ?? '')).returning({ id: partnerApplications.id })).length;
+          const accountRemoved = (await tx.delete(users).where(eq(users.id, input.partnerUserId)).returning({ id: users.id })).length;
+
+          return {
+            listingsRemoved, bookingsRemoved, paymentsRemoved, invoicesRemoved, transactionsRemoved,
+            messagesRemoved, vouchersRemoved, escrowRemoved, refundsRemoved, leasesRemoved,
+            disputesRemoved, reviewsRemoved, analyticsRemoved, commentsRemoved, translationsRemoved,
+            kycRemoved, notificationsRemoved, ticketsRemoved, payoutsRemoved, applicationsRemoved, accountRemoved,
+          };
+        });
+
+        logger.info('[Admin] partner deleted', { actorId: ctx.user.id, partnerUserId: input.partnerUserId, agencyName: partner.agencyName ?? partner.name ?? null, email: partner.email, ...summary });
+        await writeAuditLog({
+          actorId: ctx.user.id,
+          action: 'partner.deleted',
+          entityType: 'user',
+          entityId: input.partnerUserId,
+          beforeData: { role: partner.role, email: partner.email, agencyName: partner.agencyName, accountStatus: partner.accountStatus },
+          afterData: { partnerUserId: input.partnerUserId, ...summary },
+        });
+        await alertAdmins({
+          type: 'system',
+          title: 'تم حذف وكالة شريكة / Partenaire supprimé',
+          message: `تم حذف «${partner.agencyName ?? partner.name ?? partner.email}» (${partner.email}) نهائياً مع ${summary.listingsRemoved} إعلان و ${summary.bookingsRemoved} حجز وكل بياناتها المرتبطة.`,
+          href: '/admin',
+          entityType: 'user',
+          entityId: input.partnerUserId,
+          dedupeKey: `partner-deleted:${input.partnerUserId}`,
+        });
+        return { success: true as const, partnerUserId: input.partnerUserId, agencyName: partner.agencyName ?? partner.name ?? partner.email, ...summary };
       }),
     overview: adminProcedure.query(async () => {
       const db = await getDb();
