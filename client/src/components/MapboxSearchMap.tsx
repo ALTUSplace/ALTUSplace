@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
+// mapbox-gl (~800 kB) is type-only here and loaded lazily (module + CSS) inside
+// the component, so the map keeps search fast and stays out of the initial bundle.
+import type mapboxgl from 'mapbox-gl';
 import { cn } from '@/lib/utils';
 import { getMapboxToken, MOROCCO_CENTER, type LatLng } from '@/lib/mapbox';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -56,6 +57,8 @@ export function MapboxSearchMap({
   const { theme } = useTheme();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
+  // Runtime handle to the lazily-loaded mapbox-gl module (shared by the markers effect).
+  const mapboxglRef = useRef<(typeof import("mapbox-gl"))["default"] | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const centerRef = useRef<LatLng>(center ?? MOROCCO_CENTER);
@@ -95,17 +98,27 @@ export function MapboxSearchMap({
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
-    const map = new mapboxgl.Map({
-      container: containerRef.current,
-      accessToken: token,
-      style: theme === 'dark' ? 'mapbox://styles/mapbox/dark-v11' : 'mapbox://styles/mapbox/streets-v12',
-      center: [MOROCCO_CENTER.lng, MOROCCO_CENTER.lat],
-      zoom: 7,
-      attributionControl: true,
-    });
-    map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'top-left');
-    map.on('load', () => {
-      map.addSource('search-radius', {
+    let disposed = false;
+
+    (async () => {
+      const [{ default: mapboxgl },] = await Promise.all([
+        import("mapbox-gl"),
+        import("mapbox-gl/dist/mapbox-gl.css"),
+      ]);
+      if (disposed || !containerRef.current || mapRef.current) return;
+      mapboxglRef.current = mapboxgl;
+
+      const map = new mapboxgl.Map({
+        container: containerRef.current,
+        accessToken: token,
+        style: theme === 'dark' ? 'mapbox://styles/mapbox/dark-v11' : 'mapbox://styles/mapbox/streets-v12',
+        center: [MOROCCO_CENTER.lng, MOROCCO_CENTER.lat],
+        zoom: 7,
+        attributionControl: true,
+      });
+      map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'top-left');
+      map.on('load', () => {
+        map.addSource('search-radius', {
         type: 'geojson',
         data: { type: 'Feature', geometry: { type: 'Point', coordinates: [MOROCCO_CENTER.lng, MOROCCO_CENTER.lat] }, properties: {} },
       });
@@ -144,8 +157,11 @@ export function MapboxSearchMap({
     map.on('moveend', onMoveEnd);
     map.on('move', onMove);
     map.on('zoom', onMove);
-    mapRef.current = map;
+      mapRef.current = map;
+    })();
+
     return () => {
+      disposed = true;
       if (debounceRef.current) clearTimeout(debounceRef.current);
       if (mapRef.current) {
         mapRef.current.remove();
@@ -163,7 +179,8 @@ export function MapboxSearchMap({
 
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !mapReady) return;
+    const mapboxgl = mapboxglRef.current;
+    if (!map || !mapboxgl || !mapReady) return;
     markersRef.current.forEach((marker) => marker.remove());
     markersRef.current = [];
     listings.forEach((listing) => {

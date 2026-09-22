@@ -16,7 +16,7 @@ describe("commercial lease PDF generator", () => {
   };
 
   it("creates a non-empty French PDF and includes the required contract fields", async () => {
-    const blob = generateCommercialLeasePdf({ ...input, language: "fr" });
+    const blob = await generateCommercialLeasePdf({ ...input, language: "fr" });
     const text = buildCommercialLeaseText({ ...input, language: "fr" }).join(" ");
 
     expect(blob.type).toBe("application/pdf");

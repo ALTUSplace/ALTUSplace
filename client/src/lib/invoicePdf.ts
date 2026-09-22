@@ -1,5 +1,3 @@
-import { jsPDF } from "jspdf";
-
 export type InvoicePdfInput = {
   invoiceNumber: string;
   bookingId: number;
@@ -26,7 +24,8 @@ export type InvoicePdfInput = {
 const money = (value: number, currency: string) => `${new Intl.NumberFormat("fr-MA").format(value)} ${currency}`;
 const date = (value?: string | Date | null) => value ? new Date(value).toLocaleDateString("fr-MA") : "—";
 
-export function generateInvoicePdf(input: InvoicePdfInput): Blob {
+export async function generateInvoicePdf(input: InvoicePdfInput): Promise<Blob> {
+  const { jsPDF } = await import("jspdf");
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const width = 210;
   const margin = 18;

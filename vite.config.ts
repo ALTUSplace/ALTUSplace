@@ -199,7 +199,11 @@ export default defineConfig({
           if (["wouter", "sonner"].includes(packageName)) return "navigation-vendor";
           if (["use-callback-ref", "use-sidecar", "react-remove-scroll", "react-style-singleton", "react-remove-scroll-bar", "aria-hidden", "get-nonce", "detect-node-es", "is-what", "copy-anything"].includes(packageName) || packageName.startsWith("@floating-ui/")) return "ui-vendor";
           if (["@babel/runtime", "tslib", "use-sync-external-store"].includes(packageName)) return "shared-vendor";
-          return "vendor";
+
+          // No shared catch-all vendor blob: every remaining package gets its own
+          // chunk. A single unclassified dependency in the entry graph used to drag
+          // every other unclassified package (mapbox-gl, …) into the initial load.
+          return `pkg-${packageName.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
         },
         onlyExplicitManualChunks: true,
       },

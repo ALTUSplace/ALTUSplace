@@ -1,5 +1,3 @@
-import { jsPDF } from "jspdf";
-
 export type CommercialLeaseInput = {
   reference: string;
   landlordName: string;
@@ -74,7 +72,8 @@ export function buildCommercialLeaseText(input: CommercialLeaseInput): string[] 
   ];
 }
 
-export function generateCommercialLeasePdf(input: CommercialLeaseInput): Blob {
+export async function generateCommercialLeasePdf(input: CommercialLeaseInput): Promise<Blob> {
+  const { jsPDF } = await import("jspdf");
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const isArabic = input.language === "ar";
   const pageWidth = 210;

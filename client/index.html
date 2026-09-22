@@ -78,6 +78,9 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Preload the two Tajawal weights used for Arabic body/headings; the remaining
+         weights load via the stylesheet below (built-in font-display: swap). -->
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap">
     <!-- LCP: preload the homepage hero image (matches Home.tsx, fetchpriority high) -->
     <link rel="preload" as="image" fetchpriority="high" href="https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=900">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400..800;1,400..700&family=Tajawal:wght@300;400;500;700;800&family=Cairo:wght@200..900&family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&display=swap" rel="stylesheet">

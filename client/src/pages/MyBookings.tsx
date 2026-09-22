@@ -41,7 +41,7 @@ export default function MyBookings() {
 
   const downloadInvoice = async (invoice: InvoicePdfInput) => {
     const { generateInvoicePdf } = await import('@/lib/invoicePdf');
-    const blob = generateInvoicePdf(invoice);
+    const blob = await generateInvoicePdf(invoice);
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;

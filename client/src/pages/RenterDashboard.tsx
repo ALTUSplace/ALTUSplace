@@ -142,7 +142,7 @@ export default function RenterDashboard() {
                             cancellationPolicyFingerprint: invoice.cancellationPolicyFingerprint,
                             cancellationPolicyAcceptedAt: invoice.cancellationPolicyAcceptedAt,
                           };
-                          const blob = generateInvoicePdf(invoiceInput);
+                          const blob = await generateInvoicePdf(invoiceInput);
                           const url = URL.createObjectURL(blob);
                           const anchor = document.createElement('a');
                           anchor.href = url;

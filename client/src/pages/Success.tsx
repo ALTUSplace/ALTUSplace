@@ -92,7 +92,7 @@ export default function Success() {
     setIsGeneratingPDF(true);
     try {
       const { generateInvoicePdf } = await import('@/lib/invoicePdf');
-      const blob = generateInvoicePdf({
+      const blob = await generateInvoicePdf({
         ...invoice,
         cancellationPolicy: cancellationRefundPolicy.fr.points[0],
         refundPolicy: cancellationRefundPolicy.fr.points[1],
