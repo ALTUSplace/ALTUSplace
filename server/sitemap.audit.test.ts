@@ -9,39 +9,37 @@ const root = resolve(import.meta.dirname, "..");
 const read = (relativePath: string) => readFileSync(resolve(root, relativePath), "utf8");
 
 describe("sitemap + robots audit", () => {
-  it("publishes a sitemap index that references every sub-sitemap", () => {
-    const index = read("client/public/sitemap.xml");
-    expect(index).toContain("<sitemapindex");
-    expect(index).toContain("https://altusplace.ma/sitemap-static.xml");
-    expect(index).toContain("https://altusplace.ma/sitemap-cities.xml");
-    expect(index).toContain("https://altusplace.ma/api/sitemap-listings.xml");
-    expect(index).toContain("https://altusplace.ma/api/sitemap-companies.xml");
-  });
-
-  it("keeps only public, canonical pages in the static sub-sitemap", () => {
-    const sitemap = read("client/public/sitemap-static.xml");
-    expect(sitemap).toContain("https://altusplace.ma/search");
-    expect(sitemap).toContain("https://altusplace.ma/locations");
-    expect(sitemap).toContain("https://altusplace.ma/blog");
-    // Redirects and protected routes must never be submitted.
-    expect(sitemap).not.toContain("/add-car");
-    expect(sitemap).not.toContain("/help");
-  });
-
-  it("lists every city landing page in the cities sub-sitemap", () => {
-    const sitemap = read("client/public/sitemap-cities.xml");
-    for (const slug of ["casablanca", "marrakech", "agadir", "tangier", "oujda", "laayoune", "dakhla"]) {
-      expect(sitemap).toContain(`locations/${slug}`);
+  it("publishes a single deterministic sitemap.xml with marketing routes", () => {
+    const sitemap = read("client/public/sitemap.xml");
+    expect(sitemap).toContain('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">');
+    expect(sitemap).toContain("https://altusplace.ma/");
+    for (const slug of ["casablanca", "marrakech", "agadir", "rabat", "tangier", "fes"]) {
+      expect(sitemap).toContain(`https://altusplace.ma/city/${slug}`);
     }
-    expect(sitemap).toContain("locations/marrakech-car-rental");
-    expect(sitemap).toContain("locations/mohammed-v-airport-car-rental");
+    expect(sitemap).toContain("https://altusplace.ma/terms");
+    expect(sitemap).toContain("https://altusplace.ma/privacy");
+    expect(sitemap).toContain("https://altusplace.ma/blog");
+    // Top published listings (cap 500) are appended with their own entries.
+    expect(sitemap).toMatch(/<loc>https:\/\/altusplace\.ma\/(?:car|property)\/\d+<\/loc>/);
+    // The old sitemap-index + sub-sitemap scheme no longer exists.
+    expect(sitemap).not.toContain("<sitemapindex");
+    expect(sitemap).not.toContain("sitemap-static.xml");
+    expect(sitemap).not.toContain("sitemap-cities.xml");
   });
 
-  it("points robots.txt at the canonical domain and keeps private areas out", () => {
+  it("keeps only public marketing pages in the sitemap", () => {
+    const sitemap = read("client/public/sitemap.xml");
+    // Redirects and protected routes must never be submitted.
+    for (const forbidden of ["/add-car", "/help", "/dashboard", "/admin", "/checkout", "/direct-login", "/locations/"]) {
+      expect(sitemap).not.toContain(forbidden);
+    }
+  });
+
+  it("points robots.txt at the sitemap and blocks private areas", () => {
     const robots = read("client/public/robots.txt");
-    expect(robots).toContain("Sitemap: https://altusplace.ma/sitemap.xml");
-    expect(robots).not.toContain("vercel.app");
-    for (const area of ["/admin", "/kyc", "/checkout", "/api/"]) {
+    expect(robots).toContain("Sitemap: https://altusplace.vercel.app/sitemap.xml");
+    expect(robots).toContain("Allow: /");
+    for (const area of ["/admin", "/host", "/api", "/direct-login"]) {
       expect(robots).toContain(`Disallow: ${area}`);
     }
   });

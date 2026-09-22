@@ -76,11 +76,14 @@ function BespokeLocationPage({ location }: { location: LocationKey }) {
   );
 }
 
-function CityLocationPage({ city }: { city: string }) {
+function CityLocationPage({ city, canonicalPath: canonicalPathProp }: { city: string; canonicalPath?: string }) {
   const { language } = useLanguage();
   const slug = slugForCity(city);
   const isArabic = language === "ar";
   const cityNameFr = cityLabelFr(city);
+  // The /city/:slug marketing routes canonicalize to themselves; the legacy
+  // /locations/:slug pages keep pointing at their own canonical path.
+  const cityPath = canonicalPathProp ?? `/locations/${slug}`;
 
   const { data: listings = [], isLoading, isError } = trpc.listings.list.useQuery();
 
@@ -107,8 +110,8 @@ function CityLocationPage({ city }: { city: string }) {
   useSEO({
     title,
     description,
-    path: `/locations/${slug}`,
-    canonicalPath: `/locations/${slug}`,
+    path: cityPath,
+    canonicalPath: cityPath,
     language,
     robots: isEmptyCity ? "noindex, follow" : "index, follow, max-image-preview:large",
   });
@@ -119,10 +122,10 @@ function CityLocationPage({ city }: { city: string }) {
       "@type": "BreadcrumbList",
       itemListElement: [
         { "@type": "ListItem", position: 1, name: "ALTUSplace", item: `${BASE_URL}/` },
-        { "@type": "ListItem", position: 2, name: cityNameFr, item: `${BASE_URL}/locations/${slug}` },
+        { "@type": "ListItem", position: 2, name: cityNameFr, item: `${BASE_URL}${cityPath}` },
       ],
     });
-  }, [cityNameFr, slug]);
+  }, [cityNameFr, cityPath]);
 
   useEffect(() => {
     if (cityListings.length === 0) return;
@@ -261,13 +264,21 @@ function LocationsHub({ knownSlugSeen }: { knownSlugSeen?: boolean }) {
   );
 }
 
-export default function LocationLanding({ location }: { location?: LocationKey }) {
+export default function LocationLanding({
+  location,
+  slug: slugProp,
+  canonicalPath,
+}: {
+  location?: LocationKey;
+  slug?: string;
+  canonicalPath?: string;
+}) {
   const [, params] = useRoute("/locations/:slug");
-  const slug = params?.slug;
+  const slug = slugProp ?? params?.slug;
 
   if (location) return <BespokeLocationPage location={location} />;
 
   const city = slug ? cityFromSlug(slug) : null;
   if (!city) return <LocationsHub knownSlugSeen={Boolean(slug)} />;
-  return <CityLocationPage city={city} />;
+  return <CityLocationPage city={city} canonicalPath={canonicalPath} />;
 }

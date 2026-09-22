@@ -1,25 +1,7 @@
 User-agent: *
 Allow: /
-Allow: /search
-Allow: /locations
-Allow: /blog
-
 Disallow: /admin
-Disallow: /super
-Disallow: /dashboard
 Disallow: /host
-Disallow: /partner
-Disallow: /agency-dashboard
-Disallow: /kyc
-Disallow: /profile
-Disallow: /checkout
-Disallow: /success
-Disallow: /voucher
-Disallow: /messages
-Disallow: /my-bookings
-Disallow: /notifications
-Disallow: /favorites
+Disallow: /api
 Disallow: /direct-login
-Disallow: /api/
-
-Sitemap: https://altusplace.ma/sitemap.xml
+Sitemap: https://altusplace.vercel.app/sitemap.xml

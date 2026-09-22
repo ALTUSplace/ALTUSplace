@@ -60,16 +60,11 @@ describe("location landing pages audit", () => {
     expect(app).toContain('<Route path="/locations/:slug">');
   });
 
-  it("lists every city landing page in the sitemap", () => {
-    const sitemap = read("client/public/sitemap-cities.xml");
-    expect(sitemap).toContain("locations/casablanca");
-    expect(sitemap).toContain("locations/marrakech");
-    expect(sitemap).toContain("locations/agadir");
-    expect(sitemap).toContain("locations/tangier");
-    expect(sitemap).toContain("locations/oujda");
-    expect(sitemap).toContain("locations/laayoune");
-    expect(sitemap).toContain("locations/dakhla");
-    expect(sitemap).toContain("locations/marrakech-car-rental");
+  it("lists the six prerendered city marketing pages in the sitemap", () => {
+    const sitemap = read("client/public/sitemap.xml");
+    for (const slug of ["casablanca", "marrakech", "agadir", "rabat", "tangier", "fes"]) {
+      expect(sitemap).toContain(`https://altusplace.ma/city/${slug}`);
+    }
   });
 
   it("keeps the shared regional city dropdown used by listing forms", () => {
