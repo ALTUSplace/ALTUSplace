@@ -1419,7 +1419,7 @@ export const appRouter = router({
       if (!rows.length) return [];
       const attachments = await db.select({ id: disputeAttachments.id, disputeId: disputeAttachments.disputeId, originalFileName: disputeAttachments.originalFileName, fileKey: disputeAttachments.fileKey, mimeType: disputeAttachments.mimeType, fileSize: disputeAttachments.fileSize })
         .from(disputeAttachments).where(inArray(disputeAttachments.disputeId, rows.map(row => row.id)));
-      return rows.map(row => ({ ...row, attachments: attachments.filter(file => file.disputeId === row.id).map(file => ({ id: file.id, name: file.originalFileName, mimeType: file.mimeType, size: file.fileSize, url: `/manus-storage/${file.fileKey}` })) }));
+      return rows.map(row => ({ ...row, attachments: attachments.filter(file => file.disputeId === row.id).map(file => ({ id: file.id, name: file.originalFileName, mimeType: file.mimeType, size: file.fileSize, url: `/storage/${file.fileKey}` })) }));
     }),
     create: protectedProcedure
       .input(z.object({ bookingId: z.number().int().positive(), type: z.string().trim().min(2).max(120), description: z.string().trim().min(5).max(5000), attachments: z.array(z.object({ name: z.string().trim().min(1).max(255), mimeType: z.string().trim().min(1).max(100), contentBase64: z.string().max(14000000) })).max(5).optional() }))
@@ -2955,7 +2955,7 @@ export const appRouter = router({
     // Generates the standard Moroccan car rental contract ("Contrat de Location
     // de Véhicule") pre-filled with the confirmed booking and the renter's
     // verified KYC identity. PDFs are stored securely and surfaced via the
-    // /manus-storage proxy; the agency downloads it from its dashboard.
+    // /storage proxy; the agency downloads it from its dashboard.
     createForBooking: ownerProcedure
       .input(z.object({
         bookingId: z.number().int().positive(),

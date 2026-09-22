@@ -1453,14 +1453,14 @@ export default function AgencyDashboard() {
                 <>
                   {docBooking.drivingLicenseKey && (
                     <DocumentPreview
-                      src={`/manus-storage/${docBooking.drivingLicenseKey}`}
+                      src={`/storage/${docBooking.drivingLicenseKey}`}
                       mime={docBooking.drivingLicenseMimeType ?? ""}
                       fileName={docBooking.drivingLicenseFileName ?? documentKindLabel.drivingLicense}
                     />
                   )}
                   {docBooking.identityDocumentKey && (
                     <DocumentPreview
-                      src={`/manus-storage/${docBooking.identityDocumentKey}`}
+                      src={`/storage/${docBooking.identityDocumentKey}`}
                       mime={docBooking.identityDocumentMimeType ?? ""}
                       fileName={docBooking.identityDocumentFileName ?? documentKindLabel.identityDocument}
                     />

@@ -208,25 +208,28 @@ export function registerPartnerApplicationRoutes(app: Express) {
         return;
       }
 
-      // Upload images best-effort: the pending application is the point of this
-      // endpoint, so a missing/unavailable object-storage backend must never
-      // block it. On failure we keep the row and report imagesUploaded=false so
-      // the UI can tell the applicant the attachments were not stored. If Forge
-      // storage gets configured later, uploads resume automatically.
+      // Upload images to object storage. Attachments are mandatory: if any
+      // upload fails the pending application is rolled back and the request
+      // fails (no silent fallback), so a half-submitted application is never
+      // left behind.
       let logoUrl: string | null = null;
       const galleryUrls: string[] = [];
-      let imagesUploaded = true;
       try {
         if (logo) logoUrl = await uploadStagedImage(`applications/${applicationId}/logo`, logo);
         for (const image of galleryImages) {
           galleryUrls.push(await uploadStagedImage(`applications/${applicationId}/gallery`, image));
         }
       } catch (imageError) {
-        imagesUploaded = false;
-        logger.warn("[PartnerApplication] image upload skipped (application kept)", {
+        logger.error("[PartnerApplication] image upload failed — rolling back application", {
           applicationId,
           error: imageError instanceof Error ? imageError.message : String(imageError),
         });
+        const db = await getDb();
+        if (db) {
+          await db.delete(partnerApplications).where(eq(partnerApplications.id, applicationId));
+        }
+        fail(res, 500, "تعذر رفع الصور إلى خادم التخزين. تحقق من الصور وأعد المحاولة.", "image_upload_failed");
+        return;
       }
       const db = await getDb();
       if (db) {
@@ -246,7 +249,7 @@ export function registerPartnerApplicationRoutes(app: Express) {
         dedupeKey: `partner-application:${applicationId}`,
       });
       logger.warn("[PartnerApplication] new application submitted");
-      res.json({ success: true, applicationId, status: "pending", imagesUploaded });
+      res.json({ success: true, applicationId, status: "pending" });
     } catch (error) {
       logger.error("[PartnerApplication] apply failed", {
         error: error instanceof Error ? error.message : String(error),

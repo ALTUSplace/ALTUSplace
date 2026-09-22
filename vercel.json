@@ -90,6 +90,10 @@
   ],
   "rewrites": [
     {
+      "source": "/storage/(.*)",
+      "destination": "/api/index"
+    },
+    {
       "source": "/api/(.*)",
       "destination": "/api/index"
     },

@@ -131,7 +131,6 @@ export default function PartnerApply() {
   const [fieldError, setFieldError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [imagesUploaded, setImagesUploaded] = useState(true);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -235,13 +234,11 @@ export default function PartnerApply() {
 
     setSubmitting(true);
     try {
-      const result = await callApply<{
+      await callApply<{
         success: boolean;
         applicationId: number;
         status: string;
-        imagesUploaded?: boolean;
       }>(payload);
-      setImagesUploaded(result.imagesUploaded !== false);
       setSubmitted(true);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "حدث خطأ غير متوقع. حاول مرة أخرى.");
@@ -262,11 +259,6 @@ export default function PartnerApply() {
             شكراً لاهتمامك بالانضمام إلى ALTUSplace. سيراجع فريقنا طلبك وسيصدر لك حساب شريك فور
             الموافقة، وسيمكنك بعدها من تسجيل الدخول بالبريد الإلكتروني وكلمة المرور اللذين أدخلتهما.
           </p>
-          {!imagesUploaded && (
-            <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs font-medium text-amber-800">
-              ملاحظة: تعذر إرفاق الصور مع الطلب حالياً — سيتواصل معك فريقنا لاستكمالها لاحقاً إن لزم الأمر.
-            </p>
-          )}
           <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
             <Link href="/">
               <Button className="w-full bg-[#102d2b] text-white hover:bg-[#163c39]">العودة إلى الرئيسية</Button>

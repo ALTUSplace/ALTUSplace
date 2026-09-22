@@ -20,6 +20,10 @@ export const ENV = {
   isProduction: process.env.NODE_ENV === "production",
   forgeApiUrl: process.env.BUILT_IN_FORGE_API_URL ?? "",
   forgeApiKey: process.env.BUILT_IN_FORGE_API_KEY ?? "",
+  // Supabase Storage (object uploads + signed reads). The service-role key is
+  // required because server-side uploads bypass Row Level Security.
+  supabaseUrl: process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL ?? "",
+  supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY ?? "",
   // Identity verification provider: "manual" (secure upload + admin review),
   // "stripe_identity", or "persona". See server/verification/provider.ts.
   verificationProvider: process.env.VERIFICATION_PROVIDER ?? "manual",
