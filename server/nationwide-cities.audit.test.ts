@@ -33,7 +33,9 @@ describe("nationwide multi-region scope audit", () => {
     expect(agency).toContain("CitySelect value={carForm.city}");
     expect(agency).toContain("CitySelect value={propertyForm.city}");
     const home = read("client/src/pages/Home.tsx");
-    expect(home).toContain("CitySelect");
+    expect(home).toContain("SearchBar");
+    const searchBar = read("client/src/components/SearchBar.tsx");
+    expect(searchBar).toContain("CitySelect");
     const addCar = read("client/src/pages/AddCar.tsx");
     expect(addCar).toContain("CitySelect");
     const bottomSheet = read("client/src/components/FilterBottomSheet.tsx");

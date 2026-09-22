@@ -76,8 +76,12 @@ describe("real-estate property management audit", () => {
   it("surfaces real-estate listings in home and property detail", () => {
     const home = read("client/src/pages/Home.tsx");
     expect(home).toContain("isPropertyCategory");
-    expect(home).toContain('استعرض العقارات');
+    // The featured-properties action is localized: Home references the key,
+    // and the Arabic string lives in the i18n dictionary.
+    expect(home).toContain("featuredPropertiesAction");
     expect(home).toContain('type="property"');
+    const dictionary = read("client/src/contexts/LanguageContext.tsx");
+    expect(dictionary).toContain('featuredPropertiesAction: "استعرض العقارات"');
     const detail = read("client/src/pages/PropertyDetailWithVideo.tsx");
     expect(detail).toContain("pricePerMonth");
     expect(detail).toContain("rangeBlocked");

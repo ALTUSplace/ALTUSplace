@@ -14,6 +14,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { isCarCategory, isPropertyCategory } from '@/lib/categories';
 import { CitySelect } from '@/components/CitySelect';
+import { SearchBar, type SearchBarValues } from '@/components/SearchBar';
 import { resolveCitySlug } from '@/data/moroccoCities';
 import { useSEO } from '@/lib/seo';
 
@@ -88,7 +89,7 @@ const toListingItem = (item: {
 
 export default function Search() {
   const [, setLocation] = useLocation();
-  const { language, t } = useLanguage();
+  const { language, t, direction } = useLanguage();
   const searchParams = new URLSearchParams(window.location.search);
 
   const rawCity = searchParams.get('city') || 'all';
@@ -105,7 +106,11 @@ export default function Search() {
   const [maxPrice, setMaxPrice] = useState(4000);
   const [excellenceOnly, setExcellenceOnly] = useState(false);
   const [sortBy, setSortBy] = useState<'recommended' | 'price-asc' | 'price-desc'>('recommended');
-  const listingInput = useMemo(() => ({ startDate: startDateParam, endDate: endDateParam }), [startDateParam, endDateParam]);
+  const [activeDates, setActiveDates] = useState<{ startDate?: string; endDate?: string }>({
+    startDate: startDateParam,
+    endDate: endDateParam,
+  });
+  const listingInput = useMemo(() => ({ startDate: activeDates.startDate, endDate: activeDates.endDate }), [activeDates]);
   const listingsQuery = trpc.listings.list.useQuery(listingInput);
   const serverListings = useMemo(() => (listingsQuery.data ?? []).map(toListingItem), [listingsQuery.data]);
 
@@ -244,11 +249,13 @@ export default function Search() {
     if (maxPrice !== 4000) params.set('maxPrice', String(maxPrice));
     if (sortBy !== 'recommended') params.set('sort', sortBy);
     if (viewMode !== 'grid') params.set('view', viewMode);
+    if (activeDates.startDate) params.set('startDate', activeDates.startDate);
+    if (activeDates.endDate) params.set('endDate', activeDates.endDate);
     const searchString = params.toString();
     const next = searchString ? `/search?${searchString}` : '/search';
     const current = window.location.pathname + window.location.search;
     if (next !== current) setLocation(next, { replace: true });
-  }, [cityFilter, typeFilter, searchQuery, maxPrice, sortBy, viewMode, setLocation]);
+  }, [cityFilter, typeFilter, searchQuery, maxPrice, sortBy, viewMode, activeDates, setLocation]);
 
   const categoryPills = [
     { key: 'catAll', type: 'all', q: '' },
@@ -264,10 +271,17 @@ export default function Search() {
     setSearchQuery(pill.q);
   };
 
+  // Compact search bar submits: switch the vertical, update filters + dates.
+  const handleCompactSearch = (values: SearchBarValues) => {
+    setTypeFilter(values.type);
+    if (values.city && values.city !== 'all') setCityFilter(values.city);
+    setActiveDates({ startDate: values.startDate, endDate: values.endDate });
+  };
+
   return (
-    <div className="min-h-screen bg-background text-foreground pb-20" dir="rtl">
+    <div className="min-h-screen bg-background text-foreground pb-20" dir={direction}>
       <div className="container mx-auto px-4 space-y-8">
-        
+
         {/* شريط عائم للمقارنة */}
         {compareList.length > 0 && (
           <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-bg-elevated/95 backdrop-blur-xl border border-accent-clay/40 p-4 rounded-2xl shadow-2xl flex items-center gap-4 animate-in fade-in-50">
@@ -294,10 +308,13 @@ export default function Search() {
           </div>
         )}
 
+        {/* Unified search bar — persists on results (Kayak pattern) */}
+        <SearchBar variant="compact" initialTab={typeFilter === 'property' ? 'property' : 'car'} onSubmit={handleCompactSearch} />
+
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div className="space-y-2">
-            <h1 className="text-3xl font-extrabold tracking-tight text-ink-primary">{language === 'fr' ? 'Guide des voitures disponibles' : 'دليل السيارات المتاحة'}</h1>
-            <p className="text-ink-secondary text-sm leading-relaxed">{language === 'fr' ? 'Découvrez les offres vérifiées au Maroc avec filtres professionnels et réservation simplifiée.' : 'استعرض أفضل العروض المعتمدة في المغرب مع فلاتر مهنية وحجز مبسط.'}</p>
+            <h1 className="text-3xl font-extrabold tracking-tight text-ink-primary">{t('searchHubTitle')}</h1>
+            <p className="text-ink-secondary text-sm leading-relaxed">{t('searchHubSubtitle')}</p>
           </div>
         </div>
 
@@ -366,7 +383,7 @@ export default function Search() {
             <div className="space-y-2">
               <label className="text-xs font-semibold text-ink-secondary">النوع</label>
               <div className="grid grid-cols-3 gap-1 bg-bg-muted border border-border-default rounded-xl p-1">
-                {([['all', 'الكل'], ['car', 'سيارات'], ['property', 'عقارات']] as const).map(([value, label]) => (
+                {([['all', t('catAll')], ['car', t('cars')], ['property', t('properties')]] as const).map(([value, label]) => (
                   <button
                     key={value}
                     type="button"
@@ -415,7 +432,7 @@ export default function Search() {
                     }`}
                   >
                     <LayoutGrid className="w-3.5 h-3.5" />
-                    شبكة
+                    {t('viewGrid')}
                   </button>
                   <button
                     onClick={() => setViewMode('map')}
@@ -426,7 +443,7 @@ export default function Search() {
                     }`}
                   >
                     <Map className="w-3.5 h-3.5" />
-                    خريطة
+                    {t('viewMap')}
                   </button>
                 </div>
                 <div className="hidden sm:block w-px h-6 bg-border-default" />
@@ -482,8 +499,8 @@ export default function Search() {
                     type={item.type === 'car' ? 'car' : 'property'}
                     rating={item.rating}
                     reviewCount={item.reviewCount}
-                    startDate={startDateParam}
-                    endDate={endDateParam}
+                    startDate={activeDates.startDate}
+                    endDate={activeDates.endDate}
                     specs={{
                       transmission: item.specs?.transmission,
                       fuel: item.specs?.fuel,

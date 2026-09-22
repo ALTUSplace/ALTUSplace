@@ -1,20 +1,18 @@
-﻿import { useState } from 'react';
-import { Link, useLocation } from 'wouter';
+﻿import { Link, useLocation } from 'wouter';
 import { trpc } from '@/lib/trpc';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { OptimizedImage } from '@/components/OptimizedImage';
-import { Search, MapPin, Car, Building2, ShieldCheck, ArrowRight, CheckCircle2, Award, Clock } from 'lucide-react';
+import { Search, Car, ShieldCheck, ArrowRight, CheckCircle2, Award, Clock } from 'lucide-react';
 import { LISTINGS } from '@/data/altusplace';
 import { SmartRecommendations } from '@/components/SmartRecommendations';
 import { FAQSection } from '@/components/FAQSection';
 import { ListingCard } from '@/components/ui/ListingCard';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { CatalogShowcase } from '@/components/CatalogShowcase';
+import { SearchBar } from '@/components/SearchBar';
 import { isCarCategory, isPropertyCategory } from '@/lib/categories';
-import { CitySelect } from '@/components/CitySelect';
 import { useSEO } from '@/lib/seo';
-import { toast } from 'sonner';
 
 export default function Home() {
   const [, setLocation] = useLocation();
@@ -26,12 +24,6 @@ export default function Home() {
     path: '/',
     type: 'website',
   });
-
-  // Search states for Cars
-  const [carCity, setCarCity] = useState('الدار البيضاء');
-  const [pickupDate, setPickupDate] = useState('');
-  const [dropoffDate, setDropoffDate] = useState('');
-  const [searchTab, setSearchTab] = useState<'car' | 'property'>('car');
 
   const categoryPills = [
     { key: 'catSuv', type: 'car', q: 'SUV' },
@@ -86,21 +78,6 @@ export default function Home() {
       }
     })) : LISTINGS.filter(item => item.type === 'property');
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setLocation(`/search?type=${searchTab}&city=${encodeURIComponent(carCity)}&startDate=${encodeURIComponent(pickupDate)}&endDate=${encodeURIComponent(dropoffDate)}`);
-  };
-
-  // Editorial search field primitives — pill-shaped, floating on a white card
-  const fieldBase =
-    'group relative flex flex-1 items-center gap-3 rounded-full bg-bg-muted/55 px-5 py-3 text-right transition-colors duration-200 cursor-pointer hover:bg-bg-muted focus-within:bg-bg-muted';
-  const fieldIconClass =
-    'shrink-0 h-5 w-5 text-ink-tertiary transition-colors duration-200 group-hover:text-ink-secondary group-focus-within:text-accent-clay';
-  const fieldCaptionClass =
-    'text-[10px] sm:text-[11px] font-bold tracking-wide text-ink-tertiary transition-colors duration-200 group-focus-within:text-ink-secondary';
-  const fieldControlClass =
-    'w-full min-w-0 bg-transparent outline-none text-sm font-bold text-ink-primary placeholder:text-ink-tertiary cursor-pointer [color-scheme:light] [&::-webkit-calendar-picker-indicator]:cursor-pointer';
-
   return (
     <div className="min-h-screen bg-bg-base text-ink-primary flex flex-col" dir={direction}>
 
@@ -128,7 +105,7 @@ export default function Home() {
               <div className="flex flex-wrap items-center gap-4">
                 <Button
                   onClick={() => setLocation('/search')}
-                  className="b2-press bg-[#D4AF37] px-6 py-3 text-sm font-bold text-[#0A192F] shadow-md transition-colors hover:bg-[#c9a228]"
+                  className="b2-press bg-accent-clay px-6 py-3 text-sm font-bold text-white shadow-[var(--shadow-clay)] transition-colors hover:bg-accent-clay-hover"
                   style={{ borderRadius: '6px' }}
                 >
                   <Search className="w-4 h-4" aria-hidden="true" />
@@ -159,6 +136,7 @@ export default function Home() {
                     alt={t('bentoFleetTitle')}
                     width={700}
                     height={700}
+                    fetchPriority="high"
                     className="aspect-[4/5] w-full object-cover"
                   />
                 </div>
@@ -169,99 +147,12 @@ export default function Home() {
               </div>
             </div>
 
-            {/* ── Floating multi-tab search widget — spans the full width ── */}
+            {/* ── Unified search widget — Cars | Properties, shared SearchBar ── */}
             <div className="lg:col-span-12 mt-2">
-              <div className="mx-auto max-w-4xl">
-                {/* Segmented tabs */}
-                <div className="mb-4 flex justify-center">
-                  <div
-                    role="tablist"
-                    aria-label={t('browseCategories')}
-                    className="inline-flex items-center gap-1 rounded-full border border-border-subtle bg-bg-surface/85 p-1 shadow-md backdrop-blur-md"
-                  >
-                    <button
-                      type="button"
-                      role="tab"
-                      aria-selected={searchTab === 'car'}
-                      onClick={() => setSearchTab('car')}
-                      className={`inline-flex items-center gap-2 rounded-full px-5 py-2 text-sm font-bold transition-colors duration-200 ${
-                        searchTab === 'car'
-                          ? 'bg-accent-clay text-white shadow-[var(--shadow-clay)]'
-                          : 'text-ink-secondary hover:text-ink-primary'
-                      }`}
-                    >
-                      <Car className="h-4 w-4" />
-                      {t('searchTabCars')}
-                    </button>
-                    <button
-                      type="button"
-                      role="tab"
-                      aria-selected={searchTab === 'property'}
-                      onClick={() => setSearchTab('property')}
-                      className={`inline-flex items-center gap-2 rounded-full px-5 py-2 text-sm font-bold transition-colors duration-200 ${
-                        searchTab === 'property'
-                          ? 'bg-accent-clay text-white shadow-[var(--shadow-clay)]'
-                          : 'text-ink-secondary hover:text-ink-primary'
-                      }`}
-                    >
-                      <Building2 className="h-4 w-4" />
-                      {t('searchTabProperties')}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Floating search card */}
-                <div className="rounded-[2rem] border border-border-subtle bg-bg-surface p-2 shadow-2xl ring-1 ring-ink-primary/[0.03]">
-                  <form onSubmit={handleSearchSubmit} className="flex flex-col gap-2 lg:flex-row lg:items-stretch">
-                    <label className={fieldBase}>
-                      <MapPin className={fieldIconClass} strokeWidth={1.5} />
-                      <span className="flex min-w-0 flex-1 flex-col items-start text-right">
-                        <span className={fieldCaptionClass}>{t('searchCityOdgency')}</span>
-                        <CitySelect
-                          value={carCity}
-                          onChange={setCarCity}
-                          className={fieldControlClass}
-                        />
-                      </span>
-                    </label>
-
-                    <label className={fieldBase}>
-                      <span className="flex min-w-0 flex-1 flex-col items-start text-right">
-                        <span className={fieldCaptionClass}>{t('searchPickupDate')}</span>
-                        <input
-                          type="date"
-                          value={pickupDate}
-                          onChange={(e) => setPickupDate(e.target.value)}
-                          className={fieldControlClass}
-                        />
-                      </span>
-                    </label>
-
-                    <label className={fieldBase}>
-                      <span className="flex min-w-0 flex-1 flex-col items-start text-right">
-                        <span className={fieldCaptionClass}>{t('searchDropoffDate')}</span>
-                        <input
-                          type="date"
-                          value={dropoffDate}
-                          onChange={(e) => setDropoffDate(e.target.value)}
-                          className={fieldControlClass}
-                        />
-                      </span>
-                    </label>
-
-                    <button
-                      type="submit"
-                      aria-label={t('searchSubmitAdvanced')}
-                      className="b2-press flex shrink-0 items-center justify-center gap-2 self-stretch rounded-full bg-accent-clay px-8 py-3.5 text-sm font-extrabold text-white shadow-[var(--shadow-clay)] transition-colors hover:bg-accent-clay-hover lg:ms-1"
-                    >
-                      <Search className="h-4 w-4" strokeWidth={2.5} />
-                      <span>{t('search')}</span>
-                    </button>
-                  </form>
-                </div>
+              <SearchBar variant="hero" />
 
                 {/* Horizontal category pills */}
-                <div className="mt-6 flex flex-col gap-3">
+                <div className="mx-auto mt-6 flex max-w-4xl flex-col gap-3">
                   <span className="text-center text-[11px] font-bold uppercase tracking-[0.18em] text-ink-tertiary">
                     {t('browseCategories')}
                   </span>
@@ -285,7 +176,6 @@ export default function Home() {
                     ))}
                   </div>
                 </div>
-              </div>
             </div>
           </div>
         </div>
@@ -353,8 +243,6 @@ export default function Home() {
               type="car"
               rating={(item as { rating?: number }).rating ?? 0}
               reviewCount={(item as { reviewCount?: number }).reviewCount ?? 0}
-              startDate={pickupDate || undefined}
-              endDate={dropoffDate || undefined}
               specs={{
                 transmission: (item as { specs?: { transmission?: string } }).specs?.transmission,
                 fuel: (item as { specs?: { fuel?: string } }).specs?.fuel,
@@ -370,9 +258,9 @@ export default function Home() {
       {/* Featured Properties Section */}
       <section className="py-10 md:py-16 px-4 container mx-auto max-w-6xl border-t border-border-subtle">
         <PageHeader
-          eyebrow="عقارات للكراء"
-          title="شقق، فيلات ومكاتب معتمدة"
-          action={{ label: 'استعرض العقارات', href: '/search?type=property' }}
+          eyebrow={t('featuredPropertiesBadge')}
+          title={t('featuredPropertiesTitle')}
+          action={{ label: t('featuredPropertiesAction'), href: '/search?type=property' }}
         />
 
         {activeProperties.length > 0 ? (
@@ -388,8 +276,6 @@ export default function Home() {
                 type="property"
                 rating={(item as { rating?: number }).rating ?? 0}
                 reviewCount={(item as { reviewCount?: number }).reviewCount ?? 0}
-                startDate={pickupDate || undefined}
-                endDate={dropoffDate || undefined}
                 specs={{
                   rooms: item.specs?.rooms ? Number(item.specs.rooms) : undefined,
                   area: item.specs?.area,
@@ -401,7 +287,7 @@ export default function Home() {
           </div>
         ) : (
           <div className="mt-8 rounded-2xl border border-dashed border-border-default bg-bg-surface p-10 text-center text-sm text-ink-secondary">
-            لا توجد عقارات معتمدة حالياً — أضف شقتك أو مكتبك من لوحة الوكالة لتظهر هنا.
+            {t('noPropertiesYet')}
           </div>
         )}
       </section>
