@@ -1,3 +1,5 @@
+import { logger } from "./logger";
+
 export const ENV = {
   appId: process.env.VITE_APP_ID ?? "",
   // Session-signing secret. Falls back to DIRECT_LOGIN_PASSWORD so a single
@@ -48,3 +50,22 @@ export const ENV = {
   deeplApiKey: process.env.DEEPL_API_KEY ?? "",
   translationEnabled: process.env.TRANSLATION_ENABLED !== "false",
 };
+
+// ── Production security boot guards ─────────────────────────────────────────
+// Runs on first import so every server process (API functions, cron handlers,
+// local `pnpm start`) refuses to boot with an insecure production
+// configuration instead of silently running with a weak secret.
+if (process.env.NODE_ENV === "production") {
+  if (ENV.directLoginPassword) {
+    logger.warn("SECURITY: direct-login backdoor enabled in production", {
+      hint: "remove DIRECT_LOGIN_PASSWORD before general availability",
+    });
+  }
+  const secret = process.env.JWT_SECRET ?? "";
+  if (secret.length < 32) {
+    throw new Error(
+      "SECURITY: FATAL — JWT_SECRET is missing or shorter than 32 characters. " +
+        "Refusing to boot in production. Set a strong JWT_SECRET (>= 32 chars) and redeploy.",
+    );
+  }
+}

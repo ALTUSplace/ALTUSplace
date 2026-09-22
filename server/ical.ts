@@ -3,9 +3,8 @@ import { and, eq } from "drizzle-orm";
 import { bookings, listings } from "../drizzle/schema";
 import { getDb } from "./db";
 import { sdk } from "./_core/sdk";
-import { escapeIcal, parseIcalEvents, toIcalDate, validateIcalImportUrl } from "../shared/ical";
-
-const FETCH_TIMEOUT_MS = 12_000;
+import { escapeIcal, parseIcalEvents, toIcalDate } from "../shared/ical";
+import { fetchExternalText, validateExternalUrl } from "./security/urlGuard";
 
 export async function syncListingIcal(listingId: number) {
   const db = await getDb();
@@ -14,16 +13,8 @@ export async function syncListingIcal(listingId: number) {
   const listing = rows[0];
   if (!listing?.icalImportUrl) return { synced: false, skipped: "not_configured" as const };
   try {
-    const url = validateIcalImportUrl(listing.icalImportUrl);
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-    const response = await fetch(url, { signal: controller.signal, headers: { Accept: "text/calendar,text/plain;q=0.9" } });
-    clearTimeout(timeout);
-    if (!response.ok) throw new Error(`iCal HTTP ${response.status}`);
-    const length = Number(response.headers.get("content-length") ?? 0);
-    if (length > 1_000_000) throw new Error("iCal feed exceeds 1 MB");
-    const body = await response.text();
-    if (body.length > 1_000_000) throw new Error("iCal feed exceeds 1 MB");
+    const url = await validateExternalUrl(listing.icalImportUrl);
+    const body = await fetchExternalText(url);
     const ranges = parseIcalEvents(body);
     await db.update(listings).set({ icalImportedRanges: JSON.stringify(ranges), icalLastSyncedAt: new Date(), icalSyncStatus: "ok", icalSyncError: null }).where(eq(listings.id, listingId));
     return { synced: true, count: ranges.length };
