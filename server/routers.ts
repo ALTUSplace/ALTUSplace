@@ -7,7 +7,7 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { adminProcedure, ownerProcedure, publicProcedure, protectedProcedure, router, superAdminProcedure } from "./_core/trpc";
 import { getDb } from "./db";
-import { listings, listingAnalyticsEvents, listingComments, bookings, reviews, users, commercialLeaseContracts, notifications, platformSettings, commissionTiers, escrowEntries, payoutRequests, disputes, disputeAttachments, supportTickets, payments, invoices, kycSubmissions, bookingVouchers, bookingMessages, auditLogs, refundRequests, transactions } from "../drizzle/schema";
+import { listings, listingAnalyticsEvents, listingComments, bookings, reviews, users, commercialLeaseContracts, notifications, platformSettings, commissionTiers, escrowEntries, payoutRequests, disputes, disputeAttachments, supportTickets, payments, invoices, kycSubmissions, bookingVouchers, bookingMessages, auditLogs, refundRequests, transactions, partnerApplications } from "../drizzle/schema";
 import { eq, and, lte, gte, lt, gt, asc, desc, count, isNull, inArray, ne, or, not, ilike, sql, type SQL } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { safeNotifyUser, buildEmailContent, sendWhatsAppText, normalizeWhatsAppNumber, alertAdmins } from "./notificationService";
@@ -25,6 +25,7 @@ import { createImageVerificationProof, ORIGINAL_IMAGE_REJECTION_MESSAGE, verifyI
 import { isRangeAvailable, overlaps, parseBlockedRanges, parseDateRange } from "./availability";
 import { getTranslatedListing, getTranslationStats, invalidateTranslationCache, isTranslationAvailable, SUPPORTED_LANGUAGES, translateWithAws } from "./_core/translation";
 import { ENV } from "./_core/env";
+import { partnerOpenId } from "./_core/partnerAuth";
 import { getKycStatusPayload } from "./verification/eligibility";
 import { assertKycEligibleToBook } from "./verification/eligibility";
 import { maskDocumentNumber, normalizeBookingCategory } from "./verification/requirements";
@@ -650,6 +651,55 @@ export const appRouter = router({
         await db.update(refundRequests).set({ status: input.status, adminNote: input.adminNote || null, reviewedBy: ctx.user!.id, reviewedAt: new Date() }).where(eq(refundRequests.id, input.refundId));
         await writeAuditLog({ actorId: ctx.user!.id, action: "refund.reviewed", entityType: "refund_request", entityId: input.refundId, beforeData: current[0], afterData: { ...current[0], status: input.status, adminNote: input.adminNote || null } });
         await safeNotifyUser({ userId: current[0].requestedBy, type: "system", title: "تحديث طلب الاسترداد / Mise à jour du remboursement", message: `تم تحديث طلب الاسترداد #${input.refundId} إلى حالة ${input.status}.`, href: "/my-bookings", entityType: "refund_request", entityId: input.refundId });
+        return { success: true as const };
+      }),
+    partnerApplications: adminProcedure.query(async () => {
+      const db = await getDb();
+      if (!db) return [];
+      return db.select().from(partnerApplications).orderBy(desc(partnerApplications.createdAt)).limit(100);
+    }),
+    reviewPartnerApplication: adminProcedure
+      .input(z.object({ id: z.number().int().positive(), decision: z.enum(["approved", "rejected"]), adminNote: z.string().trim().max(2000).optional() }))
+      .mutation(async ({ ctx, input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "قاعدة البيانات غير متاحة." });
+        const [application] = await db.select().from(partnerApplications).where(eq(partnerApplications.id, input.id)).limit(1);
+        if (!application) throw new TRPCError({ code: "NOT_FOUND", message: "الطلب غير موجود." });
+        if (application.status !== "pending") throw new TRPCError({ code: "BAD_REQUEST", message: "تمت مراجعة هذا الطلب بالفعل." });
+
+        if (input.decision === "approved") {
+          const emailTaken = await db.select({ id: users.id }).from(users)
+            .where(eq(users.email, application.email)).limit(1);
+          const openIdTaken = await db.select({ id: users.id }).from(users)
+            .where(eq(users.openId, partnerOpenId(application.email))).limit(1);
+          if (emailTaken[0] || openIdTaken[0]) {
+            throw new TRPCError({ code: "CONFLICT", message: "هذا البريد الإلكتروني مسجل بالفعل كحساب — لا يمكن إنشاء حساب الشريك تلقائياً." });
+          }
+          await db.insert(users).values({
+            openId: partnerOpenId(application.email),
+            name: application.agencyName,
+            email: application.email,
+            agencyName: application.agencyName,
+            agencyCity: application.city,
+            agencyPhone: application.phone,
+            agencyEmail: application.email,
+            agencyLogoUrl: application.logoUrl ?? undefined,
+            agencyWebsite: application.website ?? undefined,
+            loginMethod: "partner",
+            passwordHash: application.passwordHash ?? undefined,
+            passwordSalt: application.passwordSalt ?? undefined,
+            role: "partner",
+            accountStatus: "active",
+            lastSignedIn: new Date(),
+          });
+          await db.update(partnerApplications).set({ status: "approved", adminNote: input.adminNote || null, reviewedAt: new Date() }).where(eq(partnerApplications.id, input.id));
+          await writeAuditLog({ actorId: ctx.user.id, action: "partner_application.approved", entityType: "partner_application", entityId: input.id, beforeData: { status: application.status }, afterData: { status: "approved", adminNote: input.adminNote || null } });
+          await alertAdmins({ type: "system", title: "تمت الموافقة على طلب شريك / Partenaire approuvé", message: `تم إنشاء حساب الشريك «${application.agencyName}» (${application.email}). يمكنه الآن تسجيل الدخول من فضاء الشركاء.`, href: "/admin", entityType: "partner_application", entityId: input.id, dedupeKey: `partner-application-approved:${input.id}` });
+        } else {
+          await db.update(partnerApplications).set({ status: "rejected", adminNote: input.adminNote || null, reviewedAt: new Date() }).where(eq(partnerApplications.id, input.id));
+          await writeAuditLog({ actorId: ctx.user.id, action: "partner_application.rejected", entityType: "partner_application", entityId: input.id, beforeData: { status: application.status }, afterData: { status: "rejected", adminNote: input.adminNote || null } });
+          await alertAdmins({ type: "system", title: "رُفض طلب شريك", message: `تم رفض طلب «${application.agencyName}» (${application.email}).`, href: "/admin", entityType: "partner_application", entityId: input.id, dedupeKey: `partner-application-rejected:${input.id}` });
+        }
         return { success: true as const };
       }),
     overview: adminProcedure.query(async () => {

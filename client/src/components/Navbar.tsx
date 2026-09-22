@@ -417,6 +417,10 @@ export default function Navbar() {
           </nav>
 
           <div className="hidden shrink-0 items-center gap-2 md:flex">
+            <Link href="/become-partner" className="b2-press corner-cut-sm hidden min-h-10 items-center gap-1.5 rounded-sm bg-accent-clay px-3 text-xs font-extrabold text-white shadow-[var(--shadow-clay)] transition-colors hover:bg-accent-clay-hover lg:inline-flex" aria-label={t("partnerJoinCta")} title={t("partnerJoinCta")}>
+              <Handshake className="h-4 w-4" />
+              <span>{t("partnerJoinCta")}</span>
+            </Link>
             <NavSelector
               icon={Coins}
               title={t("chooseCurrency")}
@@ -667,6 +671,10 @@ export default function Navbar() {
                 </button>
               )}
 
+              <Link href="/become-partner" onClick={() => setMobileMenuOpen(false)} className="b2-press corner-cut-sm flex min-h-11 items-center justify-center gap-2 rounded-sm bg-accent-green px-4 py-3 text-sm font-extrabold text-white transition-colors hover:bg-accent-green/90">
+                <Handshake className="h-4 w-4" />
+                {t("partnerJoinCta")}
+              </Link>
               <Link href="/add-car" onClick={() => setMobileMenuOpen(false)} className="b2-press corner-cut-sm flex min-h-11 items-center justify-center rounded-sm bg-accent-clay px-4 py-3 text-sm font-extrabold text-white shadow-[var(--shadow-clay)] transition-colors hover:bg-accent-clay-hover">
                 {t("addCar")}
               </Link>

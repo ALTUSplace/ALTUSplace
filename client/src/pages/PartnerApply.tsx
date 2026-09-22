@@ -1,0 +1,440 @@
+import { useEffect, useMemo, useState } from "react";
+import { Link, useRoute } from "wouter";
+import {
+  Building2,
+  Car,
+  CheckCircle2,
+  ChevronRight,
+  ImagePlus,
+  Loader2,
+  ShieldCheck,
+  Trash2,
+} from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { useSEO } from "@/lib/seo";
+
+const MAX_IMAGE_BYTES = 6 * 1024 * 1024;
+const MAX_GALLERY_IMAGES = 4;
+const MAX_TOTAL_IMAGES = 5; // logo + gallery
+
+type StagedImage = {
+  fileName: string;
+  mimeType: string;
+  contentBase64: string;
+  previewUrl: string;
+};
+
+type ApplyPayload = {
+  type: "car_rental" | "real_estate";
+  agencyName: string;
+  city: string;
+  phone: string;
+  email: string;
+  password: string;
+  website?: string;
+  contactPerson?: string;
+  description?: string;
+  fleetSize?: number;
+  propertyCount?: number;
+  logo?: { fileName?: string; mimeType: string; contentBase64: string };
+  gallery?: Array<{ fileName?: string; mimeType: string; contentBase64: string }>;
+};
+
+function fileToStaged(file: File): Promise<StagedImage> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = typeof reader.result === "string" ? reader.result : "";
+      const comma = result.indexOf(",");
+      const meta = comma !== -1 ? result.slice(5, comma) : "";
+      const mime = meta.split(";")[0] || file.type || "image/jpeg";
+      const contentBase64 = comma !== -1 ? result.slice(comma + 1) : "";
+      if (!contentBase64) {
+        reject(new Error("تعذر قراءة الصورة."));
+        return;
+      }
+      resolve({ fileName: file.name, mimeType: mime, contentBase64, previewUrl: result });
+    };
+    reader.onerror = () => reject(new Error("تعذر قراءة الصورة."));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function callApply<T>(body: unknown): Promise<T> {
+  const timeoutMs = 30_000;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  let response: Response;
+  try {
+    response = await fetch("/api/auth/partner/apply", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      credentials: "same-origin",
+      signal: controller.signal,
+    });
+  } catch (error) {
+    if (controller.signal.aborted) {
+      throw new Error("انتهت مهلة العملية — تحقق من اتصالك بالإنترنت وحاول مجدداً.");
+    }
+    throw error;
+  } finally {
+    clearTimeout(timer);
+  }
+  let payload: { error?: string; reason?: string } | null = null;
+  try {
+    payload = (await response.json()) as { error?: string; reason?: string };
+  } catch {
+    // non-JSON error body: fall back to the generic message below
+  }
+  if (!response.ok) {
+    throw new Error(payload?.error || "حدث خطأ غير متوقع. حاول مرة أخرى.");
+  }
+  return payload as T;
+}
+
+const inputClass =
+  "mt-2 w-full rounded-lg border p-3 font-normal focus:border-[#102d2b] focus:outline-none focus:ring-2 focus:ring-[#102d2b]/20";
+
+export default function PartnerApply() {
+  const [match, params] = useRoute("/become-partner/:type");
+  const rawType = params?.type === "real-estate" ? "real_estate" : "car_rental";
+  const isCar = rawType === "car_rental";
+
+  const title = useMemo(
+    () => (isCar ? "الانضمام كشريك — وكالة كراء السيارات" : "الانضمام كشريك — وكالة عقارية"),
+    [isCar],
+  );
+
+  useSEO({
+    title,
+    description:
+      "قدّم طلب انضمام كشريك في ALTUSplace: بيانات وكالتك، معلومات التواصل، وشعار وصور وكالتك. ستُراجع طلباتك ليصدر حساب شر كك بعد الموافقة.",
+    path: match ? `/become-partner/${params?.type}` : "/become-partner",
+    canonicalPath: match ? `/become-partner/${params?.type}` : "/become-partner",
+  });
+
+  const [agencyName, setAgencyName] = useState("");
+  const [city, setCity] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [website, setWebsite] = useState("");
+  const [contactPerson, setContactPerson] = useState("");
+  const [description, setDescription] = useState("");
+  const [fleetSize, setFleetSize] = useState("");
+  const [propertyCount, setPropertyCount] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [logo, setLogo] = useState<StagedImage | null>(null);
+  const [gallery, setGallery] = useState<StagedImage[]>([]);
+  const [fieldError, setFieldError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [imagesUploaded, setImagesUploaded] = useState(true);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
+
+  const totalImageCount = (logo ? 1 : 0) + gallery.length;
+
+  const pickLogo = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("يرجى اختيار ملف صورة صالح.");
+      return;
+    }
+    if (file.size > MAX_IMAGE_BYTES) {
+      toast.error("حجم الصورة كبير جداً — الحد الأقصى 6 ميجابايت.");
+      return;
+    }
+    try {
+      setLogo(await fileToStaged(file));
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "تعذر قراءة الصورة.");
+    }
+  };
+
+  const pickGallery = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files ?? []);
+    event.target.value = "";
+    if (files.length === 0) return;
+    if (gallery.length + files.length > MAX_GALLERY_IMAGES) {
+      toast.error(`يمكن رفع ${MAX_GALLERY_IMAGES} صور كحد أقصى في المعرض.`);
+      return;
+    }
+    if (totalImageCount + files.length > MAX_TOTAL_IMAGES) {
+      toast.error(`يمكن رفع ${MAX_TOTAL_IMAGES} صور كحد أقصى (الشعار + المعرض).`);
+      return;
+    }
+    try {
+      const staged: StagedImage[] = [];
+      for (const file of files) {
+        if (!file.type.startsWith("image/")) {
+          toast.error("يرجى اختيار ملفات صور صالحة.");
+          return;
+        }
+        if (file.size > MAX_IMAGE_BYTES) {
+          toast.error("حجم صورة كبيرة جداً — الحد الأقصى 6 ميجابايت لكل صورة.");
+          return;
+        }
+        staged.push(await fileToStaged(file));
+      }
+      setGallery((current) => [...current, ...staged]);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "تعذر قراءة الصور.");
+    }
+  };
+
+  const submit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (submitting) return;
+    setFieldError(null);
+
+    const trimmedName = agencyName.trim();
+    if (trimmedName.length < 2) return setFieldError("أدخل اسم الوكالة (حرفان على الأقل).");
+    if (!city.trim()) return setFieldError("أدخل المدينة.");
+    if (!phone.trim()) return setFieldError("أدخل رقم الهاتف بالصيغة الدولية (مثال: +2126...).");
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) return setFieldError("أدخل بريداً إلكترونياً صالحاً.");
+    if (password.length < 8) return setFieldError("كلمة المرور يجب أن تكون 8 أحرف على الأقل.");
+    if (password !== confirmPassword) return setFieldError("كلمتا المرور غير متطابقتين.");
+    if (website.trim() && !/^https?:\/\/[^\s]+$/.test(website.trim())) {
+      return setFieldError("رابط الموقع يجب أن يبدأ بـ http:// أو https:// (أو اتركه فارغاً).");
+    }
+    if (isCar && fleetSize.trim() && (!Number.isInteger(Number(fleetSize)) || Number(fleetSize) < 0)) {
+      return setFieldError("أدخل عدد سيارات الأسطول كرقم صحيح موجب.");
+    }
+    if (!isCar && propertyCount.trim() && (!Number.isInteger(Number(propertyCount)) || Number(propertyCount) < 0)) {
+      return setFieldError("أدخل عدد العقارات كرقم صحيح موجب.");
+    }
+
+    const payload: ApplyPayload = {
+      type: rawType,
+      agencyName: trimmedName,
+      city: city.trim(),
+      phone: phone.trim(),
+      email: email.trim().toLowerCase(),
+      password,
+      website: website.trim() || undefined,
+      contactPerson: contactPerson.trim() || undefined,
+      description: description.trim() || undefined,
+      fleetSize: isCar && fleetSize.trim() ? Number(fleetSize) : undefined,
+      propertyCount: !isCar && propertyCount.trim() ? Number(propertyCount) : undefined,
+      logo: logo
+        ? { fileName: logo.fileName, mimeType: logo.mimeType, contentBase64: logo.contentBase64 }
+        : undefined,
+      gallery: gallery.map((image) => ({
+        fileName: image.fileName,
+        mimeType: image.mimeType,
+        contentBase64: image.contentBase64,
+      })),
+    };
+
+    setSubmitting(true);
+    try {
+      const result = await callApply<{
+        success: boolean;
+        applicationId: number;
+        status: string;
+        imagesUploaded?: boolean;
+      }>(payload);
+      setImagesUploaded(result.imagesUploaded !== false);
+      setSubmitted(true);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "حدث خطأ غير متوقع. حاول مرة أخرى.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (submitted) {
+    return (
+      <main dir="rtl" className="grid min-h-screen place-items-center bg-[#f4f7f6] px-4 py-16 text-slate-900">
+        <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+          <span className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-emerald-50 text-emerald-600">
+            <CheckCircle2 className="h-9 w-9" />
+          </span>
+          <h1 className="mt-5 text-2xl font-black text-[#102d2b]">تم استلام طلبك بنجاح</h1>
+          <p className="mt-3 text-sm leading-relaxed text-slate-600">
+            شكراً لاهتمامك بالانضمام إلى ALTUSplace. سيراجع فريقنا طلبك وسيصدر لك حساب شريك فور
+            الموافقة، وسيمكنك بعدها من تسجيل الدخول بالبريد الإلكتروني وكلمة المرور اللذين أدخلتهما.
+          </p>
+          {!imagesUploaded && (
+            <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs font-medium text-amber-800">
+              ملاحظة: تعذر إرفاق الصور مع الطلب حالياً — سيتواصل معك فريقنا لاستكمالها لاحقاً إن لزم الأمر.
+            </p>
+          )}
+          <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
+            <Link href="/">
+              <Button className="w-full bg-[#102d2b] text-white hover:bg-[#163c39]">العودة إلى الرئيسية</Button>
+            </Link>
+            <Link href="/partner">
+              <Button variant="outline" className="w-full">فضاء الشركاء — تسجيل الدخول</Button>
+            </Link>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  return (
+    <main dir="rtl" className="min-h-screen bg-[#f4f7f6] px-4 py-10 text-slate-900 sm:px-6 lg:px-10">
+      <div className="mx-auto max-w-3xl">
+        <Link href="/become-partner" className="inline-flex items-center gap-1 text-xs font-bold text-slate-500 hover:text-[#102d2b]">
+          <ChevronRight className="h-4 w-4" />
+          كل مسارات الانضمام
+        </Link>
+
+        <section className="mt-4 rounded-2xl bg-[#102d2b] p-6 text-white">
+          <span className="grid h-12 w-12 place-items-center rounded-xl bg-white/10 text-[#f5b85b]">
+            {isCar ? <Car className="h-6 w-6" /> : <Building2 className="h-6 w-6" />}
+          </span>
+          <h1 className="mt-4 text-2xl font-black sm:text-3xl">{title}</h1>
+          <p className="mt-2 max-w-xl text-sm leading-relaxed text-white/70">
+            قدّم طلب انضمام مع بيانات وكالتك ومعلومات التواصل وصورها. سيُراجع فريقنا طلبك ويصدر حساب
+            الشريك بعد الموافقة.
+          </p>
+        </section>
+
+        <form onSubmit={submit} className="mt-6 space-y-6">
+          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h2 className="text-sm font-black text-[#102d2b]">بيانات الوكالة</h2>
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              <label className="text-sm font-semibold sm:col-span-2">
+                اسم الوكالة *
+                <input className={inputClass} value={agencyName} onChange={(event) => setAgencyName(event.target.value)} placeholder="مثال: وكالة الأطلس للكراء" />
+              </label>
+              <label className="text-sm font-semibold">
+                المدينة *
+                <input className={inputClass} value={city} onChange={(event) => setCity(event.target.value)} placeholder="مراكش" />
+              </label>
+              <label className="text-sm font-semibold">
+                الشخص المسؤول (اختياري)
+                <input className={inputClass} value={contactPerson} onChange={(event) => setContactPerson(event.target.value)} placeholder="الاسم الكامل" />
+              </label>
+              {isCar ? (
+                <label className="text-sm font-semibold">
+                  حجم الأسطول — عدد السيارات
+                  <input className={inputClass} type="number" min="0" value={fleetSize} onChange={(event) => setFleetSize(event.target.value)} placeholder="مثال: 10" />
+                </label>
+              ) : (
+                <label className="text-sm font-semibold">
+                  عدد العقارات المتاحة للكراء
+                  <input className={inputClass} type="number" min="0" value={propertyCount} onChange={(event) => setPropertyCount(event.target.value)} placeholder="مثال: 15" />
+                </label>
+              )}
+              <label className="text-sm font-semibold">
+                الموقع الإلكتروني (اختياري)
+                <input className={inputClass} type="url" dir="ltr" value={website} onChange={(event) => setWebsite(event.target.value)} placeholder="https://example.com" />
+              </label>
+              <label className="text-sm font-semibold sm:col-span-2">
+                نبذة عن الوكالة (اختياري)
+                <textarea className={`${inputClass} min-h-24`} value={description} onChange={(event) => setDescription(event.target.value)} maxLength={2000} placeholder="تخصصكم، الخدمات، عدد الفروع..." />
+              </label>
+            </div>
+          </section>
+
+          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h2 className="text-sm font-black text-[#102d2b]">معلومات التواصل والحساب</h2>
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              <label className="text-sm font-semibold">
+                رقم الهاتف (واتساب) *
+                <input className={inputClass} type="tel" dir="ltr" value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="+2126XXXXXXXX" />
+              </label>
+              <label className="text-sm font-semibold">
+                البريد الإلكتروني *
+                <input className={inputClass} type="email" dir="ltr" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" />
+              </label>
+              <label className="text-sm font-semibold">
+                كلمة المرور (8 أحرف على الأقل) *
+                <input className={inputClass} type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="new-password" />
+              </label>
+              <label className="text-sm font-semibold">
+                تأكيد كلمة المرور *
+                <input className={inputClass} type="password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} autoComplete="new-password" />
+              </label>
+            </div>
+            <p className="mt-4 flex items-start gap-2 rounded-lg bg-slate-50 p-3 text-xs text-slate-500">
+              <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+              ستستخدم هذه البيانات لتسجيل الدخول إلى فضاء الشركاء فور موافقة فريقنا على طلبك.
+            </p>
+          </section>
+
+          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h2 className="text-sm font-black text-[#102d2b]">صور الوكالة</h2>
+            <p className="mt-1 text-xs text-slate-500">
+              الشعار اختياري، ويمكن رفع حتى {MAX_GALLERY_IMAGES} صور إضافية للوكالة أو الأسطول (كل صورة حتى 6 ميجابايت).
+            </p>
+
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <label className="relative flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 p-6 text-center transition-colors hover:border-[#102d2b]">
+                {logo ? (
+                  <img src={logo.previewUrl} alt="شعار الوكالة" className="max-h-24 rounded-lg object-contain" />
+                ) : (
+                  <ImagePlus className="h-6 w-6 text-slate-400" />
+                )}
+                <span className="text-xs font-bold text-slate-600">{logo ? "تغيير الشعار" : "رفع شعار الوكالة (اختياري)"}</span>
+                <input type="file" accept="image/*" className="sr-only" onChange={pickLogo} />
+                {logo && (
+                  <button
+                    type="button"
+                    onClick={() => setLogo(null)}
+                    className="absolute left-2 top-2 rounded-full bg-red-50 p-1.5 text-red-600 hover:bg-red-100"
+                    aria-label="إزالة الشعار"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                )}
+              </label>
+
+              <label className="relative flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 p-6 text-center transition-colors hover:border-[#102d2b]">
+                <ImagePlus className="h-6 w-6 text-slate-400" />
+                <span className="text-xs font-bold text-slate-600">رفع صور المعرض ({gallery.length}/{MAX_GALLERY_IMAGES})</span>
+                <input type="file" accept="image/*" multiple className="sr-only" onChange={pickGallery} />
+              </label>
+            </div>
+
+            {gallery.length > 0 && (
+              <div className="mt-3 grid grid-cols-3 gap-3 sm:grid-cols-4">
+                {gallery.map((image, index) => (
+                  <div key={`${image.fileName}-${index}`} className="relative">
+                    <img src={image.previewUrl} alt={`صورة معرض ${index + 1}`} className="h-24 w-full rounded-lg object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => setGallery((current) => current.filter((_, itemIndex) => itemIndex !== index))}
+                      className="absolute right-1 top-1 rounded-full bg-red-50 p-1 text-red-600 hover:bg-red-100"
+                      aria-label="إزالة الصورة"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+
+          {fieldError && (
+            <p className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm font-bold text-red-700">{fieldError}</p>
+          )}
+
+          <Button type="submit" disabled={submitting} className="w-full bg-[#102d2b] py-4 text-base font-black text-white hover:bg-[#163c39] disabled:cursor-not-allowed disabled:opacity-60">
+            {submitting ? (
+              <>
+                <Loader2 className="ml-2 h-5 w-5 animate-spin" />
+                جارٍ إرسال الطلب...
+              </>
+            ) : (
+              "إرسال طلب الانضمام"
+            )}
+          </Button>
+          <p className="text-center text-xs text-slate-500">
+            بإرسالك الطلب فإنك توافق على مراجعة فريق ALTUSplace لبياناتك قبل إصدار حساب الشريك.
+          </p>
+        </form>
+      </div>
+    </main>
+  );
+}

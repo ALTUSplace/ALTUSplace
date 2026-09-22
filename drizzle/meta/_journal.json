@@ -85,6 +85,13 @@
       "when": 1790520000000,
       "tag": "0011_add_partner_role_and_agency_fields",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1790032479098,
+      "tag": "0012_late_firestar",
+      "breakpoints": true
     }
   ]
 }

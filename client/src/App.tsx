@@ -18,6 +18,7 @@ import { useNoIndex } from "@/lib/seo";
 import { startLogin } from "./const";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
+import { TrpcUnbatchedProvider } from "./lib/TrpcUnbatchedProvider";
 
 // Lazy-loaded pages and global widgets keep the initial mobile bundle small.
 const HostDashboard = lazy(() => import("./pages/HostDashboard"));
@@ -52,6 +53,8 @@ const AgencyDashboardPage = lazy(() => import("./pages/AgencyDashboard"));
 const RegisterPage = lazy(() => import("./pages/Register"));
 const DirectLoginPage = lazy(() => import("./pages/DirectLogin"));
 const AgencyOnboardingPage = lazy(() => import("./pages/AgencyOnboarding"));
+const PartnerWithUsPage = lazy(() => import("./pages/PartnerWithUs"));
+const PartnerApplyPage = lazy(() => import("./pages/PartnerApply"));
 const LocationLandingPage = lazy(() => import("./pages/LocationLanding"));
 
 function PageLoader() {
@@ -129,13 +132,16 @@ function Router() {
         )}
       </Route>
       <Route path="/dashboard">{() => <AccessGuard area="host"><HostDashboard /></AccessGuard>}</Route>
-      <Route path="/admin">{() => <AccessGuard area="admin"><Suspense fallback={<PageLoader />}><AdminDashboardPage /></Suspense></AccessGuard>}</Route>
+      <Route path="/admin">{() => <AccessGuard area="admin"><Suspense fallback={<PageLoader />}><TrpcUnbatchedProvider><AdminDashboardPage /></TrpcUnbatchedProvider></Suspense></AccessGuard>}</Route>
       <Route path="/admin/super">{() => <AccessGuard area="superadmin"><Suspense fallback={<PageLoader />}><SuperDashboardPage /></Suspense></AccessGuard>}</Route>
       <Route path="/admin/super/dashboard">{() => <AccessGuard area="superadmin"><Suspense fallback={<PageLoader />}><SuperAdminDashboardPage /></Suspense></AccessGuard>}</Route>
       <Route path="/dispute-resolution" component={DisputeResolutionPage} />
       <Route path="/terms" component={TermsPage} />
       <Route path="/register">{() => <Suspense fallback={<PageLoader />}><RegisterPage /></Suspense>}</Route>
       <Route path="/direct-login">{() => <Suspense fallback={<PageLoader />}><DirectLoginPage /></Suspense>}</Route>
+      <Route path="/become-partner">{() => <Suspense fallback={<PageLoader />}><PartnerWithUsPage /></Suspense>}</Route>
+      <Route path="/become-partner/car-rental">{() => <Suspense fallback={<PageLoader />}><PartnerApplyPage /></Suspense>}</Route>
+      <Route path="/become-partner/real-estate">{() => <Suspense fallback={<PageLoader />}><PartnerApplyPage /></Suspense>}</Route>
       <Route path="/become-agency">{() => <Suspense fallback={<PageLoader />}><AgencyOnboardingPage /></Suspense>}</Route>
       <Route path="/agency/register">{() => <Suspense fallback={<PageLoader />}><AgencyOnboardingPage /></Suspense>}</Route>
       <Route path="/privacy" component={PrivacyPage} />

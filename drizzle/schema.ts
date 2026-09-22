@@ -63,6 +63,38 @@ export const users = pgTable("users", {
   legalConsentAt: timestamp("legal_consent_at"),
 });
 
+export const partnerApplicationStatusEnum = pgEnum("partner_application_status", ["pending", "approved", "rejected"]);
+export const partnerApplicationTypeEnum = pgEnum("partner_application_type", ["car_rental", "real_estate"]);
+
+/**
+ * Pending partner ("كن شريك") applications submitted through the public
+ * landing flow. An approved application is converted into a `users` row (role
+ * "partner") using the scrypt credentials captured here — the account is only
+ * created when an admin approves, so the applicant can log in immediately
+ * afterwards with the email/password they chose.
+ */
+export const partnerApplications = pgTable("partner_applications", {
+  id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
+  type: partnerApplicationTypeEnum("type").notNull(),
+  status: partnerApplicationStatusEnum("status").default("pending").notNull(),
+  agencyName: varchar("agency_name", { length: 180 }).notNull(),
+  city: varchar("city", { length: 120 }).notNull(),
+  phone: varchar("phone", { length: 32 }).notNull(),
+  email: varchar("email", { length: 320 }).notNull(),
+  website: varchar("website", { length: 255 }),
+  contactPerson: varchar("contact_person", { length: 120 }),
+  fleetSize: integer("fleet_size"), // car_rental only
+  propertyCount: integer("property_count"), // real_estate only
+  description: text("description"),
+  logoUrl: text("logo_url"),
+  galleryUrls: text("gallery_urls").array(),
+  passwordHash: text("password_hash"), // scrypt — reused to create the account on approval
+  passwordSalt: varchar("password_salt", { length: 64 }),
+  adminNote: text("admin_note"),
+  reviewedAt: timestamp("reviewed_at"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
 export const listings = pgTable("listings", {
   id: integer("listing_id").generatedAlwaysAsIdentity().primaryKey(),
   ownerId: integer("owner_id").notNull(),
