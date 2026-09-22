@@ -15,6 +15,7 @@ const SCRYPT_KEYLEN = 64;
 const MAX_IMAGE_BYTES = 6 * 1024 * 1024; // 6 MB per image
 const MAX_TOTAL_IMAGE_BYTES = 10 * 1024 * 1024; // 10 MB across logo + gallery
 const MAX_GALLERY_IMAGES = 4;
+const MAX_VEHICLES = 20;
 
 const emailSchema = z.string().trim().toLowerCase().email().max(320);
 const passwordSchema = z.string().min(8).max(256);
@@ -25,6 +26,15 @@ const imageSchema = z.object({
   fileName: z.string().trim().min(1).max(120).optional(),
   mimeType: z.string().trim().min(1).max(64),
   contentBase64: z.string().min(1),
+});
+
+const vehicleSchema = z.object({
+  name: z.string().trim().min(1).max(120),
+  year: z.number().int().min(1900).max(2100).optional(),
+  seats: z.number().int().min(1).max(50).optional(),
+  pricePerDay: z.number().int().min(1).max(100000),
+  fuelType: z.string().trim().max(32).optional().or(z.literal("")),
+  transmission: z.string().trim().max(32).optional().or(z.literal("")),
 });
 
 const applyBodySchema = z.object({
@@ -41,6 +51,7 @@ const applyBodySchema = z.object({
   propertyCount: z.number().int().min(0).max(100000).optional(),
   logo: imageSchema.optional(),
   gallery: z.array(imageSchema).max(MAX_GALLERY_IMAGES).optional(),
+  vehicles: z.array(vehicleSchema).max(MAX_VEHICLES).optional(),
 });
 
 /** Deterministic int32 from the normalized email (mirrors partnerAuth). */
@@ -127,6 +138,7 @@ export function registerPartnerApplicationRoutes(app: Express) {
       propertyCount,
       logo,
       gallery,
+      vehicles,
     } = parsed.data;
 
     const normalizedPhone = normalizeWhatsAppNumber(phone);
@@ -152,6 +164,23 @@ export function registerPartnerApplicationRoutes(app: Express) {
       contactPerson && contactPerson.trim() ? sanitizeUserContent(contactPerson, 120) : null;
     const storedWebsite =
       website && website.trim() ? website.trim().replace(/^https?:\/\//i, "") : null;
+    const storedVehicles =
+      type === "car_rental" && Array.isArray(vehicles) && vehicles.length > 0
+        ? vehicles.slice(0, MAX_VEHICLES).map((vehicle) => ({
+            name: sanitizeUserContent(vehicle.name, 120),
+            year: vehicle.year ?? null,
+            seats: vehicle.seats ?? null,
+            pricePerDay: vehicle.pricePerDay,
+            fuelType:
+              vehicle.fuelType && vehicle.fuelType.trim()
+                ? sanitizeUserContent(vehicle.fuelType.trim(), 32)
+                : null,
+            transmission:
+              vehicle.transmission && vehicle.transmission.trim()
+                ? sanitizeUserContent(vehicle.transmission.trim(), 32)
+                : null,
+          }))
+        : null;
     const salt = randomBytes(16).toString("hex");
     const passwordHash = scryptSync(password, salt, SCRYPT_KEYLEN).toString("hex");
 
@@ -191,6 +220,7 @@ export function registerPartnerApplicationRoutes(app: Express) {
             description: storedDescription,
             fleetSize: type === "car_rental" ? (fleetSize ?? null) : null,
             propertyCount: type === "real_estate" ? (propertyCount ?? null) : null,
+            vehicles: storedVehicles,
             passwordHash,
             passwordSalt: salt,
           })

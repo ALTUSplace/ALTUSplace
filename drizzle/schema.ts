@@ -73,6 +73,15 @@ export const partnerApplicationTypeEnum = pgEnum("partner_application_type", ["c
  * created when an admin approves, so the applicant can log in immediately
  * afterwards with the email/password they chose.
  */
+export type PartnerApplicationVehicle = {
+  name: string;
+  year?: number | null;
+  seats?: number | null;
+  pricePerDay: number;
+  fuelType?: string | null;
+  transmission?: string | null;
+};
+
 export const partnerApplications = pgTable("partner_applications", {
   id: integer("id").generatedAlwaysAsIdentity().primaryKey(),
   type: partnerApplicationTypeEnum("type").notNull(),
@@ -88,6 +97,9 @@ export const partnerApplications = pgTable("partner_applications", {
   description: text("description"),
   logoUrl: text("logo_url"),
   galleryUrls: text("gallery_urls").array(),
+  // Vehicles declared by a car-rental applicant's fleet. An admin approval
+  // converts them into live `listings` rows (category "car", status Published).
+  vehicles: jsonb("vehicles").$type<PartnerApplicationVehicle[] | null>(),
   passwordHash: text("password_hash"), // scrypt — reused to create the account on approval
   passwordSalt: varchar("password_salt", { length: 64 }),
   adminNote: text("admin_note"),

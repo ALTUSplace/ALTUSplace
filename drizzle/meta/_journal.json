@@ -92,6 +92,13 @@
       "when": 1790032479098,
       "tag": "0012_late_firestar",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1790600000000,
+      "tag": "0013_add_partner_application_vehicles",
+      "breakpoints": true
     }
   ]
 }

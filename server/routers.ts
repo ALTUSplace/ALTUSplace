@@ -6,7 +6,7 @@ import { parse as parseCookie } from "cookie";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { adminProcedure, ownerProcedure, publicProcedure, protectedProcedure, router, superAdminProcedure } from "./_core/trpc";
-import { getDb } from "./db";
+import { getDb, withTransaction } from "./db";
 import { listings, listingAnalyticsEvents, listingComments, bookings, reviews, users, commercialLeaseContracts, notifications, platformSettings, commissionTiers, escrowEntries, payoutRequests, disputes, disputeAttachments, supportTickets, payments, invoices, kycSubmissions, bookingVouchers, bookingMessages, auditLogs, refundRequests, transactions, partnerApplications } from "../drizzle/schema";
 import { eq, and, lte, gte, lt, gt, asc, desc, count, isNull, inArray, ne, or, not, ilike, sql, type SQL } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
@@ -675,26 +675,57 @@ export const appRouter = router({
           if (emailTaken[0] || openIdTaken[0]) {
             throw new TRPCError({ code: "CONFLICT", message: "هذا البريد الإلكتروني مسجل بالفعل كحساب — لا يمكن إنشاء حساب الشريك تلقائياً." });
           }
-          await db.insert(users).values({
-            openId: partnerOpenId(application.email),
-            name: application.agencyName,
-            email: application.email,
-            agencyName: application.agencyName,
-            agencyCity: application.city,
-            agencyPhone: application.phone,
-            agencyEmail: application.email,
-            agencyLogoUrl: application.logoUrl ?? undefined,
-            agencyWebsite: application.website ?? undefined,
-            loginMethod: "partner",
-            passwordHash: application.passwordHash ?? undefined,
-            passwordSalt: application.passwordSalt ?? undefined,
-            role: "partner",
-            accountStatus: "active",
-            lastSignedIn: new Date(),
+          // Vehicles declared on the application payload become live car
+          // listings (category "car", status Published) as soon as the partner
+          // is approved — they surface on /search?type=car and in the admin
+          // listing manager immediately. The whole approval is atomic: if any
+          // insert fails, the partner account and its listings roll back.
+          const submittedVehicles = Array.isArray(application.vehicles) ? application.vehicles : [];
+          const fleetVehicles =
+            application.type === "car_rental"
+              ? submittedVehicles.filter((vehicle) => vehicle.name.trim() && Number.isInteger(vehicle.pricePerDay) && vehicle.pricePerDay > 0)
+              : [];
+          let partnerUserId: number | null = null;
+          await withTransaction(async (tx) => {
+            const [createdUser] = await tx.insert(users).values({
+              openId: partnerOpenId(application.email),
+              name: application.agencyName,
+              email: application.email,
+              agencyName: application.agencyName,
+              agencyCity: application.city,
+              agencyPhone: application.phone,
+              agencyEmail: application.email,
+              agencyLogoUrl: application.logoUrl ?? undefined,
+              agencyWebsite: application.website ?? undefined,
+              loginMethod: "partner",
+              passwordHash: application.passwordHash ?? undefined,
+              passwordSalt: application.passwordSalt ?? undefined,
+              role: "partner",
+              accountStatus: "active",
+              lastSignedIn: new Date(),
+            }).returning({ id: users.id });
+            partnerUserId = Number(createdUser?.id ?? 0) || null;
+            if (!partnerUserId) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "تعذر إنشاء حساب الشريك — حاول مرة أخرى." });
+            for (const vehicle of fleetVehicles) {
+              await tx.insert(listings).values({
+                ownerId: partnerUserId,
+                title: vehicle.name.trim().slice(0, 120),
+                description: `سيارة من أسطول «${application.agencyName}» — منشورة تلقائياً بعد اعتماد طلب الشراكة.`,
+                category: "car",
+                pricePerDay: vehicle.pricePerDay,
+                city: application.city,
+                seats: vehicle.seats && vehicle.seats > 0 ? vehicle.seats : null,
+                year: vehicle.year ?? null,
+                fuelType: vehicle.fuelType?.trim() ? vehicle.fuelType.trim() : undefined,
+                transmission: vehicle.transmission?.trim() ? vehicle.transmission.trim() : undefined,
+                status: "Published",
+              });
+            }
+            await tx.update(partnerApplications).set({ status: "approved", adminNote: input.adminNote || null, reviewedAt: new Date() }).where(eq(partnerApplications.id, input.id));
           });
-          await db.update(partnerApplications).set({ status: "approved", adminNote: input.adminNote || null, reviewedAt: new Date() }).where(eq(partnerApplications.id, input.id));
-          await writeAuditLog({ actorId: ctx.user.id, action: "partner_application.approved", entityType: "partner_application", entityId: input.id, beforeData: { status: application.status }, afterData: { status: "approved", adminNote: input.adminNote || null } });
-          await alertAdmins({ type: "system", title: "تمت الموافقة على طلب شريك / Partenaire approuvé", message: `تم إنشاء حساب الشريك «${application.agencyName}» (${application.email}). يمكنه الآن تسجيل الدخول من فضاء الشركاء.`, href: "/admin", entityType: "partner_application", entityId: input.id, dedupeKey: `partner-application-approved:${input.id}` });
+          await writeAuditLog({ actorId: ctx.user.id, action: "partner_application.approved", entityType: "partner_application", entityId: input.id, beforeData: { status: application.status }, afterData: { status: "approved", adminNote: input.adminNote || null, vehiclesCreated: fleetVehicles.length } });
+          await alertAdmins({ type: "system", title: "تمت الموافقة على طلب شريك / Partenaire approuvé", message: `تم إنشاء حساب الشريك «${application.agencyName}» (${application.email})${fleetVehicles.length ? ` مع نشر ${fleetVehicles.length} سيارة` : ""}. يمكنه الآن تسجيل الدخول من فضاء الشركاء.`, href: "/admin", entityType: "partner_application", entityId: input.id, dedupeKey: `partner-application-approved:${input.id}` });
+          return { success: true as const, partnerUserId, vehiclesCreated: fleetVehicles.length };
         } else {
           await db.update(partnerApplications).set({ status: "rejected", adminNote: input.adminNote || null, reviewedAt: new Date() }).where(eq(partnerApplications.id, input.id));
           await writeAuditLog({ actorId: ctx.user.id, action: "partner_application.rejected", entityType: "partner_application", entityId: input.id, beforeData: { status: application.status }, afterData: { status: "rejected", adminNote: input.adminNote || null } });

@@ -7,6 +7,7 @@ import {
   ChevronRight,
   ImagePlus,
   Loader2,
+  Plus,
   ShieldCheck,
   Trash2,
 } from "lucide-react";
@@ -17,6 +18,7 @@ import { useSEO } from "@/lib/seo";
 const MAX_IMAGE_BYTES = 6 * 1024 * 1024;
 const MAX_GALLERY_IMAGES = 4;
 const MAX_TOTAL_IMAGES = 5; // logo + gallery
+const MAX_VEHICLES = 20;
 
 type StagedImage = {
   fileName: string;
@@ -39,7 +41,33 @@ type ApplyPayload = {
   propertyCount?: number;
   logo?: { fileName?: string; mimeType: string; contentBase64: string };
   gallery?: Array<{ fileName?: string; mimeType: string; contentBase64: string }>;
+  vehicles?: Array<{
+    name: string;
+    year?: number;
+    seats?: number;
+    pricePerDay: number;
+    fuelType?: string;
+    transmission?: string;
+  }>;
 };
+
+type VehicleDraft = {
+  name: string;
+  year: string;
+  seats: string;
+  pricePerDay: string;
+  fuelType: string;
+  transmission: string;
+};
+
+const emptyVehicle = (): VehicleDraft => ({
+  name: "",
+  year: "",
+  seats: "",
+  pricePerDay: "",
+  fuelType: "",
+  transmission: "",
+});
 
 function fileToStaged(file: File): Promise<StagedImage> {
   return new Promise((resolve, reject) => {
@@ -128,6 +156,7 @@ export default function PartnerApply() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [logo, setLogo] = useState<StagedImage | null>(null);
   const [gallery, setGallery] = useState<StagedImage[]>([]);
+  const [vehicles, setVehicles] = useState<VehicleDraft[]>([]);
   const [fieldError, setFieldError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -188,6 +217,20 @@ export default function PartnerApply() {
     }
   };
 
+  const addVehicle = () => {
+    setVehicles((current) =>
+      current.length >= MAX_VEHICLES ? current : [...current, emptyVehicle()],
+    );
+  };
+  const updateVehicle = (index: number, patch: Partial<VehicleDraft>) => {
+    setVehicles((current) =>
+      current.map((vehicle, i) => (i === index ? { ...vehicle, ...patch } : vehicle)),
+    );
+  };
+  const removeVehicle = (index: number) => {
+    setVehicles((current) => current.filter((_, i) => i !== index));
+  };
+
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (submitting) return;
@@ -210,6 +253,22 @@ export default function PartnerApply() {
       return setFieldError("أدخل عدد العقارات كرقم صحيح موجب.");
     }
 
+    const filledVehicles = isCar
+      ? vehicles.filter((v) => v.name.trim() || v.pricePerDay.trim())
+      : [];
+    for (const v of filledVehicles) {
+      if (!v.name.trim()) return setFieldError("أدخل اسم/موديل كل مركبة مضافة في قائمة المركبات.");
+      if (!v.pricePerDay.trim() || !Number.isInteger(Number(v.pricePerDay)) || Number(v.pricePerDay) < 1) {
+        return setFieldError("السعر اليومي لكل مركبة يجب أن يكون رقماً صحيحاً أكبر من صفر (درهم).");
+      }
+      if (v.year.trim() && (!Number.isInteger(Number(v.year)) || Number(v.year) < 1900 || Number(v.year) > 2100)) {
+        return setFieldError("سنة الصنع يجب أن تكون بين 1900 و 2100.");
+      }
+      if (v.seats.trim() && (!Number.isInteger(Number(v.seats)) || Number(v.seats) < 1 || Number(v.seats) > 50)) {
+        return setFieldError("عدد المقاعد يجب أن يكون بين 1 و 50.");
+      }
+    }
+
     const payload: ApplyPayload = {
       type: rawType,
       agencyName: trimmedName,
@@ -230,6 +289,17 @@ export default function PartnerApply() {
         mimeType: image.mimeType,
         contentBase64: image.contentBase64,
       })),
+      vehicles:
+        isCar && filledVehicles.length
+          ? filledVehicles.map((v) => ({
+              name: v.name.trim(),
+              pricePerDay: Math.round(Number(v.pricePerDay)),
+              year: v.year.trim() ? Number(v.year) : undefined,
+              seats: v.seats.trim() ? Number(v.seats) : undefined,
+              fuelType: v.fuelType.trim() || undefined,
+              transmission: v.transmission.trim() || undefined,
+            }))
+          : undefined,
     };
 
     setSubmitting(true);
@@ -328,6 +398,127 @@ export default function PartnerApply() {
               </label>
             </div>
           </section>
+
+          {isCar && (
+            <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-sm font-black text-[#102d2b]">مركبات الأسطول (اختياري)</h2>
+                  <p className="mt-1 text-xs leading-relaxed text-slate-500">
+                    أدرج سياراتك التي ستُنشر تلقائياً في الموقع فور اعتماد طلب الشراكة — اسم المركبة،
+                    السنة، المقاعد، والسعر اليومي بالدرهم.
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={addVehicle}
+                  disabled={vehicles.length >= MAX_VEHICLES}
+                >
+                  <Plus className="ml-1 h-4 w-4" />
+                  إضافة مركبة
+                </Button>
+              </div>
+              <div className="mt-4 space-y-4">
+                {vehicles.length === 0 && (
+                  <p className="rounded-lg bg-slate-50 p-3 text-xs text-slate-400">
+                    لم تُضف أي مركبات بعد — يمكن للوكالة إضافة مركباتها لاحقاً من فضاء الشريك بعد
+                    الموافقة.
+                  </p>
+                )}
+                {vehicles.map((vehicle, index) => (
+                  <div key={index} className="rounded-xl border border-slate-200 bg-slate-50/60 p-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-black text-slate-500">مركبة {index + 1}</span>
+                      <button
+                        type="button"
+                        onClick={() => removeVehicle(index)}
+                        className="inline-flex items-center gap-1 text-xs font-bold text-red-500 hover:text-red-700"
+                        aria-label={`حذف المركبة ${index + 1}`}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                        حذف
+                      </button>
+                    </div>
+                    <div className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                      <label className="text-sm font-semibold sm:col-span-2 lg:col-span-3">
+                        الاسم / الموديل *
+                        <input
+                          className={inputClass}
+                          value={vehicle.name}
+                          onChange={(event) => updateVehicle(index, { name: event.target.value })}
+                          placeholder="مثال: داسيا داستر 2022"
+                          maxLength={120}
+                        />
+                      </label>
+                      <label className="text-sm font-semibold">
+                        سنة الصنع
+                        <input
+                          className={inputClass}
+                          type="number"
+                          min="1900"
+                          max="2100"
+                          value={vehicle.year}
+                          onChange={(event) => updateVehicle(index, { year: event.target.value })}
+                          placeholder="مثال: 2022"
+                        />
+                      </label>
+                      <label className="text-sm font-semibold">
+                        عدد المقاعد
+                        <input
+                          className={inputClass}
+                          type="number"
+                          min="1"
+                          max="50"
+                          value={vehicle.seats}
+                          onChange={(event) => updateVehicle(index, { seats: event.target.value })}
+                          placeholder="مثال: 5"
+                        />
+                      </label>
+                      <label className="text-sm font-semibold">
+                        السعر اليومي (درهم) *
+                        <input
+                          className={inputClass}
+                          type="number"
+                          min="1"
+                          value={vehicle.pricePerDay}
+                          onChange={(event) =>
+                            updateVehicle(index, { pricePerDay: event.target.value })
+                          }
+                          placeholder="مثال: 350"
+                        />
+                      </label>
+                      <label className="text-sm font-semibold">
+                        نوع الوقود
+                        <input
+                          className={inputClass}
+                          value={vehicle.fuelType}
+                          onChange={(event) =>
+                            updateVehicle(index, { fuelType: event.target.value })
+                          }
+                          placeholder="ديزل"
+                          maxLength={32}
+                        />
+                      </label>
+                      <label className="text-sm font-semibold">
+                        ناقل الحركة
+                        <input
+                          className={inputClass}
+                          value={vehicle.transmission}
+                          onChange={(event) =>
+                            updateVehicle(index, { transmission: event.target.value })
+                          }
+                          placeholder="أوتوماتيك"
+                          maxLength={32}
+                        />
+                      </label>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
 
           <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <h2 className="text-sm font-black text-[#102d2b]">معلومات التواصل والحساب</h2>
