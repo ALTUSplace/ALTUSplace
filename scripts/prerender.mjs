@@ -37,8 +37,8 @@ function resolveSiteUrl() {
   if (process.env.VITE_SITE_URL) return process.env.VITE_SITE_URL.replace(/\/+$/, "");
   const combined = [".env", ".env.local", ".env.production.local"].map(readEnvFile).join("\n");
   const match = combined.match(/^VITE_SITE_URL=(.*)$/m);
-  const raw = match ? match[1].trim().replace(/^["']|["']$/g, "") : "https://altusplace.ma";
-  return raw.replace(/\/+$/, "") || "https://altusplace.ma";
+  const raw = match ? match[1].trim().replace(/^["']|["']$/g, "") : "https://altusplace.vercel.app";
+  return raw.replace(/\/+$/, "") || "https://altusplace.vercel.app";
 }
 
 const SITE_URL = resolveSiteUrl();

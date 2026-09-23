@@ -12,15 +12,15 @@ describe("sitemap + robots audit", () => {
   it("publishes a single deterministic sitemap.xml with marketing routes", () => {
     const sitemap = read("client/public/sitemap.xml");
     expect(sitemap).toContain('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">');
-    expect(sitemap).toContain("https://altusplace.ma/");
+    expect(sitemap).toContain("https://altusplace.vercel.app/");
     for (const slug of ["casablanca", "marrakech", "agadir", "rabat", "tangier", "fes"]) {
-      expect(sitemap).toContain(`https://altusplace.ma/city/${slug}`);
+      expect(sitemap).toContain(`https://altusplace.vercel.app/city/${slug}`);
     }
-    expect(sitemap).toContain("https://altusplace.ma/terms");
-    expect(sitemap).toContain("https://altusplace.ma/privacy");
-    expect(sitemap).toContain("https://altusplace.ma/blog");
+    expect(sitemap).toContain("https://altusplace.vercel.app/terms");
+    expect(sitemap).toContain("https://altusplace.vercel.app/privacy");
+    expect(sitemap).toContain("https://altusplace.vercel.app/blog");
     // Top published listings (cap 500) are appended with their own entries.
-    expect(sitemap).toMatch(/<loc>https:\/\/altusplace\.ma\/(?:car|property)\/\d+<\/loc>/);
+    expect(sitemap).toMatch(/<loc>https:\/\/altusplace\.vercel\.app\/(?:car|property)\/\d+<\/loc>/);
     // The old sitemap-index + sub-sitemap scheme no longer exists.
     expect(sitemap).not.toContain("<sitemapindex");
     expect(sitemap).not.toContain("sitemap-static.xml");
@@ -45,7 +45,7 @@ describe("sitemap + robots audit", () => {
   });
 
   it("escapes XML entities in generated URLs", () => {
-    const xml = buildUrlset([{ loc: "https://altusplace.ma/search?a=1&b=2" }]);
+    const xml = buildUrlset([{ loc: "https://altusplace.vercel.app/search?a=1&b=2" }]);
     expect(xml).toContain("a=1&amp;b=2");
     expect(xml).not.toContain("a=1&b=2");
   });
@@ -55,9 +55,9 @@ describe("sitemap + robots audit", () => {
       { id: 5, category: "car", createdAt: new Date("2026-01-02T00:00:00Z") },
       { id: 9, category: "real_estate", createdAt: null },
     ]);
-    expect(xml).toContain("https://altusplace.ma/car/5");
+    expect(xml).toContain("https://altusplace.vercel.app/car/5");
     expect(xml).toContain("<lastmod>2026-01-02</lastmod>");
-    expect(xml).toContain("https://altusplace.ma/property/9");
+    expect(xml).toContain("https://altusplace.vercel.app/property/9");
   });
 
   it("produces a valid empty urlset without a database", async () => {
@@ -67,18 +67,18 @@ describe("sitemap + robots audit", () => {
   });
 
   it("replaces the document head metadata when prerendering", async () => {
-    const template = `<!doctype html><html><head><title>Old</title><meta name="description" content="old"><link rel="canonical" href="https://altusplace.vercel.app/"><link rel="alternate" hreflang="en" href="https://altusplace.vercel.app/en"></head><body><div id="root"></div></body></html>`;
-    const html = await injectPrerenderMetadata(template, "/locations/casablanca", "https://altusplace.ma");
+    const template = `<!doctype html><html><head><title>Old</title><meta name="description" content="old"><link rel="canonical" href="https://altusplace.ma/"><link rel="alternate" hreflang="en" href="https://altusplace.ma/en"></head><body><div id="root"></div></body></html>`;
+    const html = await injectPrerenderMetadata(template, "/locations/casablanca", "https://altusplace.vercel.app");
     expect(html).not.toContain("<title>Old</title>");
-    expect(html).not.toContain("vercel.app");
-    expect(html).toContain('<link rel="canonical" href="https://altusplace.ma/locations/casablanca">');
+    expect(html).not.toContain('hreflang="en"');
+    expect(html).toContain('<link rel="canonical" href="https://altusplace.vercel.app/locations/casablanca">');
     expect(html).toContain("كراء");
     expect(html).toContain('<meta name="robots" content="index, follow, max-image-preview:large">');
   });
 
   it("round-trips a sitemap index through the shared builder", () => {
-    const xml = buildSitemapIndex(["https://altusplace.ma/sitemap-static.xml"]);
+    const xml = buildSitemapIndex(["https://altusplace.vercel.app/sitemap-static.xml"]);
     expect(xml).toContain("<sitemapindex");
-    expect(xml).toContain("<loc>https://altusplace.ma/sitemap-static.xml</loc>");
+    expect(xml).toContain("<loc>https://altusplace.vercel.app/sitemap-static.xml</loc>");
   });
 });

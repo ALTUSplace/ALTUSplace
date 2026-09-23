@@ -63,7 +63,7 @@ describe("location landing pages audit", () => {
   it("lists the six prerendered city marketing pages in the sitemap", () => {
     const sitemap = read("client/public/sitemap.xml");
     for (const slug of ["casablanca", "marrakech", "agadir", "rabat", "tangier", "fes"]) {
-      expect(sitemap).toContain(`https://altusplace.ma/city/${slug}`);
+      expect(sitemap).toContain(`https://altusplace.vercel.app/city/${slug}`);
     }
   });
 

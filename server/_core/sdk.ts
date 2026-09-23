@@ -33,8 +33,11 @@ class OAuthService {
   constructor(private client: ReturnType<typeof axios.create>) {
     console.log("[OAuth] Initialized with baseURL:", ENV.oAuthServerUrl);
     if (!ENV.oAuthServerUrl) {
-      console.error(
-        "[OAuth] ERROR: OAUTH_SERVER_URL is not configured! Set OAUTH_SERVER_URL environment variable."
+      // OAuth is optional: session-cookie and direct-login auth work without
+      // it. Keep this at debug level — an unset OAUTH_SERVER_URL is a
+      // configuration state (OAuth endpoints disabled), not an error.
+      console.debug(
+        "[OAuth] OAUTH_SERVER_URL not set — OAuth endpoints disabled (optional feature)."
       );
     }
   }

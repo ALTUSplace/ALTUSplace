@@ -14,7 +14,7 @@ import { listings } from "../../drizzle/schema";
 import { isCarCategory } from "../../client/src/lib/categories";
 import { buildUrlset, normalizeSiteUrl } from "../../shared/sitemap";
 
-export const SEO_SITE_URL = normalizeSiteUrl(process.env.VITE_SITE_URL || "https://altusplace.ma");
+export const SEO_SITE_URL = normalizeSiteUrl(process.env.VITE_SITE_URL || "https://altusplace.vercel.app");
 
 const MAX_LISTING_URLS = 5000;
 const PUBLISHED_STATUSES = ["Published", "Available"] as const;

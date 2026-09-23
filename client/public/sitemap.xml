@@ -1,93 +1,93 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://altusplace.ma/</loc>
+    <loc>https://altusplace.vercel.app/</loc>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://altusplace.ma/city/casablanca</loc>
+    <loc>https://altusplace.vercel.app/city/casablanca</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://altusplace.ma/city/marrakech</loc>
+    <loc>https://altusplace.vercel.app/city/marrakech</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://altusplace.ma/city/agadir</loc>
+    <loc>https://altusplace.vercel.app/city/agadir</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://altusplace.ma/city/rabat</loc>
+    <loc>https://altusplace.vercel.app/city/rabat</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://altusplace.ma/city/tangier</loc>
+    <loc>https://altusplace.vercel.app/city/tangier</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://altusplace.ma/city/fes</loc>
+    <loc>https://altusplace.vercel.app/city/fes</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://altusplace.ma/terms</loc>
+    <loc>https://altusplace.vercel.app/terms</loc>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://altusplace.ma/privacy</loc>
+    <loc>https://altusplace.vercel.app/privacy</loc>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://altusplace.ma/blog</loc>
+    <loc>https://altusplace.vercel.app/blog</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://altusplace.ma/car/11</loc>
+    <loc>https://altusplace.vercel.app/car/11</loc>
     <lastmod>2026-09-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://altusplace.ma/car/10</loc>
+    <loc>https://altusplace.vercel.app/car/10</loc>
     <lastmod>2026-09-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://altusplace.ma/car/9</loc>
+    <loc>https://altusplace.vercel.app/car/9</loc>
     <lastmod>2026-09-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://altusplace.ma/property/6</loc>
+    <loc>https://altusplace.vercel.app/property/6</loc>
     <lastmod>2026-09-18</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://altusplace.ma/property/5</loc>
+    <loc>https://altusplace.vercel.app/property/5</loc>
     <lastmod>2026-09-18</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://altusplace.ma/car/4</loc>
+    <loc>https://altusplace.vercel.app/car/4</loc>
     <lastmod>2026-09-18</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://altusplace.ma/car/3</loc>
+    <loc>https://altusplace.vercel.app/car/3</loc>
     <lastmod>2026-09-18</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>

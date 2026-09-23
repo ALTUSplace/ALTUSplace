@@ -22,7 +22,7 @@ function readEnvSiteUrl(): string | undefined {
   }
 }
 
-export const SITE_URL = (readEnvSiteUrl() || "https://altusplace.ma").replace(/\/+$/, "");
+export const SITE_URL = (readEnvSiteUrl() || "https://altusplace.vercel.app").replace(/\/+$/, "");
 
 /** @deprecated Use `SITE_URL`. Kept for existing imports. */
 export const BASE_URL = SITE_URL;
