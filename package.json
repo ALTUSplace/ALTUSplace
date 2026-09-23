@@ -12,7 +12,7 @@
     "test": "vitest run",
     "db:push": "drizzle-kit generate && drizzle-kit migrate",
     "db:migrate": "node scripts/migrate.mjs",
-    "db:seed": "tsx server/seed/reviews.ts"
+    "db:seed": "tsx server/seed/demo-listings.ts && tsx server/seed/reviews.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.693.0",

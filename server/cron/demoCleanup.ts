@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { and, eq, ilike, inArray, lt, or } from "drizzle-orm";
+import { and, ilike, inArray, lt, or } from "drizzle-orm";
 import {
   bookingMessages,
   bookings,
@@ -19,6 +19,8 @@ import { getDb, withTransaction } from "../db";
 import { logger } from "../_core/logger";
 
 const DEMO_OWNER_OPENID = "demo-owner-altusplace";
+const DEMO_AGENCY_OPENID = "demo-owner-id";
+const DEMO_OWNER_OPENIDS = [DEMO_OWNER_OPENID, DEMO_AGENCY_OPENID];
 const DEMO_RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
 
 export async function demoCleanupHandler(req: Request, res: Response) {
@@ -33,7 +35,7 @@ export async function demoCleanupHandler(req: Request, res: Response) {
     if (!db) return res.status(503).json({ error: "database-unavailable", timestamp });
 
     const cutoff = new Date(Date.now() - DEMO_RETENTION_MS);
-    const demoOwnerRows = await db.select({ id: users.id }).from(users).where(eq(users.openId, DEMO_OWNER_OPENID)).limit(50);
+    const demoOwnerRows = await db.select({ id: users.id }).from(users).where(inArray(users.openId, DEMO_OWNER_OPENIDS)).limit(50);
     const ownerIds = demoOwnerRows.map((row) => row.id);
 
     const demoListingRows = await db.select({ id: listings.id }).from(listings)
