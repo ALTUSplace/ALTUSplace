@@ -15,6 +15,7 @@ import CommentSection from '@/components/CommentSection';
 import { BookingWidget } from '@/components/ui/BookingWidget';
 import { FloatingWhatsAppButton } from '@/components/FloatingWhatsAppButton';
 import { PartnerVerifiedBadge } from '@/components/ui/PartnerVerifiedBadge';
+import { FavoriteButton } from '@/components/FavoriteButton';
 
 const isIsoDay = (value: string | null): value is string => /^\d{4}-\d{2}-\d{2}$/.test(value ?? '');
 
@@ -255,6 +256,9 @@ export default function CarDetails() {
           {/* Share Buttons */}
           <div className="flex items-center gap-2">
             <span className="text-xs text-slate-400 flex items-center gap-1"><Share2 className="w-3.5 h-3.5 text-amber-400" /> مشاركة:</span>
+            {numericListingId !== null && (
+              <FavoriteButton listingId={numericListingId} size="sm" />
+            )}
             <button onClick={() => handleShare('whatsapp')} className="bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600 hover:text-white px-3 py-1 rounded-xl text-xs font-bold transition-all border border-emerald-500/30">
               واتساب
             </button>

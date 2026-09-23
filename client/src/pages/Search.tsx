@@ -7,6 +7,7 @@ import { Filter, Star, Users, Car as CarIcon, ArrowUpDown, Award, MapPin, Scale,
 import { toast } from 'sonner';
 import { MapboxSearchMap } from '@/components/MapboxSearchMap';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useFavorites } from '@/hooks/useFavorites';
 import { MOROCCO_CENTER, cityToCoords, resolveListingCoords } from '@/lib/mapbox';
 import { OptimizedImage } from '@/components/OptimizedImage';
 import { ListingCard, ListingCardSkeleton } from '@/components/ui/ListingCard';
@@ -25,6 +26,7 @@ const listingRoute = (item: ListingItem) => (item.type === 'property' ? `/proper
 export default function Search() {
   const [, setLocation] = useLocation();
   const { language, t, direction } = useLanguage();
+  const favorites = useFavorites();
   const searchParams = new URLSearchParams(window.location.search);
 
   const rawCity = searchParams.get('city') || 'all';
@@ -442,6 +444,8 @@ export default function Search() {
                     reviewCount={item.reviewCount}
                     startDate={activeDates.startDate}
                     endDate={activeDates.endDate}
+                    isFavorite={favorites.isFavorite(Number(item.id))}
+                    onToggleFavorite={() => favorites.toggleFavorite(Number(item.id))}
                     specs={{
                       transmission: item.specs?.transmission,
                       fuel: item.specs?.fuel,

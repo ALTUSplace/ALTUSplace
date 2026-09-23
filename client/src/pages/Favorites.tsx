@@ -1,158 +1,140 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link } from 'wouter';
-import { LISTINGS, ListingItem } from '@/data/altusplace';
+import { Heart, ListX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Heart, MapPin, Trash2, SlidersHorizontal } from 'lucide-react';
-import { toast } from 'sonner';
-import { OptimizedImage } from '@/components/OptimizedImage';
-import { readBrandPreference, writeBrandPreference } from '@/config/brand';
+import { ListingCard } from '@/components/ui/ListingCard';
 import { useLanguage } from "@/contexts/LanguageContext";
-
+import { useAuth } from "@/_core/hooks/useAuth";
+import { startLogin } from "@/const";
+import { useFavorites } from "@/hooks/useFavorites";
+import { isCarCategory } from "@/lib/categories";
 import { useNoIndex } from "@/lib/seo";
+
+/** Minimal listing shape returned inside a favorite row (server listings.list fields). */
+type FavoriteListing = {
+  id: number;
+  ownerId: number;
+  ownerRole?: string | null;
+  title: string;
+  titleFr?: string | null;
+  category: string;
+  pricePerDay: number;
+  imageUrl: string | null;
+  images?: string[] | null;
+  city: string;
+  averageRating?: number | null;
+  reviewCount?: number | null;
+};
+
+type FilterType = 'all' | 'car' | 'property';
 
 export default function Favorites() {
   useNoIndex();
-  const { direction } = useLanguage();
-  const [favorites, setFavorites] = useState<string[]>([]);
-  const [filterType, setFilterType] = useState<'all' | 'car' | 'property'>('all');
-  const [sortBy, setSortBy] = useState<'price-asc' | 'price-desc'>('price-asc');
+  const { direction, t } = useLanguage();
+  const { isAuthenticated, loading: authLoading, user } = useAuth({ redirectOnUnauthenticated: false });
+  const { favorites, isLoading, isFavorite, toggleFavorite } = useFavorites();
+  const [filterType, setFilterType] = useState<FilterType>('all');
 
-  useEffect(() => {
-    // جلب المفضلة من LocalStorage أو استخدام عينة افتراضية
-    const stored = readBrandPreference("favorites");
-    if (stored) {
-      try {
-        setFavorites(JSON.parse(stored));
-      } catch (e) {
-        setFavorites(['list-1', 'list-2']);
-      }
-    } else {
-      setFavorites(['list-1', 'list-2']);
-    }
-  }, []);
-
-  const handleRemoveFavorite = (id: string) => {
-    const updated = favorites.filter(favId => favId !== id);
-    setFavorites(updated);
-    writeBrandPreference("favorites", JSON.stringify(updated));
-    toast.success('تمت إزالة العنصر من المفضلة');
-  };
-
-  const favoriteItems = LISTINGS.filter(item => favorites.includes(item.id)).filter(item => {
-    if (filterType !== 'all' && item.type !== filterType) return false;
-    return true;
-  }).sort((a, b) => {
-    if (sortBy === 'price-asc') return a.pricePerUnit - b.pricePerUnit;
-    if (sortBy === 'price-desc') return b.pricePerUnit - a.pricePerUnit;
-    return 0;
+  const rows = (favorites ?? []).filter((row) => {
+    const listing = row.listing as unknown as FavoriteListing | undefined;
+    if (!listing) return false;
+    if (filterType === 'all') return true;
+    if (filterType === 'car') return isCarCategory(listing.category);
+    return !isCarCategory(listing.category);
   });
 
+  if (authLoading) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center bg-slate-50" dir={direction}>
+        <p className="text-slate-500">{t('loadingPage')}</p>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || !user) {
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 bg-slate-50 px-4" dir={direction}>
+        <Heart className="h-12 w-12 text-slate-300" />
+        <h1 className="text-xl font-black text-slate-900">{t('favoritesTitle')}</h1>
+        <p className="max-w-md text-center text-sm text-slate-500">{t('loginRequiredDesc')}</p>
+        <Button type="button" onClick={startLogin} className="bg-amber-500 font-bold text-slate-950 hover:bg-amber-400">
+          {t('loginAction')}
+        </Button>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-background text-foreground py-12" dir={direction}>
-      <div className="container mx-auto px-4 space-y-8">
-        
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-border pb-6">
-          <div>
-            <div className="inline-flex items-center gap-2 text-amber-500 text-xs font-bold uppercase tracking-widest mb-1">
-              <Heart className="w-4 h-4 fill-amber-500" /> قائمة المحفوظات المفضلة
-            </div>
-            <h1 className="text-3xl font-black text-white">السيارات والعقارات المحفوظة</h1>
-          </div>
+    <div className="min-h-screen bg-slate-50 py-6 sm:py-10 px-4 sm:px-6" dir={direction}>
+      <div className="mx-auto max-w-6xl space-y-6">
+        <header className="space-y-1">
+          <h1 className="text-2xl font-black text-slate-900 sm:text-3xl">{t('favoritesTitle')}</h1>
+          <p className="text-sm text-slate-500">{t('favoritesSubtitle')}</p>
+        </header>
 
-          {/* فلاتر الفرز والتصنيف للمفضلة */}
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2 bg-slate-900 dark:bg-[#1C1C1E] border border-slate-800 dark:border-[#2C2C2E] p-1.5 rounded-2xl text-xs">
-              <span className="text-slate-400 dark:text-[#B0B0B8] px-2">النوع:</span>
-              <button
-                onClick={() => setFilterType('all')}
-                className={`px-3 py-1.5 rounded-xl font-bold transition-all ${filterType === 'all' ? 'bg-amber-500 text-slate-950' : 'text-slate-300 dark:text-[#D6D6DB] hover:text-white'}`}
-              >
-                الكل
-              </button>
-              <button
-                onClick={() => setFilterType('car')}
-                className={`px-3 py-1.5 rounded-xl font-bold transition-all ${filterType === 'car' ? 'bg-amber-500 text-slate-950' : 'text-slate-300 dark:text-[#D6D6DB] hover:text-white'}`}
-              >
-                السيارات
-              </button>
-              <button
-                onClick={() => setFilterType('property')}
-                className={`px-3 py-1.5 rounded-xl font-bold transition-all ${filterType === 'property' ? 'bg-amber-500 text-slate-950' : 'text-slate-300 dark:text-[#D6D6DB] hover:text-white'}`}
-              >
-                العقارات
-              </button>
-            </div>
-
-            <div className="flex items-center gap-2 bg-slate-900 dark:bg-[#1C1C1E] border border-slate-800 dark:border-[#2C2C2E] p-1.5 rounded-2xl text-xs">
-              <SlidersHorizontal className="w-4 h-4 text-amber-400 mr-2" />
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as any)}
-                className="bg-slate-950 dark:bg-[#111113] border border-slate-800 dark:border-[#2C2C2E] text-white rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-amber-500"
-              >
-                <option value="price-asc">السعر: من الأرخص للأغلى</option>
-                <option value="price-desc">السعر: من الأغلى للأرخص</option>
-              </select>
-            </div>
-          </div>
+        <div className="flex flex-wrap items-center gap-2">
+          {(['all', 'car', 'property'] as const).map((type) => (
+            <button
+              key={type}
+              type="button"
+              onClick={() => setFilterType(type)}
+              className={`rounded-full px-4 py-1.5 text-sm font-bold transition-colors ${
+                filterType === type
+                  ? 'bg-slate-900 text-white'
+                  : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-100'
+              }`}
+            >
+              {t(type === 'all' ? 'favoritesTypeAll' : type === 'car' ? 'favoritesTypeCars' : 'favoritesTypeProperties')}
+            </button>
+          ))}
+          <span className="mr-auto text-sm font-bold text-slate-500">{rows.length}</span>
         </div>
 
-        {favoriteItems.length === 0 ? (
-          <div className="bg-slate-950 dark:bg-[#111113] border border-slate-800 dark:border-[#2C2C2E] rounded-3xl p-16 text-center space-y-4 max-w-xl mx-auto shadow-xl">
-            <Heart className="w-16 h-16 text-slate-600 mx-auto" />
-            <h3 className="text-xl font-bold text-white">قائمة المفضلة فارغة حالياً</h3>
-            <p className="text-xs text-slate-400 dark:text-[#B0B0B8]">تصفح أسطول السيارات والعقارات وأضف ما يعجبك إلى قائمتك الخاصة لتسهيل الرجوع إليها لاحقاً.</p>
-            <Link href="/search">
-              <Button className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-6 py-3 rounded-xl text-xs">
-                تصفح العروض المتاحة
-              </Button>
+        {isLoading && favorites === undefined && (
+          <p className="py-10 text-center text-sm text-slate-500">{t('loadingPage')}</p>
+        )}
+
+        {!isLoading && rows.length === 0 && (
+          <div className="flex flex-col items-center justify-center gap-4 rounded-3xl border border-dashed border-slate-200 bg-white py-16" dir={direction}>
+            <ListX className="h-12 w-12 text-slate-300" />
+            <h2 className="text-lg font-black text-slate-900">{t('favoritesEmptyTitle')}</h2>
+            <p className="max-w-md text-center text-sm text-slate-500">{t('favoritesEmptyDesc')}</p>
+            <Link href="/search" className="inline-flex items-center rounded-xl bg-amber-500 px-5 py-2.5 font-bold text-slate-950 hover:bg-amber-400">
+              {t('favoritesBrowse')}
             </Link>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {favoriteItems.map(item => (
-              <div key={item.id} className="bg-slate-950 dark:bg-[#111113] border border-slate-800 dark:border-[#2C2C2E] rounded-3xl overflow-hidden shadow-xl hover:border-amber-500/50 transition-all flex flex-col group">
-                <div className="relative h-52 overflow-hidden bg-slate-900 dark:bg-[#1C1C1E]">
-                  <OptimizedImage src={item.image} alt={item.title} width={640} height={360} widthHint={640} sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                  <div className="absolute top-3 right-3 bg-slate-950/80 dark:bg-[#111113]/80 backdrop-blur-md text-amber-400 px-3 py-1 rounded-full text-xs font-bold border border-slate-800 dark:border-[#2C2C2E]">
-                    {item.category}
-                  </div>
-                  <button
-                    onClick={() => handleRemoveFavorite(item.id)}
-                    className="absolute top-3 left-3 bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white p-2 rounded-xl border border-red-500/30 transition-all"
-                    title="إزالة من المفضلة"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                  <div className="absolute bottom-3 left-3 bg-slate-950/90 dark:bg-[#111113]/90 backdrop-blur-md text-white px-3 py-1 rounded-xl text-xs font-extrabold border border-slate-800 dark:border-[#2C2C2E]">
-                    {item.pricePerUnit} {item.unitLabel}
-                  </div>
-                </div>
-
-                <div className="p-6 space-y-4 flex-grow flex flex-col justify-between">
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-xs text-slate-400 dark:text-[#B0B0B8]">
-                      <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5 text-amber-500" /> {item.city}</span>
-                      <span className="text-amber-400 font-bold">{item.providerName}</span>
-                    </div>
-                    <h3 className="text-base font-bold text-white group-hover:text-amber-400 transition-colors">{item.title}</h3>
-                    <p className="text-xs text-slate-400 dark:text-[#B0B0B8] line-clamp-2 leading-relaxed">{item.description}</p>
-                  </div>
-
-                  <div className="pt-4 border-t border-slate-800 dark:border-[#2C2C2E] flex items-center justify-between">
-                    <div className="text-xs text-slate-500">التقييمات تظهر بعد مراجعة موثقة</div>
-                    <Link href={`/car/${item.id}`}>
-                      <Button className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs transition-all shadow">
-                        عرض التفاصيل
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            ))}
           </div>
         )}
 
+        {rows.length > 0 && (
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {rows.map((row) => {
+              const listing = row.listing as unknown as FavoriteListing;
+              const images =
+                Array.isArray(listing.images) && listing.images.length > 0
+                  ? listing.images
+                  : listing.imageUrl
+                    ? [listing.imageUrl]
+                    : [];
+              return (
+                <ListingCard
+                  key={row.favoriteId}
+                  id={String(listing.id)}
+                  title={listing.title}
+                  titleFr={listing.titleFr ?? undefined}
+                  city={listing.city}
+                  pricePerDay={listing.pricePerDay}
+                  images={images}
+                  type={isCarCategory(listing.category) ? 'car' : 'property'}
+                  providerVerified={listing.ownerRole === 'partner'}
+                  rating={listing.averageRating ?? 0}
+                  reviewCount={listing.reviewCount ?? 0}
+                  isFavorite={isFavorite(listing.id)}
+                  onToggleFavorite={() => toggleFavorite(listing.id)}
+                />
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -3,6 +3,7 @@ import { Link, useRoute } from "wouter";
 import { ArrowRight, Car, MapPin, ShieldCheck } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { trpc } from "@/lib/trpc";
+import { useFavorites } from "@/hooks/useFavorites";
 import { ListingCard } from "@/components/ui/ListingCard";
 import { renderJsonLd, useSEO, BASE_URL } from "@/lib/seo";
 import { isCarCategory } from "@/lib/categories";
@@ -78,6 +79,7 @@ function BespokeLocationPage({ location }: { location: LocationKey }) {
 
 function CityLocationPage({ city, canonicalPath: canonicalPathProp }: { city: string; canonicalPath?: string }) {
   const { language } = useLanguage();
+  const favorites = useFavorites();
   const slug = slugForCity(city);
   const isArabic = language === "ar";
   const cityNameFr = cityLabelFr(city);
@@ -182,6 +184,8 @@ function CityLocationPage({ city, canonicalPath: canonicalPathProp }: { city: st
                   images={item.imageUrl ? [item.imageUrl] : []}
                   type={isCarCategory(item.category) ? "car" : "property"}
                   hostName={item.ownerName || undefined}
+                  isFavorite={favorites.isFavorite(item.id)}
+                  onToggleFavorite={() => favorites.toggleFavorite(item.id)}
                   specs={{
                     transmission: item.transmission || undefined,
                     fuel: item.fuelType || undefined,

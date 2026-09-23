@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link, useLocation, useParams, useSearch } from "wouter";
-import { ArrowRight, Bath, Bed, Building2, CheckCircle2, Heart, MapPin, Share2, Video, Calendar, Lock, ShieldCheck, MessageCircle, Ruler, Star } from "lucide-react";
+import { ArrowRight, Bath, Bed, Building2, CheckCircle2, MapPin, Share2, Video, Calendar, Lock, ShieldCheck, MessageCircle, Ruler, Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,6 +14,7 @@ import { OptimizedImage } from "@/components/OptimizedImage";
 import CommentSection from "@/components/CommentSection";
 import { FloatingWhatsAppButton } from "@/components/FloatingWhatsAppButton";
 import { PartnerVerifiedBadge } from "@/components/ui/PartnerVerifiedBadge";
+import { FavoriteButton } from "@/components/FavoriteButton";
 
 function parseAmenities(value: string | null | undefined): string[] {
   if (!value) return [];
@@ -310,7 +311,7 @@ export default function PropertyDetailWithVideo() {
           </Button>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={() => toast.success(language === "fr" ? "Lien copié" : "تم نسخ الرابط")}><Share2 className="w-4 h-4" /></Button>
-            <Button variant="outline" size="sm" onClick={() => toast.success(language === "fr" ? "Ajouté aux favoris" : "تمت الإضافة إلى المفضلة")}><Heart className="w-4 h-4" /></Button>
+            {listingId !== null && <FavoriteButton listingId={listingId} size="md" />}
           </div>
         </div>
 

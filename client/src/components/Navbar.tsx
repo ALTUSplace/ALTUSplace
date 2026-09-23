@@ -23,6 +23,7 @@ import {
   Sun,
   X,
   BookmarkCheck,
+  Heart,
   MessageSquare,
   Volume2,
   VolumeX,
@@ -51,6 +52,7 @@ const navLinks: NavLink[] = [
   { href: "/admin", label: "لوحة الإدارة", labelKey: "admin", icon: ShieldAlert },
   { href: "/host", label: "لوحة المالك", labelKey: "dashboard", icon: LayoutDashboard },
   { href: "/my-bookings", label: "حجوزاتي", labelKey: "myBookings", icon: BookmarkCheck },
+  { href: "/favorites", label: "المفضلة", labelKey: "favorites", icon: Heart },
   { href: "/support-tickets", label: "الدعم الفني", labelKey: "help", icon: HelpCircle },
   { href: "/blog", label: "المدونة", labelKey: "blog", icon: BookOpen },
 ];

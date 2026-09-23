@@ -1,10 +1,11 @@
-import { CalendarDays, Home, Search, UserRound } from "lucide-react";
+import { CalendarDays, Heart, Home, Search, UserRound } from "lucide-react";
 import { useLocation } from "wouter";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const navItems = [
   { labelKey: "home", path: "/", icon: Home },
   { labelKey: "search", path: "/search", icon: Search },
+  { labelKey: "favorites", path: "/favorites", icon: Heart },
   { labelKey: "myBookings", path: "/my-bookings", icon: CalendarDays },
   { labelKey: "profile", path: "/profile", icon: UserRound },
 ];

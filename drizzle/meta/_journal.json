@@ -99,6 +99,13 @@
       "when": 1790600000000,
       "tag": "0013_add_partner_application_vehicles",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1790800000000,
+      "tag": "0014_add_favorites",
+      "breakpoints": true
     }
   ]
 }

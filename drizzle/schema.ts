@@ -207,6 +207,21 @@ export const reviews = pgTable("reviews", {
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
+/**
+ * Per-user saved listings ("favorites" / wishlist). One row per (user, listing);
+ * the unique index makes duplicate saves impossible and enables ON CONFLICT.
+ */
+export const favorites = pgTable("favorites", {
+  favoriteId: uuid("favorite_id").defaultRandom().primaryKey(),
+  userId: integer("user_id").notNull(),
+  listingId: integer("listing_id").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  userIdx: index("favorites_user_idx").on(table.userId),
+  listingIdx: index("favorites_listing_idx").on(table.listingId),
+  userListingUniqueIdx: uniqueIndex("favorites_user_listing_unique_idx").on(table.userId, table.listingId),
+}));
+
 export const kycSubmissions = pgTable("kyc_submissions", {
   id: integer("kyc_id").generatedAlwaysAsIdentity().primaryKey(),
   userId: integer("user_id").notNull(),
@@ -548,6 +563,8 @@ export type Booking = typeof bookings.$inferSelect;
 export type InsertBooking = typeof bookings.$inferInsert;
 export type Review = typeof reviews.$inferSelect;
 export type InsertReview = typeof reviews.$inferInsert;
+export type Favorite = typeof favorites.$inferSelect;
+export type InsertFavorite = typeof favorites.$inferInsert;
 export type KycSubmission = typeof kycSubmissions.$inferSelect;
 export type InsertKycSubmission = typeof kycSubmissions.$inferInsert;
 export type Payment = typeof payments.$inferSelect;

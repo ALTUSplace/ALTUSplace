@@ -27,7 +27,7 @@ const normalizeHash = (value) => String(value ?? "").toLowerCase().replace(/^\\x
 const splitStatements = (content) =>
   content
     .split(/--> statement-breakpoint|;\s*(?:\r?\n|$)/)
-    .map((s) => s.trim())
+    .map((s) => s.trim().replace(/;+\s*$/, ""))
     .filter(Boolean);
 
 const enumExists = (sql, name) => sql`select 1 from pg_type where typname = ${name} and typtype = 'e'`;

@@ -8,7 +8,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { adminProcedure, ownerProcedure, publicProcedure, protectedProcedure, router, superAdminProcedure } from "./_core/trpc";
 import { getDb, withTransaction } from "./db";
 import { logger } from "./_core/logger";
-import { listings, listingAnalyticsEvents, listingComments, bookings, reviews, users, commercialLeaseContracts, notifications, platformSettings, commissionTiers, escrowEntries, payoutRequests, disputes, disputeAttachments, supportTickets, payments, invoices, kycSubmissions, bookingVouchers, bookingMessages, auditLogs, refundRequests, transactions, partnerApplications, translations } from "../drizzle/schema";
+import { listings, listingAnalyticsEvents, listingComments, bookings, reviews, users, favorites, commercialLeaseContracts, notifications, platformSettings, commissionTiers, escrowEntries, payoutRequests, disputes, disputeAttachments, supportTickets, payments, invoices, kycSubmissions, bookingVouchers, bookingMessages, auditLogs, refundRequests, transactions, partnerApplications, translations } from "../drizzle/schema";
 import { eq, and, lte, gte, lt, gt, asc, desc, count, isNull, inArray, ne, or, not, ilike, sql, type SQL } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { safeNotifyUser, buildEmailContent, sendWhatsAppText, normalizeWhatsAppNumber, alertAdmins } from "./notificationService";
@@ -3461,6 +3461,104 @@ export const appRouter = router({
       googleConfigured: Boolean(ENV.googleTranslateApiKey),
       deeplConfigured: Boolean(ENV.deeplApiKey),
     })),
+  }),
+
+  // ── Favorites / wishlist ─────────────────────────────────────────────────────
+  // Server-backed saved listings, scoped strictly to the authenticated user:
+  // every read and write filters on ctx.user.id, so one user can never see or
+  // mutate another user's favorites (cross-user isolation).
+  favorites: router({
+    list: protectedProcedure.query(async ({ ctx }) => {
+      const db = await getDb();
+      if (!db) return [];
+      const rows = await db
+        .select({
+          favoriteId: favorites.favoriteId,
+          listingId: favorites.listingId,
+          createdAt: favorites.createdAt,
+          listing: listings,
+          ownerName: users.name,
+        })
+        .from(favorites)
+        .innerJoin(listings, eq(favorites.listingId, listings.id))
+        .leftJoin(users, eq(listings.ownerId, users.id))
+        .where(eq(favorites.userId, ctx.user!.id))
+        .orderBy(desc(favorites.createdAt));
+      return rows.map((row) => ({
+        favoriteId: row.favoriteId,
+        listingId: row.listingId,
+        createdAt: row.createdAt,
+        listing: toPublicListing({ ...row.listing, ownerName: row.ownerName }),
+      }));
+    }),
+
+    isFavorited: protectedProcedure
+      .input(z.object({ listingId: z.number().int().positive() }))
+      .query(async ({ ctx, input }) => {
+        const db = await getDb();
+        if (!db) return false;
+        const [row] = await db
+          .select({ favoriteId: favorites.favoriteId })
+          .from(favorites)
+          .where(and(eq(favorites.userId, ctx.user!.id), eq(favorites.listingId, input.listingId)))
+          .limit(1);
+        return Boolean(row);
+      }),
+
+    add: protectedProcedure
+      .input(z.object({ listingId: z.number().int().positive() }))
+      .mutation(async ({ ctx, input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "قاعدة البيانات غير متاحة." });
+        const listing = await db
+          .select({ id: listings.id })
+          .from(listings)
+          .where(eq(listings.id, input.listingId))
+          .limit(1);
+        if (!listing[0]) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "الإعلان غير موجود." });
+        }
+        const existing = await db
+          .select({ favoriteId: favorites.favoriteId })
+          .from(favorites)
+          .where(and(eq(favorites.userId, ctx.user!.id), eq(favorites.listingId, input.listingId)))
+          .limit(1);
+        if (existing[0]) {
+          throw new TRPCError({ code: "CONFLICT", message: "هذا الإعلان موجود مسبقاً في المفضلة." });
+        }
+        const inserted = await db
+          .insert(favorites)
+          .values({ userId: ctx.user!.id, listingId: input.listingId })
+          .returning({ favoriteId: favorites.favoriteId, createdAt: favorites.createdAt });
+        return { success: true as const, favoriteId: inserted[0]?.favoriteId ?? null };
+      }),
+
+    remove: protectedProcedure
+      .input(
+        z
+          .object({
+            favoriteId: z.string().uuid().optional(),
+            listingId: z.number().int().positive().optional(),
+          })
+          .refine((value) => value.favoriteId !== undefined || value.listingId !== undefined, {
+            message: "favoriteId أو listingId مطلوب.",
+          })
+      )
+      .mutation(async ({ ctx, input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "قاعدة البيانات غير متاحة." });
+        const conditions: SQL[] = [eq(favorites.userId, ctx.user!.id)];
+        if (input.favoriteId !== undefined) conditions.push(eq(favorites.favoriteId, input.favoriteId));
+        if (input.listingId !== undefined) conditions.push(eq(favorites.listingId, input.listingId));
+        const deleted = await db
+          .delete(favorites)
+          .where(and(...conditions))
+          .returning({ favoriteId: favorites.favoriteId });
+        if (deleted.length === 0) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "العنصر غير موجود في المفضلة." });
+        }
+        return { success: true as const };
+      }),
   }),
 });
 
