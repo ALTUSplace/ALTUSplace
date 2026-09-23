@@ -47,7 +47,7 @@ export function ListingCard(props: ListingCardProps) {
   const { id, title, titleFr, city, pricePerDay, unitLabel = "/ day", currency = "MAD", images, type,
     badges, providerVerified, rating, reviewCount, hostName, isFavorite, onToggleFavorite, specs, startDate, endDate, className, style } = props;
   const [, setLocation] = useLocation();
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const [activeSlide, setActiveSlide] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const { currency: activeCurrency, formatPrice, formatTotalPrice, showTotal } = useCurrency();
@@ -149,7 +149,10 @@ export function ListingCard(props: ListingCardProps) {
       <div className="flex flex-1 flex-col gap-2 p-4">
         <div className="flex items-start justify-between gap-2">
           <h3 className="line-clamp-2 text-[15px] font-bold leading-snug text-ink-primary transition-colors group-hover:text-accent-clay" title={displayTitle}>{displayTitle}</h3>
-          {rating && rating > 0 && (<div className="flex shrink-0 items-center gap-1 text-xs font-medium text-ink-secondary"><Star className="h-3.5 w-3.5 fill-accent-warm text-accent-warm" /><span>{rating.toFixed(1)}</span>{reviewCount && <span className="text-ink-tertiary">({reviewCount})</span>}</div>)}
+          {rating && rating > 0 && (<div className="flex shrink-0 items-center gap-1 text-xs font-medium text-ink-secondary"><Star className="h-3.5 w-3.5 fill-accent-warm text-accent-warm" /><span>{rating.toFixed(1)}</span>{reviewCount ? <span className="text-ink-tertiary">({reviewCount})</span> : null}</div>)}
+          {(reviewCount === undefined || reviewCount === 0) && (!rating || rating <= 0) && (
+            <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-bg-muted px-2 py-0.5 text-[10px] font-semibold text-ink-tertiary">{t("reviewsNewEmpty")}</span>
+          )}
         </div>
         <div className="flex items-center gap-1 text-xs text-ink-secondary"><MapPin className="h-3 w-3 text-ink-tertiary" /><span className="line-clamp-1">{city}</span></div>
         {specs && (specs.transmission || specs.fuel || specs.seats || specs.rooms) && (

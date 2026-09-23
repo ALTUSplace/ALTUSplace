@@ -34,6 +34,7 @@ const enumExists = (sql, name) => sql`select 1 from pg_type where typname = ${na
 const enumLabels = (sql, name) => sql`select e.enumlabel from pg_type t join pg_enum e on e.enumtypid = t.oid where t.typname = ${name} order by e.enumsortorder`;
 const tableExists = (sql, name) => sql`select 1 from information_schema.tables where table_schema='public' and table_name=${name}`;
 const columnExists = (sql, table, column) => sql`select 1 from information_schema.columns where table_schema='public' and table_name=${table} and column_name=${column}`;
+const constraintExists = (sql, table, name) => sql`select 1 from information_schema.table_constraints where constraint_schema='public' and table_name=${table} and constraint_name=${name}`;
 const indexExists = (sql, name) => sql`select 1 from pg_indexes where schemaname='public' and indexname=${name}`;
 
 async function ensureJournalTable(sql) {
@@ -110,6 +111,14 @@ async function run(connectionString) {
           if ((await columnExists(sql, table, column)).length) { console.log(`  - column ${table}.${column} already exists -> skip`); continue; }
           await sql.unsafe(statement);
           console.log(`  - column ${table}.${column} added`);
+          continue;
+        }
+        const addConstraint = statement.match(/^ALTER TABLE "?(?:public\.)?"?([a-z_]+)"? ADD CONSTRAINT "?([a-z_]+)"? /);
+        if (addConstraint) {
+          const [table, name] = [addConstraint[1], addConstraint[2]];
+          if ((await constraintExists(sql, table, name)).length) { console.log(`  - constraint ${name} already exists -> skip`); continue; }
+          await sql.unsafe(statement);
+          console.log(`  - constraint ${name} added on ${table}`);
           continue;
         }
         await sql.unsafe(statement);

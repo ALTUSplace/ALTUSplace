@@ -1,4 +1,5 @@
-import { boolean, doublePrecision, index, integer, jsonb, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid, varchar } from "drizzle-orm/pg-core";
+import { boolean, check, doublePrecision, index, integer, jsonb, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid, varchar } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 export const userRoleEnum = pgEnum("user_role", ["renter", "owner", "admin", "partner", "user", "SUPER_ADMIN"]);
 export const vendorTierEnum = pgEnum("vendor_tier", ["bronze", "silver", "gold"]);
@@ -205,7 +206,10 @@ export const reviews = pgTable("reviews", {
   rating: integer("rating").notNull(),
   comment: text("comment"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
+}, (table) => ({
+  listingIdx: index("reviews_listing_idx").on(table.listingId),
+  ratingCheck: check("reviews_rating_check", sql`${table.rating} >= 1 AND ${table.rating} <= 5`),
+}));
 
 /**
  * Per-user saved listings ("favorites" / wishlist). One row per (user, listing);

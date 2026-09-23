@@ -388,26 +388,28 @@ export default function CarDetails() {
                 </div>
 
                 {/* Reviews Section */}
-                {(reviewsQuery.isLoading || reviews.length > 0) && (
+                {(reviewsQuery.isLoading || reviewsQuery.isSuccess) && (
                   <div className="space-y-6 pt-6 border-t border-slate-800">
                     <div className="flex items-center justify-between">
                       <h3 className="text-lg font-bold text-white flex items-center gap-2">
                         <Star className="w-5 h-5 text-amber-400 fill-amber-400" />
-                        <span>تقييمات ومراجعات العملاء {reviews.length > 0 && (<span className="text-amber-400">({summary.average.toFixed(1)} ★ · {reviews.length})</span>)}</span>
+                        <span>{t("reviewsSectionTitle")}{reviews.length > 0 && (<span className="text-amber-400"> ({summary.average.toFixed(1)} ★ · {reviews.length})</span>)}</span>
                       </h3>
                     </div>
 
-                    <p className="text-xs text-slate-400">تظهر هنا المراجعات المرتبطة بحجوزات مؤكدة ومنتهية فقط.</p>
+                    <p className="text-xs text-slate-400">{t("reviewsOnlyConfirmedNote")}</p>
 
                     <div className="space-y-4">
                       {reviewsQuery.isLoading ? (
-                        <div className="bg-[#1C1C1E] border border-slate-800 p-6 rounded-3xl text-sm text-slate-400">جاري تحميل المراجعات...</div>
+                        <div className="bg-[#1C1C1E] border border-slate-800 p-6 rounded-3xl text-sm text-slate-400">{t("reviewsLoading")}</div>
                       ) : reviewsQuery.isError ? (
-                        <div className="bg-rose-950/30 border border-rose-800/60 p-6 rounded-3xl text-sm text-rose-200">تعذر تحميل المراجعات حالياً.</div>
+                        <div className="bg-rose-950/30 border border-rose-800/60 p-6 rounded-3xl text-sm text-rose-200">{t("reviewsLoadError")}</div>
+                      ) : reviews.length === 0 ? (
+                        <div className="bg-[#1C1C1E] border border-slate-800 p-6 rounded-3xl text-sm text-slate-400 text-center">{t("reviewsNewEmpty")}</div>
                       ) : reviews.map((rev) => (
                       <div key={rev.id} className="bg-[#1C1C1E] border border-slate-800 p-6 rounded-3xl space-y-2">
                         <div className="flex items-center justify-between">
-                          <span className="font-bold text-white text-sm">{rev.userName || 'مستخدم ALTUSplace'}</span>
+                          <span className="font-bold text-white text-sm">{rev.userName || t("reviewsAnonymousUser")}</span>
                           <span className="text-xs text-slate-500">{new Date(rev.createdAt).toLocaleDateString('ar-MA')}</span>
                         </div>
                         <div className="flex items-center gap-1 text-amber-400">

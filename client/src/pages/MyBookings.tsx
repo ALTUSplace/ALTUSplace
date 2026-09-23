@@ -3,11 +3,12 @@ import { Link, useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { trpc } from '@/lib/trpc';
 import { toast } from 'sonner';
-import { BookmarkCheck, Calendar, FileText, CheckCircle, Clock, Phone, Download, Receipt, MessageCircle, Loader2, AlertTriangle } from 'lucide-react';
+import { BookmarkCheck, Calendar, FileText, CheckCircle, Clock, Phone, Download, Receipt, MessageCircle, Loader2, AlertTriangle, Star } from 'lucide-react';
 import type { InvoicePdfInput } from '@/lib/invoicePdf';
 import { OptimizedImage } from '@/components/OptimizedImage';
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/_core/hooks/useAuth";
+import ReviewDialog from '@/components/ReviewDialog';
 
 const formatDate = (value: string | Date) => new Date(value).toLocaleDateString('fr-MA');
 const formatMoney = (value: number) => new Intl.NumberFormat('fr-MA').format(value);
@@ -16,7 +17,7 @@ import { useNoIndex } from "@/lib/seo";
 
 export default function MyBookings() {
   useNoIndex();
-  const { direction } = useLanguage();
+  const { direction, t } = useLanguage();
   const { isAuthenticated, loading: authLoading } = useAuth();
   const [, setLocation] = useLocation();
   const bookingsEnabled = isAuthenticated && !authLoading;
@@ -32,6 +33,7 @@ export default function MyBookings() {
     refetchOnWindowFocus: false,
   });
   const [contractBookingId, setContractBookingId] = useState<number | null>(null);
+  const [reviewTarget, setReviewTarget] = useState<{ bookingId: number; listingId: number } | null>(null);
   const contractQuery = trpc.commercialLeaseContracts.getByBooking.useQuery(
     { bookingId: contractBookingId ?? 0 },
     { enabled: contractBookingId !== null },
@@ -139,6 +141,15 @@ export default function MyBookings() {
                         {isContractLoading ? <span>جاري التحضير...</span> : <><Download className="w-4 h-4" /> عقد الكراء</>}
                       </Button>
                     )}
+                    {booking.status === 'Confirmed' && new Date(booking.endDate).getTime() <= Date.now() && (
+                      <Button
+                        type="button"
+                        onClick={() => setReviewTarget({ bookingId: booking.id, listingId: booking.listingId })}
+                        className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 px-4 py-2.5 rounded-xl text-xs font-semibold"
+                      >
+                        <Star className="w-4 h-4" /> {t("reviewCta")}
+                      </Button>
+                    )}
                     {invoiceByBooking.get(booking.id) && (
                       <Button
                         type="button"
@@ -165,6 +176,16 @@ export default function MyBookings() {
         {invoicesError && <p className="text-center text-[11px] text-amber-400">تعذر تحميل الفواتير؛ يمكنك إعادة المحاولة من صفحة الملف الشخصي.</p>}
         <p className="text-center text-[11px] text-slate-500">الفواتير مستخرجة من قاعدة البيانات، وعقود الكراء نماذج تقنية يجب مراجعتها من طرف مهني قانوني مغربي قبل التوقيع.</p>
       </div>
+
+      {reviewTarget && (
+        <ReviewDialog
+          open={reviewTarget !== null}
+          onOpenChange={(open) => { if (!open) setReviewTarget(null); }}
+          listingId={reviewTarget.listingId}
+          bookingId={reviewTarget.bookingId}
+          listingTitle={listingById.get(reviewTarget.listingId)?.title}
+        />
+      )}
     </div>
   );
 }

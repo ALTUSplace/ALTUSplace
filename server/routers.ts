@@ -11,6 +11,7 @@ import { logger } from "./_core/logger";
 import { listings, listingAnalyticsEvents, listingComments, bookings, reviews, users, favorites, commercialLeaseContracts, notifications, platformSettings, commissionTiers, escrowEntries, payoutRequests, disputes, disputeAttachments, supportTickets, payments, invoices, kycSubmissions, bookingVouchers, bookingMessages, auditLogs, refundRequests, transactions, partnerApplications, translations } from "../drizzle/schema";
 import { eq, and, lte, gte, lt, gt, asc, desc, count, isNull, inArray, ne, or, not, ilike, sql, type SQL } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
+import { fetchListingReviewSummary, normalizeSummary } from "./reviewStats";
 import { safeNotifyUser, buildEmailContent, sendWhatsAppText, normalizeWhatsAppNumber, alertAdmins } from "./notificationService";
 import { generateCarRentalContractPdf } from "./carRentalPdf";
 import { z } from "zod";
@@ -1892,6 +1893,10 @@ export const appRouter = router({
         const sourceLanguage = "ar" as const;
         const targetLanguage = input.language ?? sourceLanguage;
 
+        // Computed review aggregates (avg rounded to 1 decimal + exact count) —
+        // pair with the groupBy aggregates already shipped by list/search.
+        const reviewSummary = await fetchListingReviewSummary(db, input.id);
+
         // If translation requested and different from source, fetch translations
         if (targetLanguage !== sourceLanguage && isTranslationAvailable() && listing.title) {
           const translated = await getTranslatedListing(
@@ -1914,10 +1919,12 @@ export const appRouter = router({
             agencyName,
             agencyPhone,
             whatsappPhone,
+            averageRating: reviewSummary.average,
+            reviewCount: reviewSummary.count,
           });
         }
 
-        return toPublicListing({ ...listing, _translationMeta: null, ownerName, ownerRole, agencyName, agencyPhone, whatsappPhone });
+        return toPublicListing({ ...listing, _translationMeta: null, ownerName, ownerRole, agencyName, agencyPhone, whatsappPhone, averageRating: reviewSummary.average, reviewCount: reviewSummary.count });
       }),
 
     getBookedDates: publicProcedure
@@ -3277,15 +3284,7 @@ export const appRouter = router({
       .query(async ({ input }) => {
         const db = await getDb();
         if (!db) return { average: 0, count: 0 };
-        const [row] = await db
-          .select({
-            average: sql<number>`round(avg(${reviews.rating})::numeric, 1)::float8`,
-            count: sql<number>`count(*)::int4`,
-          })
-          .from(reviews)
-          .where(eq(reviews.listingId, input.listingId))
-          .limit(1);
-        return { average: row?.average ?? 0, count: row?.count ?? 0 };
+        return fetchListingReviewSummary(db, input.listingId);
       }),
 
     create: protectedProcedure
@@ -3294,7 +3293,7 @@ export const appRouter = router({
           listingId: z.number(),
           bookingId: z.number().int().positive(),
           rating: z.number().int().min(1).max(5),
-          comment: z.string().trim().min(3).max(2000),
+          comment: z.string().trim().min(10).max(500),
         })
       )
       .mutation(async ({ ctx, input }) => {
