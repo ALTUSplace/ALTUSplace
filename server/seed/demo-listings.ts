@@ -9,12 +9,19 @@
  * Guards (honest production behavior):
  *  - Executes ONLY when DEMO_SEED=1 — production never sets it, so nothing
  *    here can ever run on a live deployment.
- *  - Idempotent: skips entirely when the demo agency (openId
- *    `demo-owner-id`) already owns any listing. Note the schema's owner
- *    marker is the `users.openId` string — `listings.owner_id` is an integer
- *    FK to `users.id`, so the marker is the agency identity, not a literal
- *    owner_id value.
- *  - The agency is created if missing; existing rows are never modified.
+ *  - Idempotent: on a fresh database the agency (openId `demo-owner-id`) and
+ *    its 10 listings are inserted once. On re-run the seed never duplicates
+ *    rows; instead it refreshes the verified image URLs on the existing demo
+ *    listings IN PLACE. Note the schema's owner marker is the `users.openId`
+ *    string — `listings.owner_id` is an integer FK to `users.id`, so the
+ *    marker is the agency identity, not a literal owner_id value.
+ *  - The agency is created if missing; on re-runs only image URLs are ever
+ *    touched — every other field of an existing row is left unchanged.
+ *
+ * Images are verified, license-safe Wikimedia Commons thumbnails whose
+ * filenames match the exact car model (e.g. "2023 Dacia Duster", "Hyundai
+ * Tucson", "Renault Clio", "Dacia Logan III", "Toyota Corolla", "Kia
+ * Sportage") — see server/seed/demo-listings.images.test.ts.
  *
  * Category values use the modern app-wide convention ("car" / "real_estate"),
  * and `city` uses the canonical Arabic names ("الدار البيضاء", "مراكش",
@@ -60,7 +67,11 @@ type DemoListingRow = Omit<typeof listings.$inferInsert, "ownerId" | "status">;
 /** Deterministic number of days in the past (kept < 30 for demoCleanup). */
 const DAYS_AGO = [3, 6, 9, 12, 15, 18, 21, 24, 27];
 
+/** Verified Unsplash photo (apartment interiors/buildings — all return 200). */
 const IMG = (id: string) => `https://images.unsplash.com/${id}?auto=format&fit=crop&w=1200&q=80`;
+
+/** Verified Wikimedia Commons thumbnail path (stable, license-safe URL). */
+const WIKI = (path: string) => `https://upload.wikimedia.org/${path}`;
 
 const CARS: DemoListingRow[] = [
   {
@@ -77,11 +88,11 @@ const CARS: DemoListingRow[] = [
     fuelType: "ديزل",
     transmission: "يدوي",
     isFeatured: false,
-    imageUrl: IMG("photo-1503376780353-7e6692767b70"),
+    imageUrl: WIKI("wikipedia/commons/thumb/7/7b/2023_Dacia_Duster_1X7A6452.jpg/1280px-2023_Dacia_Duster_1X7A6452.jpg"),
     images: [
-      IMG("photo-1503376780353-7e6692767b70"),
-      IMG("photo-1568605117036-5fe5e7bab0b7"),
-      IMG("photo-1583267746897-2cf415887172"),
+      WIKI("wikipedia/commons/thumb/7/7b/2023_Dacia_Duster_1X7A6452.jpg/1280px-2023_Dacia_Duster_1X7A6452.jpg"),
+      WIKI("wikipedia/commons/thumb/1/15/2023_Dacia_Duster_1X7A6974.jpg/1280px-2023_Dacia_Duster_1X7A6974.jpg"),
+      WIKI("wikipedia/commons/thumb/4/42/2023_Dacia_Duster_1X7A6302.jpg/1280px-2023_Dacia_Duster_1X7A6302.jpg"),
     ],
     createdAt: daysAgo(DAYS_AGO[0]),
   },
@@ -99,11 +110,11 @@ const CARS: DemoListingRow[] = [
     fuelType: "ديزل",
     transmission: "أوتوماتيك",
     isFeatured: true,
-    imageUrl: IMG("photo-1494976388531-d1058494cdd8"),
+    imageUrl: WIKI("wikipedia/commons/thumb/8/87/2022_Hyundai_Tucson_Hybrid.jpg/1280px-2022_Hyundai_Tucson_Hybrid.jpg"),
     images: [
-      IMG("photo-1494976388531-d1058494cdd8"),
-      IMG("photo-1493238792000-8113da705763"),
-      IMG("photo-1549317661-bd32c8ce0db2"),
+      WIKI("wikipedia/commons/thumb/8/87/2022_Hyundai_Tucson_Hybrid.jpg/1280px-2022_Hyundai_Tucson_Hybrid.jpg"),
+      WIKI("wikipedia/commons/thumb/0/00/2022_Hyundai_Tucson_SEL_with_HTRAC_All_Wheel_Drive.jpg/1280px-2022_Hyundai_Tucson_SEL_with_HTRAC_All_Wheel_Drive.jpg"),
+      WIKI("wikipedia/commons/thumb/f/f1/Hyundai_Tucson_%28NX4%29_1X7A0424.jpg/1280px-Hyundai_Tucson_%28NX4%29_1X7A0424.jpg"),
     ],
     createdAt: daysAgo(DAYS_AGO[1]),
   },
@@ -121,11 +132,11 @@ const CARS: DemoListingRow[] = [
     fuelType: "بنزين",
     transmission: "يدوي",
     isFeatured: false,
-    imageUrl: IMG("photo-1552519507-da3b142c6e3d"),
+    imageUrl: WIKI("wikipedia/commons/thumb/5/5a/Renault_Clio_R.S._Line_%28V%29_%E2%80%93_h_17102021.jpg/1280px-Renault_Clio_R.S._Line_%28V%29_%E2%80%93_h_17102021.jpg"),
     images: [
-      IMG("photo-1552519507-da3b142c6e3d"),
-      IMG("photo-1542362567-b07e54358753"),
-      IMG("photo-1543465077-db45d34b88a5"),
+      WIKI("wikipedia/commons/thumb/5/5a/Renault_Clio_R.S._Line_%28V%29_%E2%80%93_h_17102021.jpg/1280px-Renault_Clio_R.S._Line_%28V%29_%E2%80%93_h_17102021.jpg"),
+      WIKI("wikipedia/commons/thumb/a/a4/Renault_Clio_R.S._Line_%28V%29_%E2%80%93_f_17102021.jpg/1280px-Renault_Clio_R.S._Line_%28V%29_%E2%80%93_f_17102021.jpg"),
+      WIKI("wikipedia/commons/thumb/1/1c/Renault_Clio_V_1X7A0392.jpg/1280px-Renault_Clio_V_1X7A0392.jpg"),
     ],
     createdAt: daysAgo(DAYS_AGO[2]),
   },
@@ -143,11 +154,11 @@ const CARS: DemoListingRow[] = [
     fuelType: "ديزل",
     transmission: "يدوي",
     isFeatured: false,
-    imageUrl: IMG("photo-1583121274602-3e2820c69888"),
+    imageUrl: WIKI("wikipedia/commons/thumb/5/52/2021_Dacia_Logan_III_%28front%29.jpg/1280px-2021_Dacia_Logan_III_%28front%29.jpg"),
     images: [
-      IMG("photo-1583121274602-3e2820c69888"),
-      IMG("photo-1543465077-db45d34b88a5"),
-      IMG("photo-1606016159991-dfe4f2746ad5"),
+      WIKI("wikipedia/commons/thumb/5/52/2021_Dacia_Logan_III_%28front%29.jpg/1280px-2021_Dacia_Logan_III_%28front%29.jpg"),
+      WIKI("wikipedia/commons/thumb/0/02/2021_Dacia_Logan_III_%28rear%29.jpg/1280px-2021_Dacia_Logan_III_%28rear%29.jpg"),
+      WIKI("wikipedia/commons/thumb/b/b1/2021_Dacia_Logan_III_%28rear_angle_view%29.jpg/1280px-2021_Dacia_Logan_III_%28rear_angle_view%29.jpg"),
     ],
     createdAt: daysAgo(DAYS_AGO[3]),
   },
@@ -165,11 +176,11 @@ const CARS: DemoListingRow[] = [
     fuelType: "بنزين",
     transmission: "أوتوماتيك",
     isFeatured: false,
-    imageUrl: IMG("photo-1606016159991-dfe4f2746ad5"),
+    imageUrl: WIKI("wikipedia/commons/thumb/b/b3/2021_Toyota_Corolla_LE%2C_front_right%2C_07-13-2024.jpg/1280px-2021_Toyota_Corolla_LE%2C_front_right%2C_07-13-2024.jpg"),
     images: [
-      IMG("photo-1606016159991-dfe4f2746ad5"),
-      IMG("photo-1493238792000-8113da705763"),
-      IMG("photo-1583121274602-3e2820c69888"),
+      WIKI("wikipedia/commons/thumb/b/b3/2021_Toyota_Corolla_LE%2C_front_right%2C_07-13-2024.jpg/1280px-2021_Toyota_Corolla_LE%2C_front_right%2C_07-13-2024.jpg"),
+      WIKI("wikipedia/commons/thumb/6/60/Toyota_Corolla_Altis_Front_27082022.jpg/1280px-Toyota_Corolla_Altis_Front_27082022.jpg"),
+      WIKI("wikipedia/commons/thumb/d/d7/TOYOTA_COROLLA_SEDAN_%28E210%29_China_%287%29.jpg/1280px-TOYOTA_COROLLA_SEDAN_%28E210%29_China_%287%29.jpg"),
     ],
     createdAt: daysAgo(DAYS_AGO[4]),
   },
@@ -187,11 +198,11 @@ const CARS: DemoListingRow[] = [
     fuelType: "ديزل",
     transmission: "أوتوماتيك",
     isFeatured: false,
-    imageUrl: IMG("photo-1568605117036-5fe5e7bab0b7"),
+    imageUrl: WIKI("wikipedia/commons/thumb/9/97/2023_Kia_Sportage_%28NQ5%29_in_White%2C_front_left.jpg/1280px-2023_Kia_Sportage_%28NQ5%29_in_White%2C_front_left.jpg"),
     images: [
-      IMG("photo-1568605117036-5fe5e7bab0b7"),
-      IMG("photo-1503376780353-7e6692767b70"),
-      IMG("photo-1583267746897-2cf415887172"),
+      WIKI("wikipedia/commons/thumb/9/97/2023_Kia_Sportage_%28NQ5%29_in_White%2C_front_left.jpg/1280px-2023_Kia_Sportage_%28NQ5%29_in_White%2C_front_left.jpg"),
+      WIKI("wikipedia/commons/thumb/d/db/2023_Kia_Sportage_%28NQ5%29_in_White%2C_rear_right.jpg/1280px-2023_Kia_Sportage_%28NQ5%29_in_White%2C_rear_right.jpg"),
+      WIKI("wikipedia/commons/thumb/5/5f/2023_Kia_Sportage_X-Line_AWD%2C_front_right%2C_12-08-2022.jpg/1280px-2023_Kia_Sportage_X-Line_AWD%2C_front_right%2C_12-08-2022.jpg"),
     ],
     createdAt: daysAgo(DAYS_AGO[5]),
   },
@@ -312,13 +323,48 @@ export type SeedResult = {
   cars: number;
   properties: number;
   listings: number;
+  /** Demo listings whose image URLs were refreshed in place on a re-run. */
+  updated: number;
 };
+
+/**
+ * Re-run path: the demo agency already owns listings, so no rows are
+ * inserted. Instead the verified image URLs (imageUrl + gallery) of the
+ * existing demo listings are refreshed IN PLACE, matched by title (unique per
+ * demo row), so re-seeding never duplicates rows and stale photos are
+ * replaced with the current verified set.
+ */
+async function refreshDemoListingImages(db: SeedDb): Promise<number> {
+  const agency = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.openId, DEMO_AGENCY_OPENID))
+    .limit(1);
+  if (!agency[0]) return 0;
+
+  const existing = await db
+    .select({ id: listings.id, title: listings.title })
+    .from(listings)
+    .where(eq(listings.ownerId, agency[0].id));
+  if (existing.length === 0) return 0;
+
+  const idByTitle = new Map(existing.map((row) => [row.title, row.id]));
+  let updated = 0;
+  for (const row of DEMO_LISTING_ROWS) {
+    const id = idByTitle.get(row.title);
+    if (id === undefined) continue;
+    await db.update(listings).set({ imageUrl: row.imageUrl, images: row.images }).where(eq(listings.id, id));
+    updated += 1;
+  }
+  return updated;
+}
 
 /** Seeds the demo catalog through any drizzle db (real or test fake). */
 export async function seedDemoListings(db: SeedDb): Promise<SeedResult> {
-  const empty: SeedResult = { skipped: null, agencyId: null, cars: 0, properties: 0, listings: 0 };
+  const empty: SeedResult = { skipped: null, agencyId: null, cars: 0, properties: 0, listings: 0, updated: 0 };
 
-  // Idempotency marker: the demo agency already owns listings → skip.
+  // Idempotency marker: the demo agency already owns listings → refresh the
+  // verified image URLs in place instead of duplicating rows.
   const marker = await db
     .select({ id: listings.id })
     .from(listings)
@@ -326,7 +372,8 @@ export async function seedDemoListings(db: SeedDb): Promise<SeedResult> {
     .where(eq(users.openId, DEMO_AGENCY_OPENID))
     .limit(1);
   if (marker.length > 0) {
-    return { ...empty, skipped: "already-seeded" };
+    const updated = await refreshDemoListingImages(db);
+    return { ...empty, skipped: "already-seeded", updated };
   }
 
   // Create the demo agency user when missing (never modify existing rows).
@@ -348,6 +395,7 @@ export async function seedDemoListings(db: SeedDb): Promise<SeedResult> {
     cars: CARS.length,
     properties: PROPERTIES.length,
     listings: DEMO_LISTING_ROWS.length,
+    updated: 0,
   };
 }
 
@@ -373,7 +421,11 @@ async function main(): Promise<void> {
   try {
     const result = await seedDemoListings(db);
     if (result.skipped === "already-seeded") {
-      console.log("[demo-listings] demo agency already seeded — skipping (idempotent).");
+      console.log(
+        result.updated > 0
+          ? `[demo-listings] demo agency already seeded — refreshed verified image URLs on ${result.updated} listing(s) in place (no rows added).`
+          : "[demo-listings] demo agency already seeded — no demo listings to refresh.",
+      );
       return;
     }
     console.log(

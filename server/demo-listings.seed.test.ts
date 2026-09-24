@@ -13,12 +13,22 @@ import { listings as listingsTable, users as usersTable } from "../drizzle/schem
  *  - agency lookup: select({id}).from(users).where(eq(openId, ...)).limit(1)
  *  - insert(users).values(...).returning({id})
  *  - insert(listings).values([...])
+ *  - refresh path: select({id,title}).from(listings).where(eq(ownerId, ...))
+ *    then update(listings).set({imageUrl, images}).where(eq(id, ...))
  */
 function makeSeedFakeDb() {
   const thenable = (value: unknown) => ({ then: (resolve: (v: unknown) => void) => resolve(value) });
   const store: {
     users: Array<{ id: number; openId: string; name?: string; role?: unknown }>;
-    listings: Array<{ id: number; ownerId: number; status?: unknown; category?: string }>;
+    listings: Array<{
+      id: number;
+      ownerId: number;
+      status?: unknown;
+      category?: string;
+      title?: string;
+      imageUrl?: string;
+      images?: string[];
+    }>;
   } = {
     users: [],
     listings: [],
@@ -26,6 +36,18 @@ function makeSeedFakeDb() {
   let nextUserId = 1000;
   let nextListingId = 5000;
   const agencyUserId = () => store.users.find((u) => u.openId === DEMO_AGENCY_OPENID)?.id ?? null;
+
+  /** eq(listings.id, value) fragments carry the id in their only `Param` chunk. */
+  const extractParamValue = (predicate: unknown): unknown => {
+    const chunks = (predicate as { queryChunks?: unknown[] })?.queryChunks ?? [];
+    const param = chunks.find(
+      (chunk) =>
+        chunk !== null &&
+        typeof chunk === "object" &&
+        (chunk as { constructor?: { name?: string } }).constructor?.name === "Param",
+    );
+    return param ? (param as { value?: unknown }).value : undefined;
+  };
 
   return {
     store,
@@ -43,6 +65,12 @@ function makeSeedFakeDb() {
                   ),
               }),
             }),
+            where: () =>
+              thenable(
+                store.listings
+                  .filter((l) => l.ownerId === agencyUserId())
+                  .map((l) => ({ id: l.id, title: l.title })),
+              ),
           };
         }
         if (table === usersTable) {
@@ -79,6 +107,17 @@ function makeSeedFakeDb() {
         throw new Error("seed test fake: unhandled insert table");
       },
     }),
+    update: (table: unknown) => ({
+      set: (values: Record<string, unknown>) => ({
+        where: (predicate: unknown) => {
+          if (table !== listingsTable) throw new Error("seed test fake: unhandled update table");
+          const id = extractParamValue(predicate);
+          const target = store.listings.find((l) => l.id === id);
+          if (target) Object.assign(target, values);
+          return thenable(target ? [target] : []);
+        },
+      }),
+    }),
   };
 }
 
@@ -93,6 +132,7 @@ describe("demo listings seed", () => {
     expect(result.cars).toBe(6);
     expect(result.properties).toBe(4);
     expect(result.listings).toBe(10);
+    expect(result.updated).toBe(0);
     expect(db.store.listings).toHaveLength(10);
 
     const agency = db.store.users.find((u) => u.openId === DEMO_AGENCY_OPENID);
@@ -104,14 +144,32 @@ describe("demo listings seed", () => {
     expect(db.store.listings.every((l) => l.status === "Published")).toBe(true);
   });
 
-  it("is idempotent — a second run skips without adding rows", async () => {
+  it("is idempotent — a second run refreshes image URLs in place without adding rows", async () => {
     const db = makeSeedFakeDb();
     await seedDemoListings(db as never);
+
+    // Simulate stale photos in the existing demo rows.
+    db.store.listings.forEach((l) => {
+      l.imageUrl = "https://stale.example/old.jpg";
+      l.images = ["https://stale.example/old-gallery.jpg"];
+    });
+
     const result = await seedDemoListings(db as never);
 
     expect(result.skipped).toBe("already-seeded");
-    expect(db.store.listings).toHaveLength(10); // unchanged
+    expect(result.updated).toBe(10);
+    expect(db.store.listings).toHaveLength(10); // no duplicate rows
     expect(db.store.users).toHaveLength(1); // agency not duplicated
+
+    // Image URLs were refreshed in place — each row now carries the verified
+    // images of the demo row it matches by title.
+    const imagesByTitle = new Map(DEMO_LISTING_ROWS.map((row) => [row.title, { imageUrl: row.imageUrl, images: row.images }]));
+    for (const l of db.store.listings) {
+      const expected = imagesByTitle.get(l.title ?? "");
+      expect(expected).toBeDefined();
+      expect(l.imageUrl).toBe(expected?.imageUrl);
+      expect(l.images).toEqual(expected?.images);
+    }
   });
 
   it("dataset invariants hold (categories, prices, cities, images, retention window)", () => {
