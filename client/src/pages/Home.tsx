@@ -9,6 +9,7 @@ import { SmartRecommendations } from '@/components/SmartRecommendations';
 import { FAQSection } from '@/components/FAQSection';
 import { ListingCard } from '@/components/ui/ListingCard';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { useFavorites } from '@/hooks/useFavorites';
 import { CatalogShowcase } from '@/components/CatalogShowcase';
 import { SearchBar } from '@/components/SearchBar';
 import { isCarCategory, isPropertyCategory } from '@/lib/categories';
@@ -17,6 +18,7 @@ import { useSEO } from '@/lib/seo';
 export default function Home() {
   const [, setLocation] = useLocation();
   const { t, direction } = useLanguage();
+  const favorites = useFavorites();
 
   useSEO({
     title: 'كراء السيارات والعقارات في المغرب | ALTUSplace',
@@ -249,6 +251,8 @@ export default function Home() {
                 seats: (item as { specs?: { seats?: string } }).specs?.seats ? Number((item as { specs?: { seats?: string } }).specs?.seats) : undefined,
                 year: (item as { year?: number }).year ?? undefined,
               }}
+              isFavorite={favorites.isFavorite(Number(item.id))}
+              onToggleFavorite={() => favorites.toggleFavorite(Number(item.id))}
               className={`stagger-${Math.min(index + 1, 8)} animate-fade-up`}
             />
           ))}
@@ -281,6 +285,8 @@ export default function Home() {
                   area: item.specs?.area,
                   year: (item as { year?: number }).year ?? undefined,
                 }}
+                isFavorite={Number.isFinite(Number(item.id)) ? favorites.isFavorite(Number(item.id)) : false}
+                onToggleFavorite={Number.isFinite(Number(item.id)) ? () => favorites.toggleFavorite(Number(item.id)) : undefined}
                 className={`stagger-${Math.min(index + 1, 8)} animate-fade-up`}
               />
             ))}
