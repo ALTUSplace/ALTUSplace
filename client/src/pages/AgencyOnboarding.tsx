@@ -18,6 +18,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { startLogin } from "@/const";
 import { formatApiError } from "@/lib/apiError";
 import { useSEO } from "@/lib/seo";
+import { normalizeWaNumber } from "@/lib/whatsapp";
 
 const AGENCY_NAME_MIN = 2;
 const AGENCY_NAME_MAX = 80;
@@ -123,6 +124,7 @@ export default function AgencyOnboarding() {
   const [agencyName, setAgencyName] = useState("");
   const [city, setCity] = useState("");
   const [phone, setPhone] = useState("");
+  const [whatsappNumber, setWhatsappNumber] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -191,6 +193,10 @@ export default function AgencyOnboarding() {
       setFieldError("يرجى إدخال رقم هاتف الوكالة بالصيغة الدولية.");
       return;
     }
+    if (whatsappNumber.trim() && normalizeWaNumber(whatsappNumber.trim()) === null) {
+      setFieldError("رقم الواتساب غير صالح - أدخل 06XXXXXXXX أو +2126XXXXXXXX.");
+      return;
+    }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
       setFieldError("يرجى إدخال بريد إلكتروني صالح.");
       return;
@@ -212,6 +218,7 @@ export default function AgencyOnboarding() {
         phone: phone.trim(),
         email: email.trim(),
         password,
+        whatsappNumber: whatsappNumber.trim() || undefined,
       });
       toast.success("تم إنشاء حساب الشريك — مرحباً بك!");
       await goToDashboard();
@@ -377,6 +384,18 @@ export default function AgencyOnboarding() {
                               maxLength={32}
                               required
                               onChange={(event) => { setPhone(event.target.value); clearErrors(); }}
+                            />
+                          </div>
+                          <div className="space-y-1.5">
+                            <label htmlFor="agency-whatsapp" className="block text-sm font-semibold">رقم الواتساب <span className="font-normal text-muted-foreground">(اختياري — للتواصل المباشر مع زبنائك)</span></label>
+                            <input
+                              id="agency-whatsapp"
+                              className="w-full rounded-xl border bg-background p-3 text-center"
+                              placeholder="مثال: 06XXXXXXXX أو +2126XXXXXXXX"
+                              value={whatsappNumber}
+                              maxLength={32}
+                              dir="ltr"
+                              onChange={(event) => { setWhatsappNumber(event.target.value); clearErrors(); }}
                             />
                           </div>
                           <div className="space-y-1.5">

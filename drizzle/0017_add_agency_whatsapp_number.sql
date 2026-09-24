@@ -1,0 +1,1 @@
+ALTER TABLE "users" ADD COLUMN "whatsapp_number" text;--> statement-breakpoint

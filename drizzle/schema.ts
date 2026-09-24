@@ -37,6 +37,8 @@ export const users = pgTable("users", {
   name: text("name"),
   email: varchar("email", { length: 320 }),
   whatsappPhone: varchar("whatsapp_phone", { length: 32 }),
+  /** Public agency WhatsApp number used for wa.me click-to-chat links (digits-only international form, e.g. 2126XXXXXXXX). */
+  whatsappNumber: text("whatsapp_number"),
   commercialRegister: varchar("commercial_register", { length: 120 }),
   agencyName: varchar("agency_name", { length: 180 }),
   agencyLogoUrl: text("agency_logo_url"),

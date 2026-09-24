@@ -6,7 +6,8 @@ import { useRef, useState, useEffect } from 'react';
 import { playSuccessSound } from '@/lib/sound';
 import { trpc } from '@/lib/trpc';
 import { cancellationRefundPolicy } from '@/lib/legalDisclosure';
-import { buildWhatsAppUrl } from '@/lib/whatsapp';
+import { buildWhatsAppUrl, buildAgencyWhatsAppMessage, buildWaMeUrl } from '@/lib/whatsapp';
+import { WhatsAppIcon } from '@/components/ui/WhatsAppContactButton';
 import { PaymentStatusBadge, PaymentMethodBadge, TransactionReference } from '@/components/PaymentStatusBadge';
 
 import { useSEO } from "@/lib/seo";
@@ -42,8 +43,22 @@ export default function Success() {
   const landlordName = booking?.ownerName || 'المالك / الشركة المؤجرة';
   const monthlyRent = booking?.totalPrice || 0;
   const canContactAgency = bookingStatus === 'Confirmed' && Boolean(booking?.ownerWhatsApp);
+  // Public agency click-to-chat number: available immediately after the client
+  // submits their info so they can contact the agency right away (wa.me link).
+  const agencyWhatsApp = booking?.agencyWhatsApp ?? null;
+  const agencyContactMessage = booking
+    ? buildAgencyWhatsAppMessage(booking.listingTitle ?? '', booking.listingId ?? 0)
+    : '';
+  const waChatUrl = buildWaMeUrl(agencyWhatsApp, agencyContactMessage);
+  const showWhatsAppContact = Boolean(waChatUrl) || canContactAgency;
 
   const handleWhatsappContact = () => {
+    if (waChatUrl) {
+      window.open(waChatUrl, '_blank', 'noopener,noreferrer');
+      return;
+    }
+    // Legacy fallback for bookings made before the agency had a public
+    // click-to-chat number: confirmed-only owner WhatsApp.
     if (!canContactAgency || !booking?.ownerWhatsApp) {
       toast.info('لا يتوفر رقم واتساب مؤكد للوكالة في بيانات هذا الحجز.');
       return;
@@ -514,13 +529,14 @@ export default function Success() {
               )}
             </Button>
 
-            {canContactAgency && (
+            {showWhatsAppContact && (
               <Button
                 type="button"
                 onClick={handleWhatsappContact}
                 className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white py-3.5 rounded-xl font-bold shadow-lg shadow-emerald-900/30 transition-all text-xs"
               >
-                <span>التواصل مع الوكالة عبر واتساب</span>
+                <WhatsAppIcon className="w-4 h-4" />
+                <span>تواصل عبر واتساب</span>
               </Button>
             )}
 
@@ -581,13 +597,14 @@ export default function Success() {
               >
                 حسناً، متابعة التصفح
               </Button>
-              {canContactAgency && (
+              {showWhatsAppContact && (
                 <Button
                   type="button"
                   onClick={handleWhatsappContact}
                   className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-xl text-xs"
                 >
-                  التواصل مع الوكالة عبر واتساب
+                  <WhatsAppIcon className="w-4 h-4" />
+                  تواصل عبر واتساب
                 </Button>
               )}
             </div>

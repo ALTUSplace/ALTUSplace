@@ -19,7 +19,7 @@ import { listings as listingsTable, users as usersTable } from "../drizzle/schem
 function makeSeedFakeDb() {
   const thenable = (value: unknown) => ({ then: (resolve: (v: unknown) => void) => resolve(value) });
   const store: {
-    users: Array<{ id: number; openId: string; name?: string; role?: unknown }>;
+    users: Array<{ id: number; openId: string; name?: string; role?: unknown; whatsappNumber?: string | null }>;
     listings: Array<{
       id: number;
       ownerId: number;
@@ -110,9 +110,10 @@ function makeSeedFakeDb() {
     update: (table: unknown) => ({
       set: (values: Record<string, unknown>) => ({
         where: (predicate: unknown) => {
-          if (table !== listingsTable) throw new Error("seed test fake: unhandled update table");
           const id = extractParamValue(predicate);
-          const target = store.listings.find((l) => l.id === id);
+          const rows = table === listingsTable ? store.listings : table === usersTable ? store.users : null;
+          if (!rows) throw new Error("seed test fake: unhandled update table");
+          const target = rows.find((r) => r.id === id);
           if (target) Object.assign(target, values);
           return thenable(target ? [target] : []);
         },
@@ -139,6 +140,7 @@ describe("demo listings seed", () => {
     expect(agency).toBeDefined();
     expect(agency?.name).toBe("ALTUSplace Demo Partner");
     expect(agency?.role).toBe("partner");
+    expect(agency?.whatsappNumber).toBe("212754382654");
 
     expect(db.store.listings.every((l) => l.ownerId === result.agencyId)).toBe(true);
     expect(db.store.listings.every((l) => l.status === "Published")).toBe(true);

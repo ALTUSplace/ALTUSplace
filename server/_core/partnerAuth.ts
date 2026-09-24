@@ -11,6 +11,7 @@ import { sdk } from "./sdk";
 import { sanitizeUserContent } from "./security";
 import { alertAdmins } from "../notificationService";
 import { normalizeWhatsAppNumber } from "../whatsappNumber";
+import { normalizeWaNumber } from "../../shared/whatsapp";
 
 /** Mirror of the client-side agency-name bounds (AgencyOnboarding.tsx). */
 export const PARTNER_NAME_MIN = 2;
@@ -79,6 +80,7 @@ export function registerPartnerAuthRoutes(app: Express) {
           phone: z.string().trim().min(1).max(32),
           email: emailSchema,
           password: passwordSchema,
+          whatsappNumber: z.string().trim().max(32).optional(),
         }).safeParse(body)
       : { success: false as const, error: null };
 
@@ -88,11 +90,19 @@ export function registerPartnerAuthRoutes(app: Express) {
       return;
     }
 
-    const { agencyName, city, phone, email, password } = parsed.data;
+    const { agencyName, city, phone, email, password, whatsappNumber } = parsed.data;
     const normalizedPhone = normalizeWhatsAppNumber(phone);
     if (!normalizedPhone) {
       fail(res, 400, "رقم الهاتف غير صالح - أدخل الرقم بالصيغة الدولية.", "invalid_input");
       return;
+    }
+    let normalizedWhatsAppNumber: string | null = null;
+    if (whatsappNumber) {
+      normalizedWhatsAppNumber = normalizeWaNumber(whatsappNumber);
+      if (!normalizedWhatsAppNumber) {
+        fail(res, 400, "رقم الواتساب غير صالح - أدخل 06XXXXXXXX أو +2126XXXXXXXX.", "invalid_input");
+        return;
+      }
     }
 
     const storedName = sanitizeName(agencyName);
@@ -123,6 +133,7 @@ export function registerPartnerAuthRoutes(app: Express) {
           agencyName: storedName,
           agencyCity: storedCity,
           agencyPhone: normalizedPhone,
+          whatsappNumber: normalizedWhatsAppNumber,
           loginMethod: "partner",
           passwordHash,
           passwordSalt: salt,

@@ -24,7 +24,7 @@ describe("per-agency WhatsApp routing audit contracts", () => {
 
   it("logs the WhatsApp number change to the agency audit trail", () => {
     const routers = read("server/routers.ts");
-    expect(routers).toMatch(/afterData: \{\s*agencyName: normalize\(input\.agencyName\), agencyPhone: normalize\(input\.agencyPhone\), agencyEmail: normalize\(input\.agencyEmail\), whatsappPhone: normalizeWhatsAppNumber\(input\.whatsappPhone \?\? ""\) \?\? null \}/);
+    expect(routers).toMatch(/afterData: \{\s*agencyName: normalize\(input\.agencyName\), agencyPhone: normalize\(input\.agencyPhone\), agencyEmail: normalize\(input\.agencyEmail\), whatsappPhone: normalizeWhatsAppNumber\(input\.whatsappPhone \?\? ""\) \?\? null(?:, whatsappNumber: normalizeWaNumber\(input\.whatsappNumber \?\? ""\) \?\? null)? \}/);
   });
 
   it("stores both the general phone and the dedicated WhatsApp number per vendor", () => {

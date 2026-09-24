@@ -120,6 +120,13 @@
       "when": 1791050000000,
       "tag": "0016_add_reviews_is_verified",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1791200000000,
+      "tag": "0017_add_agency_whatsapp_number",
+      "breakpoints": true
     }
   ]
 }

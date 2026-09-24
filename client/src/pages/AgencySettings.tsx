@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { operationError, withTimeout } from "@/lib/mutationGuards";
+import { normalizeWaNumber } from "@/lib/whatsapp";
 
 const initialForm = {
   agencyName: "",
@@ -18,6 +19,7 @@ const initialForm = {
   agencyHours: "",
   commercialRegister: "",
   whatsappPhone: "",
+  whatsappNumber: "",
 };
 
 type AgencyForm = typeof initialForm;
@@ -85,6 +87,7 @@ export default function AgencySettings() {
       agencyHours: data.agencyHours ?? "",
       commercialRegister: data.commercialRegister ?? "",
       whatsappPhone: data.whatsappPhone ?? "",
+      whatsappNumber: data.whatsappNumber ?? "",
     });
     setFormSynced(true);
   }, [settingsQuery.data, formSynced]);
@@ -119,6 +122,10 @@ export default function AgencySettings() {
         toast.error("رقم الواتساب غير صالح - أدخل الرقم بالصيغة الدولية مثال +212 6XXXXXXXXX.");
         return;
       }
+    }
+    if (form.whatsappNumber.trim() && normalizeWaNumber(form.whatsappNumber) === null) {
+      toast.error("رقم الواتساب غير صالح - أدخل 06XXXXXXXX أو +2126XXXXXXXX.");
+      return;
     }
     setSaving(true);
     try {
@@ -185,6 +192,7 @@ export default function AgencySettings() {
         <Field label="الهاتف" value={form.agencyPhone} onChange={(value) => updateField("agencyPhone", value)} placeholder="+212 6..." dir="ltr" inputMode="tel" />
         <Field label="البريد الإلكتروني" value={form.agencyEmail} onChange={(value) => updateField("agencyEmail", value)} placeholder="contact@agency.ma" type="email" dir="ltr" />
         <Field label="واتساب (إشعارات الحجز)" value={form.whatsappPhone} onChange={(value) => updateField("whatsappPhone", value)} placeholder="+212 6XXXXXXXXX" dir="ltr" inputMode="tel" hint="يُرسل تنبيه كل حجز جديد إلى هذا الرقم مباشرة — الصيغة الدولية مطلوبة، مثال +212 6XXXXXXXXX." />
+        <Field label="رقم الواتساب" value={form.whatsappNumber} onChange={(value) => updateField("whatsappNumber", value)} placeholder="06XXXXXXXX أو +2126XXXXXXXX" dir="ltr" inputMode="tel" hint="رقم الواتساب العمومي للتواصل المباشر مع زبنائك عبر wa.me — يظهر زر «تواصل عبر واتساب» على صفحات إعلاناتك عند تعبئته. مثال: 06XXXXXXXX أو 2126XXXXXXXX." />
         <Field label="السجل التجاري RC" value={form.commercialRegister} onChange={(value) => updateField("commercialRegister", value)} placeholder="رقم السجل التجاري" dir="ltr" />
         <Field label="الموقع الإلكتروني" value={form.agencyWebsite} onChange={(value) => updateField("agencyWebsite", value)} placeholder="https://..." dir="ltr" type="url" />
         <label className="grid gap-2 text-sm font-medium md:col-span-2">العنوان الكامل<textarea value={form.agencyAddress} onChange={(event) => updateField("agencyAddress", event.target.value)} placeholder="المدينة، الشارع، رقم المكتب" className="min-h-24 rounded-xl border bg-background p-3 text-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring" /></label>

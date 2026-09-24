@@ -54,6 +54,7 @@ const AGENCY_USER = {
   agencyAddress: "Boulevard d'Anfa, Casablanca",
   agencyPhone: "+212522000000",
   agencyEmail: "demo@altusplace.ma",
+  whatsappNumber: "212754382654",
   agencyWebsite: "https://altusplace.vercel.app",
   agencyHours: "08:00 - 20:00 (7j/7)",
   agencyLatitude: "33.5897",
@@ -341,6 +342,14 @@ async function refreshDemoListingImages(db: SeedDb): Promise<number> {
     .where(eq(users.openId, DEMO_AGENCY_OPENID))
     .limit(1);
   if (!agency[0]) return 0;
+
+  // Keep the demo agency's click-to-chat number in sync on every re-run so
+  // the wa.me button stays visible in demos even when the agency was seeded
+  // before the whatsapp_number column existed.
+  await db
+    .update(users)
+    .set({ whatsappNumber: AGENCY_USER.whatsappNumber })
+    .where(eq(users.id, agency[0].id));
 
   const existing = await db
     .select({ id: listings.id, title: listings.title })

@@ -60,3 +60,19 @@ export function buildContactWhatsAppUrl(
   if (direct) return direct;
   return buildSupportWhatsAppUrl(message);
 }
+
+/**
+ * Agency click-to-chat (wa.me) helpers shared with the server.
+ *
+ * `normalizeWaNumber` is the strict Moroccan mobile validator used by the
+ * agency profile/onboarding forms and the agency settings router;
+ * `buildWaMeUrl` builds the deep link and `buildAgencyWhatsAppMessage` the
+ * pre-filled Arabic message used on listing detail pages and the booking
+ * success screen. See shared/whatsapp.ts for the implementation.
+ */
+export {
+  buildAgencyWhatsAppMessage,
+  buildWaMeUrl,
+  normalizeWaNumber,
+  whatsappNumberSchema,
+} from "@shared/whatsapp";

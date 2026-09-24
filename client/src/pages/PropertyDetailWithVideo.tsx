@@ -15,6 +15,8 @@ import CommentSection from "@/components/CommentSection";
 import { FloatingWhatsAppButton } from "@/components/FloatingWhatsAppButton";
 import { PartnerVerifiedBadge } from "@/components/ui/PartnerVerifiedBadge";
 import { FavoriteButton } from "@/components/FavoriteButton";
+import { WhatsAppContactButton } from "@/components/ui/WhatsAppContactButton";
+import { buildAgencyWhatsAppMessage } from "@/lib/whatsapp";
 
 function parseAmenities(value: string | null | undefined): string[] {
   if (!value) return [];
@@ -48,6 +50,8 @@ type PropertyDetailShape = {
   amenities: string | null;
   agencyPhone?: string | null;
   whatsappPhone?: string | null;
+  /** Public WhatsApp number used for the wa.me click-to-chat CTA. */
+  whatsappNumber?: string | null;
   /** Owner role drives the partner-verified badge; only `partner` accounts verify. */
   ownerRole?: string | null;
 };
@@ -411,6 +415,12 @@ export default function PropertyDetailWithVideo() {
                 {language === "fr" ? "Identité et pièces obligatoires requises avant confirmation." : "التحقق من الهوية وإرفاق الوثائق الإلزامية مطلوب قبل تأكيد الحجز."}
               </p>
               <p className="text-xs text-slate-500 text-center">{language === "fr" ? "Le prix final est calculé côté serveur lors de la réservation." : "يُحتسب السعر النهائي على الخادم أثناء الحجز."}</p>
+
+              <WhatsAppContactButton
+                number={listing.whatsappNumber}
+                message={buildAgencyWhatsAppMessage(listing.title, listingId ?? listing.id)}
+                onContact={trackWhatsAppClick}
+              />
             </CardContent>
           </Card>
         </div>

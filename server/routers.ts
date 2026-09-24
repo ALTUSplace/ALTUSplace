@@ -1,4 +1,5 @@
 import { COOKIE_NAME } from "@shared/const";
+import { normalizeWaNumber, whatsappNumberSchema } from "@shared/whatsapp";
 import { randomUUID } from "node:crypto";
 import QRCode from "qrcode";
 import { TRPCError } from "@trpc/server";
@@ -94,6 +95,7 @@ export const appRouter = router({
         name: user.name,
         email: user.email,
         whatsappPhone: user.whatsappPhone,
+        whatsappNumber: user.whatsappNumber,
         commercialRegister: user.commercialRegister,
         agencyName: user.agencyName,
         agencyLogoUrl: user.agencyLogoUrl,
@@ -183,6 +185,7 @@ export const appRouter = router({
         agencyHours: users.agencyHours,
         commercialRegister: users.commercialRegister,
         whatsappPhone: users.whatsappPhone,
+        whatsappNumber: users.whatsappNumber,
       }).from(users).where(eq(users.id, ctx.user!.id)).limit(1);
       return rows[0] ?? null;
     }),
@@ -218,6 +221,7 @@ export const appRouter = router({
         agencyHours: z.string().trim().max(2000).optional().nullable(),
         commercialRegister: z.string().trim().max(120).optional().nullable(),
         whatsappPhone: z.string().trim().max(32).refine((value) => !value || normalizeWhatsAppNumber(value) !== null, "رقم واتساب غير صالح - أدخل الرقم بالصيغة الدولية.").optional().nullable(),
+        whatsappNumber: whatsappNumberSchema,
       }))
       .mutation(async ({ ctx, input }) => {
         const db = await getDb();
@@ -234,8 +238,9 @@ export const appRouter = router({
           agencyHours: normalize(input.agencyHours),
           commercialRegister: normalize(input.commercialRegister),
           whatsappPhone: normalizeWhatsAppNumber(input.whatsappPhone ?? "") ?? null,
+          whatsappNumber: input.whatsappNumber ? normalizeWaNumber(input.whatsappNumber) : null,
         }).where(eq(users.id, ctx.user!.id));
-        await writeAuditLog({ actorId: ctx.user!.id, action: "agency.settings.updated", entityType: "user", entityId: ctx.user!.id, afterData: { agencyName: normalize(input.agencyName), agencyPhone: normalize(input.agencyPhone), agencyEmail: normalize(input.agencyEmail), whatsappPhone: normalizeWhatsAppNumber(input.whatsappPhone ?? "") ?? null } });
+        await writeAuditLog({ actorId: ctx.user!.id, action: "agency.settings.updated", entityType: "user", entityId: ctx.user!.id, afterData: { agencyName: normalize(input.agencyName), agencyPhone: normalize(input.agencyPhone), agencyEmail: normalize(input.agencyEmail), whatsappPhone: normalizeWhatsAppNumber(input.whatsappPhone ?? "") ?? null, whatsappNumber: normalizeWaNumber(input.whatsappNumber ?? "") ?? null } });
         return { success: true as const };
       }),
     listings: ownerProcedure.query(async ({ ctx }) => {
@@ -1877,6 +1882,7 @@ export const appRouter = router({
             agencyName: users.agencyName,
             agencyPhone: users.agencyPhone,
             whatsappPhone: users.whatsappPhone,
+            whatsappNumber: users.whatsappNumber,
           })
           .from(listings)
           .leftJoin(users, eq(listings.ownerId, users.id))
@@ -1889,7 +1895,7 @@ export const appRouter = router({
           return null;
         }
 
-        const { listing, ownerName, ownerRole, agencyName, agencyPhone, whatsappPhone } = result[0];
+        const { listing, ownerName, ownerRole, agencyName, agencyPhone, whatsappPhone, whatsappNumber } = result[0];
         const sourceLanguage = "ar" as const;
         const targetLanguage = input.language ?? sourceLanguage;
 
@@ -1919,12 +1925,13 @@ export const appRouter = router({
             agencyName,
             agencyPhone,
             whatsappPhone,
+            whatsappNumber,
             averageRating: reviewSummary.average,
             reviewCount: reviewSummary.count,
           });
         }
 
-        return toPublicListing({ ...listing, _translationMeta: null, ownerName, ownerRole, agencyName, agencyPhone, whatsappPhone, averageRating: reviewSummary.average, reviewCount: reviewSummary.count });
+        return toPublicListing({ ...listing, _translationMeta: null, ownerName, ownerRole, agencyName, agencyPhone, whatsappPhone, whatsappNumber, averageRating: reviewSummary.average, reviewCount: reviewSummary.count });
       }),
 
     getBookedDates: publicProcedure
@@ -2249,6 +2256,7 @@ export const appRouter = router({
           listingCategory: listings.category,
           ownerName: users.name,
           ownerWhatsApp: users.whatsappPhone,
+          agencyWhatsApp: users.whatsappNumber,
         }).from(bookings)
           .innerJoin(listings, eq(bookings.listingId, listings.id))
           .leftJoin(users, eq(listings.ownerId, users.id))
