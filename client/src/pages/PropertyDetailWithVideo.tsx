@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link, useLocation, useParams, useSearch } from "wouter";
-import { ArrowRight, Bath, Bed, Building2, CheckCircle2, MapPin, Share2, Video, Calendar, Lock, ShieldCheck, MessageCircle, Ruler, Star } from "lucide-react";
+import { ArrowRight, Bath, Bed, Building2, CheckCircle2, MapPin, Share2, Video, Calendar, Lock, ShieldCheck, Ruler, Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,11 +12,8 @@ import { LISTINGS, type ListingItem } from "@/data/altusplace";
 import { toast } from "sonner";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import CommentSection from "@/components/CommentSection";
-import { FloatingWhatsAppButton } from "@/components/FloatingWhatsAppButton";
 import { PartnerVerifiedBadge } from "@/components/ui/PartnerVerifiedBadge";
 import { FavoriteButton } from "@/components/FavoriteButton";
-import { WhatsAppContactButton } from "@/components/ui/WhatsAppContactButton";
-import { buildAgencyWhatsAppMessage } from "@/lib/whatsapp";
 
 function parseAmenities(value: string | null | undefined): string[] {
   if (!value) return [];
@@ -122,7 +119,6 @@ export default function PropertyDetailWithVideo() {
   const bookedDatesQuery = trpc.listings.getBookedDates.useQuery({ listingId: listingId! }, { enabled: listingId !== null });
   const reviewListQuery = trpc.reviews.listByListing.useQuery({ listingId: listingId! }, { enabled: listingId !== null });
   const summaryQuery = trpc.reviews.summary.useQuery({ listingId: listingId! }, { enabled: listingId !== null });
-  const trackWhatsAppMutation = trpc.listings.trackEvent.useMutation();
   const propertyReviews = reviewListQuery.data ?? [];
   const summary = summaryQuery.data ?? { average: 0, count: 0 };
   const staticItem = listingId === null ? LISTINGS.find((item) => item.id === params.id && item.type !== "car") : undefined;
@@ -275,12 +271,6 @@ export default function PropertyDetailWithVideo() {
 
   const totalPrice = calculateRentalSubtotal(safePrice, daysCount) || safePrice * daysCount;
 
-  const trackWhatsAppClick = () => {
-    if (listingId !== null) {
-      trackWhatsAppMutation.mutate({ listingId, eventType: "whatsapp_click" });
-    }
-  };
-
   const handleProceedToCheckout = () => {
     if (!startDate || !endDate) {
       toast.error(language === "fr" ? "Veuillez sélectionner les dates" : "يرجى تحديد تاريخ البداية والنهاية");
@@ -399,28 +389,11 @@ export default function PropertyDetailWithVideo() {
                 <Lock className="w-3 h-3 text-emerald-600" />
                 {language === "fr" ? "Paiement sécurisé via CMI (simulation)" : "دفع آمن عبر CMI (محاكاة)"}
               </div>
-              <Button
-                type="button"
-                disabled={rangeBlocked}
-                onClick={() => {
-                  trackWhatsAppClick();
-                  handleProceedToCheckout();
-                }}
-                className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 rounded-xl shadow-lg shadow-emerald-200/50 flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:hover:scale-100 disabled:opacity-50"
-              >
-                <MessageCircle className="w-4 h-4" />
-                {language === "fr" ? "Réserver via WhatsApp" : "تأكيد الحجز عبر الواتساب"}
-              </Button>
               <p className="text-[10px] text-slate-500 text-center leading-relaxed">
                 {language === "fr" ? "Identité et pièces obligatoires requises avant confirmation." : "التحقق من الهوية وإرفاق الوثائق الإلزامية مطلوب قبل تأكيد الحجز."}
               </p>
               <p className="text-xs text-slate-500 text-center">{language === "fr" ? "Le prix final est calculé côté serveur lors de la réservation." : "يُحتسب السعر النهائي على الخادم أثناء الحجز."}</p>
 
-              <WhatsAppContactButton
-                number={listing.whatsappNumber}
-                message={buildAgencyWhatsAppMessage(listing.title, listingId ?? listing.id)}
-                onContact={trackWhatsAppClick}
-              />
             </CardContent>
           </Card>
         </div>
@@ -467,12 +440,6 @@ export default function PropertyDetailWithVideo() {
         <Card><CardContent className="p-5 space-y-4"><h2 className="text-xl font-bold text-slate-900">{language === "fr" ? "Équipements et visite vidéo" : "التجهيزات وجولة الفيديو"}</h2>{amenities.length ? <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">{amenities.map((item) => <div key={item} className="flex items-center gap-2 text-sm text-slate-700"><CheckCircle2 className="w-4 h-4 text-emerald-600" />{item}</div>)}</div> : <p className="text-sm text-slate-500">{language === "fr" ? "Aucun équipement renseigné." : "لم تُسجل تجهيزات لهذا الإعلان بعد."}</p>}<div className="border-t pt-4 flex items-center gap-3 text-sm text-slate-500"><Video className="w-5 h-5 text-slate-400" />{language === "fr" ? "Aucune vidéo vérifiée n’est disponible pour cette annonce." : "لا يوجد فيديو موثق متاح لهذا الإعلان حالياً."}</div></CardContent></Card>
         {listingId !== null && <CommentSection listingId={listingId} />}
       </div>
-      <FloatingWhatsAppButton
-        phone={listing.agencyPhone ?? listing.whatsappPhone}
-        title={listing.title}
-        city={listing.city}
-        onContact={trackWhatsAppClick}
-      />
     </div>
   );
 }

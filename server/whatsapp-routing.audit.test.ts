@@ -42,3 +42,29 @@ describe("per-agency WhatsApp routing audit contracts", () => {
     }
   });
 });
+
+describe("agency WhatsApp CTA gating (post-submission only)", () => {
+  it("removes every WhatsApp CTA from the public listing pages (no wa.me link)", () => {
+    for (const page of ["client/src/pages/CarDetails.tsx", "client/src/pages/PropertyDetailWithVideo.tsx"]) {
+      const source = read(page);
+      expect(count(source, /https:\/\/wa\.me/g)).toBe(0);
+      expect(count(source, /<WhatsAppContactButton/g)).toBe(0);
+      expect(count(source, /<FloatingWhatsAppButton/g)).toBe(0);
+    }
+  });
+
+  it("removes the pre-submission WhatsApp CTAs from the property booking card", () => {
+    const property = read("client/src/pages/PropertyDetailWithVideo.tsx");
+    expect(property).not.toContain("تأكيد الحجز عبر الواتساب");
+    expect(property).not.toContain("تواصل عبر واتساب");
+    expect(property).not.toContain("Réserver via WhatsApp");
+  });
+
+  it("keeps exactly one wa.me deep link on the post-submission success screen", () => {
+    const success = read("client/src/pages/Success.tsx");
+    // The success screen builds exactly one agency wa.me deep link (waChatUrl);
+    // the main CTA and the download-dialog CTA both open that same single link.
+    expect(count(success, /buildWaMeUrl\(/g)).toBe(1);
+    expect(count(success, /onClick=\{handleWhatsappContact\}/g)).toBe(2);
+  });
+});
