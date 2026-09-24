@@ -46,49 +46,82 @@
     <priority>0.3</priority>
   </url>
   <url>
+    <loc>https://altusplace.vercel.app/conditions-utilisation</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://altusplace.vercel.app/politique-confidentialite</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://altusplace.vercel.app/mentions-legales</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
     <loc>https://altusplace.vercel.app/blog</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://altusplace.vercel.app/car/11</loc>
-    <lastmod>2026-09-22</lastmod>
+    <loc>https://altusplace.vercel.app/property/34</loc>
+    <lastmod>2026-08-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://altusplace.vercel.app/car/10</loc>
-    <lastmod>2026-09-22</lastmod>
+    <loc>https://altusplace.vercel.app/property/33</loc>
+    <lastmod>2026-08-27</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://altusplace.vercel.app/car/9</loc>
-    <lastmod>2026-09-22</lastmod>
+    <loc>https://altusplace.vercel.app/property/32</loc>
+    <lastmod>2026-08-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://altusplace.vercel.app/property/6</loc>
-    <lastmod>2026-09-18</lastmod>
+    <loc>https://altusplace.vercel.app/property/31</loc>
+    <lastmod>2026-09-02</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://altusplace.vercel.app/property/5</loc>
-    <lastmod>2026-09-18</lastmod>
+    <loc>https://altusplace.vercel.app/car/30</loc>
+    <lastmod>2026-09-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://altusplace.vercel.app/car/4</loc>
-    <lastmod>2026-09-18</lastmod>
+    <loc>https://altusplace.vercel.app/car/29</loc>
+    <lastmod>2026-09-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://altusplace.vercel.app/car/3</loc>
-    <lastmod>2026-09-18</lastmod>
+    <loc>https://altusplace.vercel.app/car/28</loc>
+    <lastmod>2026-09-11</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://altusplace.vercel.app/car/27</loc>
+    <lastmod>2026-09-14</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://altusplace.vercel.app/car/26</loc>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://altusplace.vercel.app/car/25</loc>
+    <lastmod>2026-09-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>

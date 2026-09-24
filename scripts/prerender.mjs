@@ -132,6 +132,24 @@ const STATIC_ROUTES = [
     description: "كيفية جمع ومعالجة بياناتك الشخصية في ALTUSplace وحماية معلوماتك عند كراء السيارات والعقارات بالمغرب.",
   },
   {
+    path: "/conditions-utilisation",
+    file: "conditions-utilisation/index.html",
+    title: "شروط الاستخدام | ALTUSplace",
+    description: "شروط وقواعد استخدام منصة ALTUSplace لكراء السيارات والعقارات في المغرب: الحجز، الدفع، الإلغاء، الضمان المالي والتعويضات.",
+  },
+  {
+    path: "/politique-confidentialite",
+    file: "politique-confidentialite/index.html",
+    title: "سياسة الخصوصية | ALTUSplace",
+    description: "كيفية جمع ومعالجة بياناتك الشخصية في ALTUSplace وحماية معلوماتك عند كراء السيارات والعقارات بالمغرب، وفق القانون رقم 09-08.",
+  },
+  {
+    path: "/mentions-legales",
+    file: "mentions-legales/index.html",
+    title: "الإعلان القانوني | ALTUSplace",
+    description: "المعلومات القانونية لمنصة ALTUSplace: الناشر، النشاط، الاستضافة، الملكية الفكرية والقانون المغربي المطبق.",
+  },
+  {
     path: "/blog",
     file: "blog/index.html",
     title: "مدونة ALTUSplace | دليل كراء السيارات والاستثمار العقاري في المغرب",

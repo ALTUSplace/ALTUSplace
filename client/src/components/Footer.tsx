@@ -78,8 +78,9 @@ export default function Footer() {
             <Link href="/partner" className="text-white/50 hover:text-white transition-colors font-semibold">{t("partnerPortal")}</Link>
           </nav>
           <nav className="flex flex-wrap items-center justify-center gap-5 pt-1" aria-label="Legal">
-            <Link href="/terms" className="text-white/50 hover:text-white transition-colors font-semibold">{t("termsOfService")}</Link>
-            <Link href="/privacy" className="text-white/50 hover:text-white transition-colors font-semibold">{t("privacyPolicy")}</Link>
+            <Link href="/conditions-utilisation" className="text-white/50 hover:text-white transition-colors font-semibold">{t("termsOfService")}</Link>
+            <Link href="/politique-confidentialite" className="text-white/50 hover:text-white transition-colors font-semibold">{t("privacyPolicy")}</Link>
+            <Link href="/mentions-legales" className="text-white/50 hover:text-white transition-colors font-semibold">{t("mentionsLegales")}</Link>
             <Link href="/about" className="text-white/50 hover:text-white transition-colors font-semibold">{language === "ar" ? "من نحن" : language === "fr" ? "À propos" : "About"}</Link>
           </nav>
         </div>

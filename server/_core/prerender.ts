@@ -50,6 +50,22 @@ const BESPOKE_LOCATIONS: Record<string, { title: string; description: string }> 
   },
 };
 
+/** Public legal pages (French slugs, Arabic content) — crawlers get real metadata. */
+const LEGAL_PAGES: Record<string, { title: string; description: string }> = {
+  "/conditions-utilisation": {
+    title: "شروط الاستخدام | ALTUSplace",
+    description: "شروط وقواعد استخدام منصة ALTUSplace لكراء السيارات والعقارات في المغرب: الحجز، الدفع، الإلغاء، الضمان المالي والتعويضات.",
+  },
+  "/politique-confidentialite": {
+    title: "سياسة الخصوصية | ALTUSplace",
+    description: "كيفية جمع ومعالجة بياناتك الشخصية في ALTUSplace وحماية معلوماتك عند كراء السيارات والعقارات بالمغرب، وفق القانون رقم 09-08.",
+  },
+  "/mentions-legales": {
+    title: "الإعلان القانوني | ALTUSplace",
+    description: "المعلومات القانونية لمنصة ALTUSplace: الناشر، النشاط، الاستضافة، الملكية الفكرية والقانون المغربي المطبق.",
+  },
+};
+
 function canonicalFor(pathname: string, origin: string): string {
   const clean = (pathname || "/").split(/[?#]/)[0] || "/";
   const normalized = clean === "/" ? "/" : clean.replace(/\/+$/, "");
@@ -167,6 +183,11 @@ export async function resolveRouteMetadata(pathname: string, origin: string = SE
       title: "مدن المغرب: سيارات وعقارات للكراء | ALTUSplace",
       description: "تصفح العروض حسب المدينة في جميع أنحاء المغرب: من الدار البيضاء والرباط إلى أغادير والداخلة.",
     };
+  }
+
+  const legalPage = LEGAL_PAGES[path];
+  if (legalPage) {
+    return { ...base, ...legalPage };
   }
 
   return base;

@@ -31,6 +31,9 @@ const PropertyDetailPage = lazy(() => import("./pages/PropertyDetailWithVideo"))
 const DisputeResolutionPage = lazy(() => import('./pages/DisputeResolution'));
 const TermsPage = lazy(() => import('./pages/TermsOfService'));
 const PrivacyPage = lazy(() => import('./pages/PrivacyPolicy'));
+const ConditionsUtilisationPage = lazy(() => import('./pages/ConditionsUtilisation'));
+const PolitiqueConfidentialitePage = lazy(() => import('./pages/PolitiqueConfidentialite'));
+const MentionsLegalesPage = lazy(() => import('./pages/MentionsLegales'));
 const AddCarPage = lazy(() => import("./pages/AddCar"));
 const MyBookingsPage = lazy(() => import("./pages/MyBookings"));
 const HelpPage = lazy(() => import("./pages/Help"));
@@ -138,6 +141,9 @@ function Router() {
       <Route path="/admin/super/dashboard">{() => <AccessGuard area="superadmin"><Suspense fallback={<PageLoader />}><SuperAdminDashboardPage /></Suspense></AccessGuard>}</Route>
       <Route path="/dispute-resolution" component={DisputeResolutionPage} />
       <Route path="/terms" component={TermsPage} />
+      <Route path="/conditions-utilisation" component={ConditionsUtilisationPage} />
+      <Route path="/politique-confidentialite" component={PolitiqueConfidentialitePage} />
+      <Route path="/mentions-legales" component={MentionsLegalesPage} />
       <Route path="/register">{() => <Suspense fallback={<PageLoader />}><RegisterPage /></Suspense>}</Route>
       <Route path="/direct-login">{() => <Suspense fallback={<PageLoader />}><DirectLoginPage /></Suspense>}</Route>
       <Route path="/become-partner">{() => <Suspense fallback={<PageLoader />}><PartnerWithUsPage /></Suspense>}</Route>
