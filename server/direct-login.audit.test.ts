@@ -63,4 +63,16 @@ describe("direct owner login (OAuth fallback) audit", () => {
     const app = read("client/src/App.tsx");
     expect(app).toContain('path="/direct-login"');
   });
+
+  it("ships a gated one-shot ops script that reuses the existing scrypt helper and never logs the secret", () => {
+    const script = read("scripts/reset-owner-password.ts");
+    // Hard gate: refuses to run unless RESET_OWNER_PASSWORD=1 is set explicitly.
+    expect(script).toContain('process.env.RESET_OWNER_PASSWORD !== "1"');
+    // Reuses the app's existing hashing helper (setOwnerPassword) + self-check.
+    expect(script).toContain("setOwnerPassword(");
+    expect(script).toContain("verifyOwnerPassword(");
+    expect(script).toContain("owner_password_hash");
+    // Never logs the password or its hash.
+    expect(script).not.toMatch(/console\.(?:log|error|warn|info)\([^)]*(?:newPassword|passwordHash|passwordSalt)/);
+  });
 });
