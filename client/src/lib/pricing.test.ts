@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { calculateRentalDays, calculateRentalSubtotal, parseDayDate } from "./pricing";
+import { ADDON_CATALOG, CAR_ADDON_IDS, calculateAddOnsTotal, calculateRentalDays, calculateRentalSubtotal, parseDayDate, PROPERTY_ADDON_IDS } from "./pricing";
 
 describe("parseDayDate", () => {
   it("parses calendar dates anchored to midday", () => {
@@ -50,5 +50,29 @@ describe("calculateRentalSubtotal", () => {
     expect(calculateRentalSubtotal(-100, 3)).toBe(0);
     expect(calculateRentalSubtotal(450, 0)).toBe(0);
     expect(calculateRentalSubtotal(450, 2.5)).toBe(0);
+  });
+});
+
+describe("listing-type-aware add-on catalog", () => {
+  it("defines the three property add-ons with their required fees", () => {
+    expect(ADDON_CATALOG.cleaning).toMatchObject({ fee: 300, perDay: false, labelAr: "تنظيف شامل عند المغادرة" });
+    expect(ADDON_CATALOG.parking).toMatchObject({ fee: 50, perDay: true, labelAr: "مكان ركن سيارة خاص" });
+    expect(ADDON_CATALOG.late_checkin).toMatchObject({ fee: 100, perDay: false, labelAr: "تسجيل وصول متأخر (بعد 22:00)" });
+  });
+
+  it("keeps car and property add-on sets disjoint and covering the whole catalog", () => {
+    for (const id of CAR_ADDON_IDS) expect(PROPERTY_ADDON_IDS).not.toContain(id);
+    expect([...CAR_ADDON_IDS, ...PROPERTY_ADDON_IDS].sort()).toEqual(Object.keys(ADDON_CATALOG).sort());
+    expect(CAR_ADDON_IDS).toContain("insurance");
+    expect(PROPERTY_ADDON_IDS).not.toContain("insurance");
+  });
+
+  it("prices flat add-ons once and per-day add-ons across the whole stay", () => {
+    // Property: cleaning (flat 300) + parking (50/day) + late check-in (flat 100).
+    expect(calculateAddOnsTotal(["cleaning", "parking", "late_checkin"], 7)).toBe(300 + 50 * 7 + 100);
+    expect(calculateAddOnsTotal(["parking"], 3)).toBe(150);
+    expect(calculateAddOnsTotal(["cleaning"], 3)).toBe(300);
+    expect(calculateAddOnsTotal(["late_checkin"], 3)).toBe(100);
+    expect(calculateAddOnsTotal([], 3)).toBe(0);
   });
 });

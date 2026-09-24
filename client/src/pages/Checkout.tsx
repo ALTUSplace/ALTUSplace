@@ -10,16 +10,16 @@ import { useAuth } from '@/_core/hooks/useAuth';
 import { isKycSatisfiedFor, KYC_STATUS_CONFIG, type KycStatus } from '@/lib/kyc';
 import {
   ADDON_CATALOG,
+  CAR_ADDON_IDS,
   calculateCheckoutTotal,
   calculateRentalDays,
   isAddOnId,
+  PROPERTY_ADDON_IDS,
   type AddOnId,
 } from '@/lib/pricing';
 import { LISTINGS, PARTNERS } from '@/data/altusplace';
 import { buildContactWhatsAppUrl } from '@/lib/whatsapp';
 import { isPropertyCategory } from '@/lib/categories';
-
-const ALL_ADDON_IDS = Object.keys(ADDON_CATALOG) as AddOnId[];
 
 function formatMAD(amount: number): string {
   return `${new Intl.NumberFormat('fr-MA').format(amount)} درهم`;
@@ -203,11 +203,20 @@ export default function CheckoutPage() {
   const isPropertyBooking = isPropertyCategory(listingCategory);
   const isAirportPickupMohammedV = !isPropertyBooking && pickupCity === 'الدار البيضاء';
 
+  // Add-on catalogue is listing-type aware: property stays offer cleaning,
+  // private parking and late check-in; car rentals keep insurance, a baby
+  // seat, airport delivery and an extra driver — never both.
+  const bookingAddOnIds: readonly AddOnId[] = isPropertyBooking ? PROPERTY_ADDON_IDS : CAR_ADDON_IDS;
+  // Stale or mismatched URL add-ons (car ids carried into a property
+  // checkout and vice-versa) are dropped before reaching preview, totals,
+  // the WhatsApp message or the persisted booking.
+  const activeAddOns = selectedAddOns.filter((id) => bookingAddOnIds.includes(id));
+
   const bookingStart = startDateParam || new Date().toISOString().slice(0, 10);
   const bookingEnd = endDateParam || new Date().toISOString().slice(0, 10);
   const days = calculateRentalDays(bookingStart, bookingEnd);
   const pricePerDay = resPricePerDay > 0 ? resPricePerDay : (listing?.pricePerDay || 0);
-  const totals = calculateCheckoutTotal(pricePerDay, days, selectedAddOns);
+  const totals = calculateCheckoutTotal(pricePerDay, days, activeAddOns);
   const showTotalDisplay = formatMAD(totals.total);
 
   const residencyOption = RESIDENCY_OPTIONS.find((option) => option.value === residency) ?? RESIDENCY_OPTIONS[0];
@@ -226,7 +235,7 @@ export default function CheckoutPage() {
     endDate: bookingEnd,
     days,
     totalMAD: totals.total,
-    addOns: selectedAddOns,
+    addOns: activeAddOns,
     residencyLabel,
     identityLabel: identityShortLabel,
     requireLicense: !isPropertyBooking,
@@ -311,7 +320,7 @@ const result = await createBooking.mutateAsync({
           listingId: parsedListingId,
           startDate: bookingStart,
           endDate: bookingEnd,
-          addOns: selectedAddOns.length > 0 ? selectedAddOns : undefined,
+          addOns: activeAddOns.length > 0 ? activeAddOns : undefined,
           residency,
           drivingLicense: isPropertyBooking
             ? undefined
@@ -416,7 +425,7 @@ const result = await createBooking.mutateAsync({
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {ALL_ADDON_IDS.map((id) => {
+                {bookingAddOnIds.map((id) => {
                   const def = ADDON_CATALOG[id];
                   const selected = selectedAddOns.includes(id);
                   const addOnPrice = def.perDay ? def.fee * days : def.fee;
@@ -590,7 +599,7 @@ const result = await createBooking.mutateAsync({
                     <span>قيمة الاشتراك ({days} أيام)</span>
                     <span>{formatMAD(totals.subtotal)}</span>
                   </div>
-                  {selectedAddOns.map((id) => {
+                  {activeAddOns.map((id) => {
                     const def = ADDON_CATALOG[id];
                     const amount = def.perDay ? def.fee * days : def.fee;
                     return (
@@ -605,9 +614,9 @@ const result = await createBooking.mutateAsync({
                     <span>{showTotalDisplay}</span>
                   </div>
                 </div>
-                {selectedAddOns.length > 0 && (
+                {activeAddOns.length > 0 && (
                   <div className="rounded-lg bg-emerald-50 border border-emerald-200 p-2 text-[11px] text-emerald-700">
-                    <span className="flex items-center gap-1"><ShieldCheck className="w-3.5 h-3.5" />تأمين وحماية مشمولة في الإضافات المختارة</span>
+                    <span className="flex items-center gap-1"><ShieldCheck className="w-3.5 h-3.5" />{isPropertyBooking ? 'الخدمات المختارة مشمولة في ملخص الحجز النهائي' : 'تأمين وحماية مشمولة في الإضافات المختارة'}</span>
                   </div>
                 )}
                 {kycBlocked ? (

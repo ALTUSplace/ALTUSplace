@@ -6,7 +6,13 @@
  * totals shown at checkout always reconcile with what is persisted.
  */
 
-export type AddOnId = "insurance" | "baby_seat" | "delivery" | "additional_driver";
+export type AddOnId = "insurance" | "baby_seat" | "delivery" | "additional_driver" | "cleaning" | "parking" | "late_checkin";
+
+/** Add-ons offered for car rentals (Turo-style). */
+export const CAR_ADDON_IDS: readonly AddOnId[] = ["insurance", "baby_seat", "delivery", "additional_driver"];
+
+/** Add-ons offered for property stays (cleaning, parking, late check-in). */
+export const PROPERTY_ADDON_IDS: readonly AddOnId[] = ["cleaning", "parking", "late_checkin"];
 
 export type AddOnDefinition = {
   id: AddOnId;
@@ -50,6 +56,30 @@ export const ADDONS_CATALOG: Record<AddOnId, AddOnDefinition> = {
     labelAr: "سائق إضافي",
     labelFr: "Conducteur additionnel",
     labelEn: "Additional driver",
+  },
+  cleaning: {
+    id: "cleaning",
+    fee: 300,
+    perDay: false,
+    labelAr: "تنظيف شامل عند المغادرة",
+    labelFr: "Ménage complet au départ",
+    labelEn: "Full cleaning on departure",
+  },
+  parking: {
+    id: "parking",
+    fee: 50,
+    perDay: true,
+    labelAr: "مكان ركن سيارة خاص",
+    labelFr: "Place de parking privée",
+    labelEn: "Private parking spot",
+  },
+  late_checkin: {
+    id: "late_checkin",
+    fee: 100,
+    perDay: false,
+    labelAr: "تسجيل وصول متأخر (بعد 22:00)",
+    labelFr: "Arrivée tardive (après 22h)",
+    labelEn: "Late check-in (after 22:00)",
   },
 };
 

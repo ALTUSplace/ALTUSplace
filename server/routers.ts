@@ -32,7 +32,7 @@ import { partnerOpenId } from "./_core/partnerAuth";
 import { getKycStatusPayload } from "./verification/eligibility";
 import { assertKycEligibleToBook } from "./verification/eligibility";
 import { maskDocumentNumber, normalizeBookingCategory } from "./verification/requirements";
-import { ADDONS_CATALOG, calculateAddOnsTotal, isAddOnId } from "./addons";
+import { ADDONS_CATALOG, calculateAddOnsTotal, CAR_ADDON_IDS, isAddOnId, PROPERTY_ADDON_IDS } from "./addons";
 import { createEscrowEntry, freezeEscrowEntry, getGlobalCommission, getTierCommission, mediateEscrowEntry, releaseEscrowEntry, resolveEffectiveCommission, upsertGlobalCommission, upsertTierCommission, VENDOR_TIERS } from "./escrow";
 import { createProviderCharge, gatewaySupportsCurrency, type GatewayCode } from "./payments/providers";
 import { convertFromMAD, resolveExchangeRates } from "./payments/exchangeRates";
@@ -2277,7 +2277,7 @@ export const appRouter = router({
           // Optional checkout add-ons. The server re-prices these from the
           // canonical catalog — client-sent amounts are never trusted.
           addOns: z
-            .array(z.enum(["insurance", "baby_seat", "delivery", "additional_driver"]))
+            .array(z.enum(["insurance", "baby_seat", "delivery", "additional_driver", "cleaning", "parking", "late_checkin"]))
             .optional(),
           // Residency + the two mandatory checkout documents (driver's licence
           // and CIN/Passport). Files are stored server-side (Forge/S3) exactly
@@ -2322,6 +2322,15 @@ export const appRouter = router({
         if (!["Published", "Available", "Approved"].includes(listing[0].status)) {
           throw new TRPCError({ code: "CONFLICT", message: "الإعلان غير متاح للحجز حالياً." });
         }
+        const bookingCategory = normalizeBookingCategory(listing[0].category ?? null);
+
+        // Add-ons must match the listing type: car bookings get vehicle
+        // add-ons, property stays get cleaning/parking/late check-in — never
+        // a mix, so totals always reconcile with the rendered options.
+        const allowedAddOnIds = bookingCategory === "car" ? CAR_ADDON_IDS : PROPERTY_ADDON_IDS;
+        if ((input.addOns ?? []).some((id) => !allowedAddOnIds.includes(id))) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "الإضافة المختارة غير متوافقة مع نوع الإعلان." });
+        }
         const blockedRanges = [
           ...parseBlockedRanges(listing[0].availability),
           ...parseBlockedRanges(listing[0].icalImportedRanges),
@@ -2365,7 +2374,6 @@ export const appRouter = router({
         // residency, the documents required for that listing category must be
         // attached and uploaded. Car bookings need the driving licence + ID,
         // while property (real estate/office) bookings only need the ID.
-        const bookingCategory = normalizeBookingCategory(listing[0].category ?? null);
         if (input.residency) {
           if (bookingCategory === "car" && (!input.drivingLicense || !input.identityDocument)) {
             throw new TRPCError({ code: "BAD_REQUEST", message: "المرجو إرفاق رخصة السياقة ووثيقة الهوية مع حالة الإقامة." });
