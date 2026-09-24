@@ -25,7 +25,7 @@ function makeSeedFakeDb(initial: { demoListings: DemoListingRow[] }) {
     demoListings: [...initial.demoListings],
     insertedUsers: [] as Array<{ openId: string; name: string }>,
     insertedBookings: [] as Array<{ renterId: number; listingId: number; startDate: Date; endDate: Date }>,
-    insertedReviews: [] as Array<{ userId: number; listingId: number; bookingId: number; rating: number; comment: string }>,
+    insertedReviews: [] as Array<{ userId: number; listingId: number; bookingId: number; rating: number; comment: string; isVerified?: boolean }>,
   };
   let nextUserId = 1000;
   let nextBookingId = 5000;
@@ -100,7 +100,7 @@ describe("reviews demo seed — idempotency + data quality", () => {
     { id: 6, pricePerDay: 650 },
   ];
 
-  it("inserts demo renters, ended confirmed bookings and reviews — rated 4-5 weighted, comments 10-500", async () => {
+  it("inserts demo renters, ended confirmed bookings and verified reviews — rated 4-5 weighted, comments 10-500", async () => {
     const fake = makeSeedFakeDb({ demoListings });
     const result = await seedDemoReviews(fake as never);
 
@@ -111,10 +111,19 @@ describe("reviews demo seed — idempotency + data quality", () => {
     expect(result.overallAverage).toBeLessThanOrEqual(4.6);
     expect(result.perListing.reduce((sum, entry) => sum + entry.rows, 0)).toBe(TARGET_TOTAL_REVIEWS);
 
+    // Aggregate ratings are reported per listing (1-decimal average like the
+    // computed `reviewStats` aggregates) and every seeded review is verified.
+    for (const entry of result.perListing) {
+      expect(entry.rows).toBeGreaterThan(0);
+      expect(entry.average).toBeGreaterThanOrEqual(1);
+      expect(entry.average).toBeLessThanOrEqual(5);
+    }
+
     expect(fake.store.insertedUsers).toHaveLength(TARGET_TOTAL_REVIEWS);
     expect(fake.store.insertedUsers.every((u) => u.openId.startsWith(RENTER_OPENID_PREFIX))).toBe(true);
     expect(fake.store.insertedBookings).toHaveLength(TARGET_TOTAL_REVIEWS);
     expect(fake.store.insertedReviews).toHaveLength(TARGET_TOTAL_REVIEWS);
+    expect(fake.store.insertedReviews.every((review) => review.isVerified === true)).toBe(true);
 
     for (const review of fake.store.insertedReviews) {
       expect(review.rating).toBeGreaterThanOrEqual(1);

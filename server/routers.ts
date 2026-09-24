@@ -3270,6 +3270,7 @@ export const appRouter = router({
             rating: reviews.rating,
             comment: reviews.comment,
             createdAt: reviews.createdAt,
+            isVerified: reviews.isVerified,
             userName: users.name,
           })
           .from(reviews)

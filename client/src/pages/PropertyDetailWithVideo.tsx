@@ -431,7 +431,14 @@ export default function PropertyDetailWithVideo() {
                   {propertyReviews.map((rev) => (
                     <div key={rev.id} className="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm font-bold text-slate-800">{rev.userName || (language === "fr" ? "Utilisateur ALTUSplace" : t("reviewsAnonymousUser"))}</span>
+                        <span className="flex flex-wrap items-center gap-2 text-sm font-bold text-slate-800">
+                          {rev.userName || (language === "fr" ? "Utilisateur ALTUSplace" : t("reviewsAnonymousUser"))}
+                          {rev.isVerified && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-600">
+                              <ShieldCheck className="h-3 w-3" /> {t("reviewVerifiedBadge")}
+                            </span>
+                          )}
+                        </span>
                         <span className="text-xs text-slate-500">{new Date(rev.createdAt).toLocaleDateString(language === "fr" ? "fr-MA" : "ar-MA")}</span>
                       </div>
                       <div className="flex items-center gap-1 text-amber-500">

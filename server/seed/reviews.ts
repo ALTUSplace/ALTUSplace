@@ -12,6 +12,10 @@
  * The demo renters own Confirmed, already-ended demo bookings so every seeded
  * review satisfies the exact preconditions `reviews.create` enforces on real
  * submissions (own confirmed ended booking for that listing, one per booking).
+ * Every seeded review is therefore "verified-style": it carries the same
+ * `isVerified` flag a real review gets (confirmed + ended booking = verified)
+ * and surfaces the per-listing aggregate rating (average, 1 decimal) in its
+ * result so the seeded data matches what the computed aggregates will show.
  * `demoCleanup` already removes reviews + bookings by demo listing id.
  */
 import { eq, ilike, inArray, and } from "drizzle-orm";
@@ -96,7 +100,7 @@ export type SeedResult = {
   listings: number;
   reviews: number;
   overallAverage: number;
-  perListing: Array<{ listingId: number; rows: number }>;
+  perListing: Array<{ listingId: number; rows: number; average: number }>;
 };
 
 /** Seeds demo reviews through any drizzle db (real or test fake). */
@@ -191,14 +195,20 @@ export async function seedDemoReviews(db: SeedDb): Promise<SeedResult> {
         bookingId: insertedBookings[index].id,
         rating: spec.rating,
         comment: spec.comment,
+        isVerified: true,
         createdAt: spec.createdAt,
       })),
     );
 
-  const perListing = demoListings.map((listing, listingIndex) => ({
-    listingId: listing.id,
-    rows: targets[listingIndex],
-  }));
+  // Aggregate ratings per listing, rounded to 1 decimal (same rounding the
+  // computed `reviewStats` aggregates apply to real listings).
+  const perListing = demoListings.map((listing, listingIndex) => {
+    const rowsForListing = specs.filter((spec) => spec.listingId === listing.id);
+    const average = rowsForListing.length
+      ? Math.round((rowsForListing.reduce((sum, spec) => sum + spec.rating, 0) / rowsForListing.length) * 10) / 10
+      : 0;
+    return { listingId: listing.id, rows: targets[listingIndex], average };
+  });
   const overallAverage = specs.reduce((sum, spec) => sum + spec.rating, 0) / specs.length;
 
   return {
@@ -240,9 +250,9 @@ async function main(): Promise<void> {
       return;
     }
     console.log(
-      `[reviews-seed] seeded ${result.reviews} demo reviews across ${result.listings} demo listing(s); ` +
-        `overall mean ${result.overallAverage.toFixed(2)}; per listing: ` +
-        result.perListing.map((entry) => `#${entry.listingId}=${entry.rows}`).join(", ") +
+      `[reviews-seed] seeded ${result.reviews} verified demo reviews across ${result.listings} demo listing(s); ` +
+        `overall mean ${result.overallAverage.toFixed(2)}; per listing (reviews / avg rating): ` +
+        result.perListing.map((entry) => `#${entry.listingId}=${entry.rows}★${entry.average.toFixed(1)}`).join(", ") +
         ` (with <5 demo listings the 3-8 band is saturated to reach ${TARGET_TOTAL_REVIEWS}+).`,
     );
   } finally {

@@ -205,6 +205,10 @@ export const reviews = pgTable("reviews", {
   userId: integer("user_id").notNull(),
   rating: integer("rating").notNull(),
   comment: text("comment"),
+  // Every review requires a Confirmed + already-ended booking owned by the
+  // reviewer (`reviews.create` enforces it), so every review is inherently
+  // verified — this flag is the product's trust signal surfaced as a badge.
+  isVerified: boolean("is_verified").default(true).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 }, (table) => ({
   listingIdx: index("reviews_listing_idx").on(table.listingId),

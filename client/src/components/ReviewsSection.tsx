@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Star, MessageSquare, CheckCircle2, User, Loader2 } from 'lucide-react';
+import { Star, MessageSquare, CheckCircle2, User, Loader2, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import { trpc } from '@/lib/trpc';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -97,7 +97,14 @@ export default function ReviewsSection({ listingId, bookingId }: ReviewsSectionP
                     <User className="h-5 w-5" />
                   </div>
                   <div>
-                    <h4 className="font-bold">{review.userName || t("reviewsAnonymousUser")}</h4>
+                    <h4 className="flex flex-wrap items-center gap-2 font-bold">
+                      {review.userName || t("reviewsAnonymousUser")}
+                      {review.isVerified && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-600">
+                          <ShieldCheck className="h-3 w-3" /> {t("reviewVerifiedBadge")}
+                        </span>
+                      )}
+                    </h4>
                     <span className="text-xs text-muted-foreground">{new Date(review.createdAt).toLocaleDateString('ar-MA')}</span>
                   </div>
                 </div>

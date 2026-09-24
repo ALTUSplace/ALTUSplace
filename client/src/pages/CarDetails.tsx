@@ -409,7 +409,14 @@ export default function CarDetails() {
                       ) : reviews.map((rev) => (
                       <div key={rev.id} className="bg-[#1C1C1E] border border-slate-800 p-6 rounded-3xl space-y-2">
                         <div className="flex items-center justify-between">
-                          <span className="font-bold text-white text-sm">{rev.userName || t("reviewsAnonymousUser")}</span>
+                          <span className="flex flex-wrap items-center gap-2 font-bold text-white text-sm">
+                            {rev.userName || t("reviewsAnonymousUser")}
+                            {rev.isVerified && (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-400">
+                                <ShieldCheck className="h-3 w-3" /> {t("reviewVerifiedBadge")}
+                              </span>
+                            )}
+                          </span>
                           <span className="text-xs text-slate-500">{new Date(rev.createdAt).toLocaleDateString('ar-MA')}</span>
                         </div>
                         <div className="flex items-center gap-1 text-amber-400">

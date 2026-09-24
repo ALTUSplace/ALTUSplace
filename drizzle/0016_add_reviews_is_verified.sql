@@ -1,0 +1,1 @@
+ALTER TABLE "reviews" ADD COLUMN "is_verified" boolean DEFAULT true NOT NULL;

@@ -63,6 +63,7 @@ type FacReview = {
   rating: number;
   comment: string | null;
   createdAt: Date;
+  isVerified?: boolean;
   userName?: string | null;
 };
 
@@ -110,7 +111,7 @@ function makeFakeDb(store: FacStore) {
     store.reviews
       .filter((r) => r.listingId === listingId)
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-      .map((r) => ({ id: r.id, rating: r.rating, comment: r.comment, createdAt: r.createdAt, userName: r.userName ?? null }));
+      .map((r) => ({ id: r.id, rating: r.rating, comment: r.comment, createdAt: r.createdAt, isVerified: r.isVerified ?? true, userName: r.userName ?? null }));
 
   const reviewForBookingAndUser = (bookingId: number, userId: number) =>
     store.reviews.filter((r) => r.bookingId === bookingId && r.userId === userId);
@@ -214,8 +215,8 @@ const seed = (): FacStore => ({
     { id: 5, renterId: userA.id, listingId: 501, status: "Confirmed", endDate: new Date(now + 5 * day) },
   ],
   reviews: [
-    { id: 1, bookingId: 99, listingId: 501, userId: userB.id, rating: 4, comment: "قديم جداً", createdAt: new Date(now - 30 * day), userName: "User B" },
-    { id: 2, bookingId: 98, listingId: 501, userId: userB.id, rating: 5, comment: "حديث نسبياً", createdAt: new Date(now - 10 * day), userName: "User B" },
+    { id: 1, bookingId: 99, listingId: 501, userId: userB.id, rating: 4, comment: "قديم جداً", createdAt: new Date(now - 30 * day), isVerified: true, userName: "User B" },
+    { id: 2, bookingId: 98, listingId: 501, userId: userB.id, rating: 5, comment: "حديث نسبياً", createdAt: new Date(now - 10 * day), isVerified: true, userName: "User B" },
   ],
   listings: [
     { id: 501, ownerId: 301, title: "Dacia Duster", category: "car", pricePerDay: 400, status: "Published", ownerName: "Agence Atlas", ownerRole: "partner" },
@@ -279,6 +280,8 @@ describe("reviews.listByListing", () => {
     expect(rows.map((r) => r.id)).toEqual([2, 1]); // newest first
     expect(rows[0].userName).toBe("User B");
     expect(rows[0].comment).toBe("حديث نسبياً");
+    // verified flag is surfaced to the client (review came from a confirmed booking)
+    expect(rows.every((row) => row.isVerified === true)).toBe(true);
   });
 
   it("returns an empty list when the database is unavailable", async () => {
