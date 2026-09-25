@@ -211,7 +211,7 @@ export default function App() {
           <LanguageProvider>
             <CurrencyProvider>
               <TooltipProvider>
-                <div className="min-h-screen flex flex-col bg-background text-foreground font-sans">
+                <div className="min-h-screen flex flex-col bg-animated-gradient bg-background text-foreground font-sans">
                   <ConsentAnalytics />
                   <Navbar />
                   <BreadcrumbNav />
