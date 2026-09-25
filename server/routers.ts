@@ -1,4 +1,5 @@
 import { COOKIE_NAME } from "@shared/const";
+import { computeWeightedOverall } from "@shared/rating";
 import { normalizeWaNumber, whatsappNumberSchema } from "@shared/whatsapp";
 import { randomUUID } from "node:crypto";
 import QRCode from "qrcode";
@@ -3309,8 +3310,34 @@ export const appRouter = router({
         z.object({
           listingId: z.number(),
           bookingId: z.number().int().positive(),
-          rating: z.number().int().min(1).max(5),
+          // Overall rating 1-5. Optional when at least one criterion sub-score
+          // is supplied — the stored overall is then computed automatically as
+          // the weighted mean of the sub-scores (see shared/rating.ts). Legacy
+          // clients that only send `rating` keep working unchanged.
+          rating: z.number().int().min(1).max(5).optional(),
           comment: z.string().trim().min(10).max(500),
+          // Optional multi-criteria sub-scores, each 1-5. Nullable columns on
+          // the row: absent criteria are simply stored as NULL.
+          cleanlinessScore: z.number().int().min(1).max(5).nullable().optional(),
+          locationScore: z.number().int().min(1).max(5).nullable().optional(),
+          valueScore: z.number().int().min(1).max(5).nullable().optional(),
+          communicationScore: z.number().int().min(1).max(5).nullable().optional(),
+          accuracyScore: z.number().int().min(1).max(5).nullable().optional(),
+        }).superRefine((input, ctx) => {
+          const hasAnyScore = [
+            input.cleanlinessScore,
+            input.locationScore,
+            input.valueScore,
+            input.communicationScore,
+            input.accuracyScore,
+          ].some((score) => score != null);
+          if (!hasAnyScore && input.rating == null) {
+            ctx.addIssue({
+              code: "custom",
+              path: ["rating"],
+              message: "Provide either an overall rating or at least one criterion score.",
+            });
+          }
         })
       )
       .mutation(async ({ ctx, input }) => {
@@ -3346,12 +3373,36 @@ export const appRouter = router({
         if (existing[0]) {
           throw new TRPCError({ code: "CONFLICT", message: "تم تقييم هذا الحجز مسبقاً." });
         }
+        const scores = [
+          input.cleanlinessScore ?? null,
+          input.locationScore ?? null,
+          input.valueScore ?? null,
+          input.communicationScore ?? null,
+          input.accuracyScore ?? null,
+        ];
+        // New path: criterion sub-scores present → the overall is the weighted
+        // mean of the present criteria (rounded to an integer 1-5) as computed
+        // in shared/rating.ts. Legacy path: only an explicit overall rating was
+        // supplied → store it as-is (backward compatibility). The superRefine
+        // above guarantees at least one of the two sources is present.
+        const overall = computeWeightedOverall(scores) ?? input.rating;
+        if (overall == null) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Rating or at least one criterion score is required.",
+          });
+        }
         await db.insert(reviews).values({
           userId: ctx.user!.id,
           listingId: input.listingId,
           bookingId: input.bookingId,
-          rating: input.rating,
+          rating: overall,
           comment: input.comment,
+          cleanlinessScore: scores[0],
+          locationScore: scores[1],
+          valueScore: scores[2],
+          communicationScore: scores[3],
+          accuracyScore: scores[4],
         });
         return { success: true };
       }),

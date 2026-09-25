@@ -1,4 +1,4 @@
-import { boolean, check, doublePrecision, index, integer, jsonb, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid, varchar } from "drizzle-orm/pg-core";
+import { boolean, check, doublePrecision, index, integer, jsonb, pgEnum, pgTable, smallint, text, timestamp, uniqueIndex, uuid, varchar } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
 export const userRoleEnum = pgEnum("user_role", ["renter", "owner", "admin", "partner", "user", "SUPER_ADMIN"]);
@@ -207,6 +207,16 @@ export const reviews = pgTable("reviews", {
   userId: integer("user_id").notNull(),
   rating: integer("rating").notNull(),
   comment: text("comment"),
+  // Multi-criteria detail: five optional 1-5 sub-scores. The stored `rating`
+  // above is the overall — either supplied directly (legacy clients) or
+  // computed by `reviews.create` as the weighted mean of these sub-scores
+  // (see shared/rating.ts for the formula and weights). All nullable, so old
+  // reviews without sub-scores remain valid.
+  cleanlinessScore: smallint("cleanliness_score"),
+  locationScore: smallint("location_score"),
+  valueScore: smallint("value_score"),
+  communicationScore: smallint("communication_score"),
+  accuracyScore: smallint("accuracy_score"),
   // Every review requires a Confirmed + already-ended booking owned by the
   // reviewer (`reviews.create` enforces it), so every review is inherently
   // verified — this flag is the product's trust signal surfaced as a badge.
@@ -215,6 +225,18 @@ export const reviews = pgTable("reviews", {
 }, (table) => ({
   listingIdx: index("reviews_listing_idx").on(table.listingId),
   ratingCheck: check("reviews_rating_check", sql`${table.rating} >= 1 AND ${table.rating} <= 5`),
+  // Sub-scores are either absent or within 1-5, mirroring the rating check.
+  scoresCheck: check("reviews_scores_check", sql`(
+    ${table.cleanlinessScore} IS NULL OR (${table.cleanlinessScore} >= 1 AND ${table.cleanlinessScore} <= 5)
+  ) AND (
+    ${table.locationScore} IS NULL OR (${table.locationScore} >= 1 AND ${table.locationScore} <= 5)
+  ) AND (
+    ${table.valueScore} IS NULL OR (${table.valueScore} >= 1 AND ${table.valueScore} <= 5)
+  ) AND (
+    ${table.communicationScore} IS NULL OR (${table.communicationScore} >= 1 AND ${table.communicationScore} <= 5)
+  ) AND (
+    ${table.accuracyScore} IS NULL OR (${table.accuracyScore} >= 1 AND ${table.accuracyScore} <= 5)
+  )`),
 }));
 
 /**

@@ -10,6 +10,7 @@ vi.mock("./db", async (importOriginal) => {
 
 import { getDb } from "./db";
 import { appRouter } from "./routers";
+import { computeWeightedOverall } from "@shared/rating";
 import { bookings as bookingsTable, listings as listingsTable, reviews as reviewsTable, users as usersTable } from "../drizzle/schema";
 import type { TrpcContext } from "./_core/context";
 
@@ -65,6 +66,11 @@ type FacReview = {
   createdAt: Date;
   isVerified?: boolean;
   userName?: string | null;
+  cleanlinessScore?: number | null;
+  locationScore?: number | null;
+  valueScore?: number | null;
+  communicationScore?: number | null;
+  accuracyScore?: number | null;
 };
 
 type FacListing = {
@@ -352,6 +358,101 @@ describe("reviews.create — zod bounds", () => {
 
   it("accepts a comment of exactly 10 chars", async () => {
     await expect(call({ comment: "شكراً جزيلاً لكم" })).resolves.toEqual({ success: true });
+  });
+
+  it.each([0, 6])("rejects criterion score %s (out of 1..5) via zod", async (score) => {
+    await expect(call({ cleanlinessScore: score })).rejects.toThrow();
+    await expect(call({ accuracyScore: score })).rejects.toThrow();
+  });
+
+  it("rejects when neither an overall rating nor any criterion score is provided", async () => {
+    await expect(call({ rating: undefined })).rejects.toThrow();
+  });
+});
+
+describe("reviews.create — multi-criteria sub-scores", () => {
+  const caller = () => appRouter.createCaller(createCtx(userA));
+  const comment = "تجربة ممتازة من البداية للنهاية.";
+
+  it("computes and stores the weighted overall when all five criteria are rated", async () => {
+    await caller().reviews.create({
+      listingId: 501,
+      bookingId: 1,
+      comment,
+      cleanlinessScore: 5,
+      locationScore: 3,
+      valueScore: 4,
+      communicationScore: 2,
+      accuracyScore: 4,
+    });
+    const row = store.reviews.find((r) => r.bookingId === 1 && r.userId === userA.id)!;
+    expect(row.rating).toBe(4); // weighted mean 3.75 rounded (see shared/rating.ts)
+    expect(row.rating).toBe(computeWeightedOverall([5, 3, 4, 2, 4]));
+    expect(row.cleanlinessScore).toBe(5);
+    expect(row.locationScore).toBe(3);
+    expect(row.valueScore).toBe(4);
+    expect(row.communicationScore).toBe(2);
+    expect(row.accuracyScore).toBe(4);
+  });
+
+  it("renormalizes a partial rating over the present criteria and stores the rest as NULL", async () => {
+    await caller().reviews.create({
+      listingId: 501,
+      bookingId: 1,
+      comment,
+      cleanlinessScore: 5,
+      valueScore: 4,
+    });
+    const row = store.reviews.find((r) => r.bookingId === 1 && r.userId === userA.id)!;
+    expect(row.rating).toBe(computeWeightedOverall([5, null, 4, null, null]));
+    expect(row.rating).toBe(5); // (5 + 4) / 2 = 4.5 -> 5
+    expect(row.cleanlinessScore).toBe(5);
+    expect(row.valueScore).toBe(4);
+    expect(row.locationScore).toBeNull();
+    expect(row.communicationScore).toBeNull();
+    expect(row.accuracyScore).toBeNull();
+  });
+
+  it("keeps the legacy rating-only path unchanged: stores the given rating with NULL sub-scores", async () => {
+    await caller().reviews.create({ listingId: 501, bookingId: 1, rating: 5, comment });
+    const row = store.reviews.find((r) => r.bookingId === 1 && r.userId === userA.id)!;
+    expect(row.rating).toBe(5);
+    expect(row.cleanlinessScore).toBeNull();
+    expect(row.locationScore).toBeNull();
+    expect(row.valueScore).toBeNull();
+    expect(row.communicationScore).toBeNull();
+    expect(row.accuracyScore).toBeNull();
+  });
+
+  it("accepts explicit nulls alongside a rating as the legacy path", async () => {
+    await caller().reviews.create({
+      listingId: 501,
+      bookingId: 1,
+      rating: 4,
+      comment,
+      cleanlinessScore: null,
+      locationScore: null,
+      valueScore: null,
+      communicationScore: null,
+      accuracyScore: null,
+    });
+    const row = store.reviews.find((r) => r.bookingId === 1 && r.userId === userA.id)!;
+    expect(row.rating).toBe(4);
+    expect(row.cleanlinessScore).toBeNull();
+  });
+});
+
+describe("reviews — 0020 detailed ratings migration is additive and matches the schema", () => {
+  it("declares the five nullable sub-score columns and the range CHECK constraint", () => {
+    const migration = readFileSync(resolve(process.cwd(), "drizzle/0020_detailed_ratings.sql"), "utf8");
+    expect(migration).toContain('ADD COLUMN "cleanliness_score" smallint');
+    expect(migration).toContain('ADD COLUMN "location_score" smallint');
+    expect(migration).toContain('ADD COLUMN "value_score" smallint');
+    expect(migration).toContain('ADD COLUMN "communication_score" smallint');
+    expect(migration).toContain('ADD COLUMN "accuracy_score" smallint');
+    expect(migration).toContain('ADD CONSTRAINT "reviews_scores_check"');
+    // Fully additive: existing reviews (no sub-scores) keep working.
+    expect(migration).not.toMatch(/DROP|DELETE/);
   });
 });
 
