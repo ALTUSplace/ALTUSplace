@@ -30,7 +30,7 @@ describe("sitemap + robots audit", () => {
   it("keeps only public marketing pages in the sitemap", () => {
     const sitemap = read("client/public/sitemap.xml");
     // Redirects and protected routes must never be submitted.
-    for (const forbidden of ["/add-car", "/help", "/dashboard", "/admin", "/checkout", "/direct-login", "/locations/"]) {
+    for (const forbidden of ["/add-car", "/help", "/dashboard", "/admin", "/checkout", "/owner-login", "/locations/"]) {
       expect(sitemap).not.toContain(forbidden);
     }
   });
@@ -39,7 +39,7 @@ describe("sitemap + robots audit", () => {
     const robots = read("client/public/robots.txt");
     expect(robots).toContain("Sitemap: https://altusplace.vercel.app/sitemap.xml");
     expect(robots).toContain("Allow: /");
-    for (const area of ["/admin", "/host", "/api", "/direct-login"]) {
+    for (const area of ["/admin", "/host", "/api", "/owner-login"]) {
       expect(robots).toContain(`Disallow: ${area}`);
     }
   });

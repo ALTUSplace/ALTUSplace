@@ -36,7 +36,9 @@ const redirectToLoginIfUnauthorized = (error: unknown) => {
 queryClient.getQueryCache().subscribe(event => {
   if (event.type === "updated" && event.action.type === "error") {
     const error = event.query.state.error;
-    redirectToLoginIfUnauthorized(error);
+    // Passive page-load failures must NEVER hijack anonymous visitors on public
+    // pages to the login gate — even if a protected query leaks onto a public
+    // route. Only user-initiated mutations redirect (see the mutation cache below).
     console.error("[API Query Error]", error);
   }
 });

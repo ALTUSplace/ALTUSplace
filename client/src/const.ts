@@ -23,8 +23,9 @@ export const startLogin = () => {
   const appId = import.meta.env.VITE_APP_ID;
   if (!oauthPortalUrl || !appId) {
     // No external OAuth portal configured: fall back to the password-gated
-    // direct owner login instead of looping back to the register page.
-    window.location.href = "/direct-login";
+    // direct owner login instead of looping back to the register page. The
+    // owner login lives ONLY at /owner-login (hidden from nav/footer/robots).
+    window.location.href = "/owner-login";
     return;
   }
   const redirectUri = `${window.location.origin}/api/oauth/callback`;

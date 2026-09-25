@@ -57,11 +57,13 @@ describe("direct owner login (OAuth fallback) audit", () => {
     expect(owner).toContain("ENV.directLoginPassword");
   });
 
-  it("falls back to /direct-login when the OAuth portal is not configured", () => {
+  it("falls back to /owner-login when the OAuth portal is not configured", () => {
     const clientConst = read("client/src/const.ts");
-    expect(clientConst).toContain('window.location.href = "/direct-login"');
+    expect(clientConst).toContain('window.location.href = "/owner-login"');
     const app = read("client/src/App.tsx");
-    expect(app).toContain('path="/direct-login"');
+    expect(app).toContain('path="/owner-login"');
+    // The owner login page must be reachable ONLY via /owner-login.
+    expect(app).not.toContain('path="/direct-login"');
   });
 
   it("ships a gated one-shot ops script that reuses the existing scrypt helper and never logs the secret", () => {

@@ -20,11 +20,22 @@ export type FavoriteWithListing = {
 export function useFavorites() {
   const { t } = useLanguage();
   const utils = trpc.useUtils();
+  // favorites.list is a protected procedure — fetch it only when signed in.
+  // Firing it for anonymous visitors made the main.tsx UNAUTHORIZED handler
+  // auto-redirect public homepage views to the owner login gate.
+  const { data: me } = trpc.auth.me.useQuery(undefined, {
+    retry: false,
+    refetchOnWindowFocus: false,
+  });
+  const isAuthed = Boolean(me);
   const {
     data: favorites,
     isLoading,
     refetch,
-  } = trpc.favorites.list.useQuery(undefined, { staleTime: 60_000 });
+  } = trpc.favorites.list.useQuery(undefined, {
+    staleTime: 60_000,
+    enabled: isAuthed,
+  });
 
   /** Optimistic delta applied before the server round-trip settles. */
   const [pendingAdds, setPendingAdds] = useState<Set<number>>(new Set());

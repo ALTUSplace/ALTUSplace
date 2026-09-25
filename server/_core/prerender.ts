@@ -190,6 +190,12 @@ export async function resolveRouteMetadata(pathname: string, origin: string = SE
     return { ...base, ...legalPage };
   }
 
+  // The owner/admin login is operator-only: noindex it in the prerendered shell
+  // so crawlers never discover or index it (robots.txt also disallows it).
+  if (path === "/owner-login") {
+    return { ...base, title: "تسجيل الدخول المباشر | ALTUSplace", robots: "noindex, follow" };
+  }
+
   return base;
 }
 

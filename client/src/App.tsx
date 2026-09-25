@@ -145,7 +145,7 @@ function Router() {
       <Route path="/politique-confidentialite" component={PolitiqueConfidentialitePage} />
       <Route path="/mentions-legales" component={MentionsLegalesPage} />
       <Route path="/register">{() => <Suspense fallback={<PageLoader />}><RegisterPage /></Suspense>}</Route>
-      <Route path="/direct-login">{() => <Suspense fallback={<PageLoader />}><DirectLoginPage /></Suspense>}</Route>
+      <Route path="/owner-login">{() => <Suspense fallback={<PageLoader />}><DirectLoginPage /></Suspense>}</Route>
       <Route path="/become-partner">{() => <Suspense fallback={<PageLoader />}><PartnerWithUsPage /></Suspense>}</Route>
       <Route path="/become-partner/car-rental">{() => <Suspense fallback={<PageLoader />}><PartnerApplyPage /></Suspense>}</Route>
       <Route path="/become-partner/real-estate">{() => <Suspense fallback={<PageLoader />}><PartnerApplyPage /></Suspense>}</Route>
