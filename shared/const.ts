@@ -1,3 +1,5 @@
+import { REVIEW_CRITERIA } from "./rating";
+
 export const COOKIE_NAME = "app_session_id";
 export const ONE_YEAR_MS = 1000 * 60 * 60 * 24 * 365;
 export const AXIOS_TIMEOUT_MS = 30_000;
@@ -34,4 +36,24 @@ export const decodeOAuthState = (state: string): OAuthState => {
     // Legacy links: `state` was a bare base64(redirectUri) with no nonce.
   }
   return { redirectUri: decoded };
+};
+
+/** Criterion keys of the multi-criteria review breakdown (see shared/rating.ts). */
+export type RatingCriterionKey = (typeof REVIEW_CRITERIA)[number]["key"];
+
+/**
+ * Platform-wide median per criterion (1-5 scale).
+ *
+ * Hardcoded for now: the live review volume is still thin, so a computed median
+ * would swing listing to listing. These values only feed the +/-15% colour band
+ * of the listing-detail breakdown bars — they never back a stored rating or a
+ * displayed "average". Once enough reviews exist, replace this constant with a
+ * value computed from the `reviews` sub-score columns.
+ */
+export const PLATFORM_RATING_MEDIANS: Record<RatingCriterionKey, number> = {
+  cleanliness: 4.2,
+  location: 4.3,
+  value: 4.0,
+  communication: 4.4,
+  accuracy: 4.2,
 };

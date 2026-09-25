@@ -13,7 +13,7 @@ import { logger } from "./_core/logger";
 import { listings, listingAnalyticsEvents, listingComments, bookings, reviews, users, favorites, commercialLeaseContracts, notifications, platformSettings, commissionTiers, escrowEntries, payoutRequests, disputes, disputeAttachments, supportTickets, payments, invoices, kycSubmissions, bookingVouchers, bookingMessages, auditLogs, refundRequests, transactions, partnerApplications, translations } from "../drizzle/schema";
 import { eq, and, lte, gte, lt, gt, asc, desc, count, isNull, inArray, ne, or, not, ilike, sql, type SQL } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
-import { fetchListingReviewSummary, normalizeSummary } from "./reviewStats";
+import { fetchListingRatingBreakdown, fetchListingReviewSummary, normalizeSummary } from "./reviewStats";
 import { safeNotifyUser, buildEmailContent, sendWhatsAppText, normalizeWhatsAppNumber, alertAdmins } from "./notificationService";
 import { generateCarRentalContractPdf } from "./carRentalPdf";
 import { z } from "zod";
@@ -1904,6 +1904,10 @@ export const appRouter = router({
         // pair with the groupBy aggregates already shipped by list/search.
         const reviewSummary = await fetchListingReviewSummary(db, input.id);
 
+        // Per-criterion averages behind the rating-breakdown bars. Cached per
+        // listing for 5 minutes; a criterion nobody rated comes back null.
+        const ratingBreakdown = await fetchListingRatingBreakdown(db, input.id);
+
         // If translation requested and different from source, fetch translations
         if (targetLanguage !== sourceLanguage && isTranslationAvailable() && listing.title) {
           const translated = await getTranslatedListing(
@@ -1929,10 +1933,11 @@ export const appRouter = router({
             whatsappNumber,
             averageRating: reviewSummary.average,
             reviewCount: reviewSummary.count,
+            ratingBreakdown,
           });
         }
 
-        return toPublicListing({ ...listing, _translationMeta: null, ownerName, ownerRole, agencyName, agencyPhone, whatsappPhone, whatsappNumber, averageRating: reviewSummary.average, reviewCount: reviewSummary.count });
+        return toPublicListing({ ...listing, _translationMeta: null, ownerName, ownerRole, agencyName, agencyPhone, whatsappPhone, whatsappNumber, averageRating: reviewSummary.average, reviewCount: reviewSummary.count, ratingBreakdown });
       }),
 
     getBookedDates: publicProcedure

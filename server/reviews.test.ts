@@ -127,6 +127,28 @@ function makeFakeDb(store: FacStore) {
     return row ? [{ average: row.average, count: row.count }] : [];
   };
 
+  /** Mean of the non-null values of one sub-score column, 1 decimal, or null. */
+  const criterionMean = (rows: FacReview[], key: keyof FacReview) => {
+    const values = rows.map((row) => row[key]).filter((value): value is number => typeof value === "number");
+    if (values.length === 0) return null;
+    return Math.round((values.reduce((sum, value) => sum + value, 0) / values.length) * 10) / 10;
+  };
+
+  // getById criterion-breakdown aggregate, read off the same seeded reviews.
+  const breakdownForListing = (listingId: number) => {
+    const rows = store.reviews.filter((r) => r.listingId === listingId);
+    return [
+      {
+        avgCleanliness: criterionMean(rows, "cleanlinessScore"),
+        avgLocation: criterionMean(rows, "locationScore"),
+        avgValue: criterionMean(rows, "valueScore"),
+        avgCommunication: criterionMean(rows, "communicationScore"),
+        avgAccuracy: criterionMean(rows, "accuracyScore"),
+        totalReviews: rows.length,
+      },
+    ];
+  };
+
   return {
     select: (shape: Record<string, unknown>) => ({
       from: (table: unknown) => {
@@ -146,6 +168,14 @@ function makeFakeDb(store: FacStore) {
             return {
               where: (condition: unknown) => ({
                 limit: () => thenable(aggregateForListing(collectValues(condition)[0] as number)),
+              }),
+            };
+          }
+          if ("totalReviews" in shape) {
+            // getById rating breakdown: select({avgCleanliness,...}).from(reviews).where(listingId).limit(1)
+            return {
+              where: (condition: unknown) => ({
+                limit: () => thenable(breakdownForListing(collectValues(condition)[0] as number)),
               }),
             };
           }
@@ -471,5 +501,20 @@ describe("listings.getById — computed aggregates", () => {
     const detail = await caller.listings.getById({ id: 502 });
     expect(detail!.averageRating).toBe(0);
     expect(detail!.reviewCount).toBe(0);
+  });
+
+  it("carries a null-safe ratingBreakdown alongside them", async () => {
+    const caller = appRouter.createCaller(createCtx(null));
+    const detail = await caller.listings.getById({ id: 501 });
+    // Seeded reviews for 501 carry no sub-scores, so every criterion is null
+    // (never a fabricated 0) while the review count stays truthful.
+    expect(detail!.ratingBreakdown).toEqual({
+      avgCleanliness: null,
+      avgLocation: null,
+      avgValue: null,
+      avgCommunication: null,
+      avgAccuracy: null,
+      totalReviews: 2,
+    });
   });
 });

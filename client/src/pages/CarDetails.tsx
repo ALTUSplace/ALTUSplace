@@ -12,6 +12,7 @@ import { useSEO, SITE_URL } from '@/lib/seo';
 import { BABY_SEAT_FEE_PER_DAY, calculateRentalDays, calculateRentalSubtotal, INSURANCE_FEE_PER_DAY } from '@/lib/pricing';
 import { RENTAL_TERMS } from '@/lib/rentalTerms';
 import CommentSection from '@/components/CommentSection';
+import RatingBreakdownBar, { breakdownToScores, canShowBreakdown } from '@/components/RatingBreakdownBar';
 import { BookingWidget } from '@/components/ui/BookingWidget';
 import { PartnerVerifiedBadge } from '@/components/ui/PartnerVerifiedBadge';
 import { FavoriteButton } from '@/components/FavoriteButton';
@@ -428,6 +429,13 @@ export default function CarDetails() {
                     ))}
                   </div>
 
+                  </div>
+                )}
+
+                {/* Rating breakdown: hidden below 3 reviews, so the averages are meaningful. */}
+                {listing && canShowBreakdown(listing.ratingBreakdown) && (
+                  <div className="pt-6 border-t border-slate-800">
+                    <RatingBreakdownBar scores={breakdownToScores(listing.ratingBreakdown)} />
                   </div>
                 )}
 

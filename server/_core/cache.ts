@@ -17,6 +17,7 @@ import { ENV } from "./env";
 // Cache key prefixes
 const PREFIXES = {
   LISTING_DETAIL: "listings:detail:",
+  LISTING_RATING_BREAKDOWN: "listings:rating-breakdown:",
   LISTING_SEARCH: "listings:search:",
   LISTINGS_CATEGORY: "listings:category:",
   LISTINGS_CITY: "listings:city:",
@@ -27,8 +28,9 @@ const PREFIXES = {
 } as const;
 
 // Default TTLs in seconds
-const DEFAULT_TTLS = {
+export const DEFAULT_TTLS = {
   DETAIL: 300,
+  RATING_BREAKDOWN: 300,
   SEARCH: 120,
   CATEGORY: 600,
   CITY: 600,
@@ -66,6 +68,16 @@ export function isRedisAvailable(): boolean {
 
 export function getListingDetailKey(listingId: number | string): string {
   return `${PREFIXES.LISTING_DETAIL}${listingId}`;
+}
+
+/**
+ * Key for the per-listing multi-criteria rating breakdown. Deliberately NOT the
+ * listing-detail key: the breakdown only needs to stay fresh for a few minutes,
+ * so it gets its own short-lived entry that review submissions do not
+ * invalidate (and therefore do not have to).
+ */
+export function getListingRatingBreakdownKey(listingId: number | string): string {
+  return `${PREFIXES.LISTING_RATING_BREAKDOWN}${listingId}`;
 }
 
 export function getSearchCacheKey(params: {

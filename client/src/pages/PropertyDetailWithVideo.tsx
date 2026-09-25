@@ -12,6 +12,7 @@ import { LISTINGS, type ListingItem } from "@/data/altusplace";
 import { toast } from "sonner";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import CommentSection from "@/components/CommentSection";
+import RatingBreakdownBar, { breakdownToScores, canShowBreakdown } from "@/components/RatingBreakdownBar";
 import { PartnerVerifiedBadge } from "@/components/ui/PartnerVerifiedBadge";
 import { FavoriteButton } from "@/components/FavoriteButton";
 
@@ -435,6 +436,12 @@ export default function PropertyDetailWithVideo() {
             ) : (
               <p className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-center text-sm text-slate-500">{t("reviewsNewEmpty")}</p>
             )}
+          </CardContent></Card>
+        )}
+        {/* Rating breakdown below the review list; hidden below 3 reviews so the averages stay meaningful. */}
+        {listingQuery.data && canShowBreakdown(listingQuery.data.ratingBreakdown) && (
+          <Card><CardContent className="p-5 space-y-4">
+            <RatingBreakdownBar scores={breakdownToScores(listingQuery.data.ratingBreakdown)} />
           </CardContent></Card>
         )}
         <Card><CardContent className="p-5 space-y-4"><h2 className="text-xl font-bold text-slate-900">{language === "fr" ? "Équipements et visite vidéo" : "التجهيزات وجولة الفيديو"}</h2>{amenities.length ? <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">{amenities.map((item) => <div key={item} className="flex items-center gap-2 text-sm text-slate-700"><CheckCircle2 className="w-4 h-4 text-emerald-600" />{item}</div>)}</div> : <p className="text-sm text-slate-500">{language === "fr" ? "Aucun équipement renseigné." : "لم تُسجل تجهيزات لهذا الإعلان بعد."}</p>}<div className="border-t pt-4 flex items-center gap-3 text-sm text-slate-500"><Video className="w-5 h-5 text-slate-400" />{language === "fr" ? "Aucune vidéo vérifiée n’est disponible pour cette annonce." : "لا يوجد فيديو موثق متاح لهذا الإعلان حالياً."}</div></CardContent></Card>

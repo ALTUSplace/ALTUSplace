@@ -5,6 +5,11 @@ const templateRoot = path.resolve(import.meta.dirname);
 
 export default defineConfig({
   root: templateRoot,
+  // The app build gets JSX from @vitejs/plugin-react (tsconfig sets
+  // "jsx": "preserve" for it), and vitest does not load that plugin. Without
+  // this, esbuild compiles .tsx with the classic runtime and any rendered
+  // component throws "React is not defined".
+  esbuild: { jsx: "automatic" },
   resolve: {
     alias: {
       "@": path.resolve(templateRoot, "client", "src"),
