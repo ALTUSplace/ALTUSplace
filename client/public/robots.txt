@@ -4,4 +4,6 @@ Disallow: /admin
 Disallow: /host
 Disallow: /api
 Disallow: /owner-login
+Disallow: /register
+Disallow: /terms
 Sitemap: https://altusplace.vercel.app/sitemap.xml

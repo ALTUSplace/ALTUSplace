@@ -26,7 +26,6 @@ export const STATIC_PAGES: ReadonlyArray<{ path: string; changefreq: string; pri
   { path: "/about", changefreq: "monthly", priority: "0.5" },
   { path: "/support-tickets", changefreq: "monthly", priority: "0.4" },
   { path: "/dispute-resolution", changefreq: "monthly", priority: "0.4" },
-  { path: "/terms", changefreq: "yearly", priority: "0.3" },
   { path: "/privacy", changefreq: "yearly", priority: "0.3" },
 ];
 

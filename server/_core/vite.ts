@@ -6,6 +6,7 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import viteConfig from "../../vite.config";
 import { injectPrerenderMetadata } from "./prerender";
+import { protectAuthOnlyPages } from "./routeGuard";
 
 
 export async function setupVite(app: Express, server: Server) {
@@ -23,6 +24,9 @@ export async function setupVite(app: Express, server: Server) {
   });
 
   app.use(vite.middlewares);
+  // Auth-only pages (/register, /terms, /owner-login) redirect anonymous
+  // visitors to "/" before the SPA fallback can serve them.
+  app.use(protectAuthOnlyPages);
   app.use("*", async (req, res, next) => {
     const url = req.originalUrl;
 
@@ -61,6 +65,10 @@ export function serveStatic(app: Express) {
     );
   }
 
+  // Auth-only pages are intercepted BEFORE static assets so prerendered
+  // artifacts (e.g. dist/public/terms/index.html) can never leak to
+  // anonymous visitors — they are redirected to "/" first.
+  app.use(protectAuthOnlyPages);
   app.use(express.static(distPath));
 
   // Fall through to index.html while injecting listing metadata for crawlers and social previews.

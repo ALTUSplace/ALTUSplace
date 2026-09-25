@@ -2,6 +2,26 @@ import { LEGAL_CONSENT_EVENT } from "@/config/brand";
 
 export const LEGAL_CONSENT_VERSION = "platform-protection-v1";
 
+/**
+ * Short-lived marker proving the user actively started a login/consent flow
+ * (set by startLogin() right before navigating). The SPA route guard and the
+ * server middleware use it to let an IN-FLOW visitor reach /register, /terms
+ * or /owner-login, while anonymous direct/hotlink/crawler hits are redirected
+ * to the public homepage.
+ */
+export const AUTH_INTENT_COOKIE = "b2_auth_intent";
+
+export function hasAuthIntent(): boolean {
+  if (typeof document === "undefined") return false;
+  return document.cookie.split("; ").some((cookie) => cookie.trim().startsWith(`${AUTH_INTENT_COOKIE}=1`));
+}
+
+export function persistAuthIntent(): void {
+  if (typeof document === "undefined") return;
+  const secure = window.location.protocol === "https:" ? "; Secure" : "";
+  document.cookie = `${AUTH_INTENT_COOKIE}=1; Path=/; Max-Age=600; SameSite=Lax${secure}`;
+}
+
 export const legalDisclosure = {
   ar: {
         title: "بنود حماية منصة ALTUSplace",

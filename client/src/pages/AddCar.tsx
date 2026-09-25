@@ -185,7 +185,7 @@ export default function AddCar() {
                 <Checkbox id="listing-legal-consent" checked={acceptedLegal} onCheckedChange={(value) => setAcceptedLegal(value === true)} className="mt-1 border-slate-500 data-[state=checked]:bg-amber-500 data-[state=checked]:text-slate-950" />
                 <label htmlFor="listing-legal-consent" className="text-xs leading-6 text-slate-300 dark:text-[#D6D6DB] cursor-pointer">
                   أوافق على الشروط والأحكام وسياسة الخصوصية الخاصين بـ ALTUSplace، وأقر بأن معلومات العرض وصوره أصلية ودقيقة.
-                  <span className="block mt-1 text-slate-400 dark:text-[#B0B0B8]"><Link href="/terms" className="text-amber-400 hover:underline">الشروط والأحكام</Link>{' '}و{' '}<Link href="/privacy" className="text-amber-400 hover:underline">سياسة الخصوصية</Link></span>
+                  <span className="block mt-1 text-slate-400 dark:text-[#B0B0B8]"><Link href="/conditions-utilisation" className="text-amber-400 hover:underline">الشروط والأحكام</Link>{' '}و{' '}<Link href="/privacy" className="text-amber-400 hover:underline">سياسة الخصوصية</Link></span>
                 </label>
               </div>
 

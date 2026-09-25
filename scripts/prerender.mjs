@@ -120,12 +120,6 @@ const STATIC_ROUTES = [
     description: "قارن عروض كراء السيارات والعقارات في جميع مدن المغرب بأسعار واضحة وحجز آمن عبر الإنترنت.",
   },
   {
-    path: "/terms",
-    file: "terms/index.html",
-    title: "شروط الاستخدام | ALTUSplace",
-    description: "شروط وقواعد استخدام منصة ALTUSplace لكراء السيارات والعقارات في المغرب: الحجز، الدفع، الإلغاء والتعويضات.",
-  },
-  {
     path: "/privacy",
     file: "privacy/index.html",
     title: "سياسة الخصوصية | ALTUSplace",

@@ -45,14 +45,15 @@ canonical plus a single `x-default` alternate** — never `hreflang` pointing at
 | Car detail | `/car/:id` | `Product` + `Offer`, `noindex` until the listing resolves |
 | Property detail | `/property/:id` | `RealEstateListing` + `Offer`, `noindex` until resolved |
 | Blog index | `/blog` | |
-| Static/legal | `/about`, `/terms`, `/privacy`, `/dispute-resolution`, `/support-tickets` | |
+| Static/legal | `/about`, `/privacy`, `/dispute-resolution`, `/support-tickets` | |
+| Legal (public) | `/conditions-utilisation`, `/politique-confidentialite`, `/mentions-legales` | Arabic markdown pages |
 
 ### Never indexable
 
 `/admin*`, `/super*`, `/dashboard`, `/host*`, `/partner*`, `/agency-dashboard`,
 `/add-car`, `/kyc`, `/profile`, `/checkout`, `/success`, `/voucher*`,
 `/messages*`, `/my-bookings`, `/notifications`, `/favorites`, `/owner-login`,
-`/api/*`.
+`/register`, `/terms`, `/agency/register`, `/api/*`.
 
 ### Phase 1 (locale subpaths)
 

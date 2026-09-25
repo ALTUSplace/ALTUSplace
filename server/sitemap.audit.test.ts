@@ -16,7 +16,6 @@ describe("sitemap + robots audit", () => {
     for (const slug of ["casablanca", "marrakech", "agadir", "rabat", "tangier", "fes"]) {
       expect(sitemap).toContain(`https://altusplace.vercel.app/city/${slug}`);
     }
-    expect(sitemap).toContain("https://altusplace.vercel.app/terms");
     expect(sitemap).toContain("https://altusplace.vercel.app/privacy");
     expect(sitemap).toContain("https://altusplace.vercel.app/blog");
     // Top published listings (cap 500) are appended with their own entries.
@@ -30,7 +29,7 @@ describe("sitemap + robots audit", () => {
   it("keeps only public marketing pages in the sitemap", () => {
     const sitemap = read("client/public/sitemap.xml");
     // Redirects and protected routes must never be submitted.
-    for (const forbidden of ["/add-car", "/help", "/dashboard", "/admin", "/checkout", "/owner-login", "/locations/"]) {
+    for (const forbidden of ["/add-car", "/help", "/dashboard", "/admin", "/checkout", "/owner-login", "/register", "/terms", "/locations/"]) {
       expect(sitemap).not.toContain(forbidden);
     }
   });
@@ -39,7 +38,7 @@ describe("sitemap + robots audit", () => {
     const robots = read("client/public/robots.txt");
     expect(robots).toContain("Sitemap: https://altusplace.vercel.app/sitemap.xml");
     expect(robots).toContain("Allow: /");
-    for (const area of ["/admin", "/host", "/api", "/owner-login"]) {
+    for (const area of ["/admin", "/host", "/api", "/owner-login", "/register", "/terms"]) {
       expect(robots).toContain(`Disallow: ${area}`);
     }
   });

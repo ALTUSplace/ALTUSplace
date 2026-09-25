@@ -1,4 +1,5 @@
 import { OAUTH_STATE_COOKIE, encodeOAuthState } from "@shared/const";
+import { persistAuthIntent } from "@/lib/legalDisclosure";
 
 export { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 
@@ -15,6 +16,10 @@ export { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 export const startLogin = () => {
   const hasConsent = typeof document !== "undefined" && document.cookie.split("; ").some((cookie) => cookie.trim().startsWith("b2_legal_consent=platform-protection-v1"));
   if (!hasConsent) {
+    // Mark this navigation as an ACTIVE login flow so the auth-only route
+    // guard (/register is session-gated for anonymous visitors) lets us
+    // through to the legal-consent page.
+    persistAuthIntent();
     window.location.href = "/register?next=login";
     return;
   }
@@ -24,7 +29,9 @@ export const startLogin = () => {
   if (!oauthPortalUrl || !appId) {
     // No external OAuth portal configured: fall back to the password-gated
     // direct owner login instead of looping back to the register page. The
-    // owner login lives ONLY at /owner-login (hidden from nav/footer/robots).
+    // owner login lives ONLY at /owner-login (hidden from nav/footer/robots),
+    // and an active login-flow marker is required for anonymous visitors.
+    persistAuthIntent();
     window.location.href = "/owner-login";
     return;
   }
