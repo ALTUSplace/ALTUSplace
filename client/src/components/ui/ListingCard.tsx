@@ -35,19 +35,22 @@ export interface ListingCardProps {
   style?: React.CSSProperties;
 }
 
-const BADGE_CONFIG: Record<string, { label: string; icon: typeof Award; className: string }> = {
-  "top-host": { label: "Top Host", icon: Award, className: "bg-ink-primary/85 dark:bg-[#1C1C1E]/85 text-white" },
-  premium: { label: "Premium", icon: Star, className: "bg-accent-clay/90 text-white" },
-  "instant-book": { label: "Instant", icon: Zap, className: "bg-accent-green/90 text-white" },
-  featured: { label: "Featured", icon: CheckCircle2, className: "bg-accent-warm text-white" },
-  superhost: { label: "Superhost", icon: Award, className: "bg-accent-clay/90 text-white" },
+const BADGE_CONFIG: Record<
+  string,
+  { labelKey: string; icon: typeof Award; className: string }
+> = {
+  "top-host": { labelKey: "badgeTopHost", icon: Award, className: "bg-ink-primary/85 dark:bg-[#1C1C1E]/85 text-white" },
+  premium: { labelKey: "badgePremium", icon: Star, className: "bg-accent-clay/90 text-white" },
+  "instant-book": { labelKey: "badgeInstant", icon: Zap, className: "bg-accent-green/90 text-white" },
+  featured: { labelKey: "badgeFeatured", icon: CheckCircle2, className: "bg-accent-warm text-white" },
+  superhost: { labelKey: "badgeSuperhost", icon: Award, className: "bg-accent-clay/90 text-white" },
 };
 
 export function ListingCard(props: ListingCardProps) {
-  const { id, title, titleFr, city, pricePerDay, unitLabel = "/ day", currency = "MAD", images, type,
+  const { id, title, titleFr, city, pricePerDay, unitLabel, currency = "MAD", images, type,
     badges, providerVerified, rating, reviewCount, hostName, isFavorite, onToggleFavorite, specs, startDate, endDate, className, style } = props;
   const [, setLocation] = useLocation();
-  const { language, t } = useLanguage();
+  const { language, direction, t } = useLanguage();
   const [activeSlide, setActiveSlide] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const { currency: activeCurrency, formatPrice, formatTotalPrice, showTotal } = useCurrency();
@@ -57,6 +60,8 @@ export function ListingCard(props: ListingCardProps) {
   const totalSlides = displayImages.length;
   const safePrice = Number.isFinite(Number(pricePerDay)) ? Number(pricePerDay) : 0;
   const displayTitle = language === "fr" && titleFr ? titleFr : title;
+  // Callers that omit unitLabel fall back to a localized per-day suffix.
+  const unitText = unitLabel ?? t("unitPerDay");
 
   const goTo = useCallback((dir: number) => {
     setActiveSlide((prev) => {
@@ -113,36 +118,36 @@ export function ListingCard(props: ListingCardProps) {
         </div>
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-ink-primary/35 via-transparent to-transparent" />
         {(providerVerified || (badges && badges.length > 0)) && (
-          <div className="absolute left-3 top-3 flex flex-wrap gap-1.5">
+          <div className="absolute start-3 top-3 flex flex-wrap gap-1.5">
             {providerVerified && <PartnerVerifiedBadge />}
             {badges && badges.length > 0 && badges.slice(0, 2).map((badge) => {
               const cfg = BADGE_CONFIG[badge];
               const Icon = cfg.icon;
-              return (<span key={badge} className={cn("inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide shadow-md ring-1 ring-white/20 backdrop-blur-md", cfg.className)}><Icon className="h-3 w-3" />{cfg.label}</span>);
+              return (<span key={badge} className={cn("inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide shadow-md ring-1 ring-white/20 backdrop-blur-md", cfg.className)}><Icon className="h-3 w-3" />{t(cfg.labelKey)}</span>);
             })}
           </div>
         )}
         {onToggleFavorite && (
-          <button onClick={(e) => { e.stopPropagation(); onToggleFavorite(); }} className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-bg-surface/85 backdrop-blur-sm shadow-sm transition-all duration-200 hover:bg-bg-surface hover:scale-110 active:scale-95" aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}>
+          <button onClick={(e) => { e.stopPropagation(); onToggleFavorite?.(); }} className="absolute end-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-bg-surface/85 backdrop-blur-sm shadow-sm transition-all duration-200 hover:bg-bg-surface hover:scale-110 active:scale-95" aria-label={isFavorite ? t("ariaRemoveFavorite") : t("ariaAddFavorite")}>
             <Heart className={cn("h-4 w-4 transition-colors", isFavorite ? "fill-accent-red text-accent-red" : "text-ink-secondary")} />
           </button>
         )}
-        <div className="absolute bottom-3 left-3">
+        <div className="absolute bottom-3 start-3">
           <div className="inline-flex items-baseline gap-1.5 rounded-full bg-bg-surface/92 px-3.5 py-1.5 shadow-lg backdrop-blur-md ring-1 ring-white/25">
             <span key={`${activeCurrency}-${showTotal ? "total" : "day"}`} className="price-figure inline-block text-lg text-ink-primary animate-fade-in">{showTotal ? formatTotalPrice(safePrice) : formatPrice(safePrice)}</span>
             <span className="rounded-md bg-accent-clay/12 px-1.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-accent-clay" aria-label={currency}>{currency}</span>
-            <span className="text-[10px] font-medium text-ink-tertiary">{unitLabel}</span>
+            <span className="text-[10px] font-medium text-ink-tertiary">{unitText}</span>
           </div>
         </div>
         {totalSlides > 1 && (<>
-          <button onClick={(e) => { e.stopPropagation(); goTo(-1); }} className="absolute left-2 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-bg-surface/85 shadow-sm backdrop-blur-sm transition-all duration-200 opacity-0 group-hover:opacity-100 hover:bg-bg-surface hover:scale-110" aria-label="Previous image">
-            <svg className="h-4 w-4 text-ink-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+          <button onClick={(e) => { e.stopPropagation(); goTo(-1); }} className="absolute start-2 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-bg-surface/85 shadow-sm backdrop-blur-sm transition-all duration-200 opacity-0 group-hover:opacity-100 hover:bg-bg-surface hover:scale-110" aria-label={t("ariaPreviousImage")}>
+            <svg className="h-4 w-4 text-ink-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d={direction === "rtl" ? "M9 5l7 7-7 7" : "M15 19l-7-7 7-7"} /></svg>
           </button>
-          <button onClick={(e) => { e.stopPropagation(); goTo(1); }} className="absolute right-2 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-bg-surface/85 shadow-sm backdrop-blur-sm transition-all duration-200 opacity-0 group-hover:opacity-100 hover:bg-bg-surface hover:scale-110" aria-label="Next image">
-            <svg className="h-4 w-4 text-ink-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+          <button onClick={(e) => { e.stopPropagation(); goTo(1); }} className="absolute end-2 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-bg-surface/85 shadow-sm backdrop-blur-sm transition-all duration-200 opacity-0 group-hover:opacity-100 hover:bg-bg-surface hover:scale-110" aria-label={t("ariaNextImage")}>
+            <svg className="h-4 w-4 text-ink-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d={direction === "rtl" ? "M15 19l-7-7 7-7" : "M9 5l7 7-7 7"} /></svg>
           </button>
           <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-            {displayImages.map((_, i) => (<button key={i} onClick={(e) => { e.stopPropagation(); setActiveSlide(i); }} className={cn("h-1.5 rounded-full transition-all duration-300", i === activeSlide ? "w-4 bg-white" : "w-1.5 bg-white/50 hover:bg-white/80")} aria-label={`Go to image ${i + 1}`} />))}
+            {displayImages.map((_, i) => (<button key={i} onClick={(e) => { e.stopPropagation(); setActiveSlide(i); }} className={cn("h-1.5 rounded-full transition-all duration-300", i === activeSlide ? "w-4 bg-white" : "w-1.5 bg-white/50 hover:bg-white/80")} aria-label={t("ariaGoToImage").replace("{n}", String(i + 1))} />))}
           </div>
         </>)}
       </div>

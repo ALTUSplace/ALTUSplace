@@ -4,6 +4,7 @@ import { MapPin, ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
 import { CATALOG_ITEMS, type CatalogItem } from "@/data/catalog";
 import { isCarCategory } from "@/lib/categories";
 import { OptimizedImage } from "@/components/OptimizedImage";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 /**
  * Static showcase of the ALTUSplace 2026 catalog (client/src/data/catalog.ts).
@@ -43,6 +44,10 @@ export function CatalogShowcase() {
 function CatalogCard({ item }: { item: CatalogItem }) {
   const car = isCarCategory(item.category);
   const property = !car;
+  const { direction, t } = useLanguage();
+  // In RTL the gallery must advance leftwards, so the "previous" affordance sits
+  // at the inline start and points the other way.
+  const rtl = direction === "rtl";
   const images = item.images.length ? item.images : [item.imageUrl];
   const totalSlides = images.length;
   const [activeSlide, setActiveSlide] = useState(0);
@@ -115,7 +120,7 @@ function CatalogCard({ item }: { item: CatalogItem }) {
         </div>
 
         <span className="absolute start-3 top-3 inline-flex items-center rounded-full bg-bg-surface/95 px-3 py-1 text-[11px] font-extrabold text-ink-primary shadow-sm border border-border-subtle">
-          {car ? "سيارة · Car" : "عقار · Property"}
+          {car ? "سيارة" : "عقار"}
         </span>
         {item.badge && (
           <span className="absolute end-3 top-3 inline-flex items-center rounded-full bg-accent-clay px-3 py-1 text-[11px] font-extrabold text-white shadow-sm">
@@ -124,7 +129,7 @@ function CatalogCard({ item }: { item: CatalogItem }) {
         )}
 
         {/* Prominent price badge */}
-        <div className="absolute bottom-3 left-3 inline-flex items-baseline gap-1.5 rounded-full bg-bg-surface/92 px-3.5 py-1.5 shadow-lg backdrop-blur-md ring-1 ring-white/25">
+        <div className="absolute bottom-3 start-3 inline-flex items-baseline gap-1.5 rounded-full bg-bg-surface/92 px-3.5 py-1.5 shadow-lg backdrop-blur-md ring-1 ring-white/25">
           <span className="text-lg font-extrabold leading-none text-accent-clay">
             {price?.amount?.toLocaleString("fr-MA") ?? "0"}
           </span>
@@ -141,10 +146,14 @@ function CatalogCard({ item }: { item: CatalogItem }) {
                 e.stopPropagation();
                 goTo(-1);
               }}
-              aria-label="الصورة السابقة"
-              className="absolute left-2 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-bg-surface/85 shadow-sm backdrop-blur-sm transition-all duration-200 opacity-0 group-hover:opacity-100 hover:bg-bg-surface hover:scale-110"
+              aria-label={t("ariaPreviousImage")}
+              className="absolute start-2 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-bg-surface/85 shadow-sm backdrop-blur-sm transition-all duration-200 opacity-0 group-hover:opacity-100 hover:bg-bg-surface hover:scale-110"
             >
-              <ChevronLeft className="h-4 w-4 text-ink-primary" />
+              {rtl ? (
+                <ChevronRight className="h-4 w-4 text-ink-primary" />
+              ) : (
+                <ChevronLeft className="h-4 w-4 text-ink-primary" />
+              )}
             </button>
             <button
               type="button"
@@ -152,10 +161,14 @@ function CatalogCard({ item }: { item: CatalogItem }) {
                 e.stopPropagation();
                 goTo(1);
               }}
-              aria-label="الصورة التالية"
-              className="absolute right-2 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-bg-surface/85 shadow-sm backdrop-blur-sm transition-all duration-200 opacity-0 group-hover:opacity-100 hover:bg-bg-surface hover:scale-110"
+              aria-label={t("ariaNextImage")}
+              className="absolute end-2 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-bg-surface/85 shadow-sm backdrop-blur-sm transition-all duration-200 opacity-0 group-hover:opacity-100 hover:bg-bg-surface hover:scale-110"
             >
-              <ChevronRight className="h-4 w-4 text-ink-primary" />
+              {rtl ? (
+                <ChevronLeft className="h-4 w-4 text-ink-primary" />
+              ) : (
+                <ChevronRight className="h-4 w-4 text-ink-primary" />
+              )}
             </button>
             <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
               {images.map((_, i) => (
@@ -166,7 +179,7 @@ function CatalogCard({ item }: { item: CatalogItem }) {
                     e.stopPropagation();
                     setActiveSlide(i);
                   }}
-                  aria-label={`الانتقال إلى الصورة ${i + 1}`}
+                  aria-label={t("ariaGoToImage").replace("{n}", String(i + 1))}
                   className={`h-1.5 rounded-full transition-all duration-300 ${i === safeSlide ? "w-4 bg-white" : "w-1.5 bg-white/50 hover:bg-white/80"}`}
                 />
               ))}

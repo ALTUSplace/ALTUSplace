@@ -194,7 +194,7 @@ describe("demo listings seed", () => {
 
     for (const p of props) {
       expect(["مراكش", "الدار البيضاء"]).toContain(p.city);
-      expect(p.propertyType).toBe("Shaqqa");
+      expect(p.propertyType).toBe("شقة");
       expect(p.rentalPeriod).toBe("daily");
       expect(p.rooms).toBeGreaterThanOrEqual(1);
       expect(p.area).toBeGreaterThanOrEqual(40);
@@ -209,5 +209,24 @@ describe("demo listings seed", () => {
 
     const titles = DEMO_LISTING_ROWS.map((r) => r.title);
     expect(new Set(titles).size).toBe(titles.length);
+  });
+
+  it("no seed row carries transliterated-Arabic seed artifacts", () => {
+    // Guards against regressions like "Shuqqa mu'aththatha 3 ghuraf" leaking
+    // into the customer-facing catalog.
+    const artifacts = ["Shuqqa", "Shaqqa", "m'uaththatha", "mu'aththatha", "ghuraf", "ghurfatan"];
+    for (const row of DEMO_LISTING_ROWS) {
+      for (const field of [row.title, row.city, row.propertyType ?? "", row.amenities ?? ""]) {
+        for (const artifact of artifacts) {
+          expect(field, `seed row "${row.title}" contains "${artifact}"`).not.toContain(artifact);
+        }
+      }
+    }
+
+    // propertyType is display-only copy, so every property row must be Arabic.
+    const props = DEMO_LISTING_ROWS.filter((r) => r.category === "real_estate");
+    for (const row of props) {
+      expect(row.propertyType ?? "", `propertyType for "${row.title}" is not Arabic`).toMatch(/[\u0600-\u06FF]/);
+    }
   });
 });

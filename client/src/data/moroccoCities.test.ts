@@ -9,6 +9,7 @@ import {
   matchListingCity,
   resolveCitySlug,
 } from "@/data/moroccoCities";
+import { CATALOG_ITEMS } from "@/data/catalog";
 
 describe("nationwide Moroccan cities module", () => {
   it("covers all major Moroccan cities across the twelve regions", () => {
@@ -106,6 +107,29 @@ describe("nationwide Moroccan cities module", () => {
     expect(matchListingCity("الرباط", "طنجة")).toBe(false);
     expect(matchListingCity("", "الرباط")).toBe(false);
     expect(matchListingCity(undefined, "الرباط")).toBe(false);
+  });
+
+  it("keeps the seed catalog resolvable to its canonical arabic city", () => {
+    // The showcase + DB seed rows must use the official Arabic city names so
+    // city filters and /locations pages group them correctly.
+    for (const item of CATALOG_ITEMS) {
+      expect(MOROCCO_CITY_SLUGS, `${item.id} city "${item.city}" is not canonical Arabic`)
+        .toHaveProperty(item.city);
+      expect(matchListingCity(item.city, slugForCity(item.city))).toBe(true);
+    }
+    expect(CATALOG_ITEMS.every((i) => !/[A-Za-z]/.test(i.city))).toBe(true);
+  });
+
+  it("keeps the seed catalog free of transliterated-Arabic seed artifacts", () => {
+    const artifacts = ["Shuqqa", "Shaqqa", "m'uaththatha", "mu'aththatha", "ghuraf", "ghurfatan", "Bousigour"];
+    for (const item of CATALOG_ITEMS) {
+      const blob = [item.title, item.city, item.region ?? "", item.description, ...item.features].join(" ");
+      for (const artifact of artifacts) {
+        expect(blob, `${item.id} contains "${artifact}"`).not.toContain(artifact);
+      }
+      // Titles are the Arabic user-facing default: they must contain Arabic script.
+      expect(item.title, `${item.id} title is not Arabic script`).toMatch(/[\u0600-\u06FF]/);
+    }
   });
 
   it("resolves latin slugs, french names, and arabic names to the canonical arabic city", () => {
