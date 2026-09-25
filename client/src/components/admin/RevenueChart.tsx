@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Bar, CartesianGrid, ComposedChart, Legend, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Building2, Car, Layers } from "lucide-react";
+import { useToken } from "@/lib/designTokens";
 
 export type RevenuePoint = {
   key: string;
@@ -25,6 +26,19 @@ const FILTERS: Array<{ key: Filter; label: string; icon: typeof Layers }> = [
 
 export default function RevenueChart({ data }: { data: RevenuePoint[] }) {
   const [filter, setFilter] = useState<Filter>("all");
+
+  // Recharts writes colour to SVG attributes, which cannot evaluate var(), so the
+  // series/axis colours are resolved from the CSS tokens at render time. The
+  // tooltip is an always-dark surface, so it uses the brand-panel family rather
+  // than theme-dependent surfaces.
+  const accent = useToken("--accent-primary");
+  const success = useToken("--accent-green");
+  const axisInk = useToken("--ink-tertiary");
+  const gridLine = useToken("--border-default");
+  const panel = useToken("--brand-panel");
+  const panelLine = useToken("--brand-panel-line");
+  const panelInk = useToken("--brand-panel-ink");
+  const panelInkMuted = useToken("--brand-panel-ink-2");
 
   const rows = data.map((point) => {
     const gbv = filter === "properties" ? point.propertyGbv : filter === "cars" ? point.carGbv : point.gbv;
@@ -58,22 +72,22 @@ export default function RevenueChart({ data }: { data: RevenuePoint[] }) {
           <ComposedChart data={rows} margin={{ top: 8, right: 8, left: 0, bottom: 0 }} barCategoryGap="28%">
             <defs>
               <linearGradient id="gbvFill" x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0%" stopColor="#22d3ee" stopOpacity={0.55} />
-                <stop offset="100%" stopColor="#22d3ee" stopOpacity={0.08} />
+                <stop offset="0%" stopColor={accent} stopOpacity={0.55} />
+                <stop offset="100%" stopColor={accent} stopOpacity={0.08} />
               </linearGradient>
             </defs>
-            <CartesianGrid vertical={false} stroke="#1e293b" />
-            <XAxis dataKey="month" tickLine={false} axisLine={false} tick={{ fill: "#64748b", fontSize: 11 }} />
-            <YAxis yAxisId="gbv" tickLine={false} axisLine={false} tick={{ fill: "#64748b", fontSize: 11 }} tickFormatter={(v: number) => `${Math.round(v / 1000)}k`} />
-            <YAxis yAxisId="net" orientation="right" tickLine={false} axisLine={false} tick={{ fill: "#34d399", fontSize: 11 }} tickFormatter={(v: number) => `${Math.round(v / 1000)}k`} />
+            <CartesianGrid vertical={false} stroke={gridLine} />
+            <XAxis dataKey="month" tickLine={false} axisLine={false} tick={{ fill: axisInk, fontSize: 11 }} />
+            <YAxis yAxisId="gbv" tickLine={false} axisLine={false} tick={{ fill: axisInk, fontSize: 11 }} tickFormatter={(v: number) => `${Math.round(v / 1000)}k`} />
+            <YAxis yAxisId="net" orientation="right" tickLine={false} axisLine={false} tick={{ fill: success, fontSize: 11 }} tickFormatter={(v: number) => `${Math.round(v / 1000)}k`} />
             <Tooltip
-              contentStyle={{ background: "#0f172a", border: "1px solid #1e293b", borderRadius: 12, fontSize: 12, color: "#e2e8f0" }}
-              labelStyle={{ color: "#94a3b8" }}
+              contentStyle={{ background: panel, border: `1px solid ${panelLine}`, borderRadius: 12, fontSize: 12, color: panelInk }}
+              labelStyle={{ color: panelInkMuted }}
               formatter={(value: number | Array<number>, name: string) => [`${money(Number(value))} MAD`, name === "net" ? "صافي إيرادات المنصة" : "GBV"]}
             />
-            <Legend wrapperStyle={{ fontSize: 12, color: "#94a3b8" }} formatter={(value: string) => <span className="text-slate-400 dark:text-[#B0B0B8]">{value === "net" ? "صافي الإيرادات" : "إجمالي قيمة الحجوزات"}</span>} />
+            <Legend wrapperStyle={{ fontSize: 12 }} formatter={(value: string) => <span className="text-ink-tertiary">{value === "net" ? "صافي الإيرادات" : "إجمالي قيمة الحجوزات"}</span>} />
             <Bar yAxisId="gbv" dataKey="gbv" name="GBV" fill="url(#gbvFill)" radius={[6, 6, 0, 0]} maxBarSize={38} />
-            <Line yAxisId="net" dataKey="net" name="net" stroke="#34d399" strokeWidth={2.5} dot={false} type="monotone" />
+            <Line yAxisId="net" dataKey="net" name="net" stroke={success} strokeWidth={2.5} dot={false} type="monotone" />
           </ComposedChart>
         </ResponsiveContainer>
       </div>

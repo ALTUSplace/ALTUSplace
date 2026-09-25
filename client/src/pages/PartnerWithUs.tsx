@@ -34,7 +34,7 @@ export default function PartnerWithUs() {
 
   return (
     <main dir="rtl" className="min-h-screen bg-[#f4f7f6] text-slate-900">
-      <section className="relative overflow-hidden bg-[#102d2b] text-white">
+      <section className="relative overflow-hidden bg-brand-panel text-brand-panel-ink">
         <div className="pointer-events-none absolute inset-0 opacity-[0.07] [background-image:radial-gradient(#fff_1px,transparent_1px)] [background-size:22px_22px]" />
         <div className="relative mx-auto max-w-5xl px-4 py-16 sm:px-6 sm:py-20 text-center">
           <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-xs font-bold text-[#7ee2b8]">
@@ -58,17 +58,17 @@ export default function PartnerWithUs() {
       </section>
 
       <section className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16">
-        <p className="text-center text-xs font-bold uppercase tracking-[0.2em] text-[#3B82F6]">اختر مسار التسجيل</p>
-        <h2 className="mt-2 text-center text-2xl font-black text-[#102d2b] sm:text-3xl">ما نوع وكالتك؟</h2>
+        <p className="text-center text-xs font-bold uppercase tracking-[0.2em] text-accent-clay">اختر مسار التسجيل</p>
+        <h2 className="mt-2 text-center text-2xl font-black text-ink-primary sm:text-3xl">ما نوع وكالتك؟</h2>
         <div className="mt-10 grid gap-6 md:grid-cols-2">
           {paths.map((path) => (
             <div key={path.key} className="flex flex-col rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md">
               <div className="flex items-center gap-4">
-                <span className="grid h-14 w-14 shrink-0 place-items-center rounded-xl bg-[#102d2b] text-[#f5b85b]">
+                <span className="grid h-14 w-14 shrink-0 place-items-center rounded-xl bg-brand-panel text-[#f5b85b]">
                   <path.icon className="h-7 w-7" />
                 </span>
                 <div>
-                  <h3 className="text-lg font-black text-[#102d2b]">{path.title}</h3>
+                  <h3 className="text-lg font-black text-ink-primary">{path.title}</h3>
                   <p className="mt-0.5 text-xs text-slate-500">{path.subtitle}</p>
                 </div>
               </div>
@@ -81,7 +81,7 @@ export default function PartnerWithUs() {
                 ))}
               </ul>
               <Link href={path.href} className="mt-auto pt-6">
-                <Button className="w-full bg-[#102d2b] text-white hover:bg-[#163c39]">
+                <Button className="w-full bg-brand-panel text-brand-panel-ink hover:bg-brand-panel-alt">
                   {path.cta}
                   <ChevronLeft className="mr-2 h-4 w-4" />
                 </Button>
@@ -93,7 +93,7 @@ export default function PartnerWithUs() {
         <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-5 text-center">
           <p className="text-sm text-slate-600">
             لديك وكالة مسجلة بالفعل؟{" "}
-            <Link href="/partner" className="inline-flex items-center gap-1 font-bold text-[#3B82F6] hover:underline">
+            <Link href="/partner" className="inline-flex items-center gap-1 font-bold text-accent-clay hover:underline">
               <LogIn className="h-4 w-4" />
               ادخل إلى فضاء الشركاء
             </Link>

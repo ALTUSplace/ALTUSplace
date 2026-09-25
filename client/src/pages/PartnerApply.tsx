@@ -123,7 +123,7 @@ async function callApply<T>(body: unknown): Promise<T> {
 }
 
 const inputClass =
-  "mt-2 w-full rounded-lg border p-3 font-normal focus:border-[#102d2b] focus:outline-none focus:ring-2 focus:ring-[#102d2b]/20";
+  "mt-2 w-full rounded-lg border p-3 font-normal focus:border-brand-panel focus:outline-none focus:ring-2 focus:ring-brand-panel/20";
 
 export default function PartnerApply() {
   const [match, params] = useRoute("/become-partner/:type");
@@ -324,14 +324,14 @@ export default function PartnerApply() {
           <span className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-emerald-50 text-emerald-600">
             <CheckCircle2 className="h-9 w-9" />
           </span>
-          <h1 className="mt-5 text-2xl font-black text-[#102d2b]">تم استلام طلبك بنجاح</h1>
+          <h1 className="mt-5 text-2xl font-black text-ink-primary">تم استلام طلبك بنجاح</h1>
           <p className="mt-3 text-sm leading-relaxed text-slate-600">
             شكراً لاهتمامك بالانضمام إلى ALTUSplace. سيراجع فريقنا طلبك وسيصدر لك حساب شريك فور
             الموافقة، وسيمكنك بعدها من تسجيل الدخول بالبريد الإلكتروني وكلمة المرور اللذين أدخلتهما.
           </p>
           <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
             <Link href="/">
-              <Button className="w-full bg-[#102d2b] text-white hover:bg-[#163c39]">العودة إلى الرئيسية</Button>
+              <Button className="w-full bg-brand-panel text-brand-panel-ink hover:bg-brand-panel-alt">العودة إلى الرئيسية</Button>
             </Link>
             <Link href="/partner">
               <Button variant="outline" className="w-full">فضاء الشركاء — تسجيل الدخول</Button>
@@ -345,12 +345,12 @@ export default function PartnerApply() {
   return (
     <main dir="rtl" className="min-h-screen bg-[#f4f7f6] px-4 py-10 text-slate-900 sm:px-6 lg:px-10">
       <div className="mx-auto max-w-3xl">
-        <Link href="/become-partner" className="inline-flex items-center gap-1 text-xs font-bold text-slate-500 hover:text-[#102d2b]">
+        <Link href="/become-partner" className="inline-flex items-center gap-1 text-xs font-bold text-slate-500 hover:text-ink-primary">
           <ChevronRight className="h-4 w-4" />
           كل مسارات الانضمام
         </Link>
 
-        <section className="mt-4 rounded-2xl bg-[#102d2b] p-6 text-white">
+        <section className="mt-4 rounded-2xl bg-brand-panel p-6 text-brand-panel-ink">
           <span className="grid h-12 w-12 place-items-center rounded-xl bg-white/10 text-[#f5b85b]">
             {isCar ? <Car className="h-6 w-6" /> : <Building2 className="h-6 w-6" />}
           </span>
@@ -363,7 +363,7 @@ export default function PartnerApply() {
 
         <form onSubmit={submit} className="mt-6 space-y-6">
           <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-sm font-black text-[#102d2b]">بيانات الوكالة</h2>
+            <h2 className="text-sm font-black text-ink-primary">بيانات الوكالة</h2>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               <label className="text-sm font-semibold sm:col-span-2">
                 اسم الوكالة *
@@ -408,7 +408,7 @@ export default function PartnerApply() {
             <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <h2 className="text-sm font-black text-[#102d2b]">مركبات الأسطول (اختياري)</h2>
+                  <h2 className="text-sm font-black text-ink-primary">مركبات الأسطول (اختياري)</h2>
                   <p className="mt-1 text-xs leading-relaxed text-slate-500">
                     أدرج سياراتك التي ستُنشر تلقائياً في الموقع فور اعتماد طلب الشراكة — اسم المركبة،
                     السنة، المقاعد، والسعر اليومي بالدرهم.
@@ -526,7 +526,7 @@ export default function PartnerApply() {
           )}
 
           <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-sm font-black text-[#102d2b]">معلومات التواصل والحساب</h2>
+            <h2 className="text-sm font-black text-ink-primary">معلومات التواصل والحساب</h2>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               <label className="text-sm font-semibold">
                 رقم الهاتف (واتساب) *
@@ -552,13 +552,13 @@ export default function PartnerApply() {
           </section>
 
           <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-sm font-black text-[#102d2b]">صور الوكالة</h2>
+            <h2 className="text-sm font-black text-ink-primary">صور الوكالة</h2>
             <p className="mt-1 text-xs text-slate-500">
               الشعار اختياري، ويمكن رفع حتى {MAX_GALLERY_IMAGES} صور إضافية للوكالة أو الأسطول (كل صورة حتى 6 ميجابايت).
             </p>
 
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              <label className="relative flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 p-6 text-center transition-colors hover:border-[#102d2b]">
+              <label className="relative flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 p-6 text-center transition-colors hover:border-brand-panel">
                 {logo ? (
                   <img src={logo.previewUrl} alt="شعار الوكالة" className="max-h-24 rounded-lg object-contain" />
                 ) : (
@@ -578,7 +578,7 @@ export default function PartnerApply() {
                 )}
               </label>
 
-              <label className="relative flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 p-6 text-center transition-colors hover:border-[#102d2b]">
+              <label className="relative flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 p-6 text-center transition-colors hover:border-brand-panel">
                 <ImagePlus className="h-6 w-6 text-slate-400" />
                 <span className="text-xs font-bold text-slate-600">رفع صور المعرض ({gallery.length}/{MAX_GALLERY_IMAGES})</span>
                 <input type="file" accept="image/*" multiple className="sr-only" onChange={pickGallery} />
@@ -608,7 +608,7 @@ export default function PartnerApply() {
             <p className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm font-bold text-red-700">{fieldError}</p>
           )}
 
-          <Button type="submit" disabled={submitting} className="w-full bg-[#102d2b] py-4 text-base font-black text-white hover:bg-[#163c39] disabled:cursor-not-allowed disabled:opacity-60">
+          <Button type="submit" disabled={submitting} className="w-full bg-brand-panel py-4 text-base font-black text-brand-panel-ink hover:bg-brand-panel-alt disabled:cursor-not-allowed disabled:opacity-60">
             {submitting ? (
               <>
                 <Loader2 className="ml-2 h-5 w-5 animate-spin" />

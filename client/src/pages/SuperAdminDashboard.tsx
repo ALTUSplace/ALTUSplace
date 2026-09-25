@@ -163,7 +163,7 @@ export default function SuperAdminDashboard() {
 
         <div className="min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-8">
           <div className="space-y-5">
-            <header className="rounded-2xl border border-slate-800 dark:border-[#2C2C2E] bg-gradient-to-br from-[#0e1a2e] to-[#111c33] p-6 shadow-xl">
+            <header className="rounded-2xl border border-slate-800 dark:border-[#2C2C2E] bg-gradient-to-br from-brand-panel to-brand-panel-alt p-6 shadow-xl">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                 <div>
                   <div className="mb-3 flex items-center gap-2 text-cyan-400">

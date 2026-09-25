@@ -52,7 +52,7 @@ export default function SuperDashboard() {
   return (
     <main dir="rtl" className="min-h-screen bg-[#0b1220] px-4 py-6 text-slate-100 dark:text-[#F1F1F3] sm:px-6 lg:px-10">
       <div className="mx-auto max-w-[1500px] space-y-5">
-        <header className="flex flex-col gap-5 rounded-2xl border border-slate-800 dark:border-[#2C2C2E] bg-gradient-to-br from-[#0e1a2e] to-[#111c33] p-6 shadow-xl sm:flex-row sm:items-end sm:justify-between">
+        <header className="flex flex-col gap-5 rounded-2xl border border-slate-800 dark:border-[#2C2C2E] bg-gradient-to-br from-brand-panel to-brand-panel-alt p-6 shadow-xl sm:flex-row sm:items-end sm:justify-between">
           <div>
             <div className="mb-3 flex items-center gap-2 text-cyan-400">
               <Gauge className="h-4 w-4" />
