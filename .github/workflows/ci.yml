@@ -76,6 +76,20 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Journal-completeness gate. Deliberately the first step, and deliberately
+      # before `pnpm install`: it uses only node:fs, needs no dependencies, and
+      # is therefore the cheapest possible failure.
+      #
+      # An unjournaled .sql shipped once already. migrate.mjs iterates
+      # _journal.json and never lists drizzle/, so drizzle/0020_detailed_ratings.sql
+      # was silently inert in every environment while the application code queried
+      # its columns -- production returned SQLSTATE 42703 on every listing page and
+      # nothing in CI noticed. The same step also runs as a pre-commit hook via
+      # husky; the logic is additionally covered by
+      # scripts/check-migration-journal.test.ts under "Unit tests" below.
+      - name: Migration journal completeness
+        run: node scripts/check-migration-journal.mjs
+
       - name: Typecheck
         run: pnpm check
 

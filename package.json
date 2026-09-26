@@ -14,7 +14,9 @@
     "verify:hero": "node scripts/verify-hero-layout.mjs",
     "db:push": "drizzle-kit generate && drizzle-kit migrate",
     "db:migrate": "node scripts/migrate.mjs",
-    "db:seed": "tsx server/seed/demo-listings.ts && tsx server/seed/reviews.ts"
+    "db:seed": "tsx server/seed/demo-listings.ts && tsx server/seed/reviews.ts",
+    "check:migrations": "node scripts/check-migration-journal.mjs",
+    "prepare": "husky"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.693.0",
@@ -101,6 +103,7 @@
     "cross-env": "^10.1.0",
     "drizzle-kit": "^0.31.10",
     "esbuild": "^0.25.0",
+    "husky": "^9.1.7",
     "playwright": "^1.62.1",
     "postcss": "^8.4.47",
     "prettier": "^3.6.2",
