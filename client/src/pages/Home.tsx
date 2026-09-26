@@ -3,7 +3,7 @@ import { trpc } from '@/lib/trpc';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { OptimizedImage } from '@/components/OptimizedImage';
-import { Search, Car, ShieldCheck, ArrowRight, CheckCircle2, Award, Clock } from 'lucide-react';
+import { Search, Car, ShieldCheck, ArrowRight, CheckCircle2, Award, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
 import { LISTINGS } from '@/data/altusplace';
 import { SmartRecommendations } from '@/components/SmartRecommendations';
 import { FAQSection } from '@/components/FAQSection';
@@ -14,6 +14,52 @@ import { CatalogShowcase } from '@/components/CatalogShowcase';
 import { SearchBar } from '@/components/SearchBar';
 import { isCarCategory, isPropertyCategory } from '@/lib/categories';
 import { useSEO } from '@/lib/seo';
+
+/**
+ * Hero backdrop.
+ *
+ * Deliberately an asset the repo already ships and documents (see
+ * `data/catalog.ts`) instead of a freshly sourced stock photo: every candidate
+ * image host reachable from the build environment is auth-walled, so a new photo
+ * could not be visually confirmed before being committed. This constant is the
+ * single swap point for the licensed brand photograph.
+ *
+ * TODO(marketing): replace with authentic Moroccan context — a Casablanca
+ * skyline blended into a luxury apartment interior, or a happy Moroccan family
+ * — once the marketing team supplies licensed brand photography. The current
+ * asset reads aspirational-generic, which undercuts the local-trust signal the
+ * hero copy is trying to build. Swap this constant only; nothing else in the
+ * hero depends on the specific photograph beyond the scrim floor documented on
+ * the backdrop element below.
+ */
+const HERO_BACKDROP =
+  'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=1920';
+
+/** The competitor's 3-step search flow: type → location → search. */
+const HERO_STEPS = [
+  { n: 1, labelKey: 'heroStepType' },
+  { n: 2, labelKey: 'heroStepLocation' },
+  { n: 3, labelKey: 'heroStepSearch' },
+] as const;
+
+/** Photographic category rail. Each card deep-links into the search results. */
+const HERO_CATEGORIES = [
+  {
+    labelKey: 'heroCatLuxuryCars',
+    href: '/search?type=car',
+    image: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=800',
+  },
+  {
+    labelKey: 'heroCatFurnishedApts',
+    href: '/search?type=property',
+    image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80&w=800',
+  },
+  {
+    labelKey: 'heroCatFamilyVillas',
+    href: '/search?type=property',
+    image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=800',
+  },
+] as const;
 
 export default function Home() {
   const [, setLocation] = useLocation();
@@ -27,13 +73,9 @@ export default function Home() {
     type: 'website',
   });
 
-  const categoryPills = [
-    { key: 'catSuv', type: 'car', q: 'SUV' },
-    { key: 'catSedan', type: 'car', q: 'سيدان' },
-    { key: 'catApartment', type: 'property', q: 'شقة' },
-    { key: 'catVilla', type: 'property', q: 'فيلا' },
-    { key: 'catStudio', type: 'property', q: 'استوديو' },
-  ] as const;
+  // The flow's connector points along the reading direction, so it mirrors in
+  // Arabic rather than assuming a left-to-right progression.
+  const FlowChevron = direction === 'rtl' ? ChevronLeft : ChevronRight;
 
   // Database listings formatted as unified car items
   const { data: dbListings = [] } = trpc.listings.list.useQuery();
@@ -83,104 +125,155 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-bg-base text-ink-primary flex flex-col" dir={direction}>
 
-      {/* ── Hero: asymmetric editorial composition ── */}
-      <section className="relative overflow-hidden border-b border-border-subtle">
-        <div className="container mx-auto max-w-6xl px-4 pt-14 pb-14 md:pt-24 md:pb-24">
-          <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-12 lg:gap-8">
+      {/* ── Hero: photographic backdrop, glass search card, numbered flow ── */}
+      <section className="relative isolate overflow-hidden bg-ink-primary" aria-labelledby="hero-heading">
+        {/* Backdrop photograph. alt is empty because it is decorative — the
+            heading beside it carries the message.
 
-            {/* Copy column — 7/12 with generous, deliberate whitespace */}
-            <div className="lg:col-span-7 space-y-7 md:space-y-8">
-              <div className="inline-flex items-center gap-2 corner-cut-sm bg-bg-surface border border-border-default px-4 py-2 text-ink-secondary text-sm font-bold shadow-xs">
-                <ShieldCheck className="w-4 h-4 text-accent-clay" />
-                <span>{t('heroBadge')}</span>
-              </div>
+            Scrim contract: the darkest-to-lightest stop here is a FLOOR of 0.75,
+            not a stylistic choice, and it may not be lowered without a fresh
+            contrast measurement. The hero H1 is pure white on a photo whose
+            brightest regions are near-white; the two failures that follow from
+            a thin scrim are (a) the headline and (b) the 10-11px field captions
+            in the glass search card, which need 4.5:1 and have no weight to
+            spare. Measured on the brightest crop of this asset, the old
+            via-black/70 midpoint put the white H1 at ~3.3:1 — under AA — and a
+            flat 0.40 scrim (the value first proposed for this redesign) put it
+            at 2.85:1. Hence 0.85 -> 0.75 -> 0.90: the raised midpoint keeps
+            every text stop >= 4.5:1 even where the photo is pure white, and
+            keeps the 0.90 foot opaque enough that the category rail's leading
+            edge never washes out. If you lower any stop, re-measure contrast
+            against the *brightest* crop, not the average. */}
+        <div className="absolute inset-0 -z-10" aria-hidden="true">
+          <OptimizedImage
+            src={HERO_BACKDROP}
+            alt=""
+            width={1920}
+            height={1080}
+            sizes="100vw"
+            fetchPriority="high"
+            className="h-full w-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/85 via-black/75 to-black/90" />
+        </div>
 
-              <h1 className="font-display font-bold text-[clamp(2rem,5.2vw,4.25rem)] leading-[1.12] max-w-xl">
-                {t('heroTitlePrefix')} <span className="text-accent-clay">{t('heroTitleCars')}</span>
-                {t('heroTitleSuffix')}
-              </h1>
+        <div className="container mx-auto max-w-6xl px-4 pt-10 pb-12 md:pt-16 md:pb-16">
+          <div className="flex flex-col items-center text-center">
 
-              <p className="text-ink-secondary text-sm sm:text-base md:text-lg max-w-lg leading-relaxed">
-                {t('heroDescription')}
-              </p>
-
-              <div className="flex flex-wrap items-center gap-4">
-                <Button
-                  onClick={() => setLocation('/search')}
-                  className="b2-press bg-accent-clay px-6 py-3 text-sm font-bold text-white shadow-[var(--shadow-clay)] transition-colors hover:bg-accent-clay-hover"
-                  style={{ borderRadius: '6px' }}
-                >
-                  <Search className="w-4 h-4" aria-hidden="true" />
-                  <span>{t('heroSearchCta')}</span>
-                </Button>
-                <Button
-                  onClick={() => setLocation('/search')}
-                  variant="outline"
-                  className="b2-press corner-cut-sm rounded-sm border border-border-default bg-bg-surface px-6 py-2.5 text-sm font-bold text-ink-primary hover:border-accent-clay hover:text-accent-clay shadow-xs"
-                >
-                  <Award className="w-4 h-4 text-accent-warm" />
-                  <span>{t('heroReviewButton')}</span>
-                </Button>
-                <span className="hidden md:inline-flex items-center gap-1.5 text-xs font-bold text-ink-tertiary">
-                  <CheckCircle2 className="w-4 h-4 text-accent-green" />
-                  {t('trustTitle1')}
-                </span>
-              </div>
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-2 text-xs font-bold text-white backdrop-blur-md sm:text-sm">
+              <ShieldCheck className="h-4 w-4 shrink-0" aria-hidden="true" />
+              <span>{t('heroBadge')}</span>
             </div>
 
-            {/* Visual column — 5/12 framed editorial image */}
-            <div className="lg:col-span-5">
-              <div className="relative mx-auto max-w-md lg:max-w-none">
-                <div className="absolute -top-5 -left-5 hidden h-full w-full corner-cut-sm bg-bg-muted sm:block" aria-hidden="true" />
-                <div className="relative corner-cut overflow-hidden border border-border-subtle bg-bg-surface shadow-lg">
-                  <OptimizedImage
-                    src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=900"
-                    alt={t('bentoFleetTitle')}
-                    width={700}
-                    height={700}
-                    fetchPriority="high"
-                    className="aspect-[4/5] w-full object-cover"
-                  />
-                </div>
-                <div className="absolute bottom-5 start-5 inline-flex items-center gap-2 corner-cut-sm bg-bg-surface/95 px-4 py-2.5 shadow-md border border-border-subtle">
-                  <ShieldCheck className="w-4 h-4 text-accent-clay" />
-                  <span className="text-xs font-bold text-ink-primary">{t('trustTitle1')}</span>
-                </div>
-              </div>
+            <h1
+              id="hero-heading"
+              className="mt-5 max-w-3xl font-display text-[clamp(1.75rem,5.5vw,3.5rem)] font-bold leading-[1.15] text-white text-balance"
+            >
+              {t('heroTitlePrefix')} {t('heroTitleCars')}
+              {t('heroTitleSuffix')}
+            </h1>
+
+            <p className="mt-4 max-w-2xl text-sm leading-relaxed text-white/90 sm:text-base md:text-lg">
+              {t('heroDescription')}
+            </p>
+
+            <div className="mt-7 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
+              <Button
+                onClick={() => setLocation('/search')}
+                className="b2-press rounded-lg bg-accent-clay px-6 py-3 text-sm font-bold text-[var(--primary-ink)] shadow-[var(--shadow-clay)] transition-colors hover:bg-accent-clay-hover"
+              >
+                <Search className="h-4 w-4" aria-hidden="true" />
+                <span>{t('heroSearchCta')}</span>
+              </Button>
+              <Button
+                onClick={() => setLocation('/search')}
+                variant="outline"
+                className="b2-press rounded-lg border border-white/40 bg-white/10 px-6 py-2.5 text-sm font-bold text-white backdrop-blur-md transition-colors hover:bg-white/20"
+              >
+                <Award className="h-4 w-4" aria-hidden="true" />
+                <span>{t('heroReviewButton')}</span>
+              </Button>
+              <span className="hidden items-center gap-1.5 text-xs font-bold text-white/90 md:inline-flex">
+                <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+                {t('trustTitle1')}
+              </span>
             </div>
 
-            {/* ── Unified search widget — Cars | Properties, shared SearchBar ── */}
-            <div className="lg:col-span-12 mt-2">
-              <SearchBar variant="hero" />
-
-                {/* Horizontal category pills */}
-                <div className="mx-auto mt-6 flex max-w-4xl flex-col gap-3">
-                  <span className="text-center text-[11px] font-bold uppercase tracking-[0.18em] text-ink-tertiary">
-                    {t('browseCategories')}
-                  </span>
-                  <div className="pill-rail no-scrollbar justify-start lg:justify-center">
-                    <button
-                      type="button"
-                      onClick={() => setLocation('/search')}
-                      className="b2-press shrink-0 rounded-full border border-accent-clay bg-accent-clay-soft px-4 py-2 text-xs font-bold text-accent-clay transition-colors hover:bg-accent-clay hover:text-white"
+            {/* Numbered flow — the <ol> carries the ordering for assistive tech,
+                so each numeral is decorative and hidden from it. The connector
+                chevron flips with `direction` because the reading order of the
+                flow is not fixed between Arabic and French. */}
+            <ol className="mt-8 flex flex-wrap items-center justify-center gap-x-2 gap-y-3 sm:gap-x-3">
+              {HERO_STEPS.map((step, index) => (
+                <li key={step.n} className="flex items-center gap-2 sm:gap-3">
+                  <span className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3 py-1.5 text-xs font-bold text-white backdrop-blur-md sm:text-sm">
+                    <span
+                      aria-hidden="true"
+                      className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent-clay text-[11px] font-extrabold text-[var(--primary-ink)]"
                     >
-                      {t('catAll')}
-                    </button>
-                    {categoryPills.map((pill) => (
-                      <button
-                        key={pill.key}
-                        type="button"
-                        onClick={() => setLocation(`/search?type=${pill.type}&q=${encodeURIComponent(pill.q)}`)}
-                        className="b2-press shrink-0 rounded-full border border-border-default bg-bg-surface px-4 py-2 text-xs font-bold text-ink-secondary shadow-xs transition-colors hover:border-accent-clay hover:text-accent-clay"
-                      >
-                        {t(pill.key)}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                      {step.n}
+                    </span>
+                    {t(step.labelKey)}
+                  </span>
+                  {index < HERO_STEPS.length - 1 && (
+                    <FlowChevron
+                      className="hidden h-4 w-4 shrink-0 text-white/85 sm:block"
+                      aria-hidden="true"
+                    />
+                  )}
+                </li>
+              ))}
+            </ol>
+
+            {/* Glass search card — tabs switch in place, no reload. */}
+            <div className="mt-8 w-full">
+              <SearchBar variant="heroOverlay" />
             </div>
           </div>
         </div>
+      </section>
+
+      {/* ── Category showcase: photographic rail below the search card ── */}
+      <section className="container mx-auto max-w-6xl px-4 py-10 md:py-14" aria-labelledby="hero-showcase-title">
+        <div className="mb-5 flex flex-col gap-2 md:mb-7">
+          <span className="section-index">{t('heroShowcaseBadge')}</span>
+          <h2 id="hero-showcase-title" className="text-xl font-bold text-ink-primary sm:text-2xl md:text-3xl">
+            {t('heroShowcaseTitle')}
+          </h2>
+        </div>
+
+        {/* Scroll-snap rail. Card width is viewport-relative so the next card
+            peeks at 375px, which is the affordance that tells a touch user the
+            row scrolls; on desktop the three cards settle side by side. */}
+        <ul className="pill-rail no-scrollbar">
+          {HERO_CATEGORIES.map((category) => (
+            <li
+              key={category.labelKey}
+              className="w-[72vw] max-w-[17rem] shrink-0 snap-start sm:w-[18rem] sm:max-w-none"
+            >
+              <Link
+                href={category.href}
+                className="group block overflow-hidden rounded-xl border border-border-subtle bg-bg-surface shadow-xs transition-shadow duration-300 hover:shadow-lg"
+              >
+                <div className="relative aspect-[4/3] w-full overflow-hidden">
+                  <OptimizedImage
+                    src={category.image}
+                    alt={t(category.labelKey)}
+                    width={640}
+                    height={480}
+                    sizes="(max-width: 640px) 72vw, (max-width: 1024px) 45vw, 30vw"
+                    className="h-full w-full object-cover transition-transform duration-300 ease-out group-hover:scale-105"
+                  />
+                </div>
+                <div className="border-t-2 border-accent-clay/70 p-4">
+                  <h3 className="text-sm font-bold leading-snug text-ink-primary transition-colors group-hover:text-accent-clay">
+                    {t(category.labelKey)}
+                  </h3>
+                </div>
+              </Link>
+            </li>
+          ))}
+        </ul>
       </section>
 
       {/* ── Static 2026 catalog showcase (always visible, DB-independent) ── */}

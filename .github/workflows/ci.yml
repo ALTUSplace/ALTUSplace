@@ -14,6 +14,11 @@
 #       scripts/verify-navbar-clipping.mjs          (375/768/1024/1280)
 #       scripts/verify-horizontal-scroll.mjs
 #     All four honour BASE_URL, so they can target the served build as-is.
+#
+#     DONE, as a side effect: scripts/verify-hero-layout.mjs is no longer on
+#     that list. It is wired as a gate below and needed the same
+#     build-serve-wait shape, so the recipe now exists. The four above can
+#     reuse it rather than reinventing it.
 #   - Coverage reporting, and a required-checks branch protection rule so this
 #     workflow is actually enforced rather than merely informative.
 #
@@ -113,3 +118,37 @@ jobs:
       # credentials. Deliberately left out of this iteration.
       - name: Build
         run: pnpm build
+
+      # Hero layout gate. Runs the BUILT client, not the dev server: the dev
+      # server's CSP blocks Vite's React-Fast-Refresh preamble, so the SPA never
+      # mounts and #root stays empty — the built shell is the only faithful thing
+      # to measure (see scripts/serve-dist.mjs).
+      #
+      # Must run after Build. It was previously manual-only, which meant 239
+      # lines of hero geometry checks could rot unnoticed; that is why it is a
+      # gate now rather than a script nobody runs.
+      #
+      # `playwright install --with-deps chromium` is required because the
+      # browsers are not vendored. --with-deps also pulls the shared libraries
+      # (libnss3, libatk, …) that a bare ubuntu-latest image lacks.
+      #
+      # The server is backgrounded and torn down by a trap so a failing check
+      # does not leave a listener holding the job open. Readiness is polled
+      # rather than slept on, so a slow runner does not produce a false pass.
+      - name: Hero layout gate
+        run: |
+          pnpm exec playwright install --with-deps chromium
+          node scripts/serve-dist.mjs 4173 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:4173/ -o /dev/null; then
+              break
+            fi
+            if [ "$i" -eq 30 ]; then
+              echo "server never became ready on :4173"
+              exit 1
+            fi
+            sleep 1
+          done
+          node scripts/verify-hero-layout.mjs
