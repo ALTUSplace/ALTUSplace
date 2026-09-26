@@ -266,7 +266,7 @@ function FinancialAnalytics({ bookings }: { bookings: OwnerBookingRow[] }) {
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
         {[
           { label: "إيرادات مؤكدة (إجمالي)", value: money(grossRevenue), icon: WalletCards, tone: "text-emerald-600" },
-          { label: "صافي الإيرادات", value: money(netRevenue), icon: TrendingUp, tone: "text-[#102d2b]" },
+          { label: "صافي الإيرادات", value: money(netRevenue), icon: TrendingUp, tone: "text-ink-primary" },
           { label: "عمولات المنصة", value: money(platformFees), icon: BarChart3, tone: "text-sky-600" },
           { label: "حجوزات نشطة (جارية)", value: String(activeRentals), icon: Car, tone: "text-violet-600" },
           { label: "تقديرات قيد الانتظار", value: money(pendingEstimate), icon: CalendarDays, tone: "text-amber-600" },
@@ -973,7 +973,7 @@ export default function AgencyDashboard() {
 
   return (
     <div className="container mx-auto max-w-6xl space-y-6 p-4 sm:p-6">
-      <header className="flex flex-col gap-4 rounded-3xl bg-[#102d2b] p-6 text-white shadow-xl sm:flex-row sm:items-end sm:justify-between">
+      <header className="flex flex-col gap-4 rounded-3xl bg-brand-panel p-6 text-brand-panel-ink shadow-xl sm:flex-row sm:items-end sm:justify-between">
         <div>
           <div className="mb-3 flex items-center gap-2 text-amber-400">
             <Building2 className="h-4 w-4" />
@@ -1154,7 +1154,7 @@ export default function AgencyDashboard() {
         <TabsContent value="fleet" className="space-y-6">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {[
-              { label: "إجمالي السيارات", value: String(cars.length), icon: Car, tone: "text-[#102d2b]" },
+              { label: "إجمالي السيارات", value: String(cars.length), icon: Car, tone: "text-ink-primary" },
               { label: "متاحة الآن", value: String(fleetCounts.available), icon: ShieldCheck, tone: "text-emerald-600" },
               { label: "محجوزة", value: String(fleetCounts.booked), icon: CalendarDays, tone: "text-sky-600" },
               { label: "في الصيانة", value: String(fleetCounts.maintenance), icon: Wrench, tone: "text-amber-600" },
@@ -1281,7 +1281,7 @@ export default function AgencyDashboard() {
         <TabsContent value="properties" className="space-y-6">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {[
-              { label: "إجمالي العقارات", value: String(properties.length), icon: Home, tone: "text-[#102d2b]" },
+              { label: "إجمالي العقارات", value: String(properties.length), icon: Home, tone: "text-ink-primary" },
               { label: "متاحة الآن", value: String(propertyCounts.available), icon: ShieldCheck, tone: "text-emerald-600" },
               { label: "مؤجّرة", value: String(propertyCounts.rented), icon: CalendarDays, tone: "text-sky-600" },
               { label: "في الصيانة", value: String(propertyCounts.maintenance), icon: Wrench, tone: "text-amber-600" },

@@ -294,7 +294,7 @@ export default function AgencyOnboarding() {
         </div>
       ) : (
         <div>
-          <div className="bg-[#003580] text-white">
+          <div className="bg-brand-panel text-brand-panel-ink">
             <div className="relative overflow-hidden">
               <div aria-hidden className="pointer-events-none absolute -top-24 right-1/4 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
               <div aria-hidden className="pointer-events-none absolute -bottom-16 left-10 h-56 w-56 rounded-full bg-amber-400/10 blur-3xl" />
@@ -329,10 +329,10 @@ export default function AgencyOnboarding() {
                   </div>
 
                   <div id="partner-start" className="scroll-mt-24 rounded-2xl bg-card p-6 text-foreground shadow-2xl ring-1 ring-black/5 sm:p-8">
-                    <div className="mb-5 h-1.5 w-16 rounded-full bg-[#003580]" />
+                    <div className="mb-5 h-1.5 w-16 rounded-full bg-brand-panel" />
                     <div role="tablist" aria-label={t("partnerJoinTitle")} className="mx-auto inline-flex rounded-full border bg-muted/60 p-1 shadow-sm">
-                      <button type="button" role="tab" aria-selected={mode === "register"} onClick={() => { setMode("register"); clearErrors(); setEmailStepDone(false); }} className={`rounded-full px-5 py-2 text-sm font-bold transition ${mode === "register" ? "bg-[#003580] text-white shadow" : "text-muted-foreground hover:text-foreground"}`}>{t("partnerRegisterNew")}</button>
-                      <button type="button" role="tab" aria-selected={mode === "login"} onClick={() => { setMode("login"); clearErrors(); }} className={`rounded-full px-5 py-2 text-sm font-bold transition ${mode === "login" ? "bg-[#003580] text-white shadow" : "text-muted-foreground hover:text-foreground"}`}>{t("partnerExistingLogin")}</button>
+                      <button type="button" role="tab" aria-selected={mode === "register"} onClick={() => { setMode("register"); clearErrors(); setEmailStepDone(false); }} className={`rounded-full px-5 py-2 text-sm font-bold transition ${mode === "register" ? "bg-brand-panel text-brand-panel-ink shadow" : "text-muted-foreground hover:text-foreground"}`}>{t("partnerRegisterNew")}</button>
+                      <button type="button" role="tab" aria-selected={mode === "login"} onClick={() => { setMode("login"); clearErrors(); }} className={`rounded-full px-5 py-2 text-sm font-bold transition ${mode === "login" ? "bg-brand-panel text-brand-panel-ink shadow" : "text-muted-foreground hover:text-foreground"}`}>{t("partnerExistingLogin")}</button>
                     </div>
 
                     {mode === "register" ? (
@@ -457,7 +457,7 @@ export default function AgencyOnboarding() {
                                 id="partner-email-entry"
                                 type="email"
                                 autoComplete="email"
-                                className="w-full rounded-xl border bg-background p-3 text-center focus:border-[#003580] focus:outline-none focus:ring-2 focus:ring-[#003580]/20"
+                                className="w-full rounded-xl border bg-background p-3 text-center focus:border-brand-panel focus:outline-none focus:ring-2 focus:ring-brand-panel/20"
                                 placeholder="agency@example.com"
                                 value={email}
                                 maxLength={320}
@@ -476,7 +476,7 @@ export default function AgencyOnboarding() {
                           </form>
                           <div className="border-t border-border pt-4 text-center">
                             <span className="text-xs text-muted-foreground">هل لديك حساب شريك بالفعل؟ </span>
-                            <button type="button" onClick={() => setMode("login")} className="text-xs font-bold text-[#003580] hover:underline">
+                            <button type="button" onClick={() => setMode("login")} className="text-xs font-bold text-brand-panel hover:underline">
                               تسجيل الدخول
                             </button>
                         </div>
@@ -519,7 +519,7 @@ export default function AgencyOnboarding() {
                         <Button type="submit" className="w-full" disabled={submitting}>
                           {submitting ? <><Loader2 className="ml-2 h-4 w-4 animate-spin" />جاري الدخول...</> : "دخول"}
                         </Button>
-                        <button type="button" onClick={() => startLogin()} className="w-full text-center text-xs font-bold text-[#003580] hover:underline">
+                        <button type="button" onClick={() => startLogin()} className="w-full text-center text-xs font-bold text-brand-panel hover:underline">
                           {t("partnerExistingLogin")}
                         </button>
                       </form>
@@ -542,11 +542,11 @@ export default function AgencyOnboarding() {
                 {benefits.map((benefit) => (
                   <div key={benefit.title} className="rounded-2xl border bg-card p-6 shadow-sm">
                     <div className="flex items-start gap-3">
-                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#003580]/10 text-[#003580]">
+                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-panel/10 text-brand-panel">
                         <benefit.icon className="h-5 w-5" />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-[11px] font-black tracking-wide text-[#003580]">{benefit.label}</p>
+                        <p className="text-[11px] font-black tracking-wide text-brand-panel">{benefit.label}</p>
                         <h3 className="font-black leading-snug text-foreground">{benefit.title}</h3>
                         <p className="mt-1 text-xs text-muted-foreground">{benefit.description}</p>
                       </div>

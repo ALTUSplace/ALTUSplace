@@ -10,6 +10,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGri
 import { AdvancedMediaUpload } from '@/components/AdvancedMediaUpload';
 import { OptimizedImage } from '@/components/OptimizedImage';
 import { CitySelect } from '@/components/CitySelect';
+import { useToken } from '@/lib/designTokens';
 
 const monthlyPartnerData = [
   { name: 'يناير', الأرباح: 8400, الحجوزات: 6 },
@@ -22,6 +23,14 @@ const monthlyPartnerData = [
 
 export default function PartnerDashboard() {
   const utils = trpc.useUtils();
+  // Recharts contentStyle takes concrete strings, so the always-dark tooltip
+  // surface is resolved from the brand-panel tokens.
+  const tooltipStyle = {
+    backgroundColor: useToken('--brand-panel'),
+    borderColor: useToken('--brand-panel-line'),
+    borderRadius: '12px',
+    color: useToken('--brand-panel-ink'),
+  };
   const { data: listings = [], isLoading: listingsLoading } = trpc.listings.list.useQuery();
   const { data: bookings = [], isLoading: bookingsLoading } = trpc.bookings.list.useQuery();
 
@@ -176,7 +185,7 @@ export default function PartnerDashboard() {
                       <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
                       <XAxis dataKey="name" stroke="#888888" fontSize={12} />
                       <YAxis stroke="#888888" fontSize={12} />
-                      <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px', color: '#fff' }} />
+                      <Tooltip contentStyle={tooltipStyle} />
                       <Area type="monotone" dataKey="الأرباح" stroke="#d4af37" strokeWidth={3} fillOpacity={1} fill="url(#colorEarnings)" />
                     </AreaChart>
                   </ResponsiveContainer>
@@ -196,7 +205,7 @@ export default function PartnerDashboard() {
                       <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
                       <XAxis dataKey="name" stroke="#888888" fontSize={12} />
                       <YAxis stroke="#888888" fontSize={12} />
-                      <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px', color: '#fff' }} />
+                      <Tooltip contentStyle={tooltipStyle} />
                       <Bar dataKey="الحجوزات" fill="#d4af37" radius={[6, 6, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>

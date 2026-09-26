@@ -43,6 +43,13 @@
     --accent-primary-h: #1546B4;
     --accent-primary-s: rgba(26, 86, 219, 0.10);
 
+    /* Ink that sits ON the accent fill. White works on the light-theme accent
+       (6.18:1) but NOT on the brighter dark-theme accent (#4F86F7 = 3.45:1),
+       so this flips to charcoal in .dark — dark-mode CTAs were failing AA with
+       the previously hardcoded white. Pinned as a token so the pairing is
+       asserted by the contrast test instead of drifting. */
+    --primary-ink:     #FFFFFF;
+
     /* Warm secondary tone (ratings, premium hints) */
     --accent-warm:   #B7791F;
     --accent-warm-h: #9A6518;
@@ -56,6 +63,24 @@
     --accent-amber:    #B45309;
     --accent-amber-h:  #92400E;
     --accent-amber-s:  rgba(180, 83, 9, 0.12);
+
+    /* Always-dark brand panel — hero/console surfaces that must stay dark in
+       BOTH themes because they carry white text by contract. Being
+       theme-independent is what makes the white-on-panel contrast guarantee
+       hold in light and dark alike. Replaces the per-component literals
+       #003580 (Mubawab blue), #102D2B (teal-navy) and the #0E1A2E→#111C33
+       gradient pair that had drifted into four unrelated dark navies.
+         #123A93 = 10.23:1 with white   #0B2E6F = 12.85:1 with white
+       Both are the existing blue ramp's 700/800 steps, so this introduces no
+       new hue — it only collapses four ad-hoc navies onto the one brand ramp. */
+    --brand-panel:      #123A93;
+    --brand-panel-2:    #0B2E6F;
+    --brand-panel-ink:  #FFFFFF;
+    /* Muted ink + hairline for chrome that floats ON the panel (chart tooltips,
+       legends). Both stay legible on the panel in either theme:
+         ink-2 5.51:1   line 1.6:1 (decorative only, never carries text) */
+    --brand-panel-ink-2: rgba(255, 255, 255, 0.72);
+    --brand-panel-line:  rgba(255, 255, 255, 0.16);
 
     /* Border Tokens — crisp hairlines */
     --border-subtle:  #EBEBEB;
@@ -148,6 +173,9 @@
     --accent-primary-h: #6EA0F8;
     --accent-primary-s: rgba(79, 134, 247, 0.18);
 
+    /* 5.42:1 on #4F86F7 — the dark-theme counterpart to the light :root value. */
+    --primary-ink:     #0B1220;
+
     --accent-warm:   #D9A441;
     --accent-warm-h: #E3B65E;
     --accent-warm-s: rgba(217, 164, 65, 0.18);
@@ -188,7 +216,7 @@
   --color-popover:          hsl(from var(--bg-elevated) h s l / alpha);
   --color-popover-foreground: hsl(from var(--ink-primary) h s l / alpha);
   --color-primary:          hsl(from var(--accent-primary) h s l / alpha);
-  --color-primary-foreground: #FFFFFF;
+  --color-primary-foreground: var(--primary-ink);
   --color-secondary:        hsl(from var(--bg-muted) h s l / alpha);
   --color-secondary-foreground: hsl(from var(--ink-secondary) h s l / alpha);
   --color-muted:            hsl(from var(--bg-muted) h s l / alpha);
@@ -226,6 +254,13 @@
   --color-border-strong:    hsl(from var(--border-strong) h s l / alpha);
   --color-skeleton-from:    hsl(from var(--skeleton-from) h s l / alpha);
   --color-skeleton-to:      hsl(from var(--skeleton-to) h s l / alpha);
+
+  /* always-dark console/hero panel (theme-independent, white ink by contract) */
+  --color-brand-panel:      hsl(from var(--brand-panel) h s l / alpha);
+  --color-brand-panel-alt:  hsl(from var(--brand-panel-2) h s l / alpha);
+  --color-brand-panel-ink:  hsl(from var(--brand-panel-ink) h s l / alpha);
+  --color-brand-panel-ink-2: hsl(from var(--brand-panel-ink-2) h s l / alpha);
+  --color-brand-panel-line:  hsl(from var(--brand-panel-line) h s l / alpha);
 
   /* backward-compatible accent aliases consumed by existing components */
   --color-accent-indigo:     hsl(from var(--accent-primary) h s l / alpha);
@@ -270,7 +305,7 @@
   --color-sidebar:                 hsl(from var(--bg-muted) h s l / alpha);
   --color-sidebar-foreground:      hsl(from var(--ink-primary) h s l / alpha);
   --color-sidebar-primary:         hsl(from var(--accent-primary) h s l / alpha);
-  --color-sidebar-primary-foreground: #FFFFFF;
+  --color-sidebar-primary-foreground: var(--primary-ink);
   --color-sidebar-accent:          hsl(from var(--accent-primary-s) h s l / alpha);
   --color-sidebar-accent-foreground: hsl(from var(--ink-primary) h s l / alpha);
   --color-sidebar-border:          hsl(from var(--border-subtle) h s l / alpha);

@@ -36,6 +36,8 @@ import type { ExpressionSpecification, GeoJSONSource } from 'mapbox-gl';
 import { cn } from '@/lib/utils';
 import { getMapboxToken, MOROCCO_CENTER, type LatLng } from '@/lib/mapbox';
 import { useTheme } from '@/contexts/ThemeContext';
+// Aliased: this module already has a local `token` holding the Mapbox access token.
+import { token as designToken } from '@/lib/designTokens';
 import { AlertTriangle, ArrowLeftRight, Loader2, MapPin, X } from 'lucide-react';
 
 export interface MapboxMapListing {
@@ -77,31 +79,23 @@ export interface MapboxSearchMapProps {
  * Mapbox paints markers with concrete colour strings and never evaluate
  * `var()`, so each token has to be resolved to a hex before it reaches a layer.
  *
- * `index.css` already defines every token below in both themes, so they are read
- * off the document root here rather than hardcoded. The paints are re-applied
- * when the theme flips, so a dark-mode toggle never leaves a light palette baked
- * into the layers.
+ * Resolution goes through `token()` from `@/lib/designTokens` — the single
+ * resolver for the whole app — rather than a local copy of it. That module
+ * memoises per theme, so the paints below are re-applied on a theme flip (see
+ * the `setPaintProperty` effect) and a dark-mode toggle never leaves a light
+ * palette baked into the layers. Its FALLBACKS table carries the light-theme
+ * value of every token named below, which is what prerender (no DOM) and a
+ * renamed token degrade to.
  *
- * The fallbacks are the light-theme values, used during prerender (which runs
- * without a DOM) and if a token is ever renamed.
- *
- * If `@/lib/designTokens` lands on this branch, this helper should be replaced by
- * that module's `token()` — it caches per theme and does the same read.
+ * The three categories must stay mutually distinguishable on the map, so they
+ * take three different token families (brand blue / success green / warm gold)
+ * rather than the two near-identical navies (#1d6fa5 + #2563EB) that used to sit
+ * side by side.
  */
-function cssToken(name: string, fallback: string): string {
-  if (typeof document === 'undefined') return fallback;
-  const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-  return value.length > 0 ? value : fallback;
-}
-
-// The three categories must stay mutually distinguishable on the map, so they
-// take three different token families (brand blue / success green / warm gold)
-// rather than the two near-identical navies (#1d6fa5 + #2563EB) that used to sit
-// side by side.
-const TYPE_TOKEN: Record<MapboxMapListing['type'], readonly [token: string, fallback: string]> = {
-  car: ['--accent-primary', '#1A56DB'],
-  property: ['--accent-green', '#059669'],
-  office: ['--accent-warm', '#B7791F'],
+const TYPE_TOKEN: Record<MapboxMapListing['type'], string> = {
+  car: '--accent-primary',
+  property: '--accent-green',
+  office: '--accent-warm',
 };
 
 /** Mapbox `step` expression colouring cluster circles by point count. */
@@ -109,8 +103,8 @@ function clusterColorExpression(): ExpressionSpecification {
   return [
     'step',
     ['get', 'point_count'],
-    cssToken(...CLUSTER_COLOR_STOPS[0].token),
-    ...CLUSTER_COLOR_STOPS.slice(1).flatMap((stop) => [stop.threshold, cssToken(...stop.token)]),
+    designToken(CLUSTER_COLOR_STOPS[0].token),
+    ...CLUSTER_COLOR_STOPS.slice(1).flatMap((stop) => [stop.threshold, designToken(stop.token)]),
   ] as ExpressionSpecification;
 }
 
@@ -120,10 +114,10 @@ function pointColorExpression(): ExpressionSpecification {
     'match',
     ['get', 'type'],
     'car',
-    cssToken(...TYPE_TOKEN.car),
+    designToken(TYPE_TOKEN.car),
     'property',
-    cssToken(...TYPE_TOKEN.property),
-    cssToken(...TYPE_TOKEN.office),
+    designToken(TYPE_TOKEN.property),
+    designToken(TYPE_TOKEN.office),
   ] as ExpressionSpecification;
 }
 
@@ -184,18 +178,18 @@ function buildListingPreview(listing: MapboxMapListing, onOpen: () => void): HTM
 }
 
 // Cluster fills step up in density, so a glance at the map shows where the
-// listings are thickest. Each stop is a [token, light-theme fallback] pair read
-// through `cssToken`, and the whole expression is rebuilt on theme flip so a
+// listings are thickest. Each stop is a token name resolved through
+// `designToken`, and the whole expression is rebuilt on theme flip so a
 // dark-mode toggle never leaves a light palette baked into the layer.
 //
 // The two dense stops use the navy ramp, which `index.css` defines in both
 // themes. They take the navy rather than another accent so a dense cluster stays
 // visually distinct from the three listing-type colours.
-const CLUSTER_COLOR_STOPS: readonly { token: readonly [string, string]; threshold: number }[] = [
-  { token: ['--accent-primary', '#1A56DB'], threshold: 0 },
-  { token: ['--accent-primary', '#1A56DB'], threshold: 10 },
-  { token: ['--brand-navy', '#0B1220'], threshold: 50 },
-  { token: ['--brand-navy-deep', '#060A12'], threshold: 200 },
+const CLUSTER_COLOR_STOPS: readonly { token: string; threshold: number }[] = [
+  { token: '--accent-primary', threshold: 0 },
+  { token: '--accent-primary', threshold: 10 },
+  { token: '--brand-navy', threshold: 50 },
+  { token: '--brand-navy-deep', threshold: 200 },
 ];
 
 export function MapboxSearchMap({
