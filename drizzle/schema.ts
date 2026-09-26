@@ -227,15 +227,11 @@ export const reviews = pgTable("reviews", {
   ratingCheck: check("reviews_rating_check", sql`${table.rating} >= 1 AND ${table.rating} <= 5`),
   // Sub-scores are either absent or within 1-5, mirroring the rating check.
   scoresCheck: check("reviews_scores_check", sql`(
-    ${table.cleanlinessScore} IS NULL OR (${table.cleanlinessScore} >= 1 AND ${table.cleanlinessScore} <= 5)
-  ) AND (
-    ${table.locationScore} IS NULL OR (${table.locationScore} >= 1 AND ${table.locationScore} <= 5)
-  ) AND (
-    ${table.valueScore} IS NULL OR (${table.valueScore} >= 1 AND ${table.valueScore} <= 5)
-  ) AND (
-    ${table.communicationScore} IS NULL OR (${table.communicationScore} >= 1 AND ${table.communicationScore} <= 5)
-  ) AND (
-    ${table.accuracyScore} IS NULL OR (${table.accuracyScore} >= 1 AND ${table.accuracyScore} <= 5)
+    (${table.cleanlinessScore} IS NULL OR (${table.cleanlinessScore} >= 1 AND ${table.cleanlinessScore} <= 5))
+    AND (${table.locationScore} IS NULL OR (${table.locationScore} >= 1 AND ${table.locationScore} <= 5))
+    AND (${table.valueScore} IS NULL OR (${table.valueScore} >= 1 AND ${table.valueScore} <= 5))
+    AND (${table.communicationScore} IS NULL OR (${table.communicationScore} >= 1 AND ${table.communicationScore} <= 5))
+    AND (${table.accuracyScore} IS NULL OR (${table.accuracyScore} >= 1 AND ${table.accuracyScore} <= 5))
   )`),
 }));
 

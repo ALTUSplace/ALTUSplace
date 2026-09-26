@@ -13,13 +13,9 @@ ALTER TABLE "reviews" ADD COLUMN "communication_score" smallint;
 ALTER TABLE "reviews" ADD COLUMN "accuracy_score" smallint;
 --> statement-breakpoint
 ALTER TABLE "reviews" ADD CONSTRAINT "reviews_scores_check" CHECK (
-  "cleanliness_score" IS NULL OR ("cleanliness_score" >= 1 AND "cleanliness_score" <= 5)
-) AND (
-  "location_score" IS NULL OR ("location_score" >= 1 AND "location_score" <= 5)
-) AND (
-  "value_score" IS NULL OR ("value_score" >= 1 AND "value_score" <= 5)
-) AND (
-  "communication_score" IS NULL OR ("communication_score" >= 1 AND "communication_score" <= 5)
-) AND (
-  "accuracy_score" IS NULL OR ("accuracy_score" >= 1 AND "accuracy_score" <= 5)
+  ("cleanliness_score" IS NULL OR ("cleanliness_score" >= 1 AND "cleanliness_score" <= 5))
+  AND ("location_score" IS NULL OR ("location_score" >= 1 AND "location_score" <= 5))
+  AND ("value_score" IS NULL OR ("value_score" >= 1 AND "value_score" <= 5))
+  AND ("communication_score" IS NULL OR ("communication_score" >= 1 AND "communication_score" <= 5))
+  AND ("accuracy_score" IS NULL OR ("accuracy_score" >= 1 AND "accuracy_score" <= 5))
 );
