@@ -6,6 +6,8 @@
  * office, hotel) bookings accept a national ID (CNI) or a passport.
  */
 
+import { classifyListingKind } from "@shared/listingCategory";
+
 export const KYC_DOCUMENT_TYPES = [
   "cni",
   "driving_license",
@@ -32,19 +34,17 @@ export const KYC_DOCUMENT_REQUIREMENTS: Record<BookingCategory, readonly KycDocu
   property: PROPERTY_ID_VALUES,
 };
 
-const CAR_HINTS = /car|سيارة|سيارات/i;
-const PROPERTY_HINTS = /real_estate|property|office|hotel|شقة|فيلا|مكتب|فندق|apartment|villa|room/i;
-
 /**
  * Maps a stored listing `category` value (e.g. "car", "real_estate", "office")
- * to the booking category that drives the KYC requirement. Anything that is not
- * a vehicle is treated as a stay (property).
+ * to the booking category that drives the KYC requirement.
+ *
+ * Delegated to the shared classifier so the document demanded here can never
+ * disagree with the card and route rendered on the client. The previous local
+ * copy also read `/[a-z]/i.test(raw) ? "property" : "property"`, whose two
+ * branches were identical.
  */
 export function normalizeBookingCategory(category: string | null | undefined): BookingCategory {
-  const raw = (category ?? "").trim();
-  if (CAR_HINTS.test(raw)) return "car";
-  if (raw.length === 0 || PROPERTY_HINTS.test(raw)) return "property";
-  return /[a-z]/i.test(raw) ? "property" : "property";
+  return classifyListingKind(category);
 }
 
 export function requiredDocumentsForCategory(category: string | null | undefined): readonly KycDocumentType[] {

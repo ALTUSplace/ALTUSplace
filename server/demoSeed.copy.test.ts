@@ -37,10 +37,15 @@ describe("demo seed copy", () => {
 
   it("classifies its apartment rows as property, not vehicle", () => {
     // Regression guard: the old "Shaqqa / Appartement" category string did not
-    // match PROPERTY_HINTS, so these apartments were treated as cars.
+    // match the property vocabulary, so these apartments were treated as cars.
     expect(isPropertyCategory("شقة")).toBe(true);
     expect(isCarCategory("شقة")).toBe(false);
-    expect(isCarCategory("Shaqqa / Appartement")).toBe(true); // documents the old bug
+    // Updated when the classifier moved to @shared/listingCategory. The string
+    // used to be asserted as a car to document the old deny-list bug; it now
+    // resolves to a stay, because "Appartement" is French for apartment and is
+    // in the property vocabulary. Kept because this is the string that started
+    // the bug report.
+    expect(isPropertyCategory("Shaqqa / Appartement")).toBe(true);
     expect(code).toContain('category: "شقة"');
   });
 });

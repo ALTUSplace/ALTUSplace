@@ -3,7 +3,7 @@ import { useLocation } from 'wouter';
 import { ListingItem } from '@/data/altusplace';
 import { trpc } from '@/lib/trpc';
 import { Button } from '@/components/ui/button';
-import { Filter, Star, Users, Car as CarIcon, ArrowUpDown, Award, MapPin, Scale, X, Eye, Home, Map, LayoutGrid, Search as SearchIcon } from 'lucide-react';
+import { Filter, Star, Users, Car as CarIcon, ArrowUpDown, Award, MapPin, Scale, X, Eye, Home, Map, LayoutGrid, Maximize2, Search as SearchIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { MapboxSearchMap } from '@/components/MapboxSearchMap';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -56,6 +56,7 @@ export default function Search() {
 
   // عرض الخريطة التفاعلية
   const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
+  const [mapFullscreen, setMapFullscreen] = useState(false);
   const [mapRegion, setMapRegion] = useState(() => ({
     center: resolvedCity !== 'all' ? (cityToCoords(resolvedCity) ?? MOROCCO_CENTER) : MOROCCO_CENTER,
     zoom: 7,
@@ -68,19 +69,27 @@ export default function Search() {
           lat: mapRegion.center.lat,
           lng: mapRegion.center.lng,
           radiusKm: mapRadius,
-          type: 'car',
+          // Respect the active type filter. This was hardcoded to 'car', which
+          // meant property listings could never appear on the map.
+          //
+          // VERIFIED that properties do reach the map and route to /property/:
+          // verify-map-interactions.mjs injects both cars and properties into
+          // this response and exercises a property pin end to end.
+          // NOT VERIFIED: the query itself. No database is available in the
+          // verification environment, so these params are filled in but never
+          // reach a real query — radius/price/q/paging behaviour is untested,
+          // and pageSize 200 is likewise unexercised against real rows.
+          type: typeFilter === 'all' ? undefined : (typeFilter as 'car' | 'property' | 'office'),
           maxPrice,
           q: searchQuery.trim() || undefined,
           sort: 'distance',
-          pageSize: 100,
+          pageSize: 200,
         }
       : undefined,
     { enabled: viewMode === 'map', staleTime: 15_000 },
   );
 
-  const mapMarkers = useMemo(() => (mapSearch.data?.items ?? [])
-    .filter((item) => isCarCategory(item.category))
-    .map((item) => {
+  const mapMarkers = useMemo(() => (mapSearch.data?.items ?? []).map((item) => {
     const li = toListingItem(item);
     const coords = resolveListingCoords(item.lat, item.lng, item.city) ?? MOROCCO_CENTER;
     return {
@@ -387,6 +396,17 @@ export default function Search() {
                     <Map className="w-3.5 h-3.5" />
                     {t('viewMap')}
                   </button>
+                  {viewMode === 'map' && (
+                    <button
+                      type="button"
+                      onClick={() => setMapFullscreen(true)}
+                      aria-label={t('expandMapAria')}
+                      title={t('expandMap')}
+                      className="flex min-h-9 w-9 items-center justify-center rounded-lg text-ink-secondary transition-colors hover:bg-bg-muted hover:text-ink-primary"
+                    >
+                      <Maximize2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                 </div>
                 <div className="hidden sm:block w-px h-6 bg-border-default" />
                 <ArrowUpDown className="w-4 h-4 text-accent-clay" />
@@ -468,12 +488,35 @@ export default function Search() {
                     listings={mapMarkers}
                     center={mapRegion.center}
                     radiusKm={mapRadius}
-                    onSelectListing={(listing) => setLocation(`/car/${listing.id}`)}
+                    onSelectListing={(listing) =>
+                      // Route by listing type: properties used to dead-end on
+                      // /car/<id> because the map was car-only.
+                      //
+                      // VERIFIED end to end by verify-map-interactions.mjs: the
+                      // popup CTA reaches /car/1007 and /property/1017, i.e. both
+                      // directions, against the production build.
+                      //
+                      // CAVEAT: this only routes correctly if `listing.type` is
+                      // itself right, and that comes from isCarCategory. It
+                      // used to be a deny-list, so an unlisted category (a shop
+                      // or a house) was classified as a car and landed on
+                      // /car/<id> here too. Fixed: both sides now delegate to
+                      // shared/listingCategory.ts, which matches vehicles
+                      // positively. See README "Known defect" and
+                      // tests/unit/listing-category.test.ts.
+                      setLocation(listing.type === 'property' ? `/property/${listing.id}` : `/car/${listing.id}`)
+                    }
                     onViewportChange={(viewport) => setMapRegion({ center: viewport.center, zoom: viewport.zoom })}
+                    // fullscreen / onExitFullscreen / pageSize 200 are NOT
+                    // verified: both need a database-backed result set to be
+                    // meaningful, and neither was exercised.
+                    fullscreen={mapFullscreen}
+                    onExitFullscreen={() => setMapFullscreen(false)}
                     height="640px"
                   />
                 </div>
 
+                {!mapFullscreen && (
                 <div className="space-y-4">
                   <div className="bg-bg-surface border border-border-subtle rounded-2xl p-4 space-y-3 shadow-sm">
                     <div className="flex items-center justify-between">
@@ -534,6 +577,7 @@ export default function Search() {
                     </div>
                   </div>
                 </div>
+                )}
               </div>
             )}
           </div>
