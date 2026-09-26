@@ -166,3 +166,24 @@ jobs:
             sleep 1
           done
           node scripts/verify-hero-layout.mjs
+
+      # Migration/schema parity. Replays all 19 migrations from scratch into one
+      # throwaway database, applies what drizzle/schema.ts declares into a second,
+      # and compares the two catalogs. Both live in an ephemeral postgres
+      # container that the script deletes on exit; no real database is involved.
+      #
+      # The journal gate above proves a migration is *registered*. This proves the
+      # registered migrations actually *build the schema the application reads* --
+      # the gap that produced SQLSTATE 42703 on every listing page.
+      #
+      # `continue-on-error: true` is deliberate and temporary. This gate has never
+      # been executed, because the machine it was written on has no Docker and no
+      # Postgres, so whether a clean main passes is an assumption, not a measured
+      # fact. Landing it advisory means the first real run cannot block a merge or
+      # turn the gates red on unrelated work. Once it has run green on main, delete
+      # this line to make it blocking -- that promotion is a one-line change and
+      # should happen in its own PR, with its own review, not bundled with the
+      # change that introduces the gate.
+      - name: Migration schema parity (advisory)
+        continue-on-error: true
+        run: pnpm check:schema-parity

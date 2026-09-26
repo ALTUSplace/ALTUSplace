@@ -16,6 +16,7 @@
     "db:migrate": "node scripts/migrate.mjs",
     "db:seed": "tsx server/seed/demo-listings.ts && tsx server/seed/reviews.ts",
     "check:migrations": "node scripts/check-migration-journal.mjs",
+    "check:schema-parity": "node scripts/run-migration-schema-parity.mjs",
     "prepare": "husky"
   },
   "dependencies": {
