@@ -37,6 +37,24 @@ const VEHICLES = [
   ["motorcycle", "Latin"],
   ["حافلة", "bus"],
   ["تاكسي", "taxi"],
+  // French. `voiture` and `véhicule` are the commonest French words for a car
+  // and both were missing while the rarer `berline`/`camion` were present, so a
+  // French vehicle listing fell through to the property default: property card,
+  // /property/<id>, and an identity document demanded where a driving licence
+  // is required. The seed already writes "Location voiture à Casablanca".
+  ["voiture", "French — the commonest word for a car, was missing"],
+  ["voitures", "French plural"],
+  ["véhicule", "French"],
+  ["véhicules", "French plural"],
+  ["vehicule", "French, unaccented as pasted"],
+  ["vélo", "French"],
+  ["autocar", "French coach"],
+  ["fourgon", "French van"],
+  ["citadine", "French city car"],
+  ["tracteur", "French tractor"],
+  ["motocyclette", "French motorcycle"],
+  ["trois-roues", "French three-wheeler"],
+  ["monospace", "Renault Kangoo Monospace body style"],
 ];
 
 /** Categories the platform can store that are stays. */

@@ -69,6 +69,26 @@ const VEHICLE_CATEGORIES: readonly string[] = [
   "camion",
   "berline",
   "utilitaire",
+  // French, the locale with the real hole: `voiture` and `véhicule` are the two
+  // commonest French words for a car and both were missing, so a French vehicle
+  // listing became a stay — property card, /property/<id>, and an identity
+  // document demanded where a driving licence is required. The seed already
+  // writes "Location voiture à Casablanca" and reviews say "véhicule propre".
+  "voiture",
+  "voitures",
+  "véhicule",
+  "véhicules",
+  "vehicule", // unaccented, as pasted listing text often is
+  "vélo",
+  "vélos",
+  "autocar",
+  "fourgon",
+  "citadine",
+  "tracteur",
+  "tractor",
+  "motocyclette",
+  "trois-roues",
+  "monospace",
   "مركبة",
   "شاحنة",
   "حافلة",
@@ -132,6 +152,19 @@ describe("listing category classification", () => {
     expect(isCarCategory("دار")).toBe(false);
     expect(isPropertyCategory("محل تجاري")).toBe(true);
     expect(isPropertyCategory("دار")).toBe(true);
+  });
+
+  it("keeps ambiguous body-style words off the vehicle list", () => {
+    // "Renault Break" and "monospace" are real vehicle body styles, but `break`
+    // is an ordinary English noun ("coffee break", "take a break"). Adding it
+    // would be a false positive in the one direction that stays invisible: a
+    // stay routed to /car/<id>, demanding a driving licence of a tenant.
+    // `monospace` IS matched (the Renault Kangoo Monospace is a real fleet
+    // vehicle); this test pins the decision on `break` so the next person does
+    // not add it while "completing" the French list.
+    expect(isCarCategory("break")).toBe(false);
+    expect(isCarCategory("coffee break")).toBe(false);
+    expect(isCarCategory("pause café")).toBe(false);
   });
 
   it("falls back to a stay for values it does not recognise", () => {
