@@ -270,25 +270,24 @@
   --color-accent-brass-hover: hsl(from var(--accent-warm-h) h s l / alpha);
   --color-accent-brass-soft:  hsl(from var(--accent-warm-s) h s l / alpha);
 
-  /* radius scale — sharp, architectural */
-  --radius-sm:  var(--radius-sm);
-  --radius-md:  var(--radius-md);
-  --radius-lg:  var(--radius-lg);
-  --radius-xl:  var(--radius-xl);
-  --radius-2xl: var(--radius-2xl);
-  --radius-3xl: var(--radius-3xl);
-  --radius-full: var(--radius-full);
+  /* radius scale — sharp, architectural.
+     Deliberately NOT redeclared here. Every other scale in this file reaches
+     its `:root` token through a DIFFERENTLY-NAMED var (--color-* →
+     var(--accent-primary), etc.) because a self-reference is circular: the
+     spec makes a cyclic custom property guaranteed-invalid, so
+     `--radius-xl: var(--radius-xl)` resolves to nothing and every
+     `rounded-sm … rounded-3xl` utility silently computes to 0px — which is
+     how the whole site ended up rendering with square corners.
+     Omitting the key lets Tailwind emit its own default, which the later
+     `:root` block (the real source of truth) overrides. Do not re-add. */
 
   /* shadow scale — warm, layered, matte (replaces Tailwind's cold defaults,
-     so shadow-sm / shadow-md / … never reintroduce grey-box shadows) */
-  --shadow-xs:          var(--shadow-xs);
-  --shadow-sm:          var(--shadow-sm);
-  --shadow-md:          var(--shadow-md);
-  --shadow-lg:          var(--shadow-lg);
-  --shadow-xl:          var(--shadow-xl);
-  --shadow-clay:        var(--shadow-clay);
-  --shadow-card-hover:  var(--shadow-card-hover);
-  --shadow-button:      var(--shadow-button);
+     so shadow-sm / shadow-md / … never reintroduce grey-box shadows).
+     Same rule as the radius scale above: the identically-named self-references
+     that used to sit here are gone. The `:root` block is the source of truth
+     and, being emitted later, already overrides whatever Tailwind defaults
+     apply. The aliases below are safe because each points at a differently
+     named token. */
   --shadow-soft:        var(--shadow-sm);
   --shadow-card:        var(--shadow-md);
   --shadow-header:      var(--shadow-lg);
@@ -297,8 +296,6 @@
 
   /* fonts */
   --font-sans:    var(--font-body);
-  --font-display: var(--font-display);
-  --font-serif:   var(--font-serif);
   --font-mono:    'Fraunces', ui-monospace, SFMono-Regular, Menlo, monospace;
 
   /* sidebar */
@@ -702,20 +699,10 @@
     --brand-warning:      var(--accent-amber);
     --brand-info:         var(--accent-primary);
     --brand-white:        var(--bg-surface);
-    --header-height:      var(--header-height);
-    --tap-target:         var(--tap-target);
     --shadow-header:      var(--shadow-lg);
     --duration-fast:      var(--dur-fast);
     --duration-standard:  var(--dur-standard);
     --ease-standard:      var(--ease-smooth);
-    --space-section:      var(--space-section);
-    --content-max-width:  var(--content-max-width);
-    --radius-sm:          var(--radius-sm);
-    --radius-md:          var(--radius-md);
-    --radius-lg:          var(--radius-lg);
-    --radius-xl:          var(--radius-xl);
-    --radius-2xl:         var(--radius-2xl);
-    --radius-3xl:         var(--radius-3xl);
     --shadow-soft:        var(--shadow-sm);
     --shadow-card:        var(--shadow-md);
     --shadow-blue:        var(--shadow-clay);

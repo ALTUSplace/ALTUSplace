@@ -10,6 +10,8 @@
     "check": "tsc --noEmit",
     "format": "prettier --write .",
     "test": "vitest run",
+    "serve:dist": "node scripts/serve-dist.mjs",
+    "verify:hero": "node scripts/verify-hero-layout.mjs",
     "db:push": "drizzle-kit generate && drizzle-kit migrate",
     "db:migrate": "node scripts/migrate.mjs",
     "db:seed": "tsx server/seed/demo-listings.ts && tsx server/seed/reviews.ts"
