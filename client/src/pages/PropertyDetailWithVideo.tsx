@@ -1,30 +1,36 @@
 import { useMemo, useState } from "react";
 import { Link, useLocation, useParams, useSearch } from "wouter";
-import { ArrowRight, Bath, Bed, Building2, CheckCircle2, MapPin, Share2, Video, Calendar, Lock, ShieldCheck, Ruler, Star } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Bed,
+  Building2,
+  CalendarDays,
+  Calendar,
+  Layers,
+  Lock,
+  MapPin,
+  Ruler,
+  Share2,
+  ShieldCheck,
+  Star,
+  Navigation,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { trpc } from "@/lib/trpc";
 import { calculateRentalDays, calculateRentalSubtotal } from "@/lib/pricing";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useSEO, SITE_URL } from "@/lib/seo";
 import { LISTINGS, type ListingItem } from "@/data/altusplace";
 import { toast } from "sonner";
-import { OptimizedImage } from "@/components/OptimizedImage";
 import CommentSection from "@/components/CommentSection";
 import RatingBreakdownBar, { breakdownToScores, canShowBreakdown } from "@/components/RatingBreakdownBar";
 import { PartnerVerifiedBadge } from "@/components/ui/PartnerVerifiedBadge";
 import { FavoriteButton } from "@/components/FavoriteButton";
-
-function parseAmenities(value: string | null | undefined): string[] {
-  if (!value) return [];
-  try {
-    const parsed = JSON.parse(value);
-    return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === "string") : [];
-  } catch {
-    return value.split(",").map((item) => item.trim()).filter(Boolean);
-  }
-}
+import { PropertyGallery } from "@/components/PropertyGallery";
+import { PropertyLocationMap, buildPropertyDirectionsUrl } from "@/components/PropertyLocationMap";
+import type { LatLng } from "@/lib/mapbox";
 
 type PropertyDetailShape = {
   id: number | string;
@@ -45,22 +51,19 @@ type PropertyDetailShape = {
   category: string;
   rooms: number | null;
   rentalPeriod: "daily" | "monthly" | "yearly" | null;
-  amenities: string | null;
   agencyPhone?: string | null;
   whatsappPhone?: string | null;
   /** Public WhatsApp number used for the wa.me click-to-chat CTA. */
   whatsappNumber?: string | null;
   /** Owner role drives the partner-verified badge; only `partner` accounts verify. */
   ownerRole?: string | null;
+  /** Owner-supplied coordinates. Null for most listings — the map is hidden then. */
+  lat?: number | null;
+  lng?: number | null;
 };
 
 function mapStaticToDetail(item: ListingItem): PropertyDetailShape {
   const roomsNumber = Number.parseInt(String(item.specs?.rooms ?? "").replace(/[^0-9]/g, ""), 10);
-  const amenities = Array.isArray(item.amenities) && item.amenities.length
-    ? item.amenities.join(", ")
-    : item.features.length
-      ? item.features.join(", ")
-      : null;
   return {
     id: item.id,
     title: item.title,
@@ -78,7 +81,6 @@ function mapStaticToDetail(item: ListingItem): PropertyDetailShape {
     category: item.category,
     rooms: Number.isNaN(roomsNumber) ? null : roomsNumber,
     rentalPeriod: (["daily", "monthly", "yearly"] as const).find((p) => p === item.rentalTerms?.[0]) ?? null,
-    amenities,
   };
 }
 
@@ -107,11 +109,22 @@ const RENTAL_LABEL_FR: Record<string, string> = {
 
 const isIsoDay = (value: string | null): value is string => /^\d{4}-\d{2}-\d{2}$/.test(value ?? "");
 
+/**
+ * A usable pin needs both coordinates to be finite numbers. A single null is
+ * treated as "no location" rather than silently substituting a city centroid —
+ * see the precision contract in `PropertyLocationMap`.
+ */
+function toExactCoords(lat?: number | null, lng?: number | null): LatLng | null {
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+  return { lat: lat as number, lng: lng as number };
+}
+
 export default function PropertyDetailWithVideo() {
   const params = useParams<{ id?: string }>();
   const [, setLocation] = useLocation();
   const searchParams = new URLSearchParams(useSearch());
   const { language, direction, t } = useLanguage();
+  const isRtl = direction === "rtl";
 
   // Safely parse listing ID — reject missing, non-numeric, or non-positive values
   const parsedId = Number(params.id);
@@ -124,14 +137,13 @@ export default function PropertyDetailWithVideo() {
   const summary = summaryQuery.data ?? { average: 0, count: 0 };
   const staticItem = listingId === null ? LISTINGS.find((item) => item.id === params.id && item.type !== "car") : undefined;
   const listing = (listingQuery.data ?? (staticItem ? mapStaticToDetail(staticItem) : undefined)) as PropertyDetailShape | undefined;
-  const amenities = useMemo(() => parseAmenities(listing?.amenities), [listing?.amenities]);
-  const [activeImage, setActiveImage] = useState(0);
+  const [descriptionExpanded, setDescriptionExpanded] = useState(false);
   const galleryImages = listing?.images?.length
     ? listing.images
     : listing?.imageUrl
       ? [listing.imageUrl]
       : [];
-  const imageUrl = galleryImages.length ? galleryImages[Math.min(activeImage, galleryImages.length - 1)] : "";
+  const imageUrl = galleryImages[0] ?? "";
   const title = language === "fr" && listing?.titleFr
     ? listing.titleFr
     : (listing?.title || (language === "fr" ? "Détails de l'annonce" : "تفاصيل الإعلان"));
@@ -141,6 +153,7 @@ export default function PropertyDetailWithVideo() {
     : (listing?.description || (language === "fr" ? "Aucune description fournie par le propriétaire." : "لم يضف المالك وصفاً لهذا الإعلان بعد."));
   const rawPrice = Number(listing?.pricePerDay);
   const safePrice = Number.isFinite(rawPrice) ? rawPrice : 0;
+  const exactCoords = toExactCoords(listing?.lat, listing?.lng);
   const unitLabel = useMemo(() => {
     if (staticItem?.unitLabel) return staticItem.unitLabel;
     if (!listing) return language === "fr" ? "MAD / nuit" : "درهم / ليلة";
@@ -217,15 +230,15 @@ export default function PropertyDetailWithVideo() {
   const monthlyPrice = Number(listing?.pricePerMonth) || 0;
 
   if (listingQuery.isLoading) {
-    return <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-600">{t("loading")}</div>;
+    return <div className="min-h-screen bg-background flex items-center justify-center text-ink-secondary">{t("loading")}</div>;
   }
-  
+
   // Missing or invalid listing ID — show friendly message before query
   if (listingId === null && !staticItem) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center gap-4 px-4 text-center" dir={direction}>
-        <h1 className="text-2xl font-bold text-slate-900">معرّف الإعلان غير صالح</h1>
-        <p className="text-slate-600">لم يتم العثور على معرّف الإعلان في الرابط. يرجى اختيار إعلان من صفحة البحث.</p>
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 px-4 text-center" dir={direction}>
+        <h1 className="text-2xl font-bold text-ink-primary">معرّف الإعلان غير صالح</h1>
+        <p className="text-ink-secondary">لم يتم العثور على معرّف الإعلان في الرابط. يرجى اختيار إعلان من صفحة البحث.</p>
         <Button onClick={() => setLocation("/search")}>{t("back")}</Button>
       </div>
     );
@@ -233,9 +246,9 @@ export default function PropertyDetailWithVideo() {
 
   if (listingQuery.isError || !listing) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center gap-4 px-4 text-center" dir={direction}>
-        <h1 className="text-2xl font-bold text-slate-900">{t("listingsLoadError")}</h1>
-        <p className="text-slate-600">الإعلان المطلوب غير متاح حالياً أو تم إزالته.</p>
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 px-4 text-center" dir={direction}>
+        <h1 className="text-2xl font-bold text-ink-primary">{t("listingsLoadError")}</h1>
+        <p className="text-ink-secondary">الإعلان المطلوب غير متاح حالياً أو تم إزالته.</p>
         <Button onClick={() => setLocation("/search")}>{t("back")}</Button>
       </div>
     );
@@ -247,7 +260,14 @@ export default function PropertyDetailWithVideo() {
     name: listing.title,
     description,
     image: galleryImages.length ? galleryImages : [],
-    address: { "@type": "PostalAddress", addressLocality: listing.city, addressCountry: "MA" },
+    address: {
+      "@type": "PostalAddress",
+      addressLocality: listing.city,
+      addressCountry: "MA",
+      ...(exactCoords
+        ? { geo: { "@type": "GeoCoordinates", latitude: exactCoords.lat, longitude: exactCoords.lng } }
+        : {}),
+    },
     offers: { "@type": "Offer", priceCurrency: "MAD", price: safePrice, availability: "https://schema.org/InStock" },
     ...(summary.count > 0
       ? {
@@ -295,157 +315,342 @@ export default function PropertyDetailWithVideo() {
     setLocation(`/checkout?${checkoutParams.toString()}`);
   };
 
+  const typeLabel = listing.officeType
+    ? (language === "fr" ? OFFICE_TYPE_LABEL_FR[listing.officeType] : OFFICE_TYPE_LABEL[listing.officeType]) || listing.officeType
+    : listing.propertyType || listing.category;
+  const periodLabel = listing.rentalPeriod
+    ? (language === "fr" ? RENTAL_LABEL_FR[listing.rentalPeriod] : RENTAL_LABEL[listing.rentalPeriod])
+    : null;
+
+  // Only the specs the listing actually carries. `rooms`, `area` and `floor` are
+  // the three numeric facts a renter scans for; anything missing is dropped
+  // rather than rendered as an em dash, so the row never shows empty cells.
+  const specs = [
+    listing.rooms ? { icon: Bed, label: language === "fr" ? "Chambres" : "الغرف", value: String(listing.rooms) } : null,
+    listing.area && listing.area > 0
+      ? { icon: Ruler, label: language === "fr" ? "Surface" : "المساحة", value: `${listing.area} m²` }
+      : null,
+    listing.floor !== null && listing.floor !== undefined
+      ? { icon: Layers, label: language === "fr" ? "Étage" : "الطابق", value: String(listing.floor) }
+      : null,
+  ].filter((spec): spec is { icon: typeof Bed; label: string; value: string } => spec !== null);
+
+  const BackIcon = isRtl ? ArrowRight : ArrowLeft;
+  const cityMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(listing.city)}`;
+
   return (
-    <div className="min-h-screen bg-slate-50 py-6 sm:py-10 px-4 sm:px-6" dir={direction}>
+    <div className="min-h-screen bg-background text-foreground pb-20" dir={direction}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
-      <div className="max-w-6xl mx-auto space-y-6">
-        <div className="flex items-center justify-between gap-3">
-          <Button variant="ghost" onClick={() => window.history.back()} className="gap-2 text-slate-600 px-0">
-            <ArrowRight className="w-4 h-4" /> {language === "fr" ? "Retour aux résultats" : "العودة إلى النتائج"}
+      <div className="container mx-auto px-4 space-y-8">
+        <div className="flex items-center justify-between gap-3 pt-6">
+          <Button variant="ghost" onClick={() => window.history.back()} className="gap-2 px-0 text-ink-secondary">
+            <BackIcon className="size-4" aria-hidden="true" /> {language === "fr" ? "Retour aux résultats" : "العودة إلى النتائج"}
           </Button>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => toast.success(language === "fr" ? "Lien copié" : "تم نسخ الرابط")}><Share2 className="w-4 h-4" /></Button>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => toast.success(language === "fr" ? "Lien copié" : "تم نسخ الرابط")}
+              aria-label={language === "fr" ? "Partager" : "مشاركة"}
+            >
+              <Share2 className="size-4" aria-hidden="true" />
+            </Button>
             {listingId !== null && <FavoriteButton listingId={listingId} size="md" />}
           </div>
         </div>
 
-        <header className="space-y-2">
-          <div className="flex flex-wrap items-center gap-2"><Badge className="bg-amber-500">{({ Published: "منشور", Available: "متاح", Pending: "قيد المراجعة", Unavailable: "غير متاح", Rejected: "مرفوض" } as Record<string, string>)[listing.status] ?? listing.status}</Badge>{summary.count > 0 ? (<span className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-600"><Star className="h-3.5 w-3.5 fill-amber-500 text-amber-500" />{summary.average.toFixed(1)} <span className="font-medium text-slate-500">({summary.count})</span></span>) : null}</div>
+        {/* 1 — Hero: title and price anchored together at the inline-start corner. */}
+        <header className="space-y-4">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-2xl sm:text-4xl font-bold text-slate-900">{title}</h1>
-            {listing?.ownerRole === "partner" && <PartnerVerifiedBadge />}
-          </div>
-          {language === "fr" && arabicTitle && title !== arabicTitle && <p className="text-sm text-slate-500 font-medium">{arabicTitle}</p>}
-          <p className="flex items-center gap-1.5 text-sm text-slate-600"><MapPin className="w-4 h-4 text-amber-600" />{listing.city}</p>
-        </header>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="md:col-span-2 min-h-[280px] sm:min-h-[420px] rounded-2xl overflow-hidden bg-slate-200">
-            {imageUrl ? <OptimizedImage src={imageUrl} alt={title} width={1400} height={820} widthHint={1400} sizes="100vw" className="w-full h-full min-h-[280px] sm:min-h-[420px] object-cover" /> : <div className="h-full min-h-[280px] sm:min-h-[420px] flex items-center justify-center text-slate-500">{language === "fr" ? "Aucune image fournie" : "لا توجد صورة مضافة"}</div>}
-            {galleryImages.length > 1 && (
-              <div className="flex flex-wrap justify-center gap-2 p-3">
-                {galleryImages.map((src, i) => (
-                  <button key={`${src}-${i}`} onClick={() => setActiveImage(i)} aria-label={`Photo ${i + 1}`} className="cursor-pointer">
-                    <OptimizedImage src={src} alt={`${title} — photo ${i + 1}`} width={144} height={96} className={"h-14 w-20 rounded-lg object-cover border-2 " + (i === Math.min(activeImage, galleryImages.length - 1) ? "border-amber-500" : "border-slate-200 opacity-70 hover:opacity-100")} />
-                  </button>
-                ))}
-              </div>
+            <Badge className="bg-accent-clay-soft text-accent-clay hover:bg-accent-clay-soft">
+              {({ Published: "منشور", Available: "متاح", Pending: "قيد المراجعة", Unavailable: "غير متاح", Rejected: "مرفوض" } as Record<string, string>)[listing.status] ?? listing.status}
+            </Badge>
+            {summary.count > 0 && (
+              <span className="inline-flex items-center gap-1.5 text-xs font-bold text-accent-amber">
+                <Star className="size-3.5 fill-accent-amber" aria-hidden="true" />
+                {summary.average.toFixed(1)}
+                <span className="font-medium text-ink-secondary">({summary.count})</span>
+              </span>
             )}
           </div>
-          <Card className="border-amber-200 shadow-lg shadow-amber-100/50">
-            <CardContent className="p-5 space-y-4">
-              <div>
-                <p className="text-xs text-slate-500">{t("price")}</p>
-                <p className="text-3xl font-bold text-slate-900">{safePrice.toLocaleString("fr-MA")} <span className="text-sm font-normal">{unitLabel}</span></p>
+
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <h1 className="text-3xl font-bold text-ink-primary sm:text-4xl lg:text-5xl">{title}</h1>
+            {listing?.ownerRole === "partner" && <PartnerVerifiedBadge />}
+          </div>
+
+          <p className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-ink-secondary">
+            <span className="inline-flex items-center gap-1.5">
+              <MapPin className="size-4 text-accent-clay" aria-hidden="true" />
+              {listing.city}
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <Building2 className="size-4 text-accent-clay" aria-hidden="true" />
+              {typeLabel}
+            </span>
+            {periodLabel && (
+              <span className="inline-flex items-center gap-1.5">
+                <CalendarDays className="size-4 text-accent-clay" aria-hidden="true" />
+                {periodLabel}
+              </span>
+            )}
+          </p>
+          {language === "fr" && arabicTitle && title !== arabicTitle && (
+            <p className="text-sm font-medium text-ink-secondary">{arabicTitle}</p>
+          )}
+        </header>
+
+        {/* 2 — Key specs strip, directly under the title. */}
+        {specs.length > 0 && (
+          <ul className="flex flex-wrap items-center gap-x-8 gap-y-4 border-y border-border-subtle py-4">
+            {specs.map(({ icon: Icon, label, value }) => (
+              <li key={label} className="flex items-center gap-3">
+                <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-accent-clay-soft text-accent-clay">
+                  <Icon className="size-5" aria-hidden="true" />
+                </span>
+                <span className="flex flex-col">
+                  <span className="text-xs text-ink-secondary">{label}</span>
+                  <span className="text-lg font-bold text-ink-primary">{value}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {/* 3 — Full-width gallery. */}
+        <PropertyGallery
+          images={galleryImages}
+          title={title}
+          direction={direction}
+          emptyLabel={language === "fr" ? "Aucune image fournie" : "لا توجد صورة مضافة"}
+        />
+
+        <div className="grid gap-6 lg:grid-cols-4 lg:gap-8">
+          <div className="space-y-6 lg:col-span-3">
+            {/* 4 — Description. Owner's own words, clamped until expanded. */}
+            <section aria-labelledby="property-description-heading" className="rounded-3xl border border-border-subtle bg-bg-surface p-6">
+              <h2 id="property-description-heading" className="mb-3 text-xl font-bold text-ink-primary">
+                {language === "fr" ? "Description" : "الوصف"}
+              </h2>
+              <p
+                className={
+                  descriptionExpanded
+                    ? "text-sm leading-7 text-ink-secondary"
+                    : "line-clamp-3 text-sm leading-7 text-ink-secondary"
+                }
+              >
+                {description}
+              </p>
+              {description.length > 220 && (
+                <button
+                  type="button"
+                  onClick={() => setDescriptionExpanded((value) => !value)}
+                  className="mt-2 text-sm font-bold text-accent-clay hover:underline"
+                >
+                  {descriptionExpanded
+                    ? (language === "fr" ? "Réduire" : "عرض أقل")
+                    : (language === "fr" ? "Lire la suite" : "اقرأ المزيد")}
+                </button>
+              )}
+            </section>
+
+            {/* 5 — Location. Pinned only when the owner supplied real coordinates. */}
+            <section aria-labelledby="property-location-heading" className="rounded-3xl border border-border-subtle bg-bg-surface p-6">
+              <h2 id="property-location-heading" className="mb-4 text-xl font-bold text-ink-primary">
+                {language === "fr" ? "Localisation" : "الموقع"}
+              </h2>
+              {exactCoords ? (
+                <div className="space-y-3">
+                  <PropertyLocationMap
+                    coords={exactCoords}
+                    label={language === "fr" ? `Localisation de ${title}` : `موقع ${title}`}
+                    missingTokenNotice={
+                      language === "fr"
+                        ? "La carte interactive n'est pas configurée sur cet environnement."
+                        : "الخريطة التفاعلية غير مهيأة في هذه البيئة."
+                    }
+                    openInMapsLabel={language === "fr" ? "Ouvrir dans Google Maps" : "افتح في خرائط جوجل"}
+                    loadingLabel={language === "fr" ? "Chargement de la carte…" : "جارٍ تحميل الخريطة…"}
+                    className="h-[280px] overflow-hidden rounded-2xl border border-border-subtle sm:h-[360px]"
+                  />
+                  <a
+                    href={buildPropertyDirectionsUrl(exactCoords)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex min-h-[44px] items-center gap-2 text-sm font-bold text-accent-clay hover:underline"
+                  >
+                    <Navigation className="size-4" aria-hidden="true" />
+                    {language === "fr" ? "Itinéraire" : "الاتجاهات"}
+                  </a>
+                </div>
+              ) : (
+                <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-bg-muted p-5">
+                  <p className="flex items-center gap-2 text-sm text-ink-secondary">
+                    <MapPin className="size-4 text-accent-clay" aria-hidden="true" />
+                    {language === "fr"
+                      ? `Ce bien se situe à ${listing.city}. Les coordonnées exactes n'ont pas été fournies.`
+                      : `يقع هذا العقار في ${listing.city}. لم يتم توفير الإحداثيات الدقيقة.`}
+                  </p>
+                  <a
+                    href={cityMapsUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex min-h-[44px] items-center gap-2 text-sm font-bold text-accent-clay hover:underline"
+                  >
+                    <Navigation className="size-4" aria-hidden="true" />
+                    {language === "fr" ? `Voir ${listing.city}` : `عرض ${listing.city}`}
+                  </a>
+                </div>
+              )}
+            </section>
+
+            {/* Social proof, consolidated below the fold. */}
+            {reviewListQuery.isSuccess && (
+              <section aria-labelledby="property-reviews-heading" className="rounded-3xl border border-border-subtle bg-bg-surface p-6">
+                <h2 id="property-reviews-heading" className="flex items-center gap-2 text-xl font-bold text-ink-primary">
+                  <Star className="size-5 fill-accent-amber text-accent-amber" aria-hidden="true" />
+                  {language === "fr" ? "Avis clients" : t("reviewsSectionTitle")}
+                </h2>
+                {propertyReviews.length > 0 ? (
+                  <div className="mt-4 space-y-5">
+                    <p className="flex items-center gap-2 text-sm text-accent-amber">
+                      <Star className="size-4 fill-accent-amber" aria-hidden="true" />
+                      <span className="font-bold">{summary.average.toFixed(1)}</span>
+                      <span className="text-ink-secondary">({summary.count} {language === "fr" ? "avis" : "مراجعات"})</span>
+                    </p>
+                    {listingQuery.data && canShowBreakdown(listingQuery.data.ratingBreakdown) && (
+                      <RatingBreakdownBar scores={breakdownToScores(listingQuery.data.ratingBreakdown)} />
+                    )}
+                    <div className="space-y-4">
+                      {propertyReviews.map((rev) => (
+                        <div key={rev.id} className="space-y-2 rounded-2xl bg-bg-muted p-4">
+                          <div className="flex items-center justify-between gap-3">
+                            <span className="flex flex-wrap items-center gap-2 text-sm font-bold text-ink-primary">
+                              {rev.userName || (language === "fr" ? "Utilisateur ALTUSplace" : t("reviewsAnonymousUser"))}
+                              {rev.isVerified && (
+                                /* The green wash carries the "verified" signal;
+                                   the label itself is ink-primary because
+                                   --accent-green is a recorded AA debt on light
+                                   surfaces (3.26:1 here, floor is 4.5:1). */
+                                <span className="inline-flex items-center gap-1 rounded-full bg-accent-green/10 px-2 py-0.5 text-[10px] font-bold text-ink-primary">
+                                  <ShieldCheck className="size-3" aria-hidden="true" /> {t("reviewVerifiedBadge")}
+                                </span>
+                              )}
+                            </span>
+                            <span className="shrink-0 text-xs text-ink-secondary">
+                              {new Date(rev.createdAt).toLocaleDateString(language === "fr" ? "fr-MA" : "ar-MA")}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1 text-accent-amber">
+                            {Array.from({ length: rev.rating }).map((_, i) => (
+                              <Star key={i} className="size-3.5 fill-current" aria-hidden="true" />
+                            ))}
+                          </div>
+                          <p className="text-sm leading-relaxed text-ink-secondary">{rev.comment}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="mt-4 rounded-2xl bg-bg-muted p-4 text-center text-sm text-ink-secondary">{t("reviewsNewEmpty")}</p>
+                )}
+              </section>
+            )}
+
+            {listingId !== null && <CommentSection listingId={listingId} />}
+          </div>
+
+          {/* 6 — Sticky booking panel: price, dates and CTA stay reachable. */}
+          <aside className="lg:col-span-1">
+            <div className="space-y-4 lg:sticky lg:top-28">
+              <div className="rounded-3xl border border-border-subtle bg-bg-surface p-6 shadow-card">
+                <p className="text-2xl font-bold text-ink-primary">
+                  {safePrice.toLocaleString("fr-MA")}{" "}
+                  <span className="text-sm font-normal text-ink-secondary">{unitLabel}</span>
+                </p>
                 {monthlyPrice > 0 && (
-                  <p className="mt-1 text-sm font-bold text-amber-700">
-                    أو {monthlyPrice.toLocaleString("fr-MA")} {language === "fr" ? "MAD / mois" : "درهم / شهر"}
+                  <p className="mt-1 text-sm font-bold text-accent-clay">
+                    {language === "fr" ? "ou" : "أو"} {monthlyPrice.toLocaleString("fr-MA")}{" "}
+                    {language === "fr" ? "MAD / mois" : "درهم / شهر"}
                   </p>
                 )}
               </div>
-              
-              {/* Date Selection */}
-              <div className="space-y-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
-                <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
-                  <Calendar className="w-4 h-4 text-amber-600" />
+
+              <div className="space-y-4 rounded-3xl border border-border-subtle bg-bg-surface p-6 shadow-card">
+                <div className="flex items-center gap-2 text-sm font-bold text-ink-primary">
+                  <Calendar className="size-4 text-accent-clay" aria-hidden="true" />
                   {language === "fr" ? "Sélectionner les dates" : "اختر تواريخ الحجز"}
                 </div>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="text-[10px] text-slate-500 font-semibold">{language === "fr" ? "Début" : "البداية"}</label>
+                    <label htmlFor="booking-start" className="text-xs font-semibold text-ink-secondary">
+                      {language === "fr" ? "Début" : "البداية"}
+                    </label>
                     <input
+                      id="booking-start"
                       type="date"
                       value={startDate}
                       onChange={(e) => setStartDate(e.target.value)}
-                      className="w-full bg-white border border-slate-300 rounded-lg px-2 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-amber-500"
+                      className="w-full rounded-xl border border-border-default bg-bg-muted px-3 py-2 text-sm text-ink-primary focus:border-accent-clay focus:outline-none"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] text-slate-500 font-semibold">{language === "fr" ? "Fin" : "النهاية"}</label>
+                    <label htmlFor="booking-end" className="text-xs font-semibold text-ink-secondary">
+                      {language === "fr" ? "Fin" : "النهاية"}
+                    </label>
                     <input
+                      id="booking-end"
                       type="date"
                       value={endDate}
                       onChange={(e) => setEndDate(e.target.value)}
-                      className="w-full bg-white border border-slate-300 rounded-lg px-2 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-amber-500"
+                      className="w-full rounded-xl border border-border-default bg-bg-muted px-3 py-2 text-sm text-ink-primary focus:border-accent-clay focus:outline-none"
                     />
                   </div>
                 </div>
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-500">{daysCount} {language === "fr" ? "jours" : "أيام"}</span>
-                  <span className="font-bold text-amber-600">{totalPrice.toLocaleString("fr-MA")} {language === "fr" ? "MAD" : "درهم"}</span>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-ink-secondary">
+                    {daysCount} {language === "fr" ? "jours" : "أيام"}
+                  </span>
+                  <span className="font-bold text-accent-clay">{totalPrice.toLocaleString("fr-MA")} {language === "fr" ? "MAD" : "درهم"}</span>
                 </div>
                 {rangeBlocked && (
-                  <p className="rounded-lg bg-red-50 border border-red-200 p-2 text-[11px] font-bold text-red-700" role="alert">
+                  /* Red text sits on the neutral muted surface, not on a red
+                     tint: --accent-red on a 10% red wash is only 4.14:1 in the
+                     light theme, under the 4.5:1 AA floor for small text. */
+                  <p
+                    className="rounded-xl border border-destructive/30 bg-bg-muted p-3 text-xs font-bold text-destructive"
+                    role="alert"
+                  >
                     {language === "fr" ? "Période indisponible — déjà réservée." : "هذه الفترة محجوزة أو محجوبة — اختَر فترة أخرى."}
                   </p>
                 )}
+                <Button
+                  onClick={handleProceedToCheckout}
+                  disabled={rangeBlocked}
+                  className="min-h-[44px] w-full rounded-xl font-bold"
+                >
+                  <ShieldCheck className="size-4" aria-hidden="true" />
+                  {t("bookNow")}
+                </Button>
+                <p className="flex items-center justify-center gap-1.5 text-[11px] text-ink-secondary">
+                  <Lock className="size-3 text-accent-green" aria-hidden="true" />
+                  {language === "fr" ? "Paiement sécurisé via CMI (simulation)" : "دفع آمن عبر CMI (محاكاة)"}
+                </p>
+                <p className="text-center text-[11px] leading-relaxed text-ink-secondary">
+                  {language === "fr"
+                    ? "Identité et pièces obligatoires requises avant confirmation."
+                    : "التحقق من الهوية وإرفاق الوثائق الإلزامية مطلوب قبل تأكيد الحجز."}
+                </p>
+                <p className="text-center text-[11px] text-ink-secondary">
+                  {language === "fr"
+                    ? "Le prix final est calculé côté serveur lors de la réservation."
+                    : "يُحتسب السعر النهائي على الخادم أثناء الحجز."}
+                </p>
               </div>
-
-              <Button onClick={handleProceedToCheckout} disabled={rangeBlocked} className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold py-3.5 rounded-xl shadow-lg shadow-amber-200/50 flex items-center justify-center gap-2 transition-all hover:shadow-amber-300/50 hover:scale-[1.02] active:scale-[0.98] disabled:hover:scale-100 disabled:opacity-50">
-                <ShieldCheck className="w-4 h-4" />
-                {t("bookNow")}
-              </Button>
-              <div className="flex items-center justify-center gap-1.5 text-[10px] text-slate-500">
-                <Lock className="w-3 h-3 text-emerald-600" />
-                {language === "fr" ? "Paiement sécurisé via CMI (simulation)" : "دفع آمن عبر CMI (محاكاة)"}
-              </div>
-              <p className="text-[10px] text-slate-500 text-center leading-relaxed">
-                {language === "fr" ? "Identité et pièces obligatoires requises avant confirmation." : "التحقق من الهوية وإرفاق الوثائق الإلزامية مطلوب قبل تأكيد الحجز."}
-              </p>
-              <p className="text-xs text-slate-500 text-center">{language === "fr" ? "Le prix final est calculé côté serveur lors de la réservation." : "يُحتسب السعر النهائي على الخادم أثناء الحجز."}</p>
-
-            </CardContent>
-          </Card>
+            </div>
+          </aside>
         </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {[[Building2, language === "fr" ? "Type" : "النوع", listing.officeType ? (language === "fr" ? OFFICE_TYPE_LABEL_FR[listing.officeType] : OFFICE_TYPE_LABEL[listing.officeType]) || listing.officeType : listing.category || "—"], [Bed, language === "fr" ? "Pièces" : "الغرف", listing.rooms ? String(listing.rooms) : "—"], [Bath, language === "fr" ? "Période" : "المدة", listing.rentalPeriod ? (language === "fr" ? RENTAL_LABEL_FR[listing.rentalPeriod] : RENTAL_LABEL[listing.rentalPeriod]) : "—"], [MapPin, language === "fr" ? "Ville" : "المدينة", listing.city]].map(([Icon, label, value]) => <Card key={String(label)}><CardContent className="p-4"><Icon className="w-5 h-5 text-amber-600 mb-2" /><p className="text-xs text-slate-500">{String(label)}</p><p className="font-semibold text-slate-800 truncate">{String(value)}</p></CardContent></Card>)}
-          {listing.area && listing.area > 0 && <Card><CardContent className="p-4"><Ruler className="w-5 h-5 text-amber-600 mb-2" /><p className="text-xs text-slate-500">{language === "fr" ? "Surface" : "المساحة"}</p><p className="font-semibold text-slate-800">{listing.area} m²</p></CardContent></Card>}
-          {listing.floor !== null && listing.floor !== undefined && <Card><CardContent className="p-4"><Building2 className="w-5 h-5 text-amber-600 mb-2" /><p className="text-xs text-slate-500">{language === "fr" ? "Étage" : "الطابق"}</p><p className="font-semibold text-slate-800">{listing.floor}</p></CardContent></Card>}
-        </div>
-
-        <Card><CardContent className="p-5 space-y-4"><h2 className="text-xl font-bold text-slate-900">{language === "fr" ? "Description" : "الوصف"}</h2><p className="text-slate-600 leading-7">{description}</p></CardContent></Card>
-        {reviewListQuery.isSuccess && (
-          <Card><CardContent className="p-5 space-y-4"><h2 className="flex items-center gap-2 text-xl font-bold text-slate-900"><Star className="h-5 w-5 fill-amber-500 text-amber-500" />{language === "fr" ? "Avis clients" : t("reviewsSectionTitle")}</h2>
-            {propertyReviews.length > 0 ? (
-              <>
-                <p className="flex items-center gap-2 text-sm text-amber-700"><Star className="h-4 w-4 fill-amber-500 text-amber-500" /><span className="font-bold">{summary.average.toFixed(1)}</span><span className="text-slate-500">({summary.count} {language === "fr" ? "avis" : "مراجعات"})</span></p>
-                <div className="space-y-4">
-                  {propertyReviews.map((rev) => (
-                    <div key={rev.id} className="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="flex flex-wrap items-center gap-2 text-sm font-bold text-slate-800">
-                          {rev.userName || (language === "fr" ? "Utilisateur ALTUSplace" : t("reviewsAnonymousUser"))}
-                          {rev.isVerified && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-600">
-                              <ShieldCheck className="h-3 w-3" /> {t("reviewVerifiedBadge")}
-                            </span>
-                          )}
-                        </span>
-                        <span className="text-xs text-slate-500">{new Date(rev.createdAt).toLocaleDateString(language === "fr" ? "fr-MA" : "ar-MA")}</span>
-                      </div>
-                      <div className="flex items-center gap-1 text-amber-500">
-                        {Array.from({ length: rev.rating }).map((_, i) => (<Star key={i} className="h-3.5 w-3.5 fill-current" />))}
-                      </div>
-                      <p className="text-sm text-slate-600 leading-relaxed">{rev.comment}</p>
-                    </div>
-                  ))}
-                </div>
-              </>
-            ) : (
-              <p className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-center text-sm text-slate-500">{t("reviewsNewEmpty")}</p>
-            )}
-          </CardContent></Card>
-        )}
-        {/* Rating breakdown below the review list; hidden below 3 reviews so the averages stay meaningful. */}
-        {listingQuery.data && canShowBreakdown(listingQuery.data.ratingBreakdown) && (
-          <Card><CardContent className="p-5 space-y-4">
-            <RatingBreakdownBar scores={breakdownToScores(listingQuery.data.ratingBreakdown)} />
-          </CardContent></Card>
-        )}
-        <Card><CardContent className="p-5 space-y-4"><h2 className="text-xl font-bold text-slate-900">{language === "fr" ? "Équipements et visite vidéo" : "التجهيزات وجولة الفيديو"}</h2>{amenities.length ? <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">{amenities.map((item) => <div key={item} className="flex items-center gap-2 text-sm text-slate-700"><CheckCircle2 className="w-4 h-4 text-emerald-600" />{item}</div>)}</div> : <p className="text-sm text-slate-500">{language === "fr" ? "Aucun équipement renseigné." : "لم تُسجل تجهيزات لهذا الإعلان بعد."}</p>}<div className="border-t pt-4 flex items-center gap-3 text-sm text-slate-500"><Video className="w-5 h-5 text-slate-400" />{language === "fr" ? "Aucune vidéo vérifiée n’est disponible pour cette annonce." : "لا يوجد فيديو موثق متاح لهذا الإعلان حالياً."}</div></CardContent></Card>
-        {listingId !== null && <CommentSection listingId={listingId} />}
       </div>
     </div>
   );
