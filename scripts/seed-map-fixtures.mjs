@@ -14,7 +14,7 @@
  *     but they still cluster when the map is zoomed out to the country level
  * Mixes cars and properties so type-aware marker routing is exercised.
  */
-import { readFileSync } from "node:fs";
+import { isCarCategory } from "../shared/listingCategory.ts";
 
 // City anchors matching client/src/lib/mapbox.ts cityToCoords.
 const CITIES = [
@@ -35,7 +35,6 @@ const CAR_MODELS = [
   "Dacia Logan",
   "Peugeot 301",
 ];
-const CAR_CATEGORIES = ["سيارة", "car", "سيارة مدينة"];
 const PROP_TITLES = [
   "شقة فاخرة وسط المدينة",
   "ريزيدنس بإطلالة على البحر",
@@ -43,15 +42,21 @@ const PROP_TITLES = [
   "شقة اقتصادية للكراء",
 ];
 /*
- * Categories are restricted to values that client/src/lib/categories.ts actually
- * classifies correctly, verified with scripts/probe-category-classifier.mjs.
+ * Categories are checked against the app's real classifier before the suite
+ * runs (see findMisclassifiedFixtures), so a fixture can never be routed for the
+ * wrong reason.
  *
- * `محل تجاري` (shop) and `دار` (house) are deliberately NOT used: isCarCategory
- * is a deny-list, so any category missing from PROPERTY_HINTS is treated as a
- * car and would route to /car/<id>. Including them would have made the
- * type-aware-routing checks pass or fail for reasons unrelated to the map.
+ * `محل تجاري` (shop) and `دار` (house) used to be excluded from this list,
+ * because `isCarCategory` was a deny-list and treated any category missing from
+ * its property hints as a car — so both would have opened `/car/<id>` and made
+ * the type-aware-routing assertions pass for the wrong reason. The classifier
+ * now lives in `shared/listingCategory.ts` and recognises both, so they are
+ * included on purpose: they are the two strings from the original bug report and
+ * this suite is now the end-to-end guard that a property marker routes to
+ * `/property/<id>`.
  */
-const PROP_CATEGORIES = ["شقة", "property", "مكتب"];
+export const CAR_CATEGORIES = ["سيارة", "car", "سيارة مدينة", "سيدان عائلية / Sedan"];
+export const PROP_CATEGORIES = ["شقة", "property", "مكتب", "محل تجاري", "دار", "استوديو"];
 
 /** Mulberry32 — small deterministic PRNG so fixtures are reproducible. */
 function rng(seed) {
@@ -138,29 +143,34 @@ export function tRPCSearchBody(items) {  return JSON.stringify([
 export const FIXTURE_CITY_NAMES = CITIES.map((c) => c.name);
 
 /**
- * Re-implements the app's own classifier by extracting PROPERTY_HINTS straight
- * from client/src/lib/categories.ts, so fixtures can be validated against the
- * real rule instead of a hand-copied approximation.
+ * Uses the app's real classifier, imported from `shared/listingCategory.ts`
+ * (Node strips the types) rather than re-extracted from a source file, because a
+ * copy of the rule only tests the copy — and because that extraction broke the
+ * moment the patterns moved out of `client/src/lib/categories.ts`.
  *
- * This exists because isCarCategory is a deny-list
- * (`category === 'car' || !PROPERTY_HINTS.test(category)`): a fixture whose
- * category is missing from the hints is silently treated as a car, which would
- * route it to /car/<id> and make the type-aware-routing assertions pass for the
- * wrong reason. Written against the file rather than inlined because PowerShell
- * mangles Arabic literals, which would yield a false answer.
+ * Kept as a function so a caller can point it at another root when checking
+ * fixtures from a different tree.
  */
-export function loadAppCategoryClassifier(clientRoot = "client") {
-  const src = readFileSync(`${clientRoot}/src/lib/categories.ts`, "utf8");
-  const match = src.match(/PROPERTY_HINTS\s*=\s*\/([\s\S]*?)\/i/);
-  if (!match) throw new Error("could not extract PROPERTY_HINTS from categories.ts");
-  const hints = new RegExp(match[1], "i");
-  return (category) => category === "car" || !hints.test(category);
+export function loadAppCategoryClassifier() {
+  return isCarCategory;
 }
 
-/** Returns fixtures whose real classification disagrees with their intent. */
+/**
+ * Returns fixtures whose real classification disagrees with their intent.
+ *
+ * Intent is set membership of the category lists above rather than a regex over
+ * the category text, so adding a category shows up here as a real disagreement
+ * instead of being quietly redefined by the same expression being tested.
+ */
 export function findMisclassifiedFixtures() {
-  const isCar = loadAppCategoryClassifier();
+  const cars = new Set(CAR_CATEGORIES);
+  const stays = new Set(PROP_CATEGORIES);
   return buildMapFixtures()
-    .map((f) => ({ id: f.id, category: f.category, isCar: isCar(f.category) }))
-    .filter((f) => f.isCar !== /سيارة|car/.test(f.category));
+    .map((f) => ({
+      id: f.id,
+      category: f.category,
+      intendedCar: cars.has(f.category),
+      isCar: isCarCategory(f.category),
+    }))
+    .filter((f) => f.intendedCar !== f.isCar || (!f.intendedCar && !stays.has(f.category)));
 }

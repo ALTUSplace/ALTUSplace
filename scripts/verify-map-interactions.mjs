@@ -18,6 +18,7 @@ import {
   buildMapFixtures,
   tRPCSearchBody,
   findMisclassifiedFixtures,
+  loadAppCategoryClassifier,
 } from "./seed-map-fixtures.mjs";
 
 const BASE_URL = process.env.BASE_URL ?? "http://localhost:3000";
@@ -29,7 +30,11 @@ function record(name, pass, detail) {
 }
 
 const fixtures = buildMapFixtures();
-const carCount = fixtures.filter((f) => /سيارة|car/.test(f.category)).length;
+// Counted with the app's own classifier. A hand-rolled `/سيارة|car/` heuristic
+// undercounted by the 7 `سيدان عائلية / Sedan` fixtures, which name no vehicle
+// word in either script but are submitted by the car form.
+const isCarFixture = loadAppCategoryClassifier();
+const carCount = fixtures.filter((f) => isCarFixture(f.category)).length;
 const propertyCount = fixtures.length - carCount;
 console.log(
   `fixtures: ${fixtures.length} listings (${carCount} car / ${propertyCount} property) across 5 cities\n`,
@@ -44,7 +49,7 @@ record(
   misclassified.length === 0,
   misclassified.length
     ? `${misclassified.length} mismatched, e.g. id=${misclassified[0].id} "${misclassified[0].category}" -> ${misclassified[0].isCar ? "car" : "property"}`
-    : `${fixtures.length} fixtures verified against categories.ts`,
+    : `${fixtures.length} fixtures verified against shared/listingCategory.ts`,
 );
 
 const browser = await chromium.launch();

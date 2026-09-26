@@ -103,10 +103,10 @@ No database is reachable here (`getDb()` returns `null`; the server logs
 - **Scale.** 56 synthetic points is not a real city. Mapbox's clustering is
   trusted beyond that, not measured.
 
-### Known defect found while testing — not fixed
+### Known defect found while testing — since fixed
 
-`client/src/lib/categories.ts:14` classifies a category as a **car** unless it
-matches `PROPERTY_HINTS`:
+`client/src/lib/categories.ts` classified a category as a **car** unless it
+matched `PROPERTY_HINTS`:
 
 ```ts
 export function isCarCategory(category: string): boolean {
@@ -114,14 +114,44 @@ export function isCarCategory(category: string): boolean {
 }
 ```
 
-Because that is a deny-list, any unlisted category is treated as a vehicle.
-`محل تجاري` (shop) and `دار` (house) therefore resolve to `car` and open
-`/car/<id>` — including through the map popup, which undermines the
-type-aware routing above. `server/routers.ts` mirrors this via
-`normalizeBookingCategory`, so a real fix needs both sides plus test updates.
-It is pre-existing, left untouched here because the blast radius covers every
-listing surface (cards, search, dashboard, checkout) rather than the map alone.
-`scripts/probe-category-classifier.mjs` reproduces it.
+Because that was a deny-list, any unlisted category was treated as a vehicle.
+`محل تجاري` (shop) and `دار` (house) resolved to `car` and opened
+`/car/<id>` — including through the map popup, which undermined the type-aware
+routing above.
+
+The client was also **not** mirroring the server, despite the comment claiming
+so. `normalizeBookingCategory` used the opposite default ("car only if it looks
+like one"), so the two disagreed on every value outside the intersection of their
+word lists, and the server had the mirror-image bug: `سيدان عائلية / Sedan`, a
+real option on the `AddCar` form, matched neither word list and was treated as a
+stay.
+
+Both now delegate to one module, `shared/listingCategory.ts`, which matches
+vehicles positively and defaults to a stay:
+
+- vehicles are matched by name (`سيارة`, `سيدان`, `suv`, `sedan`, `van`, …) with
+  Latin terms word-bounded so `car` does not match inside `caravane`;
+- every unrecognised value is a stay, so a missed *vehicle* word is the only
+  remaining failure mode, and it is a visible one;
+- the default is a stay because it is what decides which identity document
+  `normalizeBookingCategory` demands — an unknown value must fail towards the
+  requirement that asks for proof.
+
+Two traps worth knowing about, both covered by tests:
+
+- Arabic `ة` is written as U+0629 *or* U+062A in real data. They render
+  identically, and a regex pinned to one silently misses the other — which is
+  how `سيارة` came to miss half the car catalogue. The word lists use
+  `[\u0629\u062A]` instead of a literal character.
+- The car form stores labels, not the canonical value `car`, so a word list
+  built only from seed data is not enough.
+
+`tests/unit/listing-category.test.ts` is the contract: it pins the vocabulary,
+parses `AddCar.tsx` and the seed/demo/dashboard sources so a new category cannot
+be added without classifying it, and asserts the client and server agree on
+every fixture. `scripts/probe-category-classifier.mjs` runs the same check
+standalone, and the map interaction suite now includes `محل تجاري` and `دار` as
+fixtures so the original misroute is guarded end to end.
 
 ## 📜 Legal
 

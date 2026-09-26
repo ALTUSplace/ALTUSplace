@@ -497,11 +497,13 @@ export default function Search() {
                       // directions, against the production build.
                       //
                       // CAVEAT: this only routes correctly if `listing.type` is
-                      // itself right, and that comes from isCarCategory, which is
-                      // a deny-list — an unlisted category (e.g. a shop or a
-                      // house) is classified as a car and will land on /car/<id>
-                      // here too. See README "Known defect" and
-                      // scripts/probe-category-classifier.mjs.
+                      // itself right, and that comes from isCarCategory. It
+                      // used to be a deny-list, so an unlisted category (a shop
+                      // or a house) was classified as a car and landed on
+                      // /car/<id> here too. Fixed: both sides now delegate to
+                      // shared/listingCategory.ts, which matches vehicles
+                      // positively. See README "Known defect" and
+                      // tests/unit/listing-category.test.ts.
                       setLocation(listing.type === 'property' ? `/property/${listing.id}` : `/car/${listing.id}`)
                     }
                     onViewportChange={(viewport) => setMapRegion({ center: viewport.center, zoom: viewport.zoom })}
