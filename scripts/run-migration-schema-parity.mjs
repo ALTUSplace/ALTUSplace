@@ -121,7 +121,18 @@ function main() {
     log("side 1/2: replaying all migrations from scratch (scripts/migrate.mjs)");
     runOrFail(process.execPath, ["scripts/migrate.mjs"], {
       cwd: ROOT,
-      env: { ...process.env, DATABASE_URL: migratedUrl },
+      env: {
+        ...process.env,
+        DATABASE_URL: migratedUrl,
+        // Pinned explicitly, not merely inherited. migrate.mjs prefers
+        // MIGRATION_DATABASE_URL over DATABASE_URL, so without this a
+        // developer's own migration URL would silently take over and this
+        // "ephemeral" replay would run against a real database.
+        MIGRATION_DATABASE_URL: migratedUrl,
+        // Cleared so the run always takes the strict path. Inheriting an
+        // override would mean CI and a local run exercise different code.
+        MIGRATION_ALLOW_TRANSACTION_POOLER: undefined,
+      },
     });
 
     // ---- side 2: apply what drizzle/schema.ts declares ----------------------
