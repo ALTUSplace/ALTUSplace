@@ -56,6 +56,28 @@ const VEHICLE_HINTS = new RegExp(
     String.raw`\b(?:suv|4x4|sedans?|hatchbacks?|coup(?:e|é)s?|convertibles?|cabriolets?` +
       String.raw`|pick[\s-]?ups?|minivans?|vans?|trucks?|lorries?|bus(?:es)?|minibuses|taxis?` +
       String.raw`|motorcycles?|motos?|scooters?|bikes?|bicycles?|camions?|utilitaires?|berlines?)\b`,
+    // French vehicle vocabulary, which was the one locale with a real hole.
+    //
+    // `voiture` and `véhicule` are the two commonest French words for a car and
+    // both were absent, while the rarer `berline`, `utilitaire` and `camion`
+    // were present — so French vehicle listings fell through to the property
+    // default. That is the expensive direction of the failure: the listing
+    // rendered a property card, linked to `/property/<id>` instead of
+    // `/car/<id>`, and `normalizeBookingCategory` asked for a national ID or
+    // passport where a driving licence is required, blocking the booking. It is
+    // not hypothetical either — the demo seed already writes "Location voiture
+    // à Casablanca" and reviews already say "véhicule propre".
+    //
+    // Accents are spelled out as alternatives rather than folded into a class,
+    // because listing text is pasted both with and without them, and the same
+    // applies to the plural ending.
+    //
+    // `break` is deliberately NOT added, although "Renault Break" is a real
+    // body style: it is an ordinary English noun in every other context, and a
+    // false positive here is the one failure mode that cannot be seen — it
+    // routes a stay to `/car/<id>` and demands a licence of a tenant.
+    String.raw`\b(?:voitures?|v[ée]hicules?|v[ée]los?|autocars?|fourgons?|citadines?` +
+      String.raw`|tracteurs?|tractors?|motocyclettes?|trois[\s-]?roues?|monospaces?)\b`,
     // سيارة / سيارات, plus the colloquial سياجه written with a bare ha.
     // The singular ends in ة (two code points, see `T`) while the plural appends
     // ا + ت, so they are separate alternatives rather than one optional letter.
