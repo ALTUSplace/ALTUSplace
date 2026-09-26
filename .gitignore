@@ -116,3 +116,8 @@ client/public/__manus__/version.json
 .vercel
 .env*
 .aider*
+
+# Git hooks (husky). `.husky/pre-commit` is tracked and shared with the team;
+# `.husky/_/` is the generated per-clone shim that `core.hooksPath` points at,
+# so it must never be committed.
+.husky/_/

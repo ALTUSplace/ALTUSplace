@@ -1,0 +1,9 @@
+# Hook files must be LF.
+#
+# This repo has core.autocrlf=true on Windows, which checks hooks out with CRLF.
+# git then executes .husky/pre-commit through /bin/sh, where a trailing \r turns
+# the script path into ".../pre-commit\r" and the hook dies with "not found" --
+# silently, because git treats a missing hook as "no hook configured". That is
+# the same silent-failure class as the bug this hook exists to catch, so the line
+# endings are pinned rather than left to each developer's git config.
+.husky/pre-commit text eol=lf
