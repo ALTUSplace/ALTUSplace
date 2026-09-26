@@ -315,3 +315,43 @@ export function matchListingCity(itemCity: string | null | undefined, city: stri
   if (a === b) return true;
   return a.includes(b) || b.includes(a);
 }
+
+/**
+ * Curated "popular cities" shortlist pinned above the regional groups in the
+ * Navbar city dropdown.
+ *
+ * IMPORTANT — this is an EDITORIAL list, not a ranking. The original brief asked
+ * for "the top 10 most requested cities based on booking data volume", but no
+ * bookings-by-city aggregate exists in this codebase: the only booking `groupBy`
+ * is by `listings.ownerId` for the agency dashboard, and `listingAnalyticsEvents`
+ * carries no city dimension. Rather than invent a metric and imply it is
+ * measured, the order below is a deliberate editorial choice (large economic
+ * hubs first). Every entry is a canonical slug from MOROCCO_CITY_SLUGS, so the
+ * catalogue above stays the single source of truth and no city is duplicated.
+ *
+ * If real demand data is ever wired up, replace this constant with the fetched
+ * ranking — do not "correct" the order against a metric that isn't collected.
+ */
+export const POPULAR_CITY_SLUGS = [
+  'casablanca', // الدار البيضاء — economic hub
+  'rabat', // الرباط — economic hub
+  'marrakech', // مراكش — tourism hub
+  'tangier', // طنجة — port / coastal
+  'agadir', // أغادير — coastal resort
+  'fez', // فاس — inland cultural
+  'meknes', // مكناس — inland
+  'oujda', // وجدة — eastern regional hub
+  'tetouan', // تطوان — coastal
+  'el-jadida', // الجديدة — coastal
+] as const;
+
+export type PopularCitySlug = (typeof POPULAR_CITY_SLUGS)[number];
+
+/**
+ * Popular shortlist resolved to canonical Arabic city names, skipping any slug
+ * that is not in the catalogue (defensive: keeps a typo here from shipping an
+ * option that resolves to no city).
+ */
+export const POPULAR_MOROCCO_CITIES: readonly string[] = POPULAR_CITY_SLUGS.map(
+  (slug) => SLUG_TO_CITY[slug]
+).filter((city): city is string => Boolean(city));

@@ -32,6 +32,9 @@ import { Button } from "@/components/ui/button";
 import { useTheme } from "@/contexts/ThemeContext";
 import { Language, useLanguage } from "@/contexts/LanguageContext";
 import { useCurrency, Currency } from "@/contexts/CurrencyContext";
+import { NavbarCitySelect } from "@/components/NavbarCitySelect";
+import { NavbarMobileCitySelect } from "@/components/NavbarMobileCitySelect";
+import { RegionalHighlights } from "@/components/RegionalHighlights";
 const CMIPaymentModal = lazy(() => import("./CMIPaymentModal").then((module) => ({ default: module.CMIPaymentModal })));
 const WhatsAppNotificationModal = lazy(() => import("./WhatsAppNotificationModal").then((module) => ({ default: module.WhatsAppNotificationModal })));
 const TwoFactorAuthModal = lazy(() => import("./TwoFactorAuthModal").then((module) => ({ default: module.TwoFactorAuthModal })));
@@ -423,6 +426,8 @@ export default function Navbar() {
               <Handshake className="h-4 w-4" />
               <span>{t("partnerJoinCta")}</span>
             </Link>
+            <NavbarCitySelect className="hidden xl:block" />
+
             <NavSelector
               icon={Coins}
               title={t("chooseCurrency")}
@@ -447,24 +452,47 @@ export default function Navbar() {
               onSelect={(value) => selectLanguage(value as Language)}
             />
 
-            <button
-              type="button"
-              className="b2-icon-button border border-border-subtle bg-bg-surface text-ink-secondary hover:bg-bg-muted hover:text-ink-primary"
-              onClick={() => setTwoFaModalOpen(true)}
-              title={t("securityTwoFactor")}
-              aria-label={t("securityTwoFactor")}
-            >
-              <Shield className="h-4 w-4 text-accent-clay" />
-            </button>
-            <button
-              type="button"
-              className="b2-icon-button border border-border-subtle bg-bg-surface text-ink-secondary hover:bg-bg-muted hover:text-ink-primary"
-              onClick={() => setCmiModalOpen(true)}
-              title={t("cmiPayment")}
-              aria-label={t("cmiPortal")}
-            >
-              <CreditCard className="h-4 w-4 text-accent-clay" />
-            </button>
+            {/* Secondary controls, hidden below xl.
+                The header row is a single non-wrapping flex line: at 768–1023px
+                this cluster plus the logo needs ~813px, which pushed the
+                hamburger (the only way into the mobile menu, and therefore the
+                only way into the mobile city selector) completely off-screen at
+                left: -45. Hiding these two recovers 104px, which is more than
+                the ~61px deficit, and loses nothing: both are already offered
+                inside the mobile panel as full-width rows (see the twoFaModal
+                and cmiModal triggers below).
+
+                Wrapped in a div rather than given `hidden xl:inline-flex`
+                because `.b2-icon-button` declares `display: inline-flex` in
+                the same `utilities` cascade layer *after* Tailwind generates
+                `.hidden`, so it would win on source order and the utility
+                would silently do nothing. A plain div has no competing rule.
+
+                VERIFIED by scripts/verify-navbar-clipping.mjs: no header
+                control is clipped at 375/768/1024/1280px, and
+                verify-city-selector-responsive.mjs asserts the menu button is
+                fully on-screen at every width as a standing regression guard —
+                it is the only route into the mobile city selector. */}
+            <div className="hidden items-center gap-2 xl:flex">
+              <button
+                type="button"
+                className="b2-icon-button border border-border-subtle bg-bg-surface text-ink-secondary hover:bg-bg-muted hover:text-ink-primary"
+                onClick={() => setTwoFaModalOpen(true)}
+                title={t("securityTwoFactor")}
+                aria-label={t("securityTwoFactor")}
+              >
+                <Shield className="h-4 w-4 text-accent-clay" />
+              </button>
+              <button
+                type="button"
+                className="b2-icon-button border border-border-subtle bg-bg-surface text-ink-secondary hover:bg-bg-muted hover:text-ink-primary"
+                onClick={() => setCmiModalOpen(true)}
+                title={t("cmiPayment")}
+                aria-label={t("cmiPortal")}
+              >
+                <CreditCard className="h-4 w-4 text-accent-clay" />
+              </button>
+            </div>
             <button
               type="button"
               className="b2-icon-button border border-accent-green/30 bg-accent-green-s text-accent-green hover:bg-accent-green/15"
@@ -594,6 +622,8 @@ export default function Navbar() {
         </div>
       </header>
 
+      <RegionalHighlights />
+
       <Suspense fallback={null}>
         <CMIPaymentModal
           isOpen={cmiModalOpen}
@@ -635,6 +665,8 @@ export default function Navbar() {
             </nav>
 
             <div className="mt-3 space-y-4 border-t border-border-subtle pt-4">
+              <NavbarMobileCitySelect onSelected={() => setMobileMenuOpen(false)} />
+
               <div>
                 <p className="mb-2 flex items-center gap-1.5 text-xs font-bold text-ink-secondary"><Coins className="h-3.5 w-3.5 text-accent-clay" /> {t("currency")}</p>
                 <div className="b2-segmented-control w-full">
