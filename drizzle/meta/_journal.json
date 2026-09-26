@@ -127,6 +127,13 @@
       "when": 1791200000000,
       "tag": "0017_add_agency_whatsapp_number",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1791300000000,
+      "tag": "0020_detailed_ratings",
+      "breakpoints": true
     }
   ]
 }
