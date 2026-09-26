@@ -16,6 +16,12 @@
 #     All four honour BASE_URL, so they can target the served build as-is.
 #   - Coverage reporting, and a required-checks branch protection rule so this
 #     workflow is actually enforced rather than merely informative.
+#
+# The actions are pinned to current majors (checkout v7, setup-node v7,
+# pnpm/action-setup v6) rather than the older v4s: the v4s declare a Node 20
+# runtime, which GitHub has deprecated and now force-runs on Node 24, so they
+# emit a warning on every run. Do not downgrade them without checking that
+# warning is gone.
 
 name: ci
 
@@ -38,20 +44,23 @@ jobs:
     timeout-minutes: 30
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # Reads the exact pnpm version from the `packageManager` field in
       # package.json (pnpm@10.4.1) and activates it through corepack, so CI can
       # never silently drift onto a different package manager than local dev.
       # No `version:` input on purpose — pinning it here as well would be a
       # second place to update, and this action fails if the field is absent.
-      - uses: pnpm/action-setup@v4
+      #
+      # Its own `cache` input is left at its default (false): caching is done
+      # once, by setup-node below, rather than by both actions.
+      - uses: pnpm/action-setup@v6
         with:
           run_install: false
 
       # 24 to match local dev (v24.19.0). `cache: pnpm` keys the dependency
       # layer on the resolved pnpm store and the committed lockfile.
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: "24"
           cache: "pnpm"
