@@ -169,7 +169,7 @@ export default function Home() {
               id="hero-heading"
               className="mt-5 max-w-3xl font-display text-[clamp(1.75rem,5.5vw,3.5rem)] font-bold leading-[1.15] text-white text-balance"
             >
-              {t('heroTitlePrefix')} {t('heroTitleCars')}
+              {t('heroTitlePrefix')} {t('heroTitleCars')} {t('heroTitleProperties')}
               {t('heroTitleSuffix')}
             </h1>
 
