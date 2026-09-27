@@ -29,6 +29,44 @@ function record(name, pass, detail) {
   console.log(`${pass ? "PASS" : "FAIL"}  ${name}${detail ? ` — ${detail}` : ""}`);
 }
 
+/**
+ * Drives the page to a genuinely scrolled-down offset and returns the settled
+ * scrollY.
+ *
+ * The `behavior: "instant"` is load-bearing: index.css sets
+ * `html { scroll-behavior: smooth }`, and the two-argument
+ * `window.scrollTo(0, y)` form resolves `behavior` from that CSS, so it starts
+ * an animation and returns before the page has moved. Reading scrollY straight
+ * after it reads 0 and silently turns the scroll assertion below into a no-op.
+ */
+async function scrollDown(page) {
+  await page.evaluate(() => window.scrollTo({ top: 1e6, behavior: "instant" }));
+  await page.waitForFunction(() => window.scrollY > 100, null, { timeout: 5000 }).catch(() => {});
+  return page.evaluate(() => window.scrollY);
+}
+
+/**
+ * Reads the offset once the picker's smooth scroll has arrived at the top.
+ *
+ * Deliberately waits for the destination rather than for the offset to look
+ * "stable". The picker's scroll is deferred by two animation frames, and the
+ * route change first clamps the offset to the max scroll of the shorter
+ * /search page — so the pre-scroll position sits unchanged for several frames
+ * before the animation begins. A stability heuristic returns that stale value
+ * and reports a false failure; waiting for the top simply times out instead,
+ * which is the correct outcome for a picker that never scrolls.
+ *
+ * AT_TOP_PX tolerates the 1-2px the animation's last frame can leave behind.
+ */
+const AT_TOP_PX = 4;
+
+async function settledScrollY(page) {
+  await page
+    .waitForFunction((top) => window.scrollY <= top, AT_TOP_PX, { timeout: 6000 })
+    .catch(() => {});
+  return page.evaluate(() => window.scrollY);
+}
+
 const browser = await chromium.launch();
 
 for (const viewport of WIDTHS) {
@@ -80,8 +118,39 @@ for (const viewport of WIDTHS) {
     const groupCount = await page.locator('[role="group"]').count();
     record(`[${viewport.width}px] dropdown opens with groups`, listboxVisible && groupCount === 13, `${groupCount} groups`);
     await page.keyboard.press("Escape");
+
+    // Choosing a city must return the user to the top of the results page. The
+    // picker hangs off a sticky navbar and is reachable from deep in the list,
+    // so without an explicit scroll the view stays stranded where it was.
+    // Record scrollY at the instant of the click, not before it. Playwright
+    // scrolls a target into view before clicking, so reading the offset
+    // beforehand would let a "pass" come from Playwright's own auto-scroll
+    // rather than from the picker.
+    const preScrollY = await scrollDown(page);
+    await page.evaluate(() => {
+      window.__scrollYAtPick = null;
+      document.addEventListener("click", () => { window.__scrollYAtPick = window.scrollY; }, { capture: true, once: true });
+    });
+    await page.locator(DESKTOP_TRIGGER).first().click();
+    // First option of the pinned "popular cities" group is deterministic.
+    await page.locator('[role="listbox"] [role="option"]').first().click();
+    await page.waitForURL(/city=casablanca/, { timeout: 10000 });
+    const atPickY = await page.evaluate(() => window.__scrollYAtPick);
+    const afterY = await settledScrollY(page);
+    const scrollable = typeof atPickY === "number" && atPickY > 100;
+    record(
+      `[${viewport.width}px] select scrolls page to top`,
+      !scrollable || afterY <= AT_TOP_PX,
+      !scrollable
+        ? `no scrolled-down position at click time (pre=${preScrollY}px, atClick=${atPickY}), check inconclusive`
+        : `${atPickY}px at click -> ${afterY}px`,
+    );
   } else {
     record(`[${viewport.width}px] hamburger visible`, hamburgerVisible, `hamburger ${hamburgerVisible ? "visible" : "hidden"}`);
+
+    // Establish a scrolled-down position BEFORE opening the menu: the overlay
+    // locks document.body scrolling while it is open.
+    const preScrollY = await scrollDown(page);
 
     // Mobile/tablet: open the menu, expand the city accordion.
     await page.locator(HAMBURGER).first().click();
@@ -120,6 +189,16 @@ for (const viewport of WIDTHS) {
       await page.waitForURL(/city=agadir/, { timeout: 10000 });
       const menuClosed = (await page.locator("#mobile-navigation").count()) === 0;
       record(`[${viewport.width}px] select navigates + closes menu`, menuClosed, page.url());
+
+      // Same expectation as the desktop path, and the harder case: the scroll
+      // is issued in the same tick that releases the overlay's body scroll lock,
+      // so it has to be deferred to be honoured at all.
+      const postScrollY = await settledScrollY(page);
+      record(
+        `[${viewport.width}px] select scrolls page to top`,
+        preScrollY < 100 || postScrollY <= AT_TOP_PX,
+        preScrollY < 100 ? `page not scrollable here (${preScrollY}px), check inconclusive` : `${preScrollY}px -> ${postScrollY}px`,
+      );
     }
 
     // The city list must stay inside the panel at this width.

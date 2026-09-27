@@ -4,6 +4,7 @@ import { Check, ChevronDown, MapPin } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { cityFromSlug } from "@/data/moroccoCities";
 import { useCityGroups, type CityOption } from "@/hooks/useCityGroups";
+import { scrollToPageTop } from "@/lib/scroll";
 
 type NavbarCitySelectProps = {
   className?: string;
@@ -79,6 +80,10 @@ export function NavbarCitySelect({ className }: NavbarCitySelectProps) {
       // ?city=<slug> is what Search.tsx and the /locations pages already parse.
       setLocation(`/search?city=${encodeURIComponent(option.slug)}`);
       close();
+      // Choosing a city is a "take me there" action, so the view has to follow
+      // it. The scroll is deferred past close()'s refocus so the trigger
+      // cannot scroll itself back into view afterwards.
+      scrollToPageTop();
     },
     [close, setLocation]
   );

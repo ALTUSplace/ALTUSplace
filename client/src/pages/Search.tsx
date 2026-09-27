@@ -24,10 +24,12 @@ import { useSEO } from '@/lib/seo';
 const listingRoute = (item: ListingItem) => (item.type === 'property' ? `/property/${item.id}` : `/car/${item.id}`);
 
 export default function Search() {
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const { language, t, direction } = useLanguage();
   const favorites = useFavorites();
-  const searchParams = new URLSearchParams(window.location.search);
+  // Re-parsed whenever the route changes, not on every render, so that filters
+  // pushed in by the navbar city pickers are picked up.
+  const searchParams = useMemo(() => new URLSearchParams(window.location.search), [location]);
 
   const rawCity = searchParams.get('city') || 'all';
   const resolvedCity = resolveCitySlug(rawCity);
@@ -47,6 +49,20 @@ export default function Search() {
     startDate: startDateParam,
     endDate: endDateParam,
   });
+
+  // Wouter reuses this component across /search navigations, so the useState
+  // initializers above only run on a cold mount. Without this the navbar city
+  // pickers' ?city=<slug> was silently ignored whenever the user was already on
+  // /search: the URL changed but the grid kept showing the previous city. Push
+  // the URL's city into state whenever it actually changes. The prev-value guard
+  // keeps this from fighting the sidebar CitySelect, which calls setCityFilter
+  // directly and lets the URL-sync effect below echo the result back.
+  const prevUrlCity = useRef(resolvedCity);
+  useEffect(() => {
+    if (prevUrlCity.current === resolvedCity) return;
+    prevUrlCity.current = resolvedCity;
+    setCityFilter(resolvedCity);
+  }, [resolvedCity]);
   const listingInput = useMemo(() => ({ startDate: activeDates.startDate, endDate: activeDates.endDate }), [activeDates]);
   const listingsQuery = trpc.listings.list.useQuery(listingInput);
   const serverListings = useMemo(() => (listingsQuery.data ?? []).map(toListingItem), [listingsQuery.data]);

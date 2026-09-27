@@ -64,7 +64,7 @@ other.
 
 | Area | Suite | Coverage |
 | --- | --- | --- |
-| City selector responsiveness | `verify-city-selector-responsive.mjs` | 37 checks @ 375/768/1024/1280: desktop dropdown shown only ≥1280, hamburger reachable, accordion expands to 71 options, filter narrows, empty state, selection navigates and closes the menu, zero feature-owned overflow |
+| City selector responsiveness | `verify-city-selector-responsive.mjs` | 41 checks @ 375/768/1024/1280: desktop dropdown shown only ≥1280, hamburger reachable, accordion expands to 71 options, filter narrows, empty state, selection navigates and closes the menu, selection scrolls the page back to the top, zero feature-owned overflow |
 | City selector layout | `audit-city-accordion-geometry.mjs` | 44px tap targets, no truncated labels, no rows outside the panel, popular group first, filter autofocused, list scrolls internally (3513px content in a 403px box) |
 | No horizontal page scroll | `verify-horizontal-scroll.mjs` | drives `window.scrollTo` and asserts `scrollX` stays 0 — `documentElement.scrollWidth` over-reports in RTL and is *not* used as the signal |
 | Header control clipping | `verify-navbar-clipping.mjs` | no header control clipped at any width (this suite caught a real 768px defect, see below) |

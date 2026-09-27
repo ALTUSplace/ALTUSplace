@@ -4,6 +4,7 @@ import { Check, ChevronDown, MapPin, Search } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { cityFromSlug } from "@/data/moroccoCities";
 import { filterCityGroups, useCityGroups, type CityOption } from "@/hooks/useCityGroups";
+import { scrollToPageTop } from "@/lib/scroll";
 
 type NavbarMobileCitySelectProps = {
   /** Called after a city is chosen — the host uses it to close the mobile menu. */
@@ -69,6 +70,9 @@ export function NavbarMobileCitySelect({ onSelected }: NavbarMobileCitySelectPro
     setExpanded(false);
     setQuery("");
     onSelected?.();
+    // onSelected() closes the overlay that is holding document.body's scroll
+    // lock, so the scroll must be deferred until that lock is released.
+    scrollToPageTop();
   };
 
   const totalMatches = visibleGroups.reduce((sum, group) => sum + group.options.length, 0);
