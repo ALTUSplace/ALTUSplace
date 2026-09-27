@@ -82,7 +82,7 @@ export default function MyBookings() {
         </div>
 
         {authLoading ? (
-          <div className="bg-[#1C1C1E] border border-slate-800 rounded-3xl p-10 text-center text-slate-400 flex items-center justify-center gap-2"><Loader2 className="w-4 h-4 animate-spin text-amber-400" /> جاري التحقق من الجلسة...</div>
+          <div className="bg-[#1C1C1E] border border-slate-800 rounded-3xl p-10 text-center text-ink-secondary flex items-center justify-center gap-2"><Loader2 className="w-4 h-4 animate-spin text-amber-400" /> جاري التحقق من الجلسة...</div>
         ) : !isAuthenticated ? (
           <div className="bg-[#1C1C1E] border border-slate-800 rounded-3xl p-10 text-center space-y-4">
             <div className="mx-auto w-12 h-12 bg-amber-500/15 border border-amber-500/30 rounded-2xl flex items-center justify-center text-amber-400"><AlertTriangle className="w-6 h-6" /></div>
@@ -93,7 +93,7 @@ export default function MyBookings() {
             </Button>
           </div>
         ) : bookingsLoading ? (
-          <div className="bg-[#1C1C1E] border border-slate-800 rounded-3xl p-10 text-center text-slate-400 flex items-center justify-center gap-2"><Loader2 className="w-4 h-4 animate-spin text-amber-400" /> جاري تحميل الحجوزات...</div>
+          <div className="bg-[#1C1C1E] border border-slate-800 rounded-3xl p-10 text-center text-ink-secondary flex items-center justify-center gap-2"><Loader2 className="w-4 h-4 animate-spin text-amber-400" /> جاري تحميل الحجوزات...</div>
         ) : bookingsError ? (
           <div className="bg-[#1C1C1E] border border-slate-800 rounded-3xl p-10 text-center space-y-4">
             <div className="mx-auto w-12 h-12 bg-rose-500/15 border border-rose-500/30 rounded-2xl flex items-center justify-center text-rose-400"><AlertTriangle className="w-6 h-6" /></div>
@@ -104,7 +104,7 @@ export default function MyBookings() {
             </Button>
           </div>
         ) : dbBookings.length === 0 ? (
-          <div className="bg-[#1C1C1E] border border-slate-800 rounded-3xl p-10 text-center text-slate-400">لا توجد حجوزات مرتبطة بحسابك حالياً.</div>
+          <div className="bg-[#1C1C1E] border border-slate-800 rounded-3xl p-10 text-center text-ink-secondary">لا توجد حجوزات مرتبطة بحسابك حالياً.</div>
         ) : (
           <div className="space-y-6">
             {dbBookings.map((booking) => {

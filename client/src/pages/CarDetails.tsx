@@ -131,7 +131,7 @@ export default function CarDetails() {
     return (
       <div className="min-h-screen flex flex-col gap-4 items-center justify-center bg-[#1C1C1E] text-slate-200">
         <p>معرّف الإعلان غير صالح أو مفقود من الرابط.</p>
-        <p className="text-sm text-slate-400">يرجى اختيار إعلان من صفحة البحث.</p>
+        <p className="text-sm text-ink-secondary">يرجى اختيار إعلان من صفحة البحث.</p>
         <Button onClick={() => setLocation('/search')}>{t("back")}</Button>
       </div>
     );
@@ -141,7 +141,7 @@ export default function CarDetails() {
     return (
       <div className="min-h-screen flex flex-col gap-4 items-center justify-center bg-[#1C1C1E] text-slate-200">
         <p>{t("listingsLoadError")}</p>
-        <p className="text-sm text-slate-400">الإعلان المطلوب غير متاح حالياً.</p>
+        <p className="text-sm text-ink-secondary">الإعلان المطلوب غير متاح حالياً.</p>
         <Button onClick={() => setLocation('/search')}>{t("back")}</Button>
       </div>
     );
@@ -245,7 +245,7 @@ export default function CarDetails() {
         
         {/* Breadcrumb */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-2 text-xs text-slate-400">
+          <div className="flex items-center gap-2 text-xs text-ink-secondary">
             <span onClick={() => setLocation('/')} className="hover:text-amber-400 cursor-pointer">الرئيسية</span>
             <ChevronRight className="w-3 h-3" />
             <span onClick={() => setLocation('/search')} className="hover:text-amber-400 cursor-pointer">السيارات</span>
@@ -255,7 +255,7 @@ export default function CarDetails() {
 
           {/* Share Buttons */}
           <div className="flex items-center gap-2">
-            <span className="text-xs text-slate-400 flex items-center gap-1"><Share2 className="w-3.5 h-3.5 text-amber-400" /> مشاركة:</span>
+            <span className="text-xs text-ink-secondary flex items-center gap-1"><Share2 className="w-3.5 h-3.5 text-amber-400" /> مشاركة:</span>
             {numericListingId !== null && (
               <FavoriteButton listingId={numericListingId} size="sm" />
             )}
@@ -316,27 +316,27 @@ export default function CarDetails() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="bg-[#1C1C1E] border border-slate-800 p-4 rounded-2xl text-center space-y-1">
                     <CarIcon className="w-5 h-5 text-amber-400 mx-auto" />
-                    <div className="text-[10px] text-slate-400">ناقل الحركة</div>
+                    <div className="text-[10px] text-ink-secondary">ناقل الحركة</div>
                     <div className="text-xs font-bold text-white">{car.transmission}</div>
                   </div>
                   <div className="bg-[#1C1C1E] border border-slate-800 p-4 rounded-2xl text-center space-y-1">
                     <Users className="w-5 h-5 text-amber-400 mx-auto" />
-                    <div className="text-[10px] text-slate-400">المقاعد</div>
+                    <div className="text-[10px] text-ink-secondary">المقاعد</div>
                     <div className="text-xs font-bold text-white">{typeof car.seats === "number" ? `${car.seats} مقاعد` : car.seats}</div>
                   </div>
                   <div className="bg-[#1C1C1E] border border-slate-800 p-4 rounded-2xl text-center space-y-1">
                     <Fuel className="w-5 h-5 text-amber-400 mx-auto" />
-                    <div className="text-[10px] text-slate-400">نوع الوقود</div>
+                    <div className="text-[10px] text-ink-secondary">نوع الوقود</div>
                     <div className="text-xs font-bold text-white">{car.fuel}</div>
                   </div>
                   <div className="bg-[#1C1C1E] border border-slate-800 p-4 rounded-2xl text-center space-y-1">
                     <Calendar className="w-5 h-5 text-amber-400 mx-auto" />
-                    <div className="text-[10px] text-slate-400">سنة الصنع</div>
+                    <div className="text-[10px] text-ink-secondary">سنة الصنع</div>
                     <div className="text-xs font-bold text-white">{car.year}</div>
                   </div>
                   <div className="bg-[#1C1C1E] border border-slate-800 p-4 rounded-2xl text-center space-y-1">
                     <MapPin className="w-5 h-5 text-amber-400 mx-auto" />
-                    <div className="text-[10px] text-slate-400">المدينة</div>
+                    <div className="text-[10px] text-ink-secondary">المدينة</div>
                     <div className="text-xs font-bold text-white">{car.cityName}</div>
                   </div>
                 </div>
@@ -365,7 +365,7 @@ export default function CarDetails() {
                         <h4 className="font-bold text-white text-base">{car.agency.name}</h4>
 
                       </div>
-                      <p className="text-xs text-slate-400">{car.agency.address}</p>
+                      <p className="text-xs text-ink-secondary">{car.agency.address}</p>
                     </div>
                   </div>
                   <div className="w-full sm:w-auto flex flex-col items-center gap-2">
@@ -381,7 +381,7 @@ export default function CarDetails() {
                     >
                       <MessageCircle className="w-4 h-4" /> تأكيد الحجز عبر الواتساب
                     </button>
-                    <p className="text-[10px] text-slate-400 text-center leading-relaxed">
+                    <p className="text-[10px] text-ink-secondary text-center leading-relaxed">
                       يُوجَّه طلبك إلى صفحة التأكيد حيث يكون إرفاق البيرمي ووثيقة الهوية إلزامياً قبل الحجز.
                     </p>
                   </div>
@@ -397,15 +397,15 @@ export default function CarDetails() {
                       </h3>
                     </div>
 
-                    <p className="text-xs text-slate-400">{t("reviewsOnlyConfirmedNote")}</p>
+                    <p className="text-xs text-ink-secondary">{t("reviewsOnlyConfirmedNote")}</p>
 
                     <div className="space-y-4">
                       {reviewsQuery.isLoading ? (
-                        <div className="bg-[#1C1C1E] border border-slate-800 p-6 rounded-3xl text-sm text-slate-400">{t("reviewsLoading")}</div>
+                        <div className="bg-[#1C1C1E] border border-slate-800 p-6 rounded-3xl text-sm text-ink-secondary">{t("reviewsLoading")}</div>
                       ) : reviewsQuery.isError ? (
                         <div className="bg-rose-950/30 border border-rose-800/60 p-6 rounded-3xl text-sm text-rose-200">{t("reviewsLoadError")}</div>
                       ) : reviews.length === 0 ? (
-                        <div className="bg-[#1C1C1E] border border-slate-800 p-6 rounded-3xl text-sm text-slate-400 text-center">{t("reviewsNewEmpty")}</div>
+                        <div className="bg-[#1C1C1E] border border-slate-800 p-6 rounded-3xl text-sm text-ink-secondary text-center">{t("reviewsNewEmpty")}</div>
                       ) : reviews.map((rev) => (
                       <div key={rev.id} className="bg-[#1C1C1E] border border-slate-800 p-6 rounded-3xl space-y-2">
                         <div className="flex items-center justify-between">
@@ -473,7 +473,7 @@ export default function CarDetails() {
                   </div>
                   <div>
                     <p className="text-xs font-bold text-white">تأمين شامل كل يوم</p>
-                    <p className="text-[10px] text-slate-400 flex items-center gap-1"><ShieldCheck className="w-3 h-3 text-amber-400" /> تغطية كاملة {INSURANCE_FEE_PER_DAY} درهم/يوم</p>
+                    <p className="text-[10px] text-ink-secondary flex items-center gap-1"><ShieldCheck className="w-3 h-3 text-amber-400" /> تغطية كاملة {INSURANCE_FEE_PER_DAY} درهم/يوم</p>
                   </div>
                 </div>
                 <span className="text-xs font-black text-amber-400">{insurancePrice} درهم</span>
@@ -491,7 +491,7 @@ export default function CarDetails() {
                   </div>
                   <div>
                     <p className="text-xs font-bold text-white">كرسي أطفال</p>
-                    <p className="text-[10px] text-slate-400">{BABY_SEAT_FEE_PER_DAY} درهم/يوم</p>
+                    <p className="text-[10px] text-ink-secondary">{BABY_SEAT_FEE_PER_DAY} درهم/يوم</p>
                   </div>
                 </div>
                 <span className="text-xs font-black text-amber-400">{babySeatPrice} درهم</span>

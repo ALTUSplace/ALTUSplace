@@ -75,7 +75,7 @@ const residencyBadge = (residency: string | null) => {
   if (residency === "foreigner") {
     return <Badge className="bg-sky-100 text-sky-800 border border-sky-300">أجنبي</Badge>;
   }
-  return <span className="text-xs text-slate-400">—</span>;
+  return <span className="text-xs text-ink-secondary">—</span>;
 };
 
 type OwnerBookingRow = {
@@ -198,7 +198,7 @@ function DocumentPreview({ src, mime, fileName }: { src: string; mime: string; f
     <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="flex items-center gap-2 text-sm font-bold text-slate-700" dir="ltr">
-          <FileText className="h-4 w-4 shrink-0 text-slate-400" />
+          <FileText className="h-4 w-4 shrink-0 text-ink-secondary" />
           <span className="truncate">{fileName}</span>
         </p>
         <a
@@ -444,7 +444,7 @@ function ScheduleCalendar({ bookings, cars }: { bookings: OwnerBookingRow[]; car
                     date.getDate() === today.getDate() && date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear();
                   return (
                     <div key={`h-${dayKey(date)}`} className="py-0.5 text-center">
-                      <div className={`text-[11px] font-black ${weekend(date) ? "text-slate-400" : "text-slate-600"}`}>
+                      <div className={`text-[11px] font-black ${weekend(date) ? "text-ink-secondary" : "text-slate-600"}`}>
                         {date.getDate()}
                       </div>
                       <div className={`text-[8px] leading-tight ${isTodayHeader ? "font-bold text-[#0e5b52]" : "text-slate-300"}`}>
@@ -1118,7 +1118,7 @@ export default function AgencyDashboard() {
                               عرض الوثائق
                             </Button>
                           ) : (
-                            <span className="text-xs text-slate-400">غير مرفقة</span>
+                            <span className="text-xs text-ink-secondary">غير مرفقة</span>
                           )}
                         </td>
                         <td className="px-3 py-3">
@@ -1139,7 +1139,7 @@ export default function AgencyDashboard() {
                               {busyContractId === booking.id ? "جارٍ..." : "عقد PDF"}
                             </Button>
                           ) : (
-                            <span className="text-xs text-slate-400">—</span>
+                            <span className="text-xs text-ink-secondary">—</span>
                           )}
                         </td>
                       </tr>
@@ -1360,11 +1360,11 @@ export default function AgencyDashboard() {
                                 {property.rooms}
                               </span>
                             ) : (
-                              <span className="text-slate-400">—</span>
+                              <span className="text-ink-secondary">—</span>
                             )}
                           </td>
                           <td className="px-3 py-3 font-bold">{money(property.pricePerDay)}</td>
-                          <td className="px-3 py-3 font-bold">{Number(property.pricePerMonth) > 0 ? money(property.pricePerMonth ?? 0) : <span className="text-slate-400">—</span>}</td>
+                          <td className="px-3 py-3 font-bold">{Number(property.pricePerMonth) > 0 ? money(property.pricePerMonth ?? 0) : <span className="text-ink-secondary">—</span>}</td>
                           <td className="px-3 py-3">
                             {status === "Booked" ? (
                               <Badge className="bg-sky-600">{property.status === "Rented" ? "مؤجَّر" : fleetStatusLabel[status]}</Badge>

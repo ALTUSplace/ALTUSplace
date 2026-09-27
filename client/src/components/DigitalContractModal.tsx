@@ -67,7 +67,7 @@ export const DigitalContractModal: React.FC<ContractProps> = ({
           <div className="flex justify-between items-start border-b border-slate-800 dark:border-[#2C2C2E] pb-4">
             <div>
               <h3 className="text-lg font-bold text-slate-100 dark:text-[#F1F1F3] print:text-black">عقد إيجار ووساطة إلكترونية</h3>
-              <p className="text-sm text-slate-400 dark:text-[#B0B0B8] print:text-slate-600">رقم العقد: {bookingId}</p>
+              <p className="text-sm text-ink-secondary dark:text-[#B0B0B8] print:text-slate-600">رقم العقد: {bookingId}</p>
               <p className="text-xs text-amber-500/80">تاريخ الإصدار: {new Date().toLocaleDateString('ar-MA')}</p>
             </div>
             <div className="text-left">
@@ -82,12 +82,12 @@ export const DigitalContractModal: React.FC<ContractProps> = ({
             <div>
               <h4 className="font-semibold text-amber-400 text-sm mb-1">الطرف الأول (المؤجر / الوكالة):</h4>
               <p className="text-slate-300 dark:text-[#D6D6DB] print:text-slate-800 text-sm">{vendorName}</p>
-              <p className="text-xs text-slate-400 dark:text-[#B0B0B8]">المملكة المغربية</p>
+              <p className="text-xs text-ink-secondary dark:text-[#B0B0B8]">المملكة المغربية</p>
             </div>
             <div>
               <h4 className="font-semibold text-amber-400 text-sm mb-1">الطرف الثاني (المستأجر / الزبون):</h4>
               <p className="text-slate-300 dark:text-[#D6D6DB] print:text-slate-800 text-sm">{customerName}</p>
-              <p className="text-xs text-slate-400 dark:text-[#B0B0B8]">مسجل بمنصة ALTUSplace</p>
+              <p className="text-xs text-ink-secondary dark:text-[#B0B0B8]">مسجل بمنصة ALTUSplace</p>
             </div>
           </div>
 
@@ -96,19 +96,19 @@ export const DigitalContractModal: React.FC<ContractProps> = ({
             <h4 className="font-semibold text-slate-200 dark:text-[#E8E8EB] text-sm">تفاصيل موضوع العقد:</h4>
             <div className="bg-slate-950 dark:bg-[#111113] p-4 rounded-xl border border-slate-800 dark:border-[#2C2C2E] text-sm space-y-2 print:bg-slate-100">
               <div className="flex justify-between">
-                <span className="text-slate-400 dark:text-[#B0B0B8]">نوع الخدمة:</span>
+                <span className="text-ink-secondary dark:text-[#B0B0B8]">نوع الخدمة:</span>
                 <span className="font-medium text-slate-200 dark:text-[#E8E8EB]">{itemType === 'car' ? 'تأجير سيارة' : 'إيجار عقار'}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400 dark:text-[#B0B0B8]">العنوان / الموديل:</span>
+                <span className="text-ink-secondary dark:text-[#B0B0B8]">العنوان / الموديل:</span>
                 <span className="font-medium text-slate-200 dark:text-[#E8E8EB]">{itemName}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400 dark:text-[#B0B0B8]">فترة الإيجار:</span>
+                <span className="text-ink-secondary dark:text-[#B0B0B8]">فترة الإيجار:</span>
                 <span className="font-medium text-slate-200 dark:text-[#E8E8EB]">من {startDate} إلى {endDate}</span>
               </div>
               <div className="flex justify-between border-t border-slate-800 dark:border-[#2C2C2E] pt-2">
-                <span className="text-slate-400 dark:text-[#B0B0B8]">المبلغ الإجمالي:</span>
+                <span className="text-ink-secondary dark:text-[#B0B0B8]">المبلغ الإجمالي:</span>
                 <span className="font-bold text-amber-400">{totalPrice.toLocaleString()} درهم مغربي</span>
               </div>
               <div className="flex justify-between text-xs text-slate-500">
@@ -119,7 +119,7 @@ export const DigitalContractModal: React.FC<ContractProps> = ({
           </div>
 
           {/* Terms */}
-          <div className="text-xs text-slate-400 dark:text-[#B0B0B8] space-y-1.5 leading-relaxed bg-slate-950 dark:bg-[#111113] p-4 rounded-xl border border-slate-800 dark:border-[#2C2C2E] print:bg-slate-100">
+          <div className="text-xs text-ink-secondary dark:text-[#B0B0B8] space-y-1.5 leading-relaxed bg-slate-950 dark:bg-[#111113] p-4 rounded-xl border border-slate-800 dark:border-[#2C2C2E] print:bg-slate-100">
             <p className="font-semibold text-slate-300 dark:text-[#D6D6DB]">الشروط والأحكام القانونية للوساطة:</p>
             <p>1. تقر منصة ALTUSplace بأنها وسيط إلكتروني بين الطرفين، وتضمن إتمام المعاملة وحجز العربون وفق نظام الضمان (Escrow).</p>
             <p>2. يتحمل الطرف الأول (المؤجر) كامل المسؤولية عن سلامة وحالة الموضوع المؤجر وجاهزيته للاستخدام.</p>
@@ -148,7 +148,7 @@ export const DigitalContractModal: React.FC<ContractProps> = ({
                   <PenTool className="w-4 h-4" />
                   التوقيع الرقمي الإلكتروني (Mock Digital Signature)
                 </h4>
-                <p className="text-xs text-slate-400 dark:text-[#B0B0B8]">الرجاء كتابة اسمك الثلاثي لتأكيد الاعتماد القانوني لهذا العقد:</p>
+                <p className="text-xs text-ink-secondary dark:text-[#B0B0B8]">الرجاء كتابة اسمك الثلاثي لتأكيد الاعتماد القانوني لهذا العقد:</p>
                 <div className="flex gap-2">
                   <input
                     type="text"

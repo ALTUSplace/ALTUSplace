@@ -107,7 +107,7 @@ export default function SuperAdminDashboard() {
         <div className="max-w-md space-y-3">
           <ShieldCheck className="mx-auto h-12 w-12 text-rose-500" />
           <h1 className="text-2xl font-black text-slate-100 dark:text-[#F1F1F3]">الوصول مقيّد</h1>
-          <p className="text-sm text-slate-400 dark:text-[#B0B0B8]">هذه اللوحة متاحة حصرياً لحسابات SUPER_ADMIN.</p>
+          <p className="text-sm text-ink-secondary dark:text-[#B0B0B8]">هذه اللوحة متاحة حصرياً لحسابات SUPER_ADMIN.</p>
         </div>
       </main>
     );
@@ -141,7 +141,7 @@ export default function SuperAdminDashboard() {
                   onClick={() => setSection(item.key)}
                   type="button"
                   className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
-                    active ? 'bg-cyan-500/15 text-cyan-300' : 'text-slate-400 dark:text-[#B0B0B8] hover:bg-slate-800/70 dark:hover:bg-[#2C2C2E]/70 hover:text-slate-200'
+                    active ? 'bg-cyan-500/15 text-cyan-300' : 'text-ink-secondary dark:text-[#B0B0B8] hover:bg-slate-800/70 dark:hover:bg-[#2C2C2E]/70 hover:text-slate-200'
                   }`}
                 >
                   <Icon className="h-4 w-4" />
@@ -171,7 +171,7 @@ export default function SuperAdminDashboard() {
                     <span className="text-xs font-bold uppercase tracking-[0.25em]">ALTUSplace / SUPER ADMIN / OPS</span>
                   </div>
                   <h1 className="text-2xl font-black tracking-tight text-white sm:text-3xl">لوحة التحكم الشاملة</h1>
-                  <p className="mt-2 max-w-xl text-sm text-slate-400 dark:text-[#B0B0B8]">
+                  <p className="mt-2 max-w-xl text-sm text-ink-secondary dark:text-[#B0B0B8]">
                     مؤشرات الأداء، مراجعة الإعلانات، إدارة الأدوار، وصحة النظام في مكان واحد.
                   </p>
                 </div>
@@ -197,7 +197,7 @@ export default function SuperAdminDashboard() {
                       type="button"
                       onClick={() => setSection(item.key)}
                       className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-bold transition-colors ${
-                        active ? 'bg-cyan-500/20 text-cyan-300' : 'bg-slate-800/70 dark:bg-[#2C2C2E]/70 text-slate-400 dark:text-[#B0B0B8]'
+                        active ? 'bg-cyan-500/20 text-cyan-300' : 'bg-slate-800/70 dark:bg-[#2C2C2E]/70 text-ink-secondary dark:text-[#B0B0B8]'
                       }`}
                     >
                       <Icon className="h-3.5 w-3.5" />
@@ -262,7 +262,7 @@ function KpiCard({ icon: Icon, label, value, tone, hint }: {
     <Card className="border-slate-800 dark:border-[#2C2C2E] bg-slate-900/70 dark:bg-[#1C1C1E]/70 shadow-lg shadow-black/20">
       <CardContent className="p-5">
         <div className="flex items-center justify-between">
-          <p className="text-sm font-semibold text-slate-400 dark:text-[#B0B0B8]">{label}</p>
+          <p className="text-sm font-semibold text-ink-secondary dark:text-[#B0B0B8]">{label}</p>
           <Icon className={`h-5 w-5 ${tone}`} />
         </div>
         <p className="mt-2 text-3xl font-black text-white">{value.toLocaleString('fr-MA')}</p>
@@ -293,7 +293,7 @@ function OverviewSection({ data, loading, onGoModeration }: {
         <Card className={`border-slate-800 dark:border-[#2C2C2E] bg-slate-900/70 dark:bg-[#1C1C1E]/70 shadow-lg shadow-black/20 ${pendingQueue > 0 ? 'ring-1 ring-rose-500/40' : ''}`}>
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-slate-400 dark:text-[#B0B0B8]">الإعلانات قيد المراجعة</p>
+              <p className="text-sm font-semibold text-ink-secondary dark:text-[#B0B0B8]">الإعلانات قيد المراجعة</p>
               <ListChecks className="h-5 w-5 text-rose-400" />
             </div>
             <p className="mt-2 text-3xl font-black text-white">{pendingQueue.toLocaleString('fr-MA')}</p>
@@ -309,7 +309,7 @@ function OverviewSection({ data, loading, onGoModeration }: {
           </CardContent>
         </Card>
       </div>
-      <div className="rounded-2xl border border-slate-800 dark:border-[#2C2C2E] bg-slate-900/70 dark:bg-[#1C1C1E]/70 p-5 text-sm text-slate-400 dark:text-[#B0B0B8] shadow-lg shadow-black/20">
+      <div className="rounded-2xl border border-slate-800 dark:border-[#2C2C2E] bg-slate-900/70 dark:bg-[#1C1C1E]/70 p-5 text-sm text-ink-secondary dark:text-[#B0B0B8] shadow-lg shadow-black/20">
         تتم تحديث البطاقات تلقائياً كل 30 ثانية أثناء فتح هذه اللوحة.
       </div>
     </>
@@ -382,7 +382,7 @@ function ModerationSection({ rows, loading, onDecision }: {
                   <Badge variant="outline">{row.category === 'car' ? 'سيارة' : 'عقار'}</Badge>
                   {row.isFeatured && <Badge variant="secondary">مميّز</Badge>}
                 </div>
-                <p className="mt-1 text-sm text-slate-400 dark:text-[#B0B0B8]">
+                <p className="mt-1 text-sm text-ink-secondary dark:text-[#B0B0B8]">
                   {price} · {row.city || 'مدينة غير محددة'}
                 </p>
                 <p className="mt-0.5 text-xs text-slate-500">
@@ -419,7 +419,7 @@ function ModerationSection({ rows, loading, onDecision }: {
             <DialogTitle className="text-slate-100 dark:text-[#F1F1F3]">رفض الإعلان #</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <p className="text-sm text-slate-400 dark:text-[#B0B0B8]">سيتم تخزين السبب في سجل التدقيق وإرساله للمالك عبر الإشعارات.</p>
+            <p className="text-sm text-ink-secondary dark:text-[#B0B0B8]">سيتم تخزين السبب في سجل التدقيق وإرساله للمالك عبر الإشعارات.</p>
             <Textarea
               value={reason}
               onChange={(e) => setReason(e.target.value)}
@@ -620,7 +620,7 @@ function HealthSection({ data, loading, onRefresh }: {
                     {data?.db.ok ? 'متصلة' : 'غير متاحة'}
                   </Badge>
                 </div>
-                <p className="mt-2 text-sm text-slate-400 dark:text-[#B0B0B8]">
+                <p className="mt-2 text-sm text-ink-secondary dark:text-[#B0B0B8]">
                   كامون: {data?.db.latencyMs != null ? `${data.db.latencyMs} ms` : '—'}
                 </p>
               </div>
@@ -637,7 +637,7 @@ function HealthSection({ data, loading, onRefresh }: {
                     {data?.whatsapp.status === 'connected' ? 'متصل' : data?.whatsapp.status === 'not_configured' ? 'غير مكوّن' : 'خطأ'}
                   </Badge>
                 </div>
-                <p className="mt-2 text-sm text-slate-400 dark:text-[#B0B0B8]">
+                <p className="mt-2 text-sm text-ink-secondary dark:text-[#B0B0B8]">
                   {data?.whatsapp.status === 'connected'
                     ? `متصل عبر Graph API · ${data.whatsapp.latencyMs} ms`
                     : data?.whatsapp.status === 'error'
@@ -650,7 +650,7 @@ function HealthSection({ data, loading, onRefresh }: {
               </div>
             </div>
 
-            <div className="flex flex-col gap-2 rounded-xl border border-slate-800 dark:border-[#2C2C2E] bg-slate-950/50 dark:bg-[#111113]/50 p-4 text-sm text-slate-400 dark:text-[#B0B0B8] sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-2 rounded-xl border border-slate-800 dark:border-[#2C2C2E] bg-slate-950/50 dark:bg-[#111113]/50 p-4 text-sm text-ink-secondary dark:text-[#B0B0B8] sm:flex-row sm:items-center sm:justify-between">
               <p>
                 عمر الخادم: <span className="font-bold text-slate-200 dark:text-[#E8E8EB]">{Math.floor((data?.uptimeSeconds ?? 0) / 60)} دقيقة</span>
               </p>

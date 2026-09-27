@@ -131,7 +131,7 @@ export function AdvancedMediaUpload({ onImagesUploaded }: AdvancedMediaUploadPro
           </div>
           <div>
             <h3 className="text-lg font-bold text-white">رفع صور الإعلان</h3>
-            <p className="text-xs text-slate-400 dark:text-[#B0B0B8]">تُفحص الصور تلقائياً للتأكد من أنها واقعية وأصلية قبل حفظها ونشر العرض.</p>
+            <p className="text-xs text-ink-secondary dark:text-[#B0B0B8]">تُفحص الصور تلقائياً للتأكد من أنها واقعية وأصلية قبل حفظها ونشر العرض.</p>
           </div>
         </div>
         <div className="hidden sm:flex items-center gap-1.5 text-xs text-cyan-400 bg-cyan-500/10 px-3 py-1.5 rounded-xl border border-cyan-500/20">
@@ -154,7 +154,7 @@ export function AdvancedMediaUpload({ onImagesUploaded }: AdvancedMediaUploadPro
           </div>
           <div>
             <p className="text-sm font-bold text-slate-200 dark:text-[#E8E8EB]">اسحب الصور وأفلتها هنا، أو اضغط للاختيار</p>
-            <p className="text-xs text-slate-400 dark:text-[#B0B0B8] mt-1">PNG وJPG وWEBP، حتى 5 صور و10 ميجابايت إجمالاً. تُرفض الصور الترويجية أو المولدة آلياً.</p>
+            <p className="text-xs text-ink-secondary dark:text-[#B0B0B8] mt-1">PNG وJPG وWEBP، حتى 5 صور و10 ميجابايت إجمالاً. تُرفض الصور الترويجية أو المولدة آلياً.</p>
           </div>
         </div>
       </div>

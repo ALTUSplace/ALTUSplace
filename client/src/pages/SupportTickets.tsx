@@ -75,7 +75,7 @@ export default function SupportTickets() {
             <div>
               <span className="text-amber-500 text-xs font-extrabold uppercase tracking-widest">الدعم الفني المباشر</span>
               <h1 className="text-2xl md:text-3xl font-black text-white">مركز تذاكر الاستفسارات والمساعدة</h1>
-              <p className="mt-2 text-xs text-slate-400 dark:text-[#B0B0B8]">تذاكرك محفوظة في حسابك ويمكن لفريق الإدارة متابعة حالتها والرد عليها.</p>
+              <p className="mt-2 text-xs text-ink-secondary dark:text-[#B0B0B8]">تذاكرك محفوظة في حسابك ويمكن لفريق الإدارة متابعة حالتها والرد عليها.</p>
             </div>
           </div>
           <Button
@@ -149,7 +149,7 @@ export default function SupportTickets() {
           </h2>
 
           {ticketsQuery.isLoading ? (
-            <div className="rounded-2xl border border-slate-800 dark:border-[#2C2C2E] bg-[#1C1C1E] p-10 text-center text-slate-400 dark:text-[#B0B0B8]">جاري تحميل تذاكرك...</div>
+            <div className="rounded-2xl border border-slate-800 dark:border-[#2C2C2E] bg-[#1C1C1E] p-10 text-center text-ink-secondary dark:text-[#B0B0B8]">جاري تحميل تذاكرك...</div>
           ) : ticketsQuery.isError ? (
             <div className="rounded-2xl border border-red-500/30 bg-red-950/30 p-8 text-center text-red-200">
               <AlertCircle className="mx-auto mb-3 h-7 w-7" />
@@ -157,7 +157,7 @@ export default function SupportTickets() {
               <Button variant="outline" onClick={() => ticketsQuery.refetch()} className="mt-4 border-red-400/40 text-red-100 hover:bg-red-900/40">إعادة المحاولة</Button>
             </div>
           ) : tickets.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-slate-700 dark:border-[#48484D] bg-[#1C1C1E]/60 p-10 text-center text-slate-400 dark:text-[#B0B0B8]">لا توجد تذاكر مرتبطة بحسابك. افتح تذكرة جديدة عند الحاجة.</div>
+            <div className="rounded-2xl border border-dashed border-slate-700 dark:border-[#48484D] bg-[#1C1C1E]/60 p-10 text-center text-ink-secondary dark:text-[#B0B0B8]">لا توجد تذاكر مرتبطة بحسابك. افتح تذكرة جديدة عند الحاجة.</div>
           ) : (
             <div className="space-y-4">
               {tickets.map((ticket) => (
@@ -179,7 +179,7 @@ export default function SupportTickets() {
                   <div className="text-xs text-slate-300 dark:text-[#D6D6DB] bg-[#1C1C1E]/60 p-4 rounded-xl border border-slate-800/80 dark:border-[#2C2C2E]/80 flex items-start gap-3">
                     <MessageSquare className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
                     <div>
-                      <span className="font-bold text-slate-400 dark:text-[#B0B0B8] block mb-1">{ticket.lastResponse ? `آخر رد من الدعم (${formatDate(ticket.respondedAt ?? ticket.createdAt)}):` : `تم فتح التذكرة في ${formatDate(ticket.createdAt)}:`}</span>
+                      <span className="font-bold text-ink-secondary dark:text-[#B0B0B8] block mb-1">{ticket.lastResponse ? `آخر رد من الدعم (${formatDate(ticket.respondedAt ?? ticket.createdAt)}):` : `تم فتح التذكرة في ${formatDate(ticket.createdAt)}:`}</span>
                       <p>{ticket.lastResponse || 'تم استلام طلبكم وسيقوم فريق الدعم بالرد عليه.'}</p>
                     </div>
                   </div>

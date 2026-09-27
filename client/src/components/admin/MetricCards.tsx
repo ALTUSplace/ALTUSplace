@@ -63,9 +63,9 @@ export default function MetricCards({ data }: { data: FinancialOverview }) {
             <span className={`grid h-10 w-10 place-items-center rounded-xl bg-slate-800/80 dark:bg-[#2C2C2E]/80 ring-1 ${card.ring}`}>
               <card.icon className={`h-5 w-5 ${card.accent}`} />
             </span>
-            <span className="rounded-full bg-slate-800/60 dark:bg-[#2C2C2E]/60 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-[#B0B0B8]">{card.en}</span>
+            <span className="rounded-full bg-slate-800/60 dark:bg-[#2C2C2E]/60 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-ink-secondary dark:text-[#B0B0B8]">{card.en}</span>
           </div>
-          <p className="text-sm text-slate-400 dark:text-[#B0B0B8]">{card.label}</p>
+          <p className="text-sm text-ink-secondary dark:text-[#B0B0B8]">{card.label}</p>
           <p className="mt-1 text-2xl font-black tracking-tight text-slate-100 dark:text-[#F1F1F3]">{card.value}</p>
           <p className="mt-2 text-[11px] text-slate-500">{card.sub}</p>
         </div>

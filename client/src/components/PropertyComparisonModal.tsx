@@ -76,7 +76,7 @@ export default function PropertyComparisonModal({ isOpen, onClose, comparedPrope
             <tbody className="divide-y divide-slate-100 text-sm text-slate-700">
               <tr>
                 <td className="py-3 px-4 font-semibold text-slate-600 bg-slate-50 flex items-center gap-1.5">
-                  <MapPin className="w-4 h-4 text-slate-400" /> المدينة / الموقع
+                  <MapPin className="w-4 h-4 text-ink-secondary" /> المدينة / الموقع
                 </td>
                 {comparedProperties.map((prop) => (
                   <td key={prop.id} className="py-3 px-4 font-medium text-slate-900 bg-blue-50/40">{prop.city}</td>
@@ -84,7 +84,7 @@ export default function PropertyComparisonModal({ isOpen, onClose, comparedPrope
               </tr>
               <tr>
                 <td className="py-3 px-4 font-semibold text-slate-600 bg-slate-50 flex items-center gap-1.5">
-                  <DollarSign className="w-4 h-4 text-slate-400" /> السعر اليومي
+                  <DollarSign className="w-4 h-4 text-ink-secondary" /> السعر اليومي
                 </td>
                 {comparedProperties.map((prop) => (
                   <td key={prop.id} className="py-3 px-4">
@@ -96,7 +96,7 @@ export default function PropertyComparisonModal({ isOpen, onClose, comparedPrope
               </tr>
               <tr>
                 <td className="py-3 px-4 font-semibold text-slate-600 bg-slate-50 flex items-center gap-1.5">
-                  <Layers className="w-4 h-4 text-slate-400" /> المساحة التقريبية
+                  <Layers className="w-4 h-4 text-ink-secondary" /> المساحة التقريبية
                 </td>
                 {comparedProperties.map((prop) => (
                   <td key={prop.id} className="py-3 px-4 font-semibold text-purple-700 bg-purple-50/40">{prop.area || '140 متر²'}</td>
@@ -104,7 +104,7 @@ export default function PropertyComparisonModal({ isOpen, onClose, comparedPrope
               </tr>
               <tr>
                 <td className="py-3 px-4 font-semibold text-slate-600 bg-slate-50 flex items-center gap-1.5">
-                  <Bed className="w-4 h-4 text-slate-400" /> عدد الغرف
+                  <Bed className="w-4 h-4 text-ink-secondary" /> عدد الغرف
                 </td>
                 {comparedProperties.map((prop) => (
                   <td key={prop.id} className="py-3 px-4 font-medium text-slate-800">{prop.rooms} غرف نوم</td>
@@ -112,7 +112,7 @@ export default function PropertyComparisonModal({ isOpen, onClose, comparedPrope
               </tr>
               <tr>
                 <td className="py-3 px-4 font-semibold text-slate-600 bg-slate-50 flex items-center gap-1.5">
-                  <Building2 className="w-4 h-4 text-slate-400" /> نوع العقار
+                  <Building2 className="w-4 h-4 text-ink-secondary" /> نوع العقار
                 </td>
                 {comparedProperties.map((prop) => (
                   <td key={prop.id} className="py-3 px-4 capitalize font-medium text-slate-800 bg-slate-50/50">{prop.type}</td>

@@ -94,10 +94,10 @@ export function TwoFactorAuthModal({ isOpen, onClose, onSuccess }: TwoFactorAuth
             </div>
             <div>
               <h3 className="text-base font-extrabold text-white">المصادقة الثنائية الأمنية (2FA)</h3>
-              <p className="text-[10px] text-slate-400 dark:text-[#B0B0B8]">حماية متقدمة ورموز استرداد للطوارئ</p>
+              <p className="text-[10px] text-ink-secondary dark:text-[#B0B0B8]">حماية متقدمة ورموز استرداد للطوارئ</p>
             </div>
           </div>
-          <button onClick={onClose} className="text-slate-400 dark:text-[#B0B0B8] hover:text-white text-sm font-bold">✕</button>
+          <button onClick={onClose} className="text-ink-secondary dark:text-[#B0B0B8] hover:text-white text-sm font-bold">✕</button>
         </div>
 
         {step === 'success' ? (
@@ -106,7 +106,7 @@ export function TwoFactorAuthModal({ isOpen, onClose, onSuccess }: TwoFactorAuth
               <CheckCircle2 className="w-8 h-8" />
             </div>
             <h4 className="text-lg font-bold text-white">تم تأمين الحساب وحفظ الرموز!</h4>
-            <p className="text-xs text-slate-400 dark:text-[#B0B0B8]">أصبح حسابك الإداري محمياً بأعلى معايير الأمان.</p>
+            <p className="text-xs text-ink-secondary dark:text-[#B0B0B8]">أصبح حسابك الإداري محمياً بأعلى معايير الأمان.</p>
           </div>
         ) : step === 'recovery' ? (
           <div className="space-y-4">
@@ -114,7 +114,7 @@ export function TwoFactorAuthModal({ isOpen, onClose, onSuccess }: TwoFactorAuth
               <Key className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
               <div className="text-xs space-y-1 text-slate-300 dark:text-[#D6D6DB]">
                 <p className="font-bold text-white">احتفظ برمز الاسترداد (Recovery Codes):</p>
-                <p className="text-[11px] text-slate-400 dark:text-[#B0B0B8]">يمكنك استخدام هذه الرموز لمرة واحدة في حال فقدان الوصول لهاتفك.</p>
+                <p className="text-[11px] text-ink-secondary dark:text-[#B0B0B8]">يمكنك استخدام هذه الرموز لمرة واحدة في حال فقدان الوصول لهاتفك.</p>
               </div>
             </div>
 
@@ -195,7 +195,7 @@ export function TwoFactorAuthModal({ isOpen, onClose, onSuccess }: TwoFactorAuth
               />
             </div>
 
-            <div className="flex items-center gap-2 text-[11px] text-slate-400 dark:text-[#B0B0B8] bg-slate-900/80 dark:bg-[#1C1C1E]/80 p-3 rounded-xl border border-slate-800 dark:border-[#2C2C2E]">
+            <div className="flex items-center gap-2 text-[11px] text-ink-secondary dark:text-[#B0B0B8] bg-slate-900/80 dark:bg-[#1C1C1E]/80 p-3 rounded-xl border border-slate-800 dark:border-[#2C2C2E]">
               <Lock className="w-4 h-4 text-amber-400 shrink-0" />
               <span>هذه الخطوة إلزامية لضمان أمان العمليات المالية وتعديل الأسطول.</span>
             </div>

@@ -242,7 +242,7 @@ function LocationsHub({ knownSlugSeen }: { knownSlugSeen?: boolean }) {
           <div className="mb-4 flex items-center gap-2 text-amber-300"><MapPin className="h-5 w-5" /><span>ALTUSplace Morocco</span></div>
           <h1 className="max-w-3xl text-3xl font-black leading-tight md:text-5xl">{isArabic ? "مدن المغرب: سيارات وعقارات للكراء" : language === "fr" ? "Villes du Maroc : voitures et immobilier à louer" : "Moroccan cities: cars and properties for rent"}</h1>
           <p className="mt-5 max-w-2xl text-base leading-8 text-slate-200">{isArabic ? "اختر مدينة لعرض الإعلانات النشطة على ALTUSplace. تغطي المنصة جميع جهات المغرب الاثنتي عشرة." : language === "fr" ? "Choisissez une ville pour voir les annonces actives sur ALTUSplace. La plateforme couvre les douze régions du Maroc." : "Choose a city to view active listings on ALTUSplace. The platform covers all twelve regions of Morocco."}</p>
-          {knownSlugSeen && <p className="mt-4 text-sm text-slate-400">{isArabic ? "لم نتعرف على هذه المدينة — إليك قائمة كاملة بالوجهات." : language === "fr" ? "Cette ville n'est pas reconnue — voici la liste complète des destinations." : "We could not identify this city — here is the full list of destinations."}</p>}
+          {knownSlugSeen && <p className="mt-4 text-sm text-ink-secondary">{isArabic ? "لم نتعرف على هذه المدينة — إليك قائمة كاملة بالوجهات." : language === "fr" ? "Cette ville n'est pas reconnue — voici la liste complète des destinations." : "We could not identify this city — here is the full list of destinations."}</p>}
         </section>
 
         <section className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">

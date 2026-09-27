@@ -48,10 +48,10 @@ export function WhatsAppNotificationModal({ isOpen, onClose, bookingDetails }: W
             </div>
             <div>
               <h3 className="text-base font-extrabold text-white">إرسال إشعار WhatsApp / SMS</h3>
-              <p className="text-[10px] text-slate-400 dark:text-[#B0B0B8]">تواصل فوري وآلي مع الزبون أو الوكالة</p>
+              <p className="text-[10px] text-ink-secondary dark:text-[#B0B0B8]">تواصل فوري وآلي مع الزبون أو الوكالة</p>
             </div>
           </div>
-          <button onClick={onClose} className="text-slate-400 dark:text-[#B0B0B8] hover:text-white text-sm font-bold">✕</button>
+          <button onClick={onClose} className="text-ink-secondary dark:text-[#B0B0B8] hover:text-white text-sm font-bold">✕</button>
         </div>
 
         {sent ? (
@@ -60,7 +60,7 @@ export function WhatsAppNotificationModal({ isOpen, onClose, bookingDetails }: W
               <CheckCircle2 className="w-8 h-8" />
             </div>
             <h4 className="text-lg font-bold text-white">تم الإرسال بنجاح عبر الواتساب!</h4>
-            <p className="text-xs text-slate-400 dark:text-[#B0B0B8]">تم توصيل الإشعار وتحديث سجل الحجز.</p>
+            <p className="text-xs text-ink-secondary dark:text-[#B0B0B8]">تم توصيل الإشعار وتحديث سجل الحجز.</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -73,7 +73,7 @@ export function WhatsAppNotificationModal({ isOpen, onClose, bookingDetails }: W
                   className={`py-2.5 px-4 rounded-xl text-xs font-bold border transition-all ${
                     recipient === 'agency'
                       ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400'
-                      : 'bg-slate-900 dark:bg-[#1C1C1E] border-slate-700 dark:border-[#48484D] text-slate-400 dark:text-[#B0B0B8] hover:bg-slate-800 dark:hover:bg-[#2C2C2E]'
+                      : 'bg-slate-900 dark:bg-[#1C1C1E] border-slate-700 dark:border-[#48484D] text-ink-secondary dark:text-[#B0B0B8] hover:bg-slate-800 dark:hover:bg-[#2C2C2E]'
                   }`}
                 >
                   وكالة التأجير / العقارات
@@ -84,7 +84,7 @@ export function WhatsAppNotificationModal({ isOpen, onClose, bookingDetails }: W
                   className={`py-2.5 px-4 rounded-xl text-xs font-bold border transition-all ${
                     recipient === 'customer'
                       ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400'
-                      : 'bg-slate-900 dark:bg-[#1C1C1E] border-slate-700 dark:border-[#48484D] text-slate-400 dark:text-[#B0B0B8] hover:bg-slate-800 dark:hover:bg-[#2C2C2E]'
+                      : 'bg-slate-900 dark:bg-[#1C1C1E] border-slate-700 dark:border-[#48484D] text-ink-secondary dark:text-[#B0B0B8] hover:bg-slate-800 dark:hover:bg-[#2C2C2E]'
                   }`}
                 >
                   المستأجر / العميل

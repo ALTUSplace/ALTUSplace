@@ -427,7 +427,7 @@ export default function PartnerApply() {
               </div>
               <div className="mt-4 space-y-4">
                 {vehicles.length === 0 && (
-                  <p className="rounded-lg bg-slate-50 p-3 text-xs text-slate-400">
+                  <p className="rounded-lg bg-slate-50 p-3 text-xs text-ink-secondary">
                     لم تُضف أي مركبات بعد — يمكن للوكالة إضافة مركباتها لاحقاً من فضاء الشريك بعد
                     الموافقة.
                   </p>
@@ -562,7 +562,7 @@ export default function PartnerApply() {
                 {logo ? (
                   <img src={logo.previewUrl} alt="شعار الوكالة" className="max-h-24 rounded-lg object-contain" />
                 ) : (
-                  <ImagePlus className="h-6 w-6 text-slate-400" />
+                  <ImagePlus className="h-6 w-6 text-ink-secondary" />
                 )}
                 <span className="text-xs font-bold text-slate-600">{logo ? "تغيير الشعار" : "رفع شعار الوكالة (اختياري)"}</span>
                 <input type="file" accept="image/*" className="sr-only" onChange={pickLogo} />
@@ -579,7 +579,7 @@ export default function PartnerApply() {
               </label>
 
               <label className="relative flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 p-6 text-center transition-colors hover:border-brand-panel">
-                <ImagePlus className="h-6 w-6 text-slate-400" />
+                <ImagePlus className="h-6 w-6 text-ink-secondary" />
                 <span className="text-xs font-bold text-slate-600">رفع صور المعرض ({gallery.length}/{MAX_GALLERY_IMAGES})</span>
                 <input type="file" accept="image/*" multiple className="sr-only" onChange={pickGallery} />
               </label>

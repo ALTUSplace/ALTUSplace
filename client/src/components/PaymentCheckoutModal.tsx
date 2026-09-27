@@ -386,7 +386,7 @@ export function PaymentCheckoutModal({
       case 'amex':
         return <div className="px-2 py-1 bg-accent-clay rounded text-white text-xs font-bold">AMEX</div>;
       default:
-        return <CreditCard className="w-5 h-5 text-slate-400 dark:text-[#B0B0B8]" />;
+        return <CreditCard className="w-5 h-5 text-ink-secondary dark:text-[#B0B0B8]" />;
     }
   };
 
@@ -437,13 +437,13 @@ export function PaymentCheckoutModal({
               </div>
               <div>
                 <h3 className="text-lg font-extrabold text-white">الدفع الآمن</h3>
-                <p className="text-[11px] text-slate-400 dark:text-[#B0B0B8] flex items-center gap-1">
+                <p className="text-[11px] text-ink-secondary dark:text-[#B0B0B8] flex items-center gap-1">
                   <Lock className="w-3 h-3" />
                   مشفرة بمعيار PCI-DSS عبر بوابة دفع مغربية
                 </p>
               </div>
             </div>
-            <button onClick={handleClose} disabled={step === 'processing' || step === 'redirect'} className="text-slate-400 dark:text-[#B0B0B8] hover:text-white w-8 h-8 rounded-full bg-slate-800 dark:bg-[#2C2C2E] flex items-center justify-center transition-colors disabled:opacity-50">
+            <button onClick={handleClose} disabled={step === 'processing' || step === 'redirect'} className="text-ink-secondary dark:text-[#B0B0B8] hover:text-white w-8 h-8 rounded-full bg-slate-800 dark:bg-[#2C2C2E] flex items-center justify-center transition-colors disabled:opacity-50">
               <X className="w-4 h-4" />
             </button>
           </div>
@@ -453,13 +453,13 @@ export function PaymentCheckoutModal({
           <div className="bg-gradient-to-l from-amber-500/10 to-transparent border border-amber-500/20 rounded-2xl p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-slate-400 dark:text-[#B0B0B8] mb-1">المبلغ الإجمالي</p>
+                <p className="text-xs text-ink-secondary dark:text-[#B0B0B8] mb-1">المبلغ الإجمالي</p>
                 {description && <p className="text-[11px] text-slate-500">{description}</p>}
               </div>
               <span className="text-2xl font-black text-amber-400">{amount.toLocaleString()} <span className="text-sm font-bold">{currency}</span></span>
             </div>
             {bookingDetails && (
-              <div className="mt-3 pt-3 border-t border-slate-800 dark:border-[#2C2C2E] text-xs text-slate-400 dark:text-[#B0B0B8]">
+              <div className="mt-3 pt-3 border-t border-slate-800 dark:border-[#2C2C2E] text-xs text-ink-secondary dark:text-[#B0B0B8]">
                 <p className="font-medium text-slate-300 dark:text-[#D6D6DB]">{bookingDetails.title}</p>
                 <p>{bookingDetails.startDate} → {bookingDetails.endDate} ({bookingDetails.days} أيام)</p>
               </div>
@@ -477,7 +477,7 @@ export function PaymentCheckoutModal({
                     <div className={cn('p-2.5 rounded-xl border', m.badge === 'عالمي' ? 'bg-blue-500/10 border-blue-500/20' : 'bg-slate-900/60 dark:bg-[#1C1C1E]/60 border-slate-800 dark:border-[#2C2C2E]')}>{m.icon}</div>
                     <div className="flex-1">
                       <p className="font-bold text-sm">{m.title}</p>
-                      <p className="text-[11px] text-slate-400 dark:text-[#B0B0B8]">{m.subtitle}</p>
+                      <p className="text-[11px] text-ink-secondary dark:text-[#B0B0B8]">{m.subtitle}</p>
                     </div>
                     {m.badge && <span className="text-[10px] text-amber-400 bg-amber-500/10 px-2 py-1 rounded shrink-0">{m.badge}</span>}
                   </button>
@@ -494,7 +494,7 @@ export function PaymentCheckoutModal({
               <div className="bg-gradient-to-bl from-slate-800 dark:from-[#2C2C2E] via-slate-900 dark:via-[#1C1C1E] to-slate-800 dark:to-[#2C2C2E] rounded-2xl p-5 border border-slate-700 dark:border-[#48484D] relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-bl from-amber-500/5 to-transparent" />
                 <div className="relative z-10">
-                  <div className="flex justify-between items-start mb-6">{getCardBrandIcon()}<div className="text-[10px] text-slate-400 dark:text-[#B0B0B8] flex items-center gap-1"><Lock className="w-3 h-3" />{paymentMethod === 'stripe_card' ? 'Stripe Secure' : paymentMethod === 'payzone' || paymentMethod === 'paytabs' ? `${providerName} Secure 3D` : 'CMI Secure 3D'}</div></div>
+                  <div className="flex justify-between items-start mb-6">{getCardBrandIcon()}<div className="text-[10px] text-ink-secondary dark:text-[#B0B0B8] flex items-center gap-1"><Lock className="w-3 h-3" />{paymentMethod === 'stripe_card' ? 'Stripe Secure' : paymentMethod === 'payzone' || paymentMethod === 'paytabs' ? `${providerName} Secure 3D` : 'CMI Secure 3D'}</div></div>
                   <p className="font-mono text-lg tracking-[0.2em] text-white mb-4">{cardNumber || '•••• •••• •••• ••••'}</p>
                   <div className="flex justify-between items-end">
                     <div><p className="text-[9px] text-slate-500 mb-0.5">حامل البطاقة</p><p className="text-xs font-bold text-slate-300 dark:text-[#D6D6DB] uppercase">{cardHolder || 'YOUR NAME'}</p></div>
@@ -548,7 +548,7 @@ export function PaymentCheckoutModal({
                   ))}
                 </ol>
                 <div className="flex justify-between py-2 border-t border-slate-800 dark:border-[#2C2C2E] text-sm">
-                  <span className="text-slate-400 dark:text-[#B0B0B8]">المبلغ:</span>
+                  <span className="text-ink-secondary dark:text-[#B0B0B8]">المبلغ:</span>
                   <span className="font-bold text-amber-400">{amount.toLocaleString()} {currency}</span>
                 </div>
                 <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-3 text-[11px] text-amber-300">سنتولّد لك رقم مرجع نقدياً صالحاً لمدة 24 ساعة بعد تأكيد الحجز.</div>
@@ -564,9 +564,9 @@ export function PaymentCheckoutModal({
             <div className="space-y-5">
               <div className="bg-sky-500/5 border border-sky-500/20 rounded-2xl p-5 space-y-4">
                 <div className="flex items-center gap-3"><Banknote className="w-5 h-5 text-sky-400" /><p className="font-bold text-sm text-sky-300">الدفع عند الاستلام (Pay on Arrival)</p></div>
-                <p className="text-sm text-slate-400 dark:text-[#B0B0B8] leading-relaxed">سيتم تأكيد حجزك فوراً ويدفع المبلغ نقداً عند استلام الخدمة. لا يُطلب أي تحويل مسبق.</p>
+                <p className="text-sm text-ink-secondary dark:text-[#B0B0B8] leading-relaxed">سيتم تأكيد حجزك فوراً ويدفع المبلغ نقداً عند استلام الخدمة. لا يُطلب أي تحويل مسبق.</p>
                 <div className="flex justify-between py-2 border-t border-slate-800 dark:border-[#2C2C2E] text-sm">
-                  <span className="text-slate-400 dark:text-[#B0B0B8]">المبلغ المستحق:</span>
+                  <span className="text-ink-secondary dark:text-[#B0B0B8]">المبلغ المستحق:</span>
                   <span className="font-bold text-amber-400">{amount.toLocaleString()} {currency}</span>
                 </div>
               </div>
@@ -582,9 +582,9 @@ export function PaymentCheckoutModal({
               <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-2xl p-5 space-y-4">
                 <div className="flex items-center gap-3"><Building2 className="w-5 h-5 text-emerald-400" /><p className="font-bold text-sm text-emerald-300">معلومات التحويل البنكي</p></div>
                 <div className="space-y-3 text-sm">
-                  <div className="flex justify-between py-2 border-b border-slate-800 dark:border-[#2C2C2E]"><span className="text-slate-400 dark:text-[#B0B0B8]">اسم البنك:</span><span className="font-bold text-white">BMCE Bank</span></div>
-                  <div className="flex justify-between py-2 border-b border-slate-800 dark:border-[#2C2C2E]"><span className="text-slate-400 dark:text-[#B0B0B8]">IBAN:</span><span className="font-mono text-white text-xs">MA 0023 4456 7890 1234 5678 9012</span></div>
-                  <div className="flex justify-between py-2"><span className="text-slate-400 dark:text-[#B0B0B8]">المبلغ:</span><span className="font-bold text-amber-400">{amount.toLocaleString()} {currency}</span></div>
+                  <div className="flex justify-between py-2 border-b border-slate-800 dark:border-[#2C2C2E]"><span className="text-ink-secondary dark:text-[#B0B0B8]">اسم البنك:</span><span className="font-bold text-white">BMCE Bank</span></div>
+                  <div className="flex justify-between py-2 border-b border-slate-800 dark:border-[#2C2C2E]"><span className="text-ink-secondary dark:text-[#B0B0B8]">IBAN:</span><span className="font-mono text-white text-xs">MA 0023 4456 7890 1234 5678 9012</span></div>
+                  <div className="flex justify-between py-2"><span className="text-ink-secondary dark:text-[#B0B0B8]">المبلغ:</span><span className="font-bold text-amber-400">{amount.toLocaleString()} {currency}</span></div>
                 </div>
               </div>
               <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-3 text-[11px] text-amber-300">يرجى إرسال إيصال التحويل عبر واتساب أو البريد الإلكتروني لتأكيد الحجز.</div>
@@ -606,7 +606,7 @@ export function PaymentCheckoutModal({
                     </button>
                   ))}
                 </div>
-                <p className="text-[11px] text-slate-400 dark:text-[#B0B0B8] text-center">سيتم تحويلك إلى تطبيق المحفظة لإتمام الدفع</p>
+                <p className="text-[11px] text-ink-secondary dark:text-[#B0B0B8] text-center">سيتم تحويلك إلى تطبيق المحفظة لإتمام الدفع</p>
               </div>
               <div className="flex gap-3 pt-2">
                 <Button type="button" onClick={() => setStep('method')} className="flex-1 bg-slate-800 dark:bg-[#2C2C2E] hover:bg-slate-700 dark:hover:bg-[#48484D] text-slate-300 dark:text-[#D6D6DB] font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2"><ChevronLeft className="w-4 h-4" />رجوع</Button>
@@ -619,8 +619,8 @@ export function PaymentCheckoutModal({
             <div className="space-y-5">
               <div className="bg-blue-500/5 border border-blue-500/20 rounded-2xl p-5 space-y-4">
                 <div className="flex items-center gap-3"><Fingerprint className="w-5 h-5 text-blue-400" /><p className="font-bold text-sm text-blue-300">الدفع عبر PayPal</p></div>
-                <p className="text-sm text-slate-400 dark:text-[#B0B0B8] leading-relaxed">سيتم تحويلك إلى بوابة PayPal الآمنة لإتمام الدفع بحسابك. سيتم احتساب المبلغ بالعملة المختارة مع التحويل التلقائي.</p>
-                <div className="flex justify-between py-2 border-t border-slate-800 dark:border-[#2C2C2E] text-sm"><span className="text-slate-400 dark:text-[#B0B0B8]">المبلغ:</span><span className="font-bold text-amber-400">{amount.toLocaleString()} {currency}</span></div>
+                <p className="text-sm text-ink-secondary dark:text-[#B0B0B8] leading-relaxed">سيتم تحويلك إلى بوابة PayPal الآمنة لإتمام الدفع بحسابك. سيتم احتساب المبلغ بالعملة المختارة مع التحويل التلقائي.</p>
+                <div className="flex justify-between py-2 border-t border-slate-800 dark:border-[#2C2C2E] text-sm"><span className="text-ink-secondary dark:text-[#B0B0B8]">المبلغ:</span><span className="font-bold text-amber-400">{amount.toLocaleString()} {currency}</span></div>
               </div>
               <div className="flex items-center gap-2 text-[11px] text-emerald-400 bg-emerald-500/10 p-3 rounded-xl border border-emerald-500/20">
                 <Lock className="w-4 h-4 shrink-0" /><span>معاملة مشفرة ومحمية بسياسة حماية المشتري من PayPal</span>
@@ -641,7 +641,7 @@ export function PaymentCheckoutModal({
               </div>
               <div className="text-center space-y-2 w-full">
                 <p className="font-bold text-white">{onCreatePayment ? 'جاري إنشاء الحجز وتأكيد الدفع...' : 'جاري معالجة الدفع...'}</p>
-                <p className="text-xs text-slate-400 dark:text-[#B0B0B8]">يرجى عدم إغلاق هذه النافذة</p>
+                <p className="text-xs text-ink-secondary dark:text-[#B0B0B8]">يرجى عدم إغلاق هذه النافذة</p>
                 <div className="w-full bg-slate-800 dark:bg-[#2C2C2E] rounded-full h-2 mt-4">
                   <div className="bg-gradient-to-r from-amber-500 to-amber-400 h-2 rounded-full transition-all duration-300" style={{ width: `${Math.min(processingProgress, 100)}%` }} />
                 </div>
@@ -655,7 +655,7 @@ export function PaymentCheckoutModal({
               <div className="w-20 h-20 bg-amber-500/20 border-2 border-amber-500/40 rounded-full flex items-center justify-center"><ExternalLink className="w-10 h-10 text-amber-400" /></div>
               <div className="text-center space-y-2">
                 <p className="text-xl font-extrabold text-white">سيتم تحويلك إلى بوابة {PROVIDER_NAMES[outcome.provider] ?? outcome.provider} الآمنة</p>
-                <p className="text-sm text-slate-400 dark:text-[#B0B0B8]">أكمل الدفع داخل صفحة آمنة تستضيفها جهة الدفع. رقم المرجع: <span className="text-amber-400 font-mono font-bold">{outcome.externalReference}</span></p>
+                <p className="text-sm text-ink-secondary dark:text-[#B0B0B8]">أكمل الدفع داخل صفحة آمنة تستضيفها جهة الدفع. رقم المرجع: <span className="text-amber-400 font-mono font-bold">{outcome.externalReference}</span></p>
               </div>
               <Button onClick={proceedToGateway} className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold py-3.5 rounded-xl text-sm shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2"><ExternalLink className="w-4 h-4" />متابعة إلى بوابة الدفع</Button>
             </div>
@@ -665,10 +665,10 @@ export function PaymentCheckoutModal({
             <div className="space-y-5">
               <div className="py-2 text-center">
                 <p className="text-xl font-extrabold text-white">تم إنشاء المرجع النقدي</p>
-                <p className="text-xs text-slate-400 dark:text-[#B0B0B8] mt-1">ادفعه نقداً لدى {PROVIDER_NAMES[outcome.provider] ?? outcome.provider} خلال 24 ساعة لتأكيد حجزك.</p>
+                <p className="text-xs text-ink-secondary dark:text-[#B0B0B8] mt-1">ادفعه نقداً لدى {PROVIDER_NAMES[outcome.provider] ?? outcome.provider} خلال 24 ساعة لتأكيد حجزك.</p>
               </div>
               <div className="bg-slate-900 dark:bg-[#1C1C1E] border border-amber-500/30 rounded-2xl p-5 text-center">
-                <p className="text-[11px] text-slate-400 dark:text-[#B0B0B8] mb-2">رقم المرجع النقدي</p>
+                <p className="text-[11px] text-ink-secondary dark:text-[#B0B0B8] mb-2">رقم المرجع النقدي</p>
                 <p className="font-mono text-2xl font-black tracking-widest text-amber-400 select-all">{outcome.reference}</p>
                 {outcome.expiresAt && (
                   <p className="text-[11px] text-red-400 mt-2">صالحة حتى {new Date(outcome.expiresAt).toLocaleString('ar-MA')}</p>
@@ -695,7 +695,7 @@ export function PaymentCheckoutModal({
               <div className="w-20 h-20 bg-amber-500/20 border-2 border-amber-500/40 rounded-full flex items-center justify-center"><BadgeCheck className="w-10 h-10 text-amber-400" /></div>
               <div className="text-center space-y-2">
                 <p className="text-xl font-extrabold text-white">تم إنشاء الحجز وطلب الدفع</p>
-                <p className="text-sm text-slate-400 dark:text-[#B0B0B8]">سيتم تأكيد الحجز تلقائياً فور تأكيد الدفع. يمكنك متابعة الحالة من صفحة حجوزاتي.</p>
+                <p className="text-sm text-ink-secondary dark:text-[#B0B0B8]">سيتم تأكيد الحجز تلقائياً فور تأكيد الدفع. يمكنك متابعة الحالة من صفحة حجوزاتي.</p>
               </div>
               <Button onClick={handleSuccessClose} className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold py-3.5 rounded-xl text-sm shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2"><CheckCircle2 className="w-4 h-4" />متابعة إلى حجوزاتي</Button>
             </div>
@@ -704,8 +704,8 @@ export function PaymentCheckoutModal({
           {step === 'success' && (
             <div className="py-8 flex flex-col items-center justify-center space-y-6">
               <div className="w-20 h-20 bg-emerald-500/20 border-2 border-emerald-500/40 rounded-full flex items-center justify-center"><CheckCircle2 className="w-10 h-10 text-emerald-400" /></div>
-              <div className="text-center space-y-2"><p className="text-xl font-extrabold text-white">تمت عملية الدفع بنجاح!</p><p className="text-sm text-slate-400 dark:text-[#B0B0B8]">رقم المعاملة: <span className="text-amber-400 font-mono font-bold">{transactionId}</span></p></div>
-              <div className="bg-slate-900 dark:bg-[#1C1C1E] border border-slate-700 dark:border-[#48484D] rounded-xl p-4 w-full"><div className="flex justify-between text-sm"><span className="text-slate-400 dark:text-[#B0B0B8]">المبلغ المدفوع:</span><span className="font-bold text-emerald-400">{amount.toLocaleString()} {currency}</span></div></div>
+              <div className="text-center space-y-2"><p className="text-xl font-extrabold text-white">تمت عملية الدفع بنجاح!</p><p className="text-sm text-ink-secondary dark:text-[#B0B0B8]">رقم المعاملة: <span className="text-amber-400 font-mono font-bold">{transactionId}</span></p></div>
+              <div className="bg-slate-900 dark:bg-[#1C1C1E] border border-slate-700 dark:border-[#48484D] rounded-xl p-4 w-full"><div className="flex justify-between text-sm"><span className="text-ink-secondary dark:text-[#B0B0B8]">المبلغ المدفوع:</span><span className="font-bold text-emerald-400">{amount.toLocaleString()} {currency}</span></div></div>
               <Button onClick={handleSuccessClose} className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-bold py-3.5 rounded-xl text-sm shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2"><CheckCircle2 className="w-4 h-4" />متابعة إلى تفاصيل الحجز</Button>
             </div>
           )}
@@ -713,7 +713,7 @@ export function PaymentCheckoutModal({
           {step === 'error' && (
             <div className="py-8 flex flex-col items-center justify-center space-y-6">
               <div className="w-20 h-20 bg-red-500/20 border-2 border-red-500/40 rounded-full flex items-center justify-center"><AlertCircle className="w-10 h-10 text-red-400" /></div>
-              <div className="text-center space-y-2"><p className="text-xl font-extrabold text-white">فشل الدفع</p><p className="text-sm text-slate-400 dark:text-[#B0B0B8]">{errorMessage}</p></div>
+              <div className="text-center space-y-2"><p className="text-xl font-extrabold text-white">فشل الدفع</p><p className="text-sm text-ink-secondary dark:text-[#B0B0B8]">{errorMessage}</p></div>
               <div className="flex gap-3 w-full">
                 <Button onClick={handleClose} className="flex-1 bg-slate-800 dark:bg-[#2C2C2E] hover:bg-slate-700 dark:hover:bg-[#48484D] text-slate-300 dark:text-[#D6D6DB] font-bold py-3 rounded-xl text-sm">إلغاء</Button>
                 <Button onClick={handleRetry} className="flex-[2] bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold py-3 rounded-xl text-sm shadow-lg shadow-amber-500/20">إعادة المحاولة</Button>

@@ -39,7 +39,7 @@ export default function SuperDashboard() {
         <div className="max-w-md space-y-3">
           <ShieldCheck className="mx-auto h-12 w-12 text-rose-500" />
           <h1 className="text-2xl font-black text-slate-100 dark:text-[#F1F1F3]">الوصول مقيّد</h1>
-          <p className="text-sm text-slate-400 dark:text-[#B0B0B8]">هذه اللوحة متاحة حصرياً لحسابات SUPER_ADMIN.</p>
+          <p className="text-sm text-ink-secondary dark:text-[#B0B0B8]">هذه اللوحة متاحة حصرياً لحسابات SUPER_ADMIN.</p>
         </div>
       </main>
     );
@@ -59,7 +59,7 @@ export default function SuperDashboard() {
               <span className="text-xs font-bold uppercase tracking-[0.25em]">ALTUSplace / SUPER DASHBOARD / EXECUTIVE</span>
             </div>
             <h1 className="text-3xl font-black tracking-tight text-white">لوحة القيادة التنفيذية للتمويل</h1>
-            <p className="mt-2 flex max-w-xl items-center gap-2 text-sm text-slate-400 dark:text-[#B0B0B8]">
+            <p className="mt-2 flex max-w-xl items-center gap-2 text-sm text-ink-secondary dark:text-[#B0B0B8]">
               <LayoutDashboard className="h-3.5 w-3.5 text-emerald-400" />
               التحليلات المالية، التحكم الديناميكي بالعمولة، ومراقبة الإسكرو عبر Stripe Connect.
             </p>
@@ -72,7 +72,7 @@ export default function SuperDashboard() {
         {waiting ? (
           <DashboardSkeleton />
         ) : !overviewData ? (
-          <div className="rounded-2xl border border-slate-800 dark:border-[#2C2C2E] bg-slate-900/70 dark:bg-[#1C1C1E]/70 p-10 text-center text-sm text-slate-400 dark:text-[#B0B0B8]">تعذر تحميل البيانات المالية حالياً. حاول التحديث لاحقاً.</div>
+          <div className="rounded-2xl border border-slate-800 dark:border-[#2C2C2E] bg-slate-900/70 dark:bg-[#1C1C1E]/70 p-10 text-center text-sm text-ink-secondary dark:text-[#B0B0B8]">تعذر تحميل البيانات المالية حالياً. حاول التحديث لاحقاً.</div>
         ) : (
           <>
             <MetricCards data={overviewData} />
