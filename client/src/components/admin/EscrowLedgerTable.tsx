@@ -35,7 +35,7 @@ const STATUS_STYLES: Record<EscrowRow["status"], { label: string; className: str
 };
 
 const TRANSFER_STYLES: Record<EscrowRow["stripeTransferStatus"], { label: string; className: string }> = {
-  pending: { label: "Pending", className: "bg-slate-800 dark:bg-[#2C2C2E] text-slate-400 dark:text-[#B0B0B8]" },
+  pending: { label: "Pending", className: "bg-slate-800 dark:bg-[#2C2C2E] text-ink-secondary dark:text-[#B0B0B8]" },
   sent: { label: "Sent", className: "bg-sky-500/15 text-sky-300" },
   held: { label: "Held", className: "bg-amber-500/15 text-amber-300" },
   failed: { label: "Failed", className: "bg-rose-500/15 text-rose-300" },
@@ -197,7 +197,7 @@ function Row({
         <tr className="border-b border-slate-800/70 dark:border-[#2C2C2E]/70 bg-slate-900/40 dark:bg-[#1C1C1E]/40">
           <td colSpan={11} className="px-4 py-4">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-end">
-              <label className="flex-1 text-xs font-semibold text-slate-400 dark:text-[#B0B0B8]">
+              <label className="flex-1 text-xs font-semibold text-ink-secondary dark:text-[#B0B0B8]">
                 ملاحظة التسوية / Mediation Note
                 <textarea
                   value={mediateNote}

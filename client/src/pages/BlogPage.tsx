@@ -98,7 +98,7 @@ export default function BlogPage() {
         {/* Search & Widget Bar */}
         <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
           <div className="flex items-center gap-2 w-full md:w-96 relative">
-            <Search className="absolute right-3.5 w-4 h-4 text-slate-400" />
+            <Search className="absolute right-3.5 w-4 h-4 text-ink-secondary" />
             <input 
               type="text" 
               placeholder="ابحث في المقالات والأخبار..." 
@@ -129,7 +129,7 @@ export default function BlogPage() {
               </div>
               <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
                 <div className="space-y-3">
-                  <div className="flex items-center gap-4 text-xs text-slate-400">
+                  <div className="flex items-center gap-4 text-xs text-ink-secondary">
                     <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> {article.date}</span>
                     <span className="flex items-center gap-1"><User className="w-3.5 h-3.5" /> {article.author}</span>
                   </div>
@@ -141,7 +141,7 @@ export default function BlogPage() {
                   </p>
                 </div>
                 <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
-                  <span className="text-xs font-semibold text-slate-400">{article.readTime}</span>
+                  <span className="text-xs font-semibold text-ink-secondary">{article.readTime}</span>
                   <Button variant="link" className="text-[#1C1C1E] font-bold p-0 h-auto flex items-center gap-1 text-xs hover:text-accent-clay">
                     <span>قراءة المقال</span>
                     <ArrowRight className="w-3.5 h-3.5" />

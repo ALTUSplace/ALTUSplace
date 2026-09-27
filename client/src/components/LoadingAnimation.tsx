@@ -32,7 +32,7 @@ export function LoadingAnimation({
           <Sparkles className="w-5 h-5 text-amber-400 animate-pulse" />
           {text}
         </h3>
-        <p className="text-sm text-slate-400 dark:text-[#B0B0B8] font-medium">
+        <p className="text-sm text-ink-secondary dark:text-[#B0B0B8] font-medium">
           {subtext}
         </p>
       </div>

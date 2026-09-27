@@ -96,8 +96,8 @@ export default function CommissionController({
               return (
                 <div key={tier.tier} className="rounded-lg border border-slate-800 dark:border-[#2C2C2E] bg-slate-950/40 dark:bg-[#111113]/40 p-3">
                   <div className="mb-2 flex items-center justify-between">
-                    <span className="flex items-center gap-1.5 text-xs font-bold text-slate-200 dark:text-[#E8E8EB]"><Medal className={`h-4 w-4 ${meta?.color ?? "text-slate-400 dark:text-[#B0B0B8]"}`} /> {meta?.label ?? tier.tier} <span className="text-[10px] font-medium text-slate-500">({meta?.en ?? ""})</span></span>
-                    <span className="flex items-center gap-1.5 text-[10px] text-slate-400 dark:text-[#B0B0B8]">
+                    <span className="flex items-center gap-1.5 text-xs font-bold text-slate-200 dark:text-[#E8E8EB]"><Medal className={`h-4 w-4 ${meta?.color ?? "text-ink-secondary dark:text-[#B0B0B8]"}`} /> {meta?.label ?? tier.tier} <span className="text-[10px] font-medium text-slate-500">({meta?.en ?? ""})</span></span>
+                    <span className="flex items-center gap-1.5 text-[10px] text-ink-secondary dark:text-[#B0B0B8]">
                       {tier.active ? <span className="inline-flex items-center gap-0.5 text-emerald-300"><Check className="h-3 w-3" />override</span> : <span className="text-slate-500">global</span>}
                       <span className="rounded-full bg-slate-800 dark:bg-[#2C2C2E] px-1.5 py-0.5">{tierDistribution[tier.tier] ?? 0} مزوّد</span>
                     </span>
@@ -144,7 +144,7 @@ export default function CommissionController({
 function RateEditor({ draft, onChange, compact = false }: { draft: { mode: "percent" | "flat"; percent: number; flat: number }; onChange: (next: { mode: "percent" | "flat"; percent: number; flat: number }) => void; compact?: boolean }) {
   return (
     <div className={`flex flex-wrap items-end gap-2 ${compact ? "" : ""}`}>
-      <label className="text-[11px] font-semibold text-slate-400 dark:text-[#B0B0B8]">
+      <label className="text-[11px] font-semibold text-ink-secondary dark:text-[#B0B0B8]">
         {compact ? "النمط" : "نوع الرسوم"}
         <select value={draft.mode} onChange={(event) => onChange({ ...draft, mode: event.target.value as "percent" | "flat" })} className="mt-0.5 block rounded-md border border-slate-700 dark:border-[#48484D] bg-slate-800 dark:bg-[#2C2C2E] px-2 py-1.5 text-xs text-slate-200 dark:text-[#E8E8EB] outline-none">
           <option value="percent">Percent %</option>
@@ -152,12 +152,12 @@ function RateEditor({ draft, onChange, compact = false }: { draft: { mode: "perc
         </select>
       </label>
       {draft.mode === "percent" ? (
-        <label className="text-[11px] font-semibold text-slate-400 dark:text-[#B0B0B8]">
+        <label className="text-[11px] font-semibold text-ink-secondary dark:text-[#B0B0B8]">
           النسبة %
           <input type="number" min={0} max={100} step={0.1} value={String(draft.percent)} onChange={(event) => onChange({ ...draft, percent: Number(event.target.value) })} className="mt-0.5 block w-20 rounded-md border border-slate-700 dark:border-[#48484D] bg-slate-800 dark:bg-[#2C2C2E] px-2 py-1.5 text-xs text-slate-100 dark:text-[#F1F1F3] outline-none" />
         </label>
       ) : (
-        <label className="text-[11px] font-semibold text-slate-400 dark:text-[#B0B0B8]">
+        <label className="text-[11px] font-semibold text-ink-secondary dark:text-[#B0B0B8]">
           المبلغ (MAD)
           <input type="number" min={0} step={1} value={String(Math.round(draft.flat))} onChange={(event) => onChange({ ...draft, flat: Number(event.target.value) })} className="mt-0.5 block w-24 rounded-md border border-slate-700 dark:border-[#48484D] bg-slate-800 dark:bg-[#2C2C2E] px-2 py-1.5 text-xs text-slate-100 dark:text-[#F1F1F3] outline-none" />
         </label>

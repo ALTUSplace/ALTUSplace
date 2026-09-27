@@ -143,7 +143,7 @@ export default function ReviewDialog({
                           className="sr-only"
                         />
                         <Star
-                          className={`h-6 w-6 ${value >= star ? "fill-amber-400 text-amber-400" : "text-slate-400"}`}
+                          className={`h-6 w-6 ${value >= star ? "fill-amber-400 text-amber-400" : "text-ink-secondary"}`}
                         />
                       </label>
                     ))}

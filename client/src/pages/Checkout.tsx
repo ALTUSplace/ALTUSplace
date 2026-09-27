@@ -127,7 +127,7 @@ function DocumentUploadField({
           />
         </label>
       )}
-      <p className="text-[11px] text-slate-400">{hint}</p>
+      <p className="text-[11px] text-ink-secondary">{hint}</p>
     </div>
   );
 }
@@ -579,7 +579,7 @@ const result = await createBooking.mutateAsync({
                   </p>
                 )}
                 {!agencyPhone && (
-                  <p className="text-[11px] text-slate-400">
+                  <p className="text-[11px] text-ink-secondary">
                     لم تشارك الوكالة رقم واتساب بعد؛ ستُوجَّه رسالتك إلى خط دعم ALTUSplace الذي ينسّق معها.
                   </p>
                 )}
@@ -591,7 +591,7 @@ const result = await createBooking.mutateAsync({
             <Card className="md:sticky md:top-6">
               <CardHeader>
                 <CardTitle className="text-lg">ملخص الطلب</CardTitle>
-                <p className="text-[11px] font-normal text-slate-400 -mt-1">ملخص الفاتورة الشفافة — بدون رسوم خفية</p>
+                <p className="text-[11px] font-normal text-ink-secondary -mt-1">ملخص الفاتورة الشفافة — بدون رسوم خفية</p>
               </CardHeader>
               <CardContent className="space-y-4 text-sm">
                 <div className="space-y-2">

@@ -68,7 +68,7 @@ export const DisasterRecoveryTab: React.FC = () => {
             <Database className="w-6 h-6 text-amber-500" />
             نظام النسخ الاحتياطي التلقائي والتعافي من الكوارث (Disaster Recovery)
           </h2>
-          <p className="text-sm text-slate-400 dark:text-[#B0B0B8] mt-1">
+          <p className="text-sm text-ink-secondary dark:text-[#B0B0B8] mt-1">
             إدارة النسخ الاحتياطية لبيانات السيارات، العقارات، المستخدمين، والحجوزات لضمان استمرارية العمل بنسبة 100%.
           </p>
         </div>
@@ -97,7 +97,7 @@ export const DisasterRecoveryTab: React.FC = () => {
         <Card className="bg-slate-900/60 dark:bg-[#1C1C1E]/60 border-slate-800 dark:border-[#2C2C2E] text-slate-100 dark:text-[#F1F1F3]">
           <CardContent className="p-5 flex items-center justify-between">
             <div>
-              <p className="text-xs text-slate-400 dark:text-[#B0B0B8]">حالة نظام الحماية</p>
+              <p className="text-xs text-ink-secondary dark:text-[#B0B0B8]">حالة نظام الحماية</p>
               <h3 className="text-lg font-bold text-emerald-400 mt-1 flex items-center gap-1.5">
                 <CheckCircle2 className="w-5 h-5 text-emerald-400" />
                 نشط وآمن 100%
@@ -112,7 +112,7 @@ export const DisasterRecoveryTab: React.FC = () => {
         <Card className="bg-slate-900/60 dark:bg-[#1C1C1E]/60 border-slate-800 dark:border-[#2C2C2E] text-slate-100 dark:text-[#F1F1F3]">
           <CardContent className="p-5 flex items-center justify-between">
             <div>
-              <p className="text-xs text-slate-400 dark:text-[#B0B0B8]">آخر نسخ تلقائي</p>
+              <p className="text-xs text-ink-secondary dark:text-[#B0B0B8]">آخر نسخ تلقائي</p>
               <h3 className="text-lg font-bold text-amber-400 mt-1 flex items-center gap-1.5">
                 <Clock className="w-5 h-5 text-amber-400" />
                 اليوم، 04:00 صباحاً
@@ -127,7 +127,7 @@ export const DisasterRecoveryTab: React.FC = () => {
         <Card className="bg-slate-900/60 dark:bg-[#1C1C1E]/60 border-slate-800 dark:border-[#2C2C2E] text-slate-100 dark:text-[#F1F1F3]">
           <CardContent className="p-5 flex items-center justify-between">
             <div>
-              <p className="text-xs text-slate-400 dark:text-[#B0B0B8]">مساحة التخزين السحابي</p>
+              <p className="text-xs text-ink-secondary dark:text-[#B0B0B8]">مساحة التخزين السحابي</p>
               <h3 className="text-lg font-bold text-accent-clay mt-1">4.2 GB / 50 GB</h3>
             </div>
             <div className="p-3 bg-accent-clay-soft rounded-xl text-accent-clay">
@@ -141,7 +141,7 @@ export const DisasterRecoveryTab: React.FC = () => {
       <Card className="bg-slate-900/80 dark:bg-[#1C1C1E]/80 border-slate-800 dark:border-[#2C2C2E] text-slate-100 dark:text-[#F1F1F3] shadow-xl">
         <CardHeader>
           <CardTitle className="text-base font-bold text-slate-200 dark:text-[#E8E8EB]">سجل النسخ الاحتياطية المتاحة للاستعادة</CardTitle>
-          <CardDescription className="text-xs text-slate-400 dark:text-[#B0B0B8]">
+          <CardDescription className="text-xs text-ink-secondary dark:text-[#B0B0B8]">
             يمكنك تحميل أي نسخة سابقة بصيغة SQL أو استعادتها بضغطة زر واحدة في حالة الطوارئ.
           </CardDescription>
         </CardHeader>
@@ -149,7 +149,7 @@ export const DisasterRecoveryTab: React.FC = () => {
           <div className="overflow-x-auto">
             <table className="w-full text-right border-collapse">
               <thead>
-                <tr className="border-b border-slate-800 dark:border-[#2C2C2E] text-xs text-slate-400 dark:text-[#B0B0B8]">
+                <tr className="border-b border-slate-800 dark:border-[#2C2C2E] text-xs text-ink-secondary dark:text-[#B0B0B8]">
                   <th className="py-3 px-4">اسم الملف</th>
                   <th className="py-3 px-4">نوع النسخ</th>
                   <th className="py-3 px-4">الحجم</th>
@@ -168,7 +168,7 @@ export const DisasterRecoveryTab: React.FC = () => {
                       </span>
                     </td>
                     <td className="py-3 px-4 text-slate-300 dark:text-[#D6D6DB]">{bk.size}</td>
-                    <td className="py-3 px-4 text-slate-400 dark:text-[#B0B0B8] text-xs">{bk.time}</td>
+                    <td className="py-3 px-4 text-ink-secondary dark:text-[#B0B0B8] text-xs">{bk.time}</td>
                     <td className="py-3 px-4">
                       <span className="text-xs text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md">
                         {bk.status}
@@ -212,17 +212,17 @@ export const DisasterRecoveryTab: React.FC = () => {
               </div>
               <div>
                 <h3 className="text-lg font-bold text-slate-100 dark:text-[#F1F1F3]">تأكيد تصدير السجلات</h3>
-                <p className="text-xs text-slate-400 dark:text-[#B0B0B8]">هل ترغب في تصدير سجلات النسخ الاحتياطي الحالية بصيغة CSV؟</p>
+                <p className="text-xs text-ink-secondary dark:text-[#B0B0B8]">هل ترغب في تصدير سجلات النسخ الاحتياطي الحالية بصيغة CSV؟</p>
               </div>
             </div>
 
             <div className="bg-slate-950 dark:bg-[#111113] p-4 rounded-xl border border-slate-800 dark:border-[#2C2C2E] text-xs space-y-2 text-slate-300 dark:text-[#D6D6DB]">
               <div className="flex justify-between">
-                <span className="text-slate-400 dark:text-[#B0B0B8]">عدد السجلات المشمولة:</span>
+                <span className="text-ink-secondary dark:text-[#B0B0B8]">عدد السجلات المشمولة:</span>
                 <span className="font-bold text-amber-400">{backups.length} نسخ مسجلة</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400 dark:text-[#B0B0B8]">صيغة الملف:</span>
+                <span className="text-ink-secondary dark:text-[#B0B0B8]">صيغة الملف:</span>
                 <span className="font-mono text-emerald-400">.csv (Excel Compatible)</span>
               </div>
             </div>

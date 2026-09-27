@@ -166,7 +166,7 @@ export function SecurePaymentModal({
           </svg>
         );
       default:
-        return <CreditCard className="w-5 h-5 text-slate-400 dark:text-[#B0B0B8]" />;
+        return <CreditCard className="w-5 h-5 text-ink-secondary dark:text-[#B0B0B8]" />;
     }
   };
 
@@ -181,20 +181,20 @@ export function SecurePaymentModal({
               </div>
               <div>
                 <h3 className="text-lg font-extrabold text-white">الدفع الآمن</h3>
-                <p className="text-[11px] text-slate-400 dark:text-[#B0B0B8] flex items-center gap-1">
+                <p className="text-[11px] text-ink-secondary dark:text-[#B0B0B8] flex items-center gap-1">
                   <Lock className="w-3 h-3" />
                   مشفرة بمعيار PCI-DSS عبر مركز البنك المغربي (CMI)
                 </p>
               </div>
             </div>
-            <button onClick={handleClose} disabled={loading} className="text-slate-400 dark:text-[#B0B0B8] hover:text-white text-sm font-bold w-8 h-8 rounded-full bg-slate-800 dark:bg-[#2C2C2E] flex items-center justify-center transition-colors disabled:opacity-50">✕</button>
+            <button onClick={handleClose} disabled={loading} className="text-ink-secondary dark:text-[#B0B0B8] hover:text-white text-sm font-bold w-8 h-8 rounded-full bg-slate-800 dark:bg-[#2C2C2E] flex items-center justify-center transition-colors disabled:opacity-50">✕</button>
           </div>
         </div>
 
         <div className="px-6 pt-5">
           <div className="bg-gradient-to-l from-amber-500/10 to-transparent border border-amber-500/20 rounded-2xl p-4 flex items-center justify-between">
             <div>
-              <p className="text-xs text-slate-400 dark:text-[#B0B0B8] mb-1">المبلغ الإجمالي للدفع</p>
+              <p className="text-xs text-ink-secondary dark:text-[#B0B0B8] mb-1">المبلغ الإجمالي للدفع</p>
               {description && <p className="text-[11px] text-slate-500">{description}</p>}
             </div>
             <span className="text-2xl font-black text-amber-400">{amount.toLocaleString()} <span className="text-sm font-bold">{currency}</span></span>
@@ -208,15 +208,15 @@ export function SecurePaymentModal({
               <div className="space-y-3">
                 <button onClick={() => { setPaymentMethod('cmi_card'); setStep('details'); }} className="w-full flex items-center gap-4 p-4 rounded-2xl border-2 border-amber-500 bg-amber-500/5 transition-all text-right">
                   <div className="bg-accent-clay-soft p-2.5 rounded-xl border border-accent-clay/30"><CreditCard className="w-5 h-5 text-accent-clay" /></div>
-                  <div className="flex-1"><p className="font-bold text-sm">بطاقة بنكية (CMI)</p><p className="text-[11px] text-slate-400 dark:text-[#B0B0B8]">Visa, Mastercard, CMI</p></div>
+                  <div className="flex-1"><p className="font-bold text-sm">بطاقة بنكية (CMI)</p><p className="text-[11px] text-ink-secondary dark:text-[#B0B0B8]">Visa, Mastercard, CMI</p></div>
                 </button>
                 <button onClick={() => { setPaymentMethod('bank_transfer'); setStep('details'); }} className="w-full flex items-center gap-4 p-4 rounded-2xl border-2 border-slate-700 dark:border-[#48484D] hover:border-slate-600 bg-slate-900 dark:bg-[#1C1C1E] transition-all text-right">
                   <div className="bg-emerald-500/10 p-2.5 rounded-xl border border-emerald-500/20"><Building2 className="w-5 h-5 text-emerald-400" /></div>
-                  <div className="flex-1"><p className="font-bold text-sm">تحويل بنكي</p><p className="text-[11px] text-slate-400 dark:text-[#B0B0B8]">تحويل مباشر إلى حساب الوكالة</p></div>
+                  <div className="flex-1"><p className="font-bold text-sm">تحويل بنكي</p><p className="text-[11px] text-ink-secondary dark:text-[#B0B0B8]">تحويل مباشر إلى حساب الوكالة</p></div>
                 </button>
                 <button onClick={() => { setPaymentMethod('mobile_wallet'); setStep('details'); }} className="w-full flex items-center gap-4 p-4 rounded-2xl border-2 border-slate-700 dark:border-[#48484D] hover:border-slate-600 bg-slate-900 dark:bg-[#1C1C1E] transition-all text-right">
                   <div className="bg-purple-500/10 p-2.5 rounded-xl border border-purple-500/20"><Smartphone className="w-5 h-5 text-purple-400" /></div>
-                  <div className="flex-1"><p className="font-bold text-sm">محفظة إلكترونية</p><p className="text-[11px] text-slate-400 dark:text-[#B0B0B8]">Himti, Jumia Pay, Barid Cash</p></div>
+                  <div className="flex-1"><p className="font-bold text-sm">محفظة إلكترونية</p><p className="text-[11px] text-ink-secondary dark:text-[#B0B0B8]">Himti, Jumia Pay, Barid Cash</p></div>
                 </button>
               </div>
             </div>
@@ -227,7 +227,7 @@ export function SecurePaymentModal({
               <div className="bg-gradient-to-bl from-slate-800 dark:from-[#2C2C2E] via-slate-900 dark:via-[#1C1C1E] to-slate-800 dark:to-[#2C2C2E] rounded-2xl p-5 border border-slate-700 dark:border-[#48484D] relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-bl from-amber-500/5 to-transparent" />
                 <div className="relative z-10">
-                  <div className="flex justify-between items-start mb-6">{getCardIcon()}<div className="text-[10px] text-slate-400 dark:text-[#B0B0B8] flex items-center gap-1"><Lock className="w-3 h-3" />CMI Secure</div></div>
+                  <div className="flex justify-between items-start mb-6">{getCardIcon()}<div className="text-[10px] text-ink-secondary dark:text-[#B0B0B8] flex items-center gap-1"><Lock className="w-3 h-3" />CMI Secure</div></div>
                   <p className="font-mono text-lg tracking-[0.2em] text-white mb-4">{cardNumber || '•••• •••• •••• ••••'}</p>
                   <div className="flex justify-between items-end">
                     <div><p className="text-[9px] text-slate-500 mb-0.5">حامل البطاقة</p><p className="text-xs font-bold text-slate-300 dark:text-[#D6D6DB] uppercase">{cardHolder || 'YOUR NAME'}</p></div>
@@ -274,10 +274,10 @@ export function SecurePaymentModal({
               <div className="bg-cyan-500/5 border border-cyan-500/20 rounded-2xl p-5 space-y-4">
                 <div className="flex items-center gap-3"><Building2 className="w-5 h-5 text-cyan-400" /><p className="font-bold text-sm text-cyan-300">معلومات التحويل البنكي</p></div>
                 <div className="space-y-3 text-sm">
-                  <div className="flex justify-between py-2 border-b border-slate-800 dark:border-[#2C2C2E]"><span className="text-slate-400 dark:text-[#B0B0B8]">اسم البنك:</span><span className="font-bold text-white">BMCE Bank</span></div>
-                  <div className="flex justify-between py-2 border-b border-slate-800 dark:border-[#2C2C2E]"><span className="text-slate-400 dark:text-[#B0B0B8]">IBAN:</span><span className="font-mono text-white text-xs">MA 0023 4456 7890 1234 5678 9012</span></div>
-                  <div className="flex justify-between py-2 border-b border-slate-800 dark:border-[#2C2C2E]"><span className="text-slate-400 dark:text-[#B0B0B8]">BIC/SWIFT:</span><span className="font-mono text-white">BMCEMAMC</span></div>
-                  <div className="flex justify-between py-2"><span className="text-slate-400 dark:text-[#B0B0B8]">المبلغ:</span><span className="font-bold text-amber-400">{amount.toLocaleString()} {currency}</span></div>
+                  <div className="flex justify-between py-2 border-b border-slate-800 dark:border-[#2C2C2E]"><span className="text-ink-secondary dark:text-[#B0B0B8]">اسم البنك:</span><span className="font-bold text-white">BMCE Bank</span></div>
+                  <div className="flex justify-between py-2 border-b border-slate-800 dark:border-[#2C2C2E]"><span className="text-ink-secondary dark:text-[#B0B0B8]">IBAN:</span><span className="font-mono text-white text-xs">MA 0023 4456 7890 1234 5678 9012</span></div>
+                  <div className="flex justify-between py-2 border-b border-slate-800 dark:border-[#2C2C2E]"><span className="text-ink-secondary dark:text-[#B0B0B8]">BIC/SWIFT:</span><span className="font-mono text-white">BMCEMAMC</span></div>
+                  <div className="flex justify-between py-2"><span className="text-ink-secondary dark:text-[#B0B0B8]">المبلغ:</span><span className="font-bold text-amber-400">{amount.toLocaleString()} {currency}</span></div>
                 </div>
               </div>
               <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-3 text-[11px] text-amber-300">يرجى إرسال إيصال التحويل عبر واتساب أو البريد الإلكتروني لتأكيد الحجز.</div>
@@ -299,7 +299,7 @@ export function SecurePaymentModal({
                     </button>
                   ))}
                 </div>
-                <p className="text-[11px] text-slate-400 dark:text-[#B0B0B8] text-center">سيتم تحويلك إلى تطبيق المحفظة لإتمام الدفع</p>
+                <p className="text-[11px] text-ink-secondary dark:text-[#B0B0B8] text-center">سيتم تحويلك إلى تطبيق المحفظة لإتمام الدفع</p>
               </div>
               <div className="flex gap-3 pt-2">
                 <Button type="button" onClick={() => setStep('method')} className="flex-1 bg-slate-800 dark:bg-[#2C2C2E] hover:bg-slate-700 dark:hover:bg-[#48484D] text-slate-300 dark:text-[#D6D6DB] font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2"><ChevronLeft className="w-4 h-4" />رجوع</Button>
@@ -315,7 +315,7 @@ export function SecurePaymentModal({
                 <div className="absolute inset-0 w-20 h-20 border-4 border-amber-500 border-t-transparent rounded-full animate-spin" />
                 <div className="absolute inset-0 flex items-center justify-center"><Loader2 className="w-8 h-8 text-amber-400 animate-spin" /></div>
               </div>
-              <div className="text-center space-y-2"><p className="font-bold text-white">جاري معالجة الدفع...</p><p className="text-xs text-slate-400 dark:text-[#B0B0B8]">يرجى عدم إغلاق هذه النافذة</p></div>
+              <div className="text-center space-y-2"><p className="font-bold text-white">جاري معالجة الدفع...</p><p className="text-xs text-ink-secondary dark:text-[#B0B0B8]">يرجى عدم إغلاق هذه النافذة</p></div>
               <div className="flex items-center gap-2 text-[11px] text-emerald-400"><Lock className="w-3.5 h-3.5" /><span>اتصال مشفر وآمن</span></div>
             </div>
           )}
@@ -323,8 +323,8 @@ export function SecurePaymentModal({
           {step === 'success' && (
             <div className="py-8 flex flex-col items-center justify-center space-y-6">
               <div className="w-20 h-20 bg-emerald-500/20 border-2 border-emerald-500/40 rounded-full flex items-center justify-center"><CheckCircle2 className="w-10 h-10 text-emerald-400" /></div>
-              <div className="text-center space-y-2"><p className="text-xl font-extrabold text-white">تمت عملية الدفع بنجاح!</p><p className="text-sm text-slate-400 dark:text-[#B0B0B8]">رقم المعاملة: <span className="text-amber-400 font-mono font-bold">{transactionId}</span></p></div>
-              <div className="bg-slate-900 dark:bg-[#1C1C1E] border border-slate-700 dark:border-[#48484D] rounded-xl p-4 w-full"><div className="flex justify-between text-sm"><span className="text-slate-400 dark:text-[#B0B0B8]">المبلغ المدفوع:</span><span className="font-bold text-emerald-400">{amount.toLocaleString()} {currency}</span></div></div>
+              <div className="text-center space-y-2"><p className="text-xl font-extrabold text-white">تمت عملية الدفع بنجاح!</p><p className="text-sm text-ink-secondary dark:text-[#B0B0B8]">رقم المعاملة: <span className="text-amber-400 font-mono font-bold">{transactionId}</span></p></div>
+              <div className="bg-slate-900 dark:bg-[#1C1C1E] border border-slate-700 dark:border-[#48484D] rounded-xl p-4 w-full"><div className="flex justify-between text-sm"><span className="text-ink-secondary dark:text-[#B0B0B8]">المبلغ المدفوع:</span><span className="font-bold text-emerald-400">{amount.toLocaleString()} {currency}</span></div></div>
               <Button onClick={handleSuccessClose} className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-bold py-3.5 rounded-xl text-sm shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2"><CheckCircle2 className="w-4 h-4" />متابعة إلى تفاصيل الحجز</Button>
             </div>
           )}

@@ -59,7 +59,7 @@ export default function RevenueChart({ data }: { data: RevenuePoint[] }) {
               key={key}
               type="button"
               onClick={() => setFilter(key)}
-              className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition ${filter === key ? "bg-cyan-500 text-slate-950" : "text-slate-400 dark:text-[#B0B0B8] hover:text-slate-200"}`}
+              className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition ${filter === key ? "bg-cyan-500 text-slate-950" : "text-ink-secondary dark:text-[#B0B0B8] hover:text-slate-200"}`}
             >
               <Icon className="h-3.5 w-3.5" />
               {label}

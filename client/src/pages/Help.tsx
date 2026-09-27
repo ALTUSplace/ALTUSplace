@@ -44,7 +44,7 @@ export default function Help() {
             <HelpCircle className="w-8 h-8" />
           </div>
           <h1 className="text-3xl font-black text-white">مركز المساعدة والدعم الفني</h1>
-          <p className="text-slate-400 dark:text-[#B0B0B8] text-sm">نحن هنا للإجابة عن كافة استفساراتك وتوفير تجربة وساطة سلسة وموثوقة</p>
+          <p className="text-ink-secondary dark:text-[#B0B0B8] text-sm">نحن هنا للإجابة عن كافة استفساراتك وتوفير تجربة وساطة سلسة وموثوقة</p>
         </div>
 
         {/* الأسئلة الشائعة */}
@@ -76,7 +76,7 @@ export default function Help() {
             </div>
             <div>
               <h3 className="text-lg font-bold text-white">إرسال استفسار للدعم الفني</h3>
-              <p className="text-xs text-slate-400 dark:text-[#B0B0B8]">{`سيتم إرسال رسالتك مباشرة إلى البريد المعتمد: ${SUPPORT_EMAIL}`}</p>
+              <p className="text-xs text-ink-secondary dark:text-[#B0B0B8]">{`سيتم إرسال رسالتك مباشرة إلى البريد المعتمد: ${SUPPORT_EMAIL}`}</p>
             </div>
           </div>
 
@@ -163,7 +163,7 @@ export default function Help() {
             <Mail className="w-5 h-5" />
           </div>
           <div>
-            <div className="text-xs text-slate-400 dark:text-[#B0B0B8] text-center">البريد الإلكتروني الرسمي المعتمد للدعم الفني</div>
+            <div className="text-xs text-ink-secondary dark:text-[#B0B0B8] text-center">البريد الإلكتروني الرسمي المعتمد للدعم الفني</div>
             <a href={`mailto:${SUPPORT_EMAIL}`} className="text-lg font-bold text-white hover:text-amber-400">{SUPPORT_EMAIL}</a>
           </div>
         </div>
