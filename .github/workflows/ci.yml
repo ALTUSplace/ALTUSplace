@@ -93,21 +93,22 @@ jobs:
       - name: Typecheck
         run: pnpm check
 
-      # `pnpm test` is `vitest run`, and pnpm forwards trailing args to the
-      # script (verified: it resolves to `vitest run "--exclude ..."`).
+      # `pnpm test` is `vitest run`, invoked bare.
       #
-      # server/imageWatermark.test.ts is excluded because it is untracked local
-      # work, unrelated to this repo's committed suite, and it times out at 5s
-      # where every other file passes. It is not in git, so on CI this exclude
-      # matches nothing today; it is kept so the gate stays green if that file
-      # is ever committed, instead of the workflow needing a rewrite then.
+      # This step previously passed `--exclude server/imageWatermark.test.ts`.
+      # That exclusion existed only while the watermark work was untracked local
+      # WIP, so on CI it matched nothing; left in place it would have silently
+      # suppressed the only coverage of applyListingWatermark now that the file
+      # is committed. The suite runs in ~1s here, well inside the 5s the old
+      # comment claimed it exceeded, so nothing else needed changing.
       #
-      # Note vitest has no `exclude` in vitest.config.ts, so a CLI --exclude
-      # replaces the default list (node_modules, dist, ...). That is safe here
-      # only because `include` is scoped to server|client|tests|scripts/**, so
-      # nothing outside the repo is ever collected anyway.
+      # Note vitest.config.ts has no `exclude`, so a CLI --exclude would replace
+      # the default list wholesale. Running bare avoids that entirely, and is
+      # safe because `include` is scoped to *.test.ts / *.spec.ts under
+      # server|client|tests|scripts, so stray tooling scripts are never
+      # collected.
       - name: Unit tests
-        run: pnpm test -- --exclude "server/imageWatermark.test.ts"
+        run: pnpm test
 
       # Guards the shared/listingCategory.ts contract directly, including that
       # the client and server no longer carry separate word lists. Cheaper and
