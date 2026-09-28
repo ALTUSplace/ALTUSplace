@@ -45,7 +45,7 @@ concurrency:
 jobs:
   gates:
     name: gates
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
 
     steps:
@@ -187,3 +187,24 @@ jobs:
       - name: Migration schema parity (advisory)
         continue-on-error: true
         run: pnpm check:schema-parity
+
+      # Sub-AA contrast token regression guard. Blocking, and currently passing.
+      #
+      # PR #20 (c911da6, "mass remediation of sub-AA slate text tokens") cleared
+      # these from the tree, so a full scan of main finds zero -- 204 .tsx/.ts
+      # files under client/src and nothing matching. This step therefore fails
+      # only when one is reintroduced, which is the point of it.
+      #
+      # Scoped to client/src/ because that is where the remediated class names
+      # were used. (A wider scan of server/, shared/, api/, e2e/ and tests/ on
+      # main is also clean, so widening the path is available if new UI code ever
+      # lands outside client/.)
+      #
+      # Path note: originally specified as src/, but there is no src/ at the repo
+      # root. That is not cosmetic -- grep on a missing directory exits 2, not 1,
+      # so `... && exit 1 || echo OK` would take the `||` branch and pass
+      # unconditionally, i.e. never fail. Against the old path this would have
+      # been a check that only looked like coverage.
+      - name: Verify no sub-AA contrast tokens remain
+        run: |
+          grep -rE "text-slate-400|text-gray-500" client/src/ --include="*.tsx" --include="*.ts" && exit 1 || echo "OK"
