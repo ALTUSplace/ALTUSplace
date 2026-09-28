@@ -13,6 +13,9 @@ import {
   validatePartnerApplyDraft,
   validatePartnerVehicleRow,
   PARTNER_APPLY_MESSAGES,
+  baseBytesLength,
+  safeBase64,
+  MAX_IMAGE_BYTES,
   type PartnerFieldErrors,
 } from "../shared/partnerApplication";
 
@@ -441,6 +444,93 @@ describe("partner application — no raw zod defaults reach the applicant", () =
   });
 });
 
+describe("partner application — image size caps", () => {
+  /** base64 of `bytes` decoded bytes, so a body can be sized exactly. */
+  const base64OfBytes = (bytes: number) =>
+    Buffer.alloc(bytes, 0x41).toString("base64");
+
+  const image = (bytes: number, fileName = "photo.jpg") => ({
+    fileName,
+    mimeType: "image/jpeg",
+    contentBase64: base64OfBytes(bytes),
+  });
+
+  it("strips a data-URL prefix and counts decoded bytes, not base64 characters", () => {
+    const raw = base64OfBytes(900);
+    expect(safeBase64(`data:image/jpeg;base64,${raw}`)).toBe(raw);
+    expect(safeBase64(raw)).toBe(raw);
+    // 900 bytes is 1200 base64 characters; the cap must see the decoded size.
+    expect(baseBytesLength(raw)).toBeLessThanOrEqual(900);
+    expect(baseBytesLength(raw)).toBeGreaterThan(900 - 4);
+  });
+
+  it("subtracts base64 padding when counting decoded bytes", () => {
+    expect(baseBytesLength("QQ==")).toBe(1);
+    expect(baseBytesLength("QUI=")).toBe(2);
+    expect(baseBytesLength("QUJD")).toBe(3);
+  });
+
+  it("rejects an over-cap logo as a 400-addressable field error, not a 500", () => {
+    const result = validatePartnerApplyBody({
+      ...completeCarRental,
+      logo: image(MAX_IMAGE_BYTES + 1),
+    });
+    expect(result.ok).toBe(false);
+    expect(Object.keys(result.fieldErrors ?? {})).toEqual(["logo.contentBase64"]);
+    expect(result.fieldErrors?.["logo.contentBase64"]).toBe(
+      PARTNER_APPLY_MESSAGES.logoTooLarge,
+    );
+    expectAllArabic(result.fieldErrors ?? {});
+  });
+
+  it("rejects an over-cap gallery image at its own index", () => {
+    const result = validatePartnerApplyBody({
+      ...completeCarRental,
+      gallery: [image(1024, "ok-1.jpg"), image(MAX_IMAGE_BYTES + 1, "big-2.jpg")],
+    });
+    expect(result.ok).toBe(false);
+    expect(Object.keys(result.fieldErrors ?? {})).toEqual(["gallery.1.contentBase64"]);
+    expect(result.fieldErrors?.["gallery.1.contentBase64"]).toBe(
+      PARTNER_APPLY_MESSAGES.galleryTooLarge,
+    );
+    expectAllArabic(result.fieldErrors ?? {});
+  });
+
+  it("names the gallery rather than the logo for an over-cap gallery image", () => {
+    const result = validatePartnerApplyBody({
+      ...completeCarRental,
+      gallery: [image(MAX_IMAGE_BYTES + 1)],
+    });
+    const message = result.fieldErrors?.["gallery.0.contentBase64"] ?? "";
+    expect(message).toContain("صور المعرض");
+    expect(message).not.toContain("شعار الوكالة");
+  });
+
+  it("accepts an image sitting exactly on the cap and rejects one byte more", () => {
+    const atCap = validatePartnerApplyBody({
+      ...completeCarRental,
+      logo: image(MAX_IMAGE_BYTES),
+    });
+    expect(atCap.ok).toBe(true);
+    const overCap = validatePartnerApplyBody({
+      ...completeCarRental,
+      logo: image(MAX_IMAGE_BYTES + 1),
+    });
+    expect(overCap.ok).toBe(false);
+  });
+
+  it("keeps the cap off the draft schema's mandatory-field rules", () => {
+    // The draft shares the image shape, so an over-cap staged image must fail
+    // the draft too — with a message, not a crash.
+    const result = validatePartnerApplyDraft({
+      ...draftFor(),
+      logo: image(MAX_IMAGE_BYTES + 1),
+    });
+    expect(result.ok).toBe(false);
+    expectAllArabic(result.fieldErrors ?? {});
+  });
+});
+
 describe("partner application — helpers", () => {
   it("turns blank numeric input into undefined so required rules can fire", () => {
     expect(toOptionalNumber("")).toBeUndefined();
@@ -518,5 +608,58 @@ describe("partner application — endpoint and form wiring (audit)", () => {
     // flatten().fieldErrors surfaced zod's English messages verbatim.
     expect(route).not.toContain("parsed.error.flatten()");
     expect(route).not.toContain("applyBodySchema");
+  });
+
+  it("enforces the per-image cap in the shared schema, not only after the INSERT", () => {
+    const route = read("server/_core/partnerApplication.ts");
+    // The base64 helpers live in shared/ so the schema and the upload path
+    // cannot drift into disagreeing about what "too large" means.
+    expect(route).toContain("baseBytesLength,");
+    expect(route).toContain("safeBase64,");
+    expect(route).not.toContain("function baseBytesLength");
+    expect(route).not.toContain("function safeBase64");
+    // The total-bytes 400 must name a field so the form has something to focus.
+    expect(route).toContain("PARTNER_APPLY_MESSAGES.imagesTooLarge");
+  });
+
+  /**
+   * Source-level only: there is no DOM test environment in this repo, so this
+   * asserts the wiring exists rather than that it behaves. See the "no raw zod
+   * defaults" block above for the same limitation.
+   */
+  it("wires both image dropzones into the per-field error chain", () => {
+    const form = read("client/src/pages/PartnerApply.tsx");
+    expect(form).toContain("const imageErrorsFor");
+    expect(form).toContain("const clearImageErrors");
+    expect(form).toContain("const fileFieldProps");
+    // An id is what lets the summary's focus effect find the control.
+    expect(form).toContain('fileFieldProps("logo"');
+    expect(form).toContain('fileFieldProps("gallery"');
+    expect(form).toContain('<FieldError fieldKey="logo"');
+    expect(form).toContain('<FieldError fieldKey="gallery"');
+    // An indexed gallery error belongs under its own thumbnail.
+    expect(form).toContain("fieldKey={`gallery.${index}`}");
+    expect(form).toContain("galleryErrors.byIndex.get(index)");
+    // Re-picking clears the stale error.
+    expect(form).toContain('clearImageErrors("logo")');
+    expect(form).toContain('clearImageErrors("gallery")');
+  });
+
+  it("collapses an image error onto its dropzone for the focus effect", () => {
+    const form = read("client/src/pages/PartnerApply.tsx");
+    expect(form).toContain("const focusTargetFor");
+    // PARTNER_APPLY_FIELD_ORDER has no logo/gallery, so without the collapse
+    // the summary silently skipped focusing for an image-only rejection.
+    expect(form).toContain("setFocusField(focusTargetFor(fieldErrors))");
+    expect(form).toContain('key.startsWith("logo.")');
+    expect(form).toContain('key.startsWith("gallery.")');
+  });
+
+  it("keeps the file inputs' sr-only class instead of the text-input border styling", () => {
+    const form = read("client/src/pages/PartnerApply.tsx");
+    // fieldProps() would clobber className with a border style meant for text
+    // inputs, so the file inputs use a dedicated id/aria-only helper.
+    expect(form).toContain('className="sr-only"');
+    expect(form).toContain('"aria-describedby": message');
   });
 });
