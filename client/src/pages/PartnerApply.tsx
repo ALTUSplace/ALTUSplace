@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useRoute } from "wouter";
 import {
+  AlertCircle,
   Building2,
   Car,
   CheckCircle2,
@@ -14,11 +15,30 @@ import {
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useSEO } from "@/lib/seo";
-
-const MAX_IMAGE_BYTES = 6 * 1024 * 1024;
-const MAX_GALLERY_IMAGES = 4;
-const MAX_TOTAL_IMAGES = 5; // logo + gallery
-const MAX_VEHICLES = 20;
+import {
+  AGENCY_NAME_MAX,
+  CITY_MAX,
+  CONTACT_PERSON_MAX,
+  DESCRIPTION_MAX,
+  MAX_GALLERY_IMAGES,
+  MAX_IMAGE_BYTES,
+  MAX_TOTAL_IMAGES,
+  MAX_VEHICLES,
+  PARTNER_APPLY_FIELD_ORDER,
+  PARTNER_PASSWORD_MIN,
+  VEHICLE_FUEL_MAX,
+  VEHICLE_NAME_MAX,
+  VEHICLE_TRANSMISSION_MAX,
+  isBlankVehicleDraft,
+  partnerFieldLabel,
+  partnerValidationSummary,
+  partnerVehicleDraftToWire,
+  toOptionalNumber,
+  validatePartnerApplyDraft,
+  validatePartnerVehicleRow,
+  type PartnerFieldErrors,
+  type PartnerVehicleDraft,
+} from "@shared/partnerApplication";
 
 type StagedImage = {
   fileName: string;
@@ -31,11 +51,11 @@ type ApplyPayload = {
   type: "car_rental" | "real_estate";
   agencyName: string;
   city: string;
+  contactPerson: string;
   phone: string;
   email: string;
   password: string;
   website?: string;
-  contactPerson?: string;
   description?: string;
   fleetSize?: number;
   propertyCount?: number;
@@ -51,13 +71,25 @@ type ApplyPayload = {
   }>;
 };
 
-type VehicleDraft = {
-  name: string;
-  year: string;
-  seats: string;
-  pricePerDay: string;
-  fuelType: string;
-  transmission: string;
+type VehicleDraft = PartnerVehicleDraft;
+
+/** `vehicles.0.pricePerDay` -> the DOM id of the input it belongs to. */
+const fieldId = (key: string) => `partner-field-${key.replace(/\./g, "-")}`;
+
+/**
+ * The control a validation key belongs to, for the error summary's focus.
+ * Text inputs key 1:1 and follow the visual order, but an image error names the
+ * offending node (`logo.contentBase64`, `gallery.1.contentBase64`) and has no
+ * input of its own, so both collapse onto their dropzone — which is what the
+ * focus effect actually looks up with `getElementById(fieldId(key))`.
+ */
+const focusTargetFor = (fieldErrors: PartnerFieldErrors): string | null => {
+  const ordered = PARTNER_APPLY_FIELD_ORDER.find((field) => fieldErrors[field] !== undefined);
+  if (ordered) return ordered;
+  const keys = Object.keys(fieldErrors);
+  if (keys.some((key) => key === "logo" || key.startsWith("logo."))) return "logo";
+  if (keys.some((key) => key === "gallery" || key.startsWith("gallery."))) return "gallery";
+  return null;
 };
 
 const emptyVehicle = (): VehicleDraft => ({
@@ -89,7 +121,7 @@ function fileToStaged(file: File): Promise<StagedImage> {
   });
 }
 
-async function callApply<T>(body: unknown): Promise<T> {
+async function callApply(body: unknown): Promise<{ success: boolean; applicationId: number; status: string }> {
   const timeoutMs = 30_000;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -110,20 +142,48 @@ async function callApply<T>(body: unknown): Promise<T> {
   } finally {
     clearTimeout(timer);
   }
-  let payload: { error?: string; reason?: string } | null = null;
+  let payload: { error?: string; reason?: string; fieldErrors?: PartnerFieldErrors } | null = null;
   try {
-    payload = (await response.json()) as { error?: string; reason?: string };
+    payload = (await response.json()) as {
+      error?: string;
+      reason?: string;
+      fieldErrors?: PartnerFieldErrors;
+    };
   } catch {
     // non-JSON error body: fall back to the generic message below
   }
   if (!response.ok) {
-    throw new Error(payload?.error || "حدث خطأ غير متوقع. حاول مرة أخرى.");
+    // A 400 from the intake endpoint carries per-field Arabic messages; hand
+    // them back so the form can highlight the exact inputs.
+    const error = new Error(payload?.error || "حدث خطأ غير متوقع. حاول مرة أخرى.") as Error & {
+      fieldErrors?: PartnerFieldErrors;
+    };
+    if (payload?.reason === "invalid_input" && payload.fieldErrors) {
+      error.fieldErrors = payload.fieldErrors;
+    }
+    throw error;
   }
-  return payload as T;
+  return payload as { success: boolean; applicationId: number; status: string };
 }
 
 const inputClass =
   "mt-2 w-full rounded-lg border p-3 font-normal focus:border-[#102d2b] focus:outline-none focus:ring-2 focus:ring-[#102d2b]/20";
+const inputErrorClass = "border-red-400 bg-red-50/40 focus:border-red-500 focus:ring-red-500/20";
+
+/** Inline Arabic message rendered directly under the offending input. */
+function FieldError({ fieldKey, message }: { fieldKey: string; message?: string }) {
+  if (!message) return null;
+  return (
+    <p
+      id={`${fieldId(fieldKey)}-error`}
+      role="alert"
+      className="mt-1.5 flex items-start gap-1.5 text-xs font-bold leading-relaxed text-red-600"
+    >
+      <AlertCircle className="mt-px h-3.5 w-3.5 shrink-0" />
+      <span>{message}</span>
+    </p>
+  );
+}
 
 export default function PartnerApply() {
   const [match, params] = useRoute("/become-partner/:type");
@@ -157,20 +217,95 @@ export default function PartnerApply() {
   const [logo, setLogo] = useState<StagedImage | null>(null);
   const [gallery, setGallery] = useState<StagedImage[]>([]);
   const [vehicles, setVehicles] = useState<VehicleDraft[]>([]);
-  const [fieldError, setFieldError] = useState<string | null>(null);
+  const [errors, setErrors] = useState<PartnerFieldErrors>({});
+  const [serverError, setServerError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [focusField, setFocusField] = useState<string | null>(null);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
+  // Send the eye to the first field that still has to be corrected.
+  useEffect(() => {
+    if (!focusField) return;
+    const element = document.getElementById(fieldId(focusField));
+    if (!element) return;
+    element.scrollIntoView({ behavior: "smooth", block: "center" });
+    if (element instanceof HTMLElement) element.focus({ preventScroll: true });
+    setFocusField(null);
+  }, [focusField]);
+
   const totalImageCount = (logo ? 1 : 0) + gallery.length;
+
+  /** Clears a field's error as soon as the applicant edits it again. */
+  const clearError = (...keys: string[]) => {
+    setErrors((current) => {
+      if (!keys.some((key) => current[key] !== undefined)) return current;
+      const next = { ...current };
+      for (const key of keys) delete next[key];
+      return next;
+    });
+  };
+
+  /**
+   * Image problems arrive keyed by the offending node, so resolve them by
+   * prefix. Three shapes matter: `logo` / `logo.contentBase64` and a bare
+   * `gallery` name the control as a whole and land on its dropzone, while
+   * `gallery.1.contentBase64` names one photo and belongs under that
+   * thumbnail. Keeping them apart means a container-level error can never hide
+   * behind a thumbnail that does not exist.
+   */
+  const imageErrorsFor = (prefix: string) => {
+    const indexedKey = new RegExp(`^${prefix}\\.(\\d+)\\.`);
+    let whole: string | undefined;
+    const byIndex = new Map<number, string>();
+    for (const [key, message] of Object.entries(errors)) {
+      if (key !== prefix && !key.startsWith(`${prefix}.`)) continue;
+      const match = indexedKey.exec(key);
+      if (!match) {
+        if (whole === undefined) whole = message;
+        continue;
+      }
+      const index = Number(match[1]);
+      if (!byIndex.has(index)) byIndex.set(index, message);
+    }
+    return { whole, byIndex };
+  };
+
+  /** Clears every error under an image control (`logo`, `logo.contentBase64`, `gallery.1.*`, ...). */
+  const clearImageErrors = (prefix: string) => {
+    setErrors((current) => {
+      const kept = Object.fromEntries(
+        Object.entries(current).filter(([key]) => key !== prefix && !key.startsWith(`${prefix}.`)),
+      );
+      return Object.keys(kept).length === Object.keys(current).length ? current : kept;
+    });
+  };
+
+  /**
+   * Both file inputs are visually replaced by a dropzone <label>, so
+   * `fieldProps`' border styling does not apply and `className` has to stay
+   * `sr-only` — only the accessibility wiring is reused. Supplying the id is
+   * what lets the error summary's focus effect find the control at all: it
+   * looks the target up with `getElementById(fieldId(key))`, which previously
+   * returned null for both dropzones and silently did nothing.
+   */
+  const fileFieldProps = (key: string, message?: string) => ({
+    id: fieldId(key),
+    "aria-invalid": message ? (true as const) : undefined,
+    "aria-describedby": message ? `${fieldId(key)}-error` : undefined,
+  });
+
+  const logoErrors = imageErrorsFor("logo");
+  const galleryErrors = imageErrorsFor("gallery");
 
   const pickLogo = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file) return;
+    clearImageErrors("logo");
     if (!file.type.startsWith("image/")) {
       toast.error("يرجى اختيار ملف صورة صالح.");
       return;
@@ -190,6 +325,7 @@ export default function PartnerApply() {
     const files = Array.from(event.target.files ?? []);
     event.target.value = "";
     if (files.length === 0) return;
+    clearImageErrors("gallery");
     if (gallery.length + files.length > MAX_GALLERY_IMAGES) {
       toast.error(`يمكن رفع ${MAX_GALLERY_IMAGES} صور كحد أقصى في المعرض.`);
       return;
@@ -226,61 +362,48 @@ export default function PartnerApply() {
     setVehicles((current) =>
       current.map((vehicle, i) => (i === index ? { ...vehicle, ...patch } : vehicle)),
     );
+    clearError(...Object.keys(patch).map((key) => `vehicles.${index}.${key}`));
   };
   const removeVehicle = (index: number) => {
     setVehicles((current) => current.filter((_, i) => i !== index));
+    setErrors((current) => {
+      const next: PartnerFieldErrors = {};
+      for (const [key, value] of Object.entries(current)) {
+        if (!key.startsWith(`vehicles.${index}.`)) next[key] = value;
+      }
+      return next;
+    });
   };
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (submitting) return;
-    setFieldError(null);
+    setServerError(null);
 
-    const trimmedName = agencyName.trim();
-    if (trimmedName.length < 2) return setFieldError("أدخل اسم الوكالة (حرفان على الأقل).");
-    if (!city.trim()) return setFieldError("أدخل المدينة.");
-    if (!phone.trim()) return setFieldError("أدخل رقم الهاتف بالصيغة الدولية (مثال: +2126...).");
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) return setFieldError("أدخل بريداً إلكترونياً صالحاً.");
-    if (password.length < 8) return setFieldError("كلمة المرور يجب أن تكون 8 أحرف على الأقل.");
-    if (password !== confirmPassword) return setFieldError("كلمتا المرور غير متطابقتين.");
-    if (website.trim() && !/^https?:\/\/[^\s]+$/.test(website.trim())) {
-      return setFieldError("رابط الموقع يجب أن يبدأ بـ http:// أو https:// (أو اتركه فارغاً).");
-    }
-    if (isCar && fleetSize.trim() && (!Number.isInteger(Number(fleetSize)) || Number(fleetSize) < 0)) {
-      return setFieldError("أدخل عدد سيارات الأسطول كرقم صحيح موجب.");
-    }
-    if (!isCar && propertyCount.trim() && (!Number.isInteger(Number(propertyCount)) || Number(propertyCount) < 0)) {
-      return setFieldError("أدخل عدد العقارات كرقم صحيح موجب.");
-    }
-
-    const filledVehicles = isCar
-      ? vehicles.filter((v) => v.name.trim() || v.pricePerDay.trim())
+    // Rows the applicant actually started filling in. Unused rows never reach
+    // the API, but a partially filled row is reported instead of being
+    // silently discarded.
+    const startedVehicles = isCar
+      ? vehicles
+          .map((vehicle, index) => ({ vehicle, index }))
+          .filter(({ vehicle }) => !isBlankVehicleDraft(vehicle))
       : [];
-    for (const v of filledVehicles) {
-      if (!v.name.trim()) return setFieldError("أدخل اسم/موديل كل مركبة مضافة في قائمة المركبات.");
-      if (!v.pricePerDay.trim() || !Number.isInteger(Number(v.pricePerDay)) || Number(v.pricePerDay) < 1) {
-        return setFieldError("السعر اليومي لكل مركبة يجب أن يكون رقماً صحيحاً أكبر من صفر (درهم).");
-      }
-      if (v.year.trim() && (!Number.isInteger(Number(v.year)) || Number(v.year) < 1900 || Number(v.year) > 2100)) {
-        return setFieldError("سنة الصنع يجب أن تكون بين 1900 و 2100.");
-      }
-      if (v.seats.trim() && (!Number.isInteger(Number(v.seats)) || Number(v.seats) < 1 || Number(v.seats) > 50)) {
-        return setFieldError("عدد المقاعد يجب أن يكون بين 1 و 50.");
-      }
-    }
 
-    const payload: ApplyPayload = {
+    const wireVehicles = startedVehicles.map(({ vehicle }) => partnerVehicleDraftToWire(vehicle));
+
+    const draft = {
       type: rawType,
-      agencyName: trimmedName,
+      agencyName: agencyName.trim(),
       city: city.trim(),
+      contactPerson: contactPerson.trim(),
       phone: phone.trim(),
-      email: email.trim().toLowerCase(),
+      email: email.trim(),
       password,
-      website: website.trim() || undefined,
-      contactPerson: contactPerson.trim() || undefined,
-      description: description.trim() || undefined,
-      fleetSize: isCar && fleetSize.trim() ? Number(fleetSize) : undefined,
-      propertyCount: !isCar && propertyCount.trim() ? Number(propertyCount) : undefined,
+      confirmPassword,
+      website: website.trim(),
+      description: description.trim(),
+      fleetSize: toOptionalNumber(fleetSize),
+      propertyCount: toOptionalNumber(propertyCount),
       logo: logo
         ? { fileName: logo.fileName, mimeType: logo.mimeType, contentBase64: logo.contentBase64 }
         : undefined,
@@ -289,29 +412,71 @@ export default function PartnerApply() {
         mimeType: image.mimeType,
         contentBase64: image.contentBase64,
       })),
-      vehicles:
-        isCar && filledVehicles.length
-          ? filledVehicles.map((v) => ({
-              name: v.name.trim(),
-              pricePerDay: Math.round(Number(v.pricePerDay)),
-              year: v.year.trim() ? Number(v.year) : undefined,
-              seats: v.seats.trim() ? Number(v.seats) : undefined,
-              fuelType: v.fuelType.trim() || undefined,
-              transmission: v.transmission.trim() || undefined,
-            }))
-          : undefined,
+      vehicles: wireVehicles,
+    };
+
+    const validation = validatePartnerApplyDraft(draft);
+    // Vehicle rows are validated against their original form index, so the
+    // message always lands on the row the applicant can see.
+    const vehicleErrors = startedVehicles.reduce<PartnerFieldErrors>(
+      (accumulator, { vehicle, index }) => ({
+        ...accumulator,
+        ...validatePartnerVehicleRow(index, partnerVehicleDraftToWire(vehicle)),
+      }),
+      {},
+    );
+
+    const invalidCount = Object.keys(vehicleErrors).length;
+    if (!validation.ok || invalidCount > 0) {
+      const fieldErrors: PartnerFieldErrors = { ...vehicleErrors, ...(validation.fieldErrors ?? {}) };
+      setErrors(fieldErrors);
+      setFocusField(validation.firstInvalidField ?? Object.keys(vehicleErrors)[0] ?? null);
+      return;
+    }
+
+    const payload: ApplyPayload = {
+      type: rawType,
+      agencyName: draft.agencyName,
+      city: draft.city,
+      contactPerson: draft.contactPerson,
+      phone: draft.phone,
+      email: draft.email.toLowerCase(),
+      password,
+      website: draft.website || undefined,
+      description: draft.description || undefined,
+      fleetSize: isCar ? draft.fleetSize : undefined,
+      propertyCount: !isCar ? draft.propertyCount : undefined,
+      logo: draft.logo,
+      gallery: draft.gallery,
+      vehicles: wireVehicles.length
+        ? wireVehicles.map((vehicle) => ({
+            name: String(vehicle.name),
+            pricePerDay: Math.round(Number(vehicle.pricePerDay)),
+            year: vehicle.year === undefined ? undefined : Number(vehicle.year),
+            seats: vehicle.seats === undefined ? undefined : Number(vehicle.seats),
+            fuelType: (vehicle.fuelType as string | undefined) || undefined,
+            transmission: (vehicle.transmission as string | undefined) || undefined,
+          }))
+        : undefined,
     };
 
     setSubmitting(true);
     try {
-      await callApply<{
-        success: boolean;
-        applicationId: number;
-        status: string;
-      }>(payload);
+      await callApply(payload);
+      setErrors({});
       setSubmitted(true);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "حدث خطأ غير متوقع. حاول مرة أخرى.");
+      const fieldErrors = (error as { fieldErrors?: PartnerFieldErrors } | null)?.fieldErrors;
+      if (fieldErrors && Object.keys(fieldErrors).length > 0) {
+        // The endpoint rejected the payload — mirror its per-field messages
+        // onto the inputs instead of only showing a toast.
+        setErrors(fieldErrors);
+        setFocusField(focusTargetFor(fieldErrors));
+      }
+      const message =
+        error instanceof Error ? error.message : "حدث خطأ غير متوقع. حاول مرة أخرى.";
+      setServerError(message);
+      toast.error(message);
     } finally {
       setSubmitting(false);
     }
@@ -342,6 +507,20 @@ export default function PartnerApply() {
     );
   }
 
+  const errorKeys = Object.keys(errors);
+  const validationSummary = partnerValidationSummary(errors);
+
+  /** Shared a11y + styling props so every invalid input is marked the same way. */
+  const fieldProps = (key: string, extraClass = "") => {
+    const message = errors[key];
+    return {
+      id: fieldId(key),
+      className: `${inputClass} ${message ? inputErrorClass : extraClass}`.trim(),
+      "aria-invalid": message ? (true as const) : undefined,
+      "aria-describedby": message ? `${fieldId(key)}-error` : undefined,
+    };
+  };
+
   return (
     <main dir="rtl" className="min-h-screen bg-[#f4f7f6] px-4 py-10 text-slate-900 sm:px-6 lg:px-10">
       <div className="mx-auto max-w-3xl">
@@ -361,46 +540,133 @@ export default function PartnerApply() {
           </p>
         </section>
 
-        <form onSubmit={submit} className="mt-6 space-y-6">
+        {errorKeys.length > 0 && (
+          <div
+            role="alert"
+            aria-live="polite"
+            className="mt-6 rounded-2xl border border-red-300 bg-red-50 p-4 text-sm"
+          >
+            <p className="flex items-center gap-2 font-black text-red-700">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              {validationSummary}
+            </p>
+            <ul className="mt-3 space-y-1.5">
+              {errorKeys.map((key) => (
+                <li key={key}>
+                  <button
+                    type="button"
+                    onClick={() => setFocusField(key)}
+                    className="text-right text-xs font-bold text-red-700 underline decoration-red-300 underline-offset-4 hover:decoration-red-600"
+                  >
+                    {partnerFieldLabel(key)}: {errors[key]}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {serverError && Object.keys(errors).length === 0 && (
+          <p role="alert" className="mt-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-700">
+            {serverError}
+          </p>
+        )}
+
+        <form onSubmit={submit} noValidate className="mt-6 space-y-6">
           <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <h2 className="text-sm font-black text-[#102d2b]">بيانات الوكالة</h2>
+            <p className="mt-1 text-xs text-slate-500">الحقول المعلَّمة بـ * إلزامية.</p>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              <label className="text-sm font-semibold sm:col-span-2">
-                اسم الوكالة *
-                <input className={inputClass} value={agencyName} onChange={(event) => setAgencyName(event.target.value)} placeholder="مثال: وكالة الأطلس للكراء" />
-              </label>
-              <label className="text-sm font-semibold">
-                المدينة *
-                <input className={inputClass} value={city} onChange={(event) => setCity(event.target.value)} placeholder="مراكش" />
-              </label>
-              <label className="text-sm font-semibold">
-                الشخص المسؤول (اختياري)
-                <input className={inputClass} value={contactPerson} onChange={(event) => setContactPerson(event.target.value)} placeholder="الاسم الكامل" />
-              </label>
+              <div className="text-sm font-semibold sm:col-span-2">
+                <label htmlFor={fieldId("agencyName")}>اسم الوكالة *</label>
+                <input
+                  {...fieldProps("agencyName")}
+                  value={agencyName}
+                  onChange={(event) => { setAgencyName(event.target.value); clearError("agencyName"); }}
+                  maxLength={AGENCY_NAME_MAX}
+                  placeholder="مثال: وكالة الأطلس للكراء"
+                />
+                <FieldError fieldKey="agencyName" message={errors.agencyName} />
+              </div>
+              <div className="text-sm font-semibold">
+                <label htmlFor={fieldId("city")}>المدينة *</label>
+                <input
+                  {...fieldProps("city")}
+                  value={city}
+                  onChange={(event) => { setCity(event.target.value); clearError("city"); }}
+                  maxLength={CITY_MAX}
+                  placeholder="مراكش"
+                />
+                <FieldError fieldKey="city" message={errors.city} />
+              </div>
+              <div className="text-sm font-semibold">
+                <label htmlFor={fieldId("contactPerson")}>الشخص المسؤول *</label>
+                <input
+                  {...fieldProps("contactPerson")}
+                  value={contactPerson}
+                  onChange={(event) => { setContactPerson(event.target.value); clearError("contactPerson"); }}
+                  maxLength={CONTACT_PERSON_MAX}
+                  placeholder="الاسم الكامل"
+                />
+                <FieldError fieldKey="contactPerson" message={errors.contactPerson} />
+              </div>
               {isCar ? (
-                <label className="text-sm font-semibold">
-                  حجم الأسطول — عدد السيارات
-                  <input className={inputClass} type="number" min="0" value={fleetSize} onChange={(event) => setFleetSize(event.target.value)} placeholder="مثال: 10" />
-                </label>
+                <div className="text-sm font-semibold">
+                  <label htmlFor={fieldId("fleetSize")}>حجم الأسطول — عدد السيارات *</label>
+                  <input
+                    {...fieldProps("fleetSize")}
+                    type="number"
+                    min="1"
+                    step="1"
+                    value={fleetSize}
+                    onChange={(event) => { setFleetSize(event.target.value); clearError("fleetSize"); }}
+                    placeholder="مثال: 10"
+                  />
+                  <FieldError fieldKey="fleetSize" message={errors.fleetSize} />
+                </div>
               ) : (
-                <label className="text-sm font-semibold">
-                  عدد العقارات المتاحة للكراء
-                  <input className={inputClass} type="number" min="0" value={propertyCount} onChange={(event) => setPropertyCount(event.target.value)} placeholder="مثال: 15" />
-                </label>
+                <div className="text-sm font-semibold">
+                  <label htmlFor={fieldId("propertyCount")}>عدد العقارات المتاحة للكراء *</label>
+                  <input
+                    {...fieldProps("propertyCount")}
+                    type="number"
+                    min="1"
+                    step="1"
+                    value={propertyCount}
+                    onChange={(event) => { setPropertyCount(event.target.value); clearError("propertyCount"); }}
+                    placeholder="مثال: 15"
+                  />
+                  <FieldError fieldKey="propertyCount" message={errors.propertyCount} />
+                </div>
               )}
-              {isCar && Number(fleetSize) > 0 && vehicles.filter((v) => v.name.trim() || v.pricePerDay.trim()).length === 0 ? (
+              {isCar && Number(fleetSize) > 0 && vehicles.every(isBlankVehicleDraft) ? (
                 <p className="rounded-lg bg-amber-50 p-2 text-xs text-amber-700 sm:col-span-2">
                   أُدخل حجم الأسطول ({fleetSize}) دون تسجيل تفاصيل المركبات في قسم «مركبات الأسطول» أعلاه — لن تُنشر أي سيارات تلقائياً بعد الموافقة إلا إذا أدرجت مركباتك.
                 </p>
               ) : null}
-              <label className="text-sm font-semibold">
-                الموقع الإلكتروني (اختياري)
-                <input className={inputClass} type="url" dir="ltr" value={website} onChange={(event) => setWebsite(event.target.value)} placeholder="https://example.com" />
-              </label>
-              <label className="text-sm font-semibold sm:col-span-2">
-                نبذة عن الوكالة (اختياري)
-                <textarea className={`${inputClass} min-h-24`} value={description} onChange={(event) => setDescription(event.target.value)} maxLength={2000} placeholder="تخصصكم، الخدمات، عدد الفروع..." />
-              </label>
+              <div className="text-sm font-semibold">
+                <label htmlFor={fieldId("website")}>الموقع الإلكتروني (اختياري)</label>
+                <input
+                  {...fieldProps("website")}
+                  type="url"
+                  dir="ltr"
+                  value={website}
+                  onChange={(event) => { setWebsite(event.target.value); clearError("website"); }}
+                  placeholder="https://example.com"
+                />
+                <FieldError fieldKey="website" message={errors.website} />
+              </div>
+              <div className="text-sm font-semibold sm:col-span-2">
+                <label htmlFor={fieldId("description")}>نبذة عن الوكالة (اختياري)</label>
+                <textarea
+                  {...fieldProps("description", "min-h-24")}
+                  value={description}
+                  onChange={(event) => { setDescription(event.target.value); clearError("description"); }}
+                  maxLength={DESCRIPTION_MAX}
+                  placeholder="تخصصكم، الخدمات، عدد الفروع..."
+                />
+                <FieldError fieldKey="description" message={errors.description} />
+              </div>
             </div>
           </section>
 
@@ -447,77 +713,108 @@ export default function PartnerApply() {
                       </button>
                     </div>
                     <div className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                      <label className="text-sm font-semibold sm:col-span-2 lg:col-span-3">
-                        الاسم / الموديل *
+                      <div className="text-sm font-semibold sm:col-span-2 lg:col-span-3">
+                        <label htmlFor={fieldId(`vehicles.${index}.name`)}>الاسم / الموديل *</label>
                         <input
-                          className={inputClass}
+                          {...fieldProps(`vehicles.${index}.name`)}
                           value={vehicle.name}
                           onChange={(event) => updateVehicle(index, { name: event.target.value })}
                           placeholder="مثال: داسيا داستر 2022"
-                          maxLength={120}
+                          maxLength={VEHICLE_NAME_MAX}
                         />
-                      </label>
-                      <label className="text-sm font-semibold">
-                        سنة الصنع
+                        <FieldError
+                          fieldKey={`vehicles.${index}.name`}
+                          message={errors[`vehicles.${index}.name`]}
+                        />
+                      </div>
+                      <div className="text-sm font-semibold">
+                        <label htmlFor={fieldId(`vehicles.${index}.year`)}>سنة الصنع</label>
                         <input
-                          className={inputClass}
+                          {...fieldProps(`vehicles.${index}.year`)}
                           type="number"
                           min="1900"
                           max="2100"
+                          step="1"
                           value={vehicle.year}
                           onChange={(event) => updateVehicle(index, { year: event.target.value })}
                           placeholder="مثال: 2022"
                         />
-                      </label>
-                      <label className="text-sm font-semibold">
-                        عدد المقاعد
+                        <FieldError
+                          fieldKey={`vehicles.${index}.year`}
+                          message={errors[`vehicles.${index}.year`]}
+                        />
+                      </div>
+                      <div className="text-sm font-semibold">
+                        <label htmlFor={fieldId(`vehicles.${index}.seats`)}>عدد المقاعد</label>
                         <input
-                          className={inputClass}
+                          {...fieldProps(`vehicles.${index}.seats`)}
                           type="number"
                           min="1"
                           max="50"
+                          step="1"
                           value={vehicle.seats}
                           onChange={(event) => updateVehicle(index, { seats: event.target.value })}
                           placeholder="مثال: 5"
                         />
-                      </label>
-                      <label className="text-sm font-semibold">
-                        السعر اليومي (درهم) *
+                        <FieldError
+                          fieldKey={`vehicles.${index}.seats`}
+                          message={errors[`vehicles.${index}.seats`]}
+                        />
+                      </div>
+                      <div className="text-sm font-semibold">
+                        <label htmlFor={fieldId(`vehicles.${index}.pricePerDay`)}>
+                          السعر اليومي (درهم) *
+                        </label>
                         <input
-                          className={inputClass}
+                          {...fieldProps(`vehicles.${index}.pricePerDay`)}
                           type="number"
                           min="1"
+                          step="1"
                           value={vehicle.pricePerDay}
                           onChange={(event) =>
                             updateVehicle(index, { pricePerDay: event.target.value })
                           }
                           placeholder="مثال: 350"
                         />
-                      </label>
-                      <label className="text-sm font-semibold">
-                        نوع الوقود
+                        <FieldError
+                          fieldKey={`vehicles.${index}.pricePerDay`}
+                          message={errors[`vehicles.${index}.pricePerDay`]}
+                        />
+                      </div>
+                      <div className="text-sm font-semibold">
+                        <label htmlFor={fieldId(`vehicles.${index}.fuelType`)}>نوع الوقود</label>
                         <input
-                          className={inputClass}
+                          {...fieldProps(`vehicles.${index}.fuelType`)}
                           value={vehicle.fuelType}
                           onChange={(event) =>
                             updateVehicle(index, { fuelType: event.target.value })
                           }
                           placeholder="ديزل"
-                          maxLength={32}
+                          maxLength={VEHICLE_FUEL_MAX}
                         />
-                      </label>
-                      <label className="text-sm font-semibold">
-                        ناقل الحركة
+                        <FieldError
+                          fieldKey={`vehicles.${index}.fuelType`}
+                          message={errors[`vehicles.${index}.fuelType`]}
+                        />
+                      </div>
+                      <div className="text-sm font-semibold">
+                        <label htmlFor={fieldId(`vehicles.${index}.transmission`)}>
+                          ناقل الحركة
+                        </label>
                         <input
-                          className={inputClass}
+                          {...fieldProps(`vehicles.${index}.transmission`)}
                           value={vehicle.transmission}
                           onChange={(event) =>
                             updateVehicle(index, { transmission: event.target.value })
                           }
                           placeholder="أوتوماتيك"
-                          maxLength={32}
+                          maxLength={VEHICLE_TRANSMISSION_MAX}
                         />
-                      </label>
+                        <FieldError
+                          fieldKey={`vehicles.${index}.transmission`}
+                          message={errors[`vehicles.${index}.transmission`]}
+                        />
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -528,22 +825,54 @@ export default function PartnerApply() {
           <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <h2 className="text-sm font-black text-[#102d2b]">معلومات التواصل والحساب</h2>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              <label className="text-sm font-semibold">
-                رقم الهاتف (واتساب) *
-                <input className={inputClass} type="tel" dir="ltr" value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="+2126XXXXXXXX" />
-              </label>
-              <label className="text-sm font-semibold">
-                البريد الإلكتروني *
-                <input className={inputClass} type="email" dir="ltr" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" />
-              </label>
-              <label className="text-sm font-semibold">
-                كلمة المرور (8 أحرف على الأقل) *
-                <input className={inputClass} type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="new-password" />
-              </label>
-              <label className="text-sm font-semibold">
-                تأكيد كلمة المرور *
-                <input className={inputClass} type="password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} autoComplete="new-password" />
-              </label>
+              <div className="text-sm font-semibold">
+                <label htmlFor={fieldId("phone")}>رقم الهاتف (واتساب) *</label>
+                <input
+                  {...fieldProps("phone")}
+                  type="tel"
+                  dir="ltr"
+                  value={phone}
+                  onChange={(event) => { setPhone(event.target.value); clearError("phone"); }}
+                  placeholder="+2126XXXXXXXX"
+                />
+                <FieldError fieldKey="phone" message={errors.phone} />
+              </div>
+              <div className="text-sm font-semibold">
+                <label htmlFor={fieldId("email")}>البريد الإلكتروني *</label>
+                <input
+                  {...fieldProps("email")}
+                  type="email"
+                  dir="ltr"
+                  value={email}
+                  onChange={(event) => { setEmail(event.target.value); clearError("email"); }}
+                  placeholder="you@example.com"
+                />
+                <FieldError fieldKey="email" message={errors.email} />
+              </div>
+              <div className="text-sm font-semibold">
+                <label htmlFor={fieldId("password")}>
+                  كلمة المرور ({PARTNER_PASSWORD_MIN} أحرف على الأقل) *
+                </label>
+                <input
+                  {...fieldProps("password")}
+                  type="password"
+                  value={password}
+                  onChange={(event) => { setPassword(event.target.value); clearError("password", "confirmPassword"); }}
+                  autoComplete="new-password"
+                />
+                <FieldError fieldKey="password" message={errors.password} />
+              </div>
+              <div className="text-sm font-semibold">
+                <label htmlFor={fieldId("confirmPassword")}>تأكيد كلمة المرور *</label>
+                <input
+                  {...fieldProps("confirmPassword")}
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(event) => { setConfirmPassword(event.target.value); clearError("confirmPassword"); }}
+                  autoComplete="new-password"
+                />
+                <FieldError fieldKey="confirmPassword" message={errors.confirmPassword} />
+              </div>
             </div>
             <p className="mt-4 flex items-start gap-2 rounded-lg bg-slate-50 p-3 text-xs text-slate-500">
               <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
@@ -558,31 +887,43 @@ export default function PartnerApply() {
             </p>
 
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              <label className="relative flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 p-6 text-center transition-colors hover:border-[#102d2b]">
-                {logo ? (
-                  <img src={logo.previewUrl} alt="شعار الوكالة" className="max-h-24 rounded-lg object-contain" />
-                ) : (
-                  <ImagePlus className="h-6 w-6 text-slate-400" />
-                )}
-                <span className="text-xs font-bold text-slate-600">{logo ? "تغيير الشعار" : "رفع شعار الوكالة (اختياري)"}</span>
-                <input type="file" accept="image/*" className="sr-only" onChange={pickLogo} />
-                {logo && (
-                  <button
-                    type="button"
-                    onClick={() => setLogo(null)}
-                    className="absolute left-2 top-2 rounded-full bg-red-50 p-1.5 text-red-600 hover:bg-red-100"
-                    aria-label="إزالة الشعار"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                )}
-              </label>
+              {/* The FieldError sits outside the <label> on purpose: nested inside
+                  it, the message becomes part of the label's text and clicking it
+                  would re-open the file dialog. */}
+              <div className="flex flex-col">
+                <label className="relative flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 p-6 text-center transition-colors hover:border-[#102d2b]">
+                  {logo ? (
+                    <img src={logo.previewUrl} alt="شعار الوكالة" className="max-h-24 rounded-lg object-contain" />
+                  ) : (
+                    <ImagePlus className="h-6 w-6 text-slate-400" />
+                  )}
+                  <span className="text-xs font-bold text-slate-600">{logo ? "تغيير الشعار" : "رفع شعار الوكالة (اختياري)"}</span>
+                  <input type="file" accept="image/*" className="sr-only" onChange={pickLogo} {...fileFieldProps("logo", logoErrors.whole)} />
+                  {logo && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setLogo(null);
+                        clearImageErrors("logo");
+                      }}
+                      className="absolute left-2 top-2 rounded-full bg-red-50 p-1.5 text-red-600 hover:bg-red-100"
+                      aria-label="إزالة الشعار"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  )}
+                </label>
+                <FieldError fieldKey="logo" message={logoErrors.whole} />
+              </div>
 
-              <label className="relative flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 p-6 text-center transition-colors hover:border-[#102d2b]">
-                <ImagePlus className="h-6 w-6 text-slate-400" />
-                <span className="text-xs font-bold text-slate-600">رفع صور المعرض ({gallery.length}/{MAX_GALLERY_IMAGES})</span>
-                <input type="file" accept="image/*" multiple className="sr-only" onChange={pickGallery} />
-              </label>
+              <div className="flex flex-col">
+                <label className="relative flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 p-6 text-center transition-colors hover:border-[#102d2b]">
+                  <ImagePlus className="h-6 w-6 text-slate-400" />
+                  <span className="text-xs font-bold text-slate-600">رفع صور المعرض ({gallery.length}/{MAX_GALLERY_IMAGES})</span>
+                  <input type="file" accept="image/*" multiple className="sr-only" onChange={pickGallery} {...fileFieldProps("gallery", galleryErrors.whole)} />
+                </label>
+                <FieldError fieldKey="gallery" message={galleryErrors.whole} />
+              </div>
             </div>
 
             {gallery.length > 0 && (
@@ -592,20 +933,29 @@ export default function PartnerApply() {
                     <img src={image.previewUrl} alt={`صورة معرض ${index + 1}`} className="h-24 w-full rounded-lg object-cover" />
                     <button
                       type="button"
-                      onClick={() => setGallery((current) => current.filter((_, itemIndex) => itemIndex !== index))}
+                      onClick={() => {
+                        setGallery((current) => current.filter((_, itemIndex) => itemIndex !== index));
+                        clearImageErrors("gallery");
+                      }}
                       className="absolute right-1 top-1 rounded-full bg-red-50 p-1 text-red-600 hover:bg-red-100"
                       aria-label="إزالة الصورة"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
+                    <FieldError
+                      fieldKey={`gallery.${index}`}
+                      message={galleryErrors.byIndex.get(index)}
+                    />
                   </div>
                 ))}
               </div>
             )}
           </section>
 
-          {fieldError && (
-            <p className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm font-bold text-red-700">{fieldError}</p>
+          {serverError && Object.keys(errors).length > 0 && (
+            <p role="alert" className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm font-bold text-red-700">
+              {serverError}
+            </p>
           )}
 
           <Button type="submit" disabled={submitting} className="w-full bg-[#102d2b] py-4 text-base font-black text-white hover:bg-[#163c39] disabled:cursor-not-allowed disabled:opacity-60">

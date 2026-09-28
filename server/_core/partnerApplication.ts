@@ -1,8 +1,19 @@
 import { randomBytes, scryptSync, createHash } from "node:crypto";
 import { and, eq, ne, sql } from "drizzle-orm";
 import type { Express, Request, Response } from "express";
-import { z } from "zod";
 import { partnerApplications, users } from "../../drizzle/schema";
+import {
+  MAX_IMAGE_BYTES,
+  MAX_TOTAL_IMAGE_BYTES,
+  MAX_VEHICLES,
+  PARTNER_APPLY_MESSAGES,
+  baseBytesLength,
+  partnerFirstFieldMessage,
+  safeBase64,
+  validatePartnerApplyBody,
+  type PartnerApplyInput,
+  type PartnerFieldErrors,
+} from "../../shared/partnerApplication";
 import { getDb, withTransaction } from "../db";
 import { logger } from "./logger";
 import { sanitizeUserContent } from "./security";
@@ -12,72 +23,29 @@ import { storagePut } from "../storage";
 import { partnerOpenId } from "./partnerAuth";
 
 const SCRYPT_KEYLEN = 64;
-const MAX_IMAGE_BYTES = 6 * 1024 * 1024; // 6 MB per image
-const MAX_TOTAL_IMAGE_BYTES = 10 * 1024 * 1024; // 10 MB across logo + gallery
-const MAX_GALLERY_IMAGES = 4;
-const MAX_VEHICLES = 20;
-
-const emailSchema = z.string().trim().toLowerCase().email().max(320);
-const passwordSchema = z.string().min(8).max(256);
-const nameSchema = z.string().trim().min(2).max(80);
-const citySchema = z.string().trim().min(1).max(120);
-
-const imageSchema = z.object({
-  fileName: z.string().trim().min(1).max(120).optional(),
-  mimeType: z.string().trim().min(1).max(64),
-  contentBase64: z.string().min(1),
-});
-
-const vehicleSchema = z.object({
-  name: z.string().trim().min(1).max(120),
-  year: z.number().int().min(1900).max(2100).optional(),
-  seats: z.number().int().min(1).max(50).optional(),
-  pricePerDay: z.number().int().min(1).max(100000),
-  fuelType: z.string().trim().max(32).optional().or(z.literal("")),
-  transmission: z.string().trim().max(32).optional().or(z.literal("")),
-});
-
-const applyBodySchema = z.object({
-  type: z.enum(["car_rental", "real_estate"]),
-  agencyName: nameSchema,
-  city: citySchema,
-  phone: z.string().trim().min(1).max(32),
-  email: emailSchema,
-  password: passwordSchema,
-  website: z.string().trim().url().max(255).optional().or(z.literal("")),
-  contactPerson: z.string().trim().max(120).optional().or(z.literal("")),
-  description: z.string().trim().max(2000).optional().or(z.literal("")),
-  fleetSize: z.number().int().min(0).max(100000).optional(),
-  propertyCount: z.number().int().min(0).max(100000).optional(),
-  logo: imageSchema.optional(),
-  gallery: z.array(imageSchema).max(MAX_GALLERY_IMAGES).optional(),
-  vehicles: z.array(vehicleSchema).max(MAX_VEHICLES).optional(),
-});
 
 /** Deterministic int32 from the normalized email (mirrors partnerAuth). */
 function emailLockKey(email: string): number {
   return createHash("sha256").update(email).digest().readInt32BE(0);
 }
 
-function fail(res: Response, status: number, message: string, reason: string): void {
-  res.status(status).json({ error: message, reason });
+/**
+ * Sends an Arabic, field-addressed rejection. `fieldErrors` maps each offending
+ * field (`agencyName`, `vehicles.0.pricePerDay`, ...) to the message the form
+ * shows next to that exact input.
+ */
+function fail(
+  res: Response,
+  status: number,
+  message: string,
+  reason: string,
+  fieldErrors?: PartnerFieldErrors,
+): void {
+  res.status(status).json({ error: message, reason, ...(fieldErrors ? { fieldErrors } : {}) });
 }
 
 function sanitizeName(value: string): string {
   return sanitizeUserContent(value, 120);
-}
-
-/** Strip an optional `data:<mime>;base64,` prefix so raw base64 always flows through. */
-function safeBase64(value: string): string {
-  const comma = value.indexOf(",");
-  return comma !== -1 && value.slice(0, comma).includes(";base64") ? value.slice(comma + 1) : value;
-}
-
-/** Approximate decoded byte length of a base64 string (used for size caps). */
-function baseBytesLength(base64: string): number {
-  const len = base64.length;
-  const padding = base64.endsWith("==") ? 2 : base64.endsWith("=") ? 1 : 0;
-  return Math.floor((len * 3) / 4) - padding;
 }
 
 async function uploadStagedImage(
@@ -85,6 +53,10 @@ async function uploadStagedImage(
   image: { fileName?: string; mimeType: string; contentBase64: string },
 ): Promise<string> {
   const sourceBase64 = safeBase64(image.contentBase64);
+  // Defence in depth: the shared schema already rejects an over-cap image as a
+  // 400 before the application row is inserted, so reaching this means the
+  // schema was bypassed. Kept because the alternative is a 500 from a row that
+  // has already been written.
   if (baseBytesLength(sourceBase64) > MAX_IMAGE_BYTES) {
     throw new Error("image_too_large");
   }
@@ -107,20 +79,34 @@ async function uploadStagedImage(
  * arrive as base64 in the JSON body and are uploaded to object storage; the
  * scrypt credentials are kept on the application so an admin approval can
  * immediately mint the partner account (see routers.admin.reviewPartnerApplication).
+ *
+ * Mandatory fields (agency name, city, contact person, phone, email,
+ * password, and the fleet/property count for the chosen type) are validated
+ * against the shared schema in shared/partnerApplication.ts — the same one the
+ * browser form uses. A rejected payload gets HTTP 400 with an Arabic message
+ * plus a `fieldErrors` map keyed by field, and never reaches the INSERT.
  */
 export function registerPartnerApplicationRoutes(app: Express) {
   app.post("/api/auth/partner/apply", async (req: Request, res: Response) => {
     const body = (req as unknown as { body?: unknown }).body;
-    const parsed =
-      typeof body === "object" && body !== null
-        ? applyBodySchema.safeParse(body)
-        : { success: false as const, error: null };
 
-    if (!parsed.success) {
-      const firstField = parsed.error
-        ? Object.values(parsed.error.flatten().fieldErrors).flat()[0]
-        : undefined;
-      fail(res, 400, firstField ?? "بيانات غير صالحة. تحقق من الحقول ثم أعد المحاولة.", "invalid_input");
+    // Strict validation gate. Everything downstream (INSERT, image upload,
+    // admin notification) runs only for a fully complete application, so an
+    // incomplete form can never reach the database.
+    const validation = validatePartnerApplyBody(body);
+    if (!validation.ok) {
+      const rejectedFields = Object.keys(validation.fieldErrors);
+      logger.warn("[PartnerApplication] rejected incomplete application", {
+        fields: rejectedFields,
+        count: rejectedFields.length,
+      });
+      fail(
+        res,
+        400,
+        partnerFirstFieldMessage(validation.fieldErrors),
+        "invalid_input",
+        validation.fieldErrors,
+      );
       return;
     }
 
@@ -139,11 +125,15 @@ export function registerPartnerApplicationRoutes(app: Express) {
       logo,
       gallery,
       vehicles,
-    } = parsed.data;
+    } = validation.data satisfies PartnerApplyInput;
 
     const normalizedPhone = normalizeWhatsAppNumber(phone);
     if (!normalizedPhone) {
-      fail(res, 400, "رقم الهاتف غير صالح - أدخل الرقم بالصيغة الدولية.", "invalid_input");
+      // Defence in depth: `isValidPartnerPhone` already gates the schema, but
+      // storage never receives an unnormalizable number.
+      fail(res, 400, "رقم الهاتف غير صالح - أدخل الرقم بالصيغة الدولية.", "invalid_input", {
+        phone: "رقم الهاتف غير صالح — أدخله بالصيغة الدولية (مثال: +212612345678).",
+      });
       return;
     }
 
@@ -152,7 +142,11 @@ export function registerPartnerApplicationRoutes(app: Express) {
       (logo ? baseBytesLength(safeBase64(logo.contentBase64)) : 0) +
       galleryImages.reduce((sum, image) => sum + baseBytesLength(safeBase64(image.contentBase64)), 0);
     if (totalImageBytes > MAX_TOTAL_IMAGE_BYTES) {
-      fail(res, 400, "إجمالي حجم الصور كبير جداً — الحد الأقصى 10 ميجابايت.", "images_too_large");
+      // The field entry matters: without one the form can only show the banner
+      // and has no control to focus.
+      fail(res, 400, PARTNER_APPLY_MESSAGES.imagesTooLarge, "images_too_large", {
+        gallery: PARTNER_APPLY_MESSAGES.imagesTooLarge,
+      });
       return;
     }
 

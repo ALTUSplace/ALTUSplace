@@ -43,6 +43,22 @@ export const VEHICLE_PRICE_MAX = 100_000;
 export const VEHICLE_FUEL_MAX = 32;
 export const VEHICLE_TRANSMISSION_MAX = 32;
 
+/** Kept beside the byte caps so a message can never disagree with the limit. */
+const MAX_IMAGE_MB = Math.round(MAX_IMAGE_BYTES / (1024 * 1024));
+
+/** Strip an optional `data:<mime>;base64,` prefix so raw base64 always flows through. */
+export function safeBase64(value: string): string {
+  const comma = value.indexOf(",");
+  return comma !== -1 && value.slice(0, comma).includes(";base64") ? value.slice(comma + 1) : value;
+}
+
+/** Approximate decoded byte length of a base64 string (used for size caps). */
+export function baseBytesLength(base64: string): number {
+  const len = base64.length;
+  const padding = base64.endsWith("==") ? 2 : base64.endsWith("=") ? 1 : 0;
+  return Math.floor((len * 3) / 4) - padding;
+}
+
 /* ------------------------------------------------ Arabic field dictionary */
 
 export const PARTNER_APPLY_FIELD_LABELS = {
@@ -159,7 +175,10 @@ export const PARTNER_APPLY_MESSAGES = {
   descriptionText: "نبذة عن الوكالة يجب أن تكون نصاً.",
   bodyInvalid: "تعذّر قراءة بيانات الطلب. أعد تحميل الصفحة وأكمل النموذج من جديد.",
   logoInvalid: "شعار الوكالة غير صالح. أعد اختيار صورة صالحة.",
+  logoTooLarge: `حجم شعار الوكالة كبير جداً — الحد الأقصى ${MAX_IMAGE_MB} ميجابايت.`,
   galleryInvalid: "صور المعرض غير صالحة. أعد اختيار صورة صالحة.",
+  galleryTooLarge: `حجم صورة من صور المعرض كبير جداً — الحد الأقصى ${MAX_IMAGE_MB} ميجابايت لكل صورة.`,
+  imagesTooLarge: "إجمالي حجم الصور كبير جداً — الحد الأقصى 10 ميجابايت.",
   galleryTooMany: `يمكن رفع ${MAX_GALLERY_IMAGES} صور في معرض الوكالة كحد أقصى.`,
   vehiclesTooMany: `يمكن إدراج ${MAX_VEHICLES} مركبة كحد أقصى في الطلب الواحد.`,
 } as const;
@@ -226,26 +245,38 @@ export function isBlankVehicleDraft(vehicle: PartnerVehicleDraft): boolean {
  * Arabic-only: `fileName`'s length checks and `mimeType`'s upper bound were
  * previously unguarded and leaked "Too small" / "Too big".
  */
-const imageSchema = (invalid: string) =>
-  z.object(
-    {
-      fileName: z
-        .string({ error: invalid })
-        .trim()
-        .min(1, { error: invalid })
-        .max(120, { error: invalid })
-        .optional(),
-      mimeType: z
-        .string({ error: invalid })
-        .trim()
-        .min(1, { error: invalid })
-        .max(64, { error: invalid }),
-      contentBase64: z
-        .string({ error: invalid })
-        .min(1, { error: invalid }),
-    },
-    { error: invalid },
-  );
+const imageSchema = (invalid: string, tooLarge: string) =>
+  z
+    .object(
+      {
+        fileName: z
+          .string({ error: invalid })
+          .trim()
+          .min(1, { error: invalid })
+          .max(120, { error: invalid })
+          .optional(),
+        mimeType: z
+          .string({ error: invalid })
+          .trim()
+          .min(1, { error: invalid })
+          .max(64, { error: invalid }),
+        contentBase64: z
+          .string({ error: invalid })
+          .min(1, { error: invalid }),
+      },
+      { error: invalid },
+    )
+    .superRefine((image, ctx) => {
+      // The per-image cap is enforced here rather than in the upload helper
+      // because the upload runs *after* the application row is inserted: an
+      // image between MAX_IMAGE_BYTES and MAX_TOTAL_IMAGE_BYTES used to cost an
+      // INSERT plus a compensating DELETE and answer 500 "تعذر رفع الصور"
+      // instead of a 400 the form can point at. Keyed to contentBase64, like
+      // every other image error.
+      if (baseBytesLength(safeBase64(image.contentBase64)) > MAX_IMAGE_BYTES) {
+        ctx.addIssue({ code: "custom", path: ["contentBase64"], message: tooLarge });
+      }
+    });
 
 const optionalTrimmedText = (max: number, tooLong: string, wrongType: string) =>
   // Written as an explicit union rather than `.optional().or(z.literal(""))`:
@@ -358,11 +389,12 @@ const partnerApplyBaseShape = {
     .trim()
     .max(DESCRIPTION_MAX, { error: PARTNER_APPLY_MESSAGES.descriptionLong })
     .optional(),
-  logo: imageSchema(PARTNER_APPLY_MESSAGES.logoInvalid).optional(),
+  logo: imageSchema(PARTNER_APPLY_MESSAGES.logoInvalid, PARTNER_APPLY_MESSAGES.logoTooLarge).optional(),
   gallery: z
-    .array(imageSchema(PARTNER_APPLY_MESSAGES.galleryInvalid), {
-      error: PARTNER_APPLY_MESSAGES.galleryInvalid,
-    })
+    .array(
+      imageSchema(PARTNER_APPLY_MESSAGES.galleryInvalid, PARTNER_APPLY_MESSAGES.galleryTooLarge),
+      { error: PARTNER_APPLY_MESSAGES.galleryInvalid },
+    )
     .max(MAX_GALLERY_IMAGES, { error: PARTNER_APPLY_MESSAGES.galleryTooMany })
     .optional(),
   vehicles: z
