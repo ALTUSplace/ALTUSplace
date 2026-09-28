@@ -26,6 +26,7 @@ import { escapeIcal, parseIcalEvents, validateIcalImportUrl } from "../shared/ic
 import { syncListingIcal } from "./ical";
 import { CANCELLATION_POLICY_VERSION, CANCELLATION_POLICY_TEXT, CANCELLATION_POLICY_FINGERPRINT } from "../shared/cancellationPolicySnapshot";
 import { createImageVerificationProof, ORIGINAL_IMAGE_REJECTION_MESSAGE, verifyImageVerificationProof, verifyOriginalListingImage } from "./imageVerification";
+import { applyListingWatermark } from "./imageWatermark";
 import { isRangeAvailable, overlaps, parseBlockedRanges, parseDateRange } from "./availability";
 import { getTranslatedListing, getTranslationStats, invalidateTranslationCache, isTranslationAvailable, SUPPORTED_LANGUAGES, translateWithAws } from "./_core/translation";
 import { ENV } from "./_core/env";
@@ -537,7 +538,11 @@ export const appRouter = router({
             cause: { confidence: verification.confidence, reasons: verification.reasons },
           });
         }
-        const uploaded = await storagePut(`users/${ctx.user!.id}/listings/${Date.now()}-${normalizedName}`, imageBuffer, input.mimeType);
+        // Watermark after the originality check above — verifyOriginalListingImage
+        // rejects images that already carry a watermark. The proof is still signed
+        // over the untouched original so it remains a provenance anchor.
+        const watermarked = await applyListingWatermark(imageBuffer, input.mimeType);
+        const uploaded = await storagePut(`users/${ctx.user!.id}/listings/${Date.now()}-${normalizedName}`, watermarked.data, watermarked.contentType);
         const verificationProof = createImageVerificationProof({ ownerId: ctx.user!.id, url: uploaded.url, bytes: imageBuffer });
         return { ...uploaded, fileName: normalizedName, mimeType: input.mimeType, verification: { confidence: verification.confidence }, verificationProof };
       }),
