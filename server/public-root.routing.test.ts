@@ -57,7 +57,7 @@ describe("GET / public routing boundary", () => {
     expect(html).toContain('name="robots" content="index, follow');
     // No owner-login form markers anywhere in the home document.
     expect(html).not.toContain("direct-password");
-    expect(html).not.toContain("تسجيل الدخول المباشر");
+    expect(html).not.toContain("دخول المالكين");
     expect(html).not.toContain('name="robots" content="noindex');
   });
 
