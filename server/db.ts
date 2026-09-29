@@ -10,6 +10,24 @@ let _db: ReturnType<typeof drizzle> | null = null;
 // Lazily create the drizzle instance so local tooling can run without a DB.
 export async function getDb() {
   const databaseUrl = process.env.DATABASE_URL ?? process.env.SUPABASE_DB_URL;
+  if (!databaseUrl) {
+    if (process.env.DB_STRICT === "1") {
+      throw new Error(
+        "DB_STRICT=1 but neither DATABASE_URL nor SUPABASE_DB_URL is set",
+      );
+    }
+    console.warn("[Database] no connection string — running degraded");
+    return null;
+  }
+  let parsed: URL;
+  try {
+    parsed = new URL(databaseUrl);
+  } catch {
+    throw new Error("DATABASE_URL is not a valid URL");
+  }
+  if (parsed.protocol !== "postgresql:" && parsed.protocol !== "postgres:") {
+    throw new Error(`DATABASE_URL must be postgresql://, got ${parsed.protocol}`);
+  }
   if (!_db && databaseUrl) {
     try {
       const client = postgres(databaseUrl, { prepare: false });

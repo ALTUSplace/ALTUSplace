@@ -8,7 +8,7 @@ import { inspectConnectionString, MIGRATION_LOCK_KEY } from "./migrate.mjs";
 
 const SESSION_POOLER = "postgres://u:p@aws-0-eu-north-1.pooler.supabase.com:5432/postgres";
 const TRANSACTION_POOLER = "postgres://u:p@aws-0-eu-north-1.pooler.supabase.com:6543/postgres";
-const DIRECT = "postgres://u:p@db.bndamyekddqkvrsnmfhe.supabase.co:5432/postgres";
+const DIRECT = "postgres://u:p@db.example.supabase.co:5432/postgres";
 
 describe("migration connection classification", () => {
   it("refuses port 6543, Supabase's transaction-mode pooler", () => {
