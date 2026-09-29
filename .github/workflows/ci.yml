@@ -177,16 +177,23 @@ jobs:
       # registered migrations actually *build the schema the application reads* --
       # the gap that produced SQLSTATE 42703 on every listing page.
       #
-      # `continue-on-error: true` is deliberate and temporary. This gate has never
-      # been executed, because the machine it was written on has no Docker and no
-      # Postgres, so whether a clean main passes is an assumption, not a measured
-      # fact. Landing it advisory means the first real run cannot block a merge or
-      # turn the gates red on unrelated work. Once it has run green on main, delete
-      # this line to make it blocking -- that promotion is a one-line change and
-      # should happen in its own PR, with its own review, not bundled with the
-      # change that introduces the gate.
-      - name: Migration schema parity (advisory)
-        continue-on-error: true
+      # Blocking. This used to carry `continue-on-error: true` because the gate had
+      # never been executed -- the machine it was written on has no Docker and no
+      # Postgres, so whether a clean main passed was an assumption, not a measured
+      # fact. Advisory landing meant the first real run could neither block a merge
+      # nor turn the gates red on unrelated work.
+      #
+      # That precondition is now met: the first real run (CI run 36635706008 on
+      # PR #25) reported "PARITY OK", with 625 catalog lines on the migrated side
+      # and 625 on the declared side. Note that under `continue-on-error: true` the
+      # Actions UI reports a *failed* step as `success`, so the raw log is the only
+      # trustworthy signal -- do not trust the checkmark when reading this gate.
+      #
+      # The original note asked for this promotion to land in its own PR. It rode in
+      # with #25 instead, so that the hand-written 0021 migration could not reach
+      # main on an advisory gate. Splitting it out afterwards is still worthwhile if
+      # a separately-reviewed promotion is preferred.
+      - name: Migration schema parity
         run: pnpm check:schema-parity
 
       # Sub-AA contrast token regression guard. Blocking, and currently passing.
