@@ -43,6 +43,13 @@ function resolveSiteUrl() {
 
 const SITE_URL = resolveSiteUrl();
 const LOGO_URL = `${SITE_URL}/images/logo.png`;
+/**
+ * The 1200x630 social card written by scripts/generate-og-image.mjs. LOGO_URL
+ * stays the schema.org logo and the LocalBusiness image; logo.png is a
+ * 1000x558 canvas that is 94.7% transparent padding around a small portrait
+ * lockup, so it previews as a near-empty box.
+ */
+const OG_IMAGE_URL = `${SITE_URL}/images/og-default.png`;
 
 function escapeHtml(value) {
   return String(value ?? "").replace(
@@ -186,16 +193,16 @@ function renderHead(route) {
     og("og:site_name", "ALTUSplace"),
     og("og:title", route.title),
     og("og:description", route.description),
-    og("og:image", LOGO_URL),
-    og("og:image:width", "1000"),
-    og("og:image:height", "558"),
+    og("og:image", OG_IMAGE_URL),
+    og("og:image:width", "1200"),
+    og("og:image:height", "630"),
     og("og:image:alt", `ALTUSplace — ${route.title}`),
     og("og:url", canonical),
     og("og:locale", "ar_MA"),
     `<meta name="twitter:card" content="summary_large_image">`,
     `<meta name="twitter:title" content="${escapeHtml(route.title)}">`,
     `<meta name="twitter:description" content="${escapeHtml(route.description)}">`,
-    `<meta name="twitter:image" content="${escapeHtml(LOGO_URL)}">`,
+    `<meta name="twitter:image" content="${escapeHtml(OG_IMAGE_URL)}">`,
     route.jsonLd
       ? `<script type="application/ld+json">${JSON.stringify(route.jsonLd).replace(/</g, "\\u003c")}</script>`
       : "",
