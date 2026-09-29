@@ -134,6 +134,13 @@
       "when": 1791300000000,
       "tag": "0020_detailed_ratings",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1791400000000,
+      "tag": "0021_vendor_profiles_and_listing_state",
+      "breakpoints": true
     }
   ]
 }

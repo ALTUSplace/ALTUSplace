@@ -66,6 +66,35 @@ export const users = pgTable("users", {
   legalConsentAt: timestamp("legal_consent_at"),
 });
 
+/**
+ * Vendor-facing business profile, split out of the flattened agency_* columns
+ * on `users`: `users` owns identity and role, this owns the public business
+ * face rendered on listing cards. The unique index on user_id makes it
+ * strictly one profile per user, so an upsert is a single ON CONFLICT.
+ *
+ * Listing ownership deliberately does NOT point here — `listings.owner_id`
+ * references `users.id`, which keeps the (owner, status, category) moderation
+ * index single-table. "This owner has a vendor profile" is enforced in the
+ * service layer at listing creation, not by an FK.
+ */
+export const vendorProfiles = pgTable(
+  "vendor_profiles",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: integer("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade", onUpdate: "cascade" }),
+    businessName: varchar("business_name", { length: 180 }).notNull(),
+    logoUrl: text("logo_url"),
+    /** Set by an admin after KYC / commercial-register review. Gates the vendor badge. */
+    isVerified: boolean("is_verified").default(false).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    userIdUnique: uniqueIndex("vendor_profiles_user_id_unique_idx").on(table.userId),
+  }),
+);
+
 export const partnerApplicationStatusEnum = pgEnum("partner_application_status", ["pending", "approved", "rejected"]);
 export const partnerApplicationTypeEnum = pgEnum("partner_application_type", ["car_rental", "real_estate"]);
 
@@ -117,6 +146,7 @@ export const listings = pgTable("listings", {
   description: text("description"),
   category: varchar("category", { length: 64 }).notNull(), // car أو real_estate
   pricePerDay: integer("price_per_day").notNull(),
+  currency: varchar("currency", { length: 3 }).default("MAD").notNull(), // MAD | EUR — priced in listing currency, settled in MAD by default
   imageUrl: text("image_url"),
   images: text("images").array(), // per-listing gallery (public URLs), primary source for rendering
   seats: integer("seats"), // السيارات — عدد المقاعد
@@ -125,7 +155,15 @@ export const listings = pgTable("listings", {
   floor: integer("floor"), // العقارات — الطابق
   status: listingStatusEnum("status").default("Published").notNull(),
   isFeatured: boolean("is_featured").default(false).notNull(),
+  /**
+   * Set once the upload pipeline has stamped the watermark over the stored
+   * bytes (server/imageWatermark.ts returns `watermarked` but nothing
+   * persisted it, so the flag had no home until this column).
+   */
+  watermarkApplied: boolean("watermark_applied").default(false).notNull(),
   city: varchar("city", { length: 64 }).default("الدار البيضاء").notNull(),
+  /** URL-safe city key (e.g. "marrakech") for /locations/<slug> and the city sitemap. */
+  citySlug: varchar("city_slug", { length: 64 }), // NULL until the Arabic `city` values are backfilled
   lat: doublePrecision("latitude"),
   lng: doublePrecision("longitude"),
   fuelType: varchar("fuel_type", { length: 32 }).default("ديزل"),
@@ -151,6 +189,9 @@ export const listings = pgTable("listings", {
   statusIdx: index("listings_status_idx").on(table.status),
   ownerIdIdx: index("listings_owner_id_idx").on(table.ownerId),
   searchCompositeIdx: index("listings_search_composite_idx").on(table.city, table.category, table.status),
+  // Hot moderation + vendor-dashboard path: one owner's queue, filtered by type.
+  // `category` doubles as the CAR/PROPERTY discriminator so no second enum exists.
+  ownerStatusCategoryIdx: index("listings_owner_status_category_idx").on(table.ownerId, table.status, table.category),
   latLngIdx: index("listings_lat_lng_idx").on(table.lat, table.lng),
 }));
 
@@ -389,6 +430,8 @@ export const auditLogs = pgTable("audit_logs", {
   entityId: integer("entity_id"),
   beforeData: text("before_data"),
   afterData: text("after_data"),
+  /** Free-text moderation reason, rendered verbatim in the admin audit feed. */
+  notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => ({
   entityIdx: index("audit_logs_entity_idx").on(table.entityType, table.entityId),
@@ -583,6 +626,8 @@ export type InsertTranslation = typeof translations.$inferInsert;
 
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
+export type VendorProfile = typeof vendorProfiles.$inferSelect;
+export type InsertVendorProfile = typeof vendorProfiles.$inferInsert;
 export type Listing = typeof listings.$inferSelect;
 export type InsertListing = typeof listings.$inferInsert;
 export type ListingAnalyticsEvent = typeof listingAnalyticsEvents.$inferSelect;
