@@ -395,20 +395,53 @@
   }
   ::-webkit-scrollbar-thumb:hover { background: var(--border-strong); background-clip: padding-box; }
 
+  /* "تخطّي إلى المحتوى الرئيسي". Reused by SkipLink.tsx.
+     Fixed rather than absolute so it needs no positioned ancestor, and driven
+     off the inline axis so it stays on the correct side when LanguageContext
+     flips document.dir to "rtl". Colors are existing tokens: #1C1C1E on #FFFFFF
+     (light) and #F2F3F5 on #16181D (dark) are both ~16:1, comfortably past AA
+     and clear of the sub-AA contrast gate in .github/workflows/ci.yml. */
   .skip-link {
-    position: absolute;
-    top: -100%;
-    left: 1rem;
+    position: fixed;
+    inset-block-start: 0.75rem;
+    inset-inline-start: 0.75rem;
     padding: 0.5rem 1rem;
     background: var(--ink-primary);
     color: var(--bg-surface);
     border-radius: var(--radius-sm);
+    border: 2px solid transparent;
     font-weight: 600;
     font-size: var(--text-body-sm);
+    /* Parked fully above the viewport. The old rule used `top: -100%` with
+       `:focus { transform: translateY(0) }`, which is a no-op transform — the
+       link stayed off-screen when focused and the skip link was unusable. */
+    transform: translateY(calc(-100% - 1.5rem));
     transition: transform var(--dur-fast) var(--ease-smooth);
     z-index: 9999;
   }
-  .skip-link:focus { transform: translateY(0); }
+  /* :focus rather than :focus-visible: this link is only reachable by Tab, and
+     Safari has historically missed :focus-visible on it. */
+  .skip-link:focus {
+    transform: translateY(0);
+    border-color: var(--accent-primary);
+  }
+
+  /* Route-focus target. Focused programmatically after every navigation so a
+     screen reader lands on the new page instead of silently staying on the nav
+     link that triggered it. The heading is the primary target; this is the
+     fallback for pages without one. The ring is suppressed because Chrome does
+     match :focus-visible on programmatically focused tabindex="-1" containers,
+     which would wrap the entire viewport in an outline. The announcement that
+     fires alongside is the actual feedback here. */
+  #main-content:focus {
+    outline: none;
+  }
+  /* Keep the focused heading clear of the sticky header when focus scrolls it
+     into view. */
+  #main-content,
+  #main-content h1 {
+    scroll-margin-block-start: 5rem;
+  }
 
   .no-scrollbar {
     -ms-overflow-style: none;

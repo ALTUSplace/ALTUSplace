@@ -235,6 +235,9 @@ const translations: Record<Language, Record<string, string>> = {
     openSearchLabel: "فتح البحث",
     searchTitleLabel: "عنوان البحث",
     loadingPage: "جاري تحميل الصفحة...",
+    // SPA route-change announcements (client/src/hooks/useRouteAnnouncer.ts).
+    skipToMainContent: "تخطي إلى المحتوى الرئيسي",
+    pageAnnouncementGeneric: "صفحة جديدة",
     accessChecking: "جاري التحقق من صلاحية الوصول...",
     loginRequired: "تسجيل الدخول مطلوب",
     loginRequiredDesc: "يرجى تسجيل الدخول للوصول إلى هذه الصفحة",
@@ -590,6 +593,9 @@ const translations: Record<Language, Record<string, string>> = {
     openSearchLabel: "Ouvrir la recherche",
     searchTitleLabel: "Titre de recherche",
     loadingPage: "Chargement de la page...",
+    // SPA route-change announcements (client/src/hooks/useRouteAnnouncer.ts).
+    skipToMainContent: "Aller au contenu principal",
+    pageAnnouncementGeneric: "Nouvelle page",
     accessChecking: "Vérification des droits d'accès...",
     loginRequired: "Connexion requise",
     loginRequiredDesc: "Veuillez vous connecter pour accéder à cette page",
@@ -957,6 +963,9 @@ const translations: Record<Language, Record<string, string>> = {
     openSearchLabel: "Open search",
     searchTitleLabel: "Search title",
     loadingPage: "Loading page...",
+    // SPA route-change announcements (client/src/hooks/useRouteAnnouncer.ts).
+    skipToMainContent: "Skip to main content",
+    pageAnnouncementGeneric: "New page",
     accessChecking: "Checking access permissions...",
     loginRequired: "Login required",
     loginRequiredDesc: "Please log in to access this page",
