@@ -190,8 +190,16 @@ export function NavbarCitySelect({ className }: NavbarCitySelectProps) {
                     tabIndex={-1}
                     onClick={() => commit(option)}
                     onMouseEnter={() => setActiveIndex(index)}
+                    // Theme tokens, not literal white. The panel is bg-bg-elevated,
+                    // which is #FFFFFF in light mode, so the old hardcoded
+                    // text-white / text-white-80 / bg-white-10 rendered white-on-white
+                    // and every city vanished in Light mode while looking fine in Dark.
+                    // Mirrors the pattern NavbarMobileCitySelect already uses, which is
+                    // why the mobile accordion was never affected.
                     className={`flex min-h-9 w-full items-center justify-between gap-2 rounded-sm px-3 text-start text-xs font-bold transition-colors duration-150 ${
-                      isActive ? "bg-white/10 text-white" : "text-white/80 hover:bg-white/10 hover:text-white"
+                      isActive
+                        ? "bg-bg-muted text-ink-primary"
+                        : "text-ink-secondary hover:bg-bg-muted hover:text-ink-primary"
                     }`}
                   >
                     <span>{option.label}</span>
