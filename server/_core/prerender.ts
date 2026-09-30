@@ -98,7 +98,7 @@ async function listingMetadata(id: number, origin: string): Promise<RouteMetadat
       (isCar
         ? `استأجر ${listing.title} في ${listing.city} بسعر ${price} درهم لليوم عبر ALTUSplace.`
         : `عقار للإيجار في ${listing.city} بسعر ${price} درهم عبر ALTUSplace.`);
-    const image = listing.imageUrl || `${origin}/images/logo.png`;
+    const image = listing.imageUrl || `${origin}/images/og-default.png`;
 
     return {
       title,
@@ -127,7 +127,7 @@ export async function resolveRouteMetadata(pathname: string, origin: string = SE
   const base: RouteMetadata = {
     title: DEFAULT_TITLE,
     description: DEFAULT_DESCRIPTION,
-    image: `${origin}/images/logo.png`,
+    image: `${origin}/images/og-default.png`,
     type: "website",
     robots: "index, follow, max-image-preview:large",
     canonical: canonicalFor(pathname, origin),
@@ -195,7 +195,7 @@ export async function resolveRouteMetadata(pathname: string, origin: string = SE
   // discover or index them (robots.txt also disallows them, and the route
   // guard redirects anonymous visitors to "/").
   const AUTH_ONLY_METADATA: Record<string, { title: string }> = {
-    "/owner-login": { title: "تسجيل الدخول المباشر | ALTUSplace" },
+    "/owner-login": { title: "دخول المالكين | ALTUSplace" },
     "/register": { title: "إنشاء حساب | ALTUSplace" },
     "/terms": { title: "شروط الاستخدام | ALTUSplace" },
   };
