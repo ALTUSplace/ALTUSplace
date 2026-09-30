@@ -8,6 +8,7 @@ import { COOKIE_NAME } from "@shared/const";
 import { injectPrerenderMetadata, resolveRouteMetadata } from "./_core/prerender";
 import { protectAuthOnlyPages, shouldRedirectAuthOnlyPage, AUTH_INTENT_COOKIE } from "./_core/routeGuard";
 import { sdk } from "./_core/sdk";
+import { buildTestSitemap } from "./sitemap-fixture.mjs";
 
 const root = resolve(import.meta.dirname, "..");
 const read = (relativePath: string) => readFileSync(resolve(root, relativePath), "utf8");
@@ -177,7 +178,7 @@ describe("public/private route isolation audit", () => {
   });
 
   it("keeps /register and /terms out of the sitemap and robots-allow surface", () => {
-    const sitemap = read("client/public/sitemap.xml");
+    const sitemap = buildTestSitemap();
     expect(sitemap).not.toContain("https://altusplace.vercel.app/terms");
     expect(sitemap).not.toContain("https://altusplace.vercel.app/register");
     const robots = read("client/public/robots.txt");
