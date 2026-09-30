@@ -7,6 +7,7 @@ import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { operationError, withTimeout } from "@/lib/mutationGuards";
 import { normalizeWaNumber } from "@/lib/whatsapp";
+import { useDocumentTitle } from "@/lib/seo";
 
 const initialForm = {
   agencyName: "",
@@ -36,6 +37,7 @@ function fileToBase64(file: File): Promise<string> {
 }
 
 export default function AgencySettings() {
+  useDocumentTitle("إعدادات الوكالة | ALTUSplace");
   const { user, loading: authLoading } = useAuth({
     redirectOnUnauthenticated: true,
     redirectPath: "/become-agency",

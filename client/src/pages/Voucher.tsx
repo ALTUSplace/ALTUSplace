@@ -8,9 +8,10 @@ import { toast } from 'sonner';
 import { OptimizedImage } from '@/components/OptimizedImage';
 import { buildWhatsAppUrl } from '@/lib/whatsapp';
 
-import { useNoIndex } from "@/lib/seo";
+import { useDocumentTitle, useNoIndex } from "@/lib/seo";
 
 export default function VoucherPage() {
+  useDocumentTitle("قسيمة الحجز | ALTUSplace");
   useNoIndex();
   const { code = '' } = useParams<{ code: string }>();
   const [, setLocation] = useLocation();

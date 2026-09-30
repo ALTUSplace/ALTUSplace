@@ -10,6 +10,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { CitySelect } from "@/components/CitySelect";
 import { operationError, withTimeout } from "@/lib/mutationGuards";
 import { useToken } from "@/lib/designTokens";
+import { useDocumentTitle, useNoIndex } from "@/lib/seo";
 
 const labels = {
   office: "مكتب مستقل",
@@ -19,6 +20,8 @@ const labels = {
 } as const;
 
 export default function HostDashboard() {
+  useDocumentTitle("أضف إعلانك | ALTUSplace");
+  useNoIndex();
   const { user, loading, refresh } = useAuth();
   // Recharts writes stroke to an SVG attribute, which cannot evaluate var().
   const viewsInk = useToken("--ink-primary");

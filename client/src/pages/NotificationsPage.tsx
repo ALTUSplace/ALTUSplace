@@ -17,9 +17,10 @@ function notificationTime(value: Date | string, language: Language) {
   });
 }
 
-import { useNoIndex } from "@/lib/seo";
+import { useDocumentTitle, useNoIndex } from "@/lib/seo";
 
 export default function NotificationsPage() {
+  useDocumentTitle("الإشعارات | ALTUSplace");
   useNoIndex();
   const { isAuthenticated } = useAuth();
   const { language, direction } = useLanguage();
