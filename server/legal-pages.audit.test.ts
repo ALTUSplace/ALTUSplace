@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { resolveRouteMetadata } from "./_core/prerender";
+import { buildTestSitemap } from "./sitemap-fixture.mjs";
 
 const root = resolve(import.meta.dirname, "..");
 const read = (relativePath: string) => readFileSync(resolve(root, relativePath), "utf8");
@@ -78,7 +79,7 @@ describe("legal pages audit", () => {
     const sitemapScript = read("scripts/sitemap.mjs");
     expect(sitemapScript).toContain(`{ path: "${route}"`);
 
-    const sitemapXml = read("client/public/sitemap.xml");
+    const sitemapXml = buildTestSitemap();
     expect(sitemapXml).toContain(`https://altusplace.vercel.app${route}`);
   });
 
