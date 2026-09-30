@@ -216,3 +216,38 @@ jobs:
       - name: Verify no sub-AA contrast tokens remain
         run: |
           grep -rE "text-slate-400|text-gray-500" client/src/ --include="*.tsx" --include="*.ts" && exit 1 || echo "OK"
+
+  # Secret scanning. A separate job from `gates` on purpose: it needs no
+  # toolchain, no pnpm install and no database, so it stays fast, and a secret
+  # finding can never be masked by an unrelated build failure. It runs on every
+  # pull request to main and on every push to main.
+  secret-scan:
+    name: secret-scan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # Full history. `gitleaks detect` reports findings per commit, so a
+          # shallow clone would hide any secret committed outside the fetched
+          # window -- which is exactly the case worth catching.
+          fetch-depth: 0
+
+      # `.gitleaks.toml` extends the upstream default rules and narrows only the
+      # literals that are legitimately non-secret in this repo: the tracked
+      # .env contract files, `+2126XXXXXXXX` phone placeholders, and the fixed
+      # `postgres:postgres` default used by the ephemeral CI database.
+      #
+      # `--redact` keeps any value out of the log. `--exit-code 1` makes a
+      # finding a hard failure rather than a warning.
+      #
+      # If this step ever fails: the secret must be treated as compromised and
+      # rotated in its provider. Deleting it from the working tree is not
+      # sufficient, because it is already in git history.
+      - name: gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: detect --source . --config .gitleaks.toml --exit-code 1 --redact --verbose

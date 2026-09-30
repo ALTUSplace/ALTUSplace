@@ -1,0 +1,51 @@
+# gitleaks configuration for ALTUSplace.
+#
+# Rationale for keeping this file instead of relying on gitleaks' built-in
+# defaults: the default rule set flags placeholder values that this repo uses
+# legitimately (e.g. `+2126XXXXXXXX` WhatsApp placeholders, Vercel/Turbo/Nx
+# environment booleans), which produced noise in an initial trial run. The
+# allowlist below is deliberately narrow and each entry states why it is safe.
+#
+# The scanner runs in CI on pull requests to main. A finding here is a hard
+# failure: a secret that reached a commit must be treated as compromised and
+# rotated, not merely deleted from history.
+
+title = "ALTUSplace gitleaks configuration"
+
+[extend]
+# Inherit gitleaks' upstream default rules (AWS, GitHub, Stripe, generic API
+# keys, private keys, JWTs, database URLs, etc.) and only add repo-specific
+# narrowing on top.
+useDefault = true
+
+[allowlist]
+description = "Non-secret literals that legitimately appear in this repository."
+
+# Documentation, examples and the .env contract file. These are the only env
+# files tracked by git; every real value lives in an ignored .env* file.
+paths = [
+  '''(^|/)(\.env\.production\.example|\.env\.example)$''',
+  '''(^|/)node_modules/''',
+  '''(^|/)dist/''',
+  '''(^|/)\.screenshots/''',
+  '''(^|/)pnpm-lock\.yaml$''',
+  '''(^|/)b2_rent_brand_presentation/''',
+  '''(^|/)slides_project/''',
+]
+
+# Regexes for values that are structurally secret-looking but are placeholders
+# or fixed, non-secret constants in this codebase.
+regexes = [
+  # Moroccan phone placeholders used in copy and form examples: "+2126XXXXXXXX"
+  '''\+2126X{4,}''',
+  # Fixed, non-secret Supabase/Postgres local defaults used by the ephemeral
+  # CI postgres service container and by drizzle config. These are literals
+  # committed on purpose, with no credential value.
+  '''postgresql://postgres:postgres@''',
+  # Placeholder JWT used only to satisfy a length check in a unit test.
+  '''eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.placeholder''',
+]
+
+# A finding is only a problem if it is not already committed. `stopwords` is
+# left empty; the allowlist above is the whole policy.
+stopwords = []
