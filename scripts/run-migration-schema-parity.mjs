@@ -69,8 +69,18 @@ function cleanup() {
 function waitForPostgres() {
   // Readiness is polled rather than slept on, so a slow machine cannot produce a
   // false pass and a fast one is not penalised with a fixed sleep.
+  //
+  // `pg_isready` alone is not enough: it reports "accepting connections" during
+  // the tail end of startup, before the server can run a single query, and the
+  // first `scripts/migrate.mjs` connection then dies with "the database system
+  // is starting up" (observed flaking the required `gates` check on multiple
+  // PRs). Poll with a real `SELECT 1` on the default database instead, which
+  // only succeeds once the server can actually answer a query -- the exact
+  // capability migrate.mjs needs. The unix-socket "local" auth in the official
+  // postgres image is trust, so `docker exec psql -U <postgres user>` needs no
+  // password, matching the pg_isready call this replaces.
   for (let attempt = 1; attempt <= 60; attempt += 1) {
-    if (dockerExec(["pg_isready", "-U", USER]).status === 0) return;
+    if (dockerExec(["psql", "-U", USER, "-d", "postgres", "-tA", "-c", "SELECT 1"]).status === 0) return;
     if (attempt === 60) {
       const logs = dockerExec(["logs", CONTAINER]);
       process.stderr.write(`${logs.stdout ?? ""}${logs.stderr ?? ""}`);
