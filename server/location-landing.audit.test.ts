@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
+import { buildTestSitemap } from "./sitemap-fixture.mjs";
 
 const root = resolve(import.meta.dirname, "..");
 const read = (relativePath: string) => readFileSync(resolve(root, relativePath), "utf8");
@@ -61,7 +62,7 @@ describe("location landing pages audit", () => {
   });
 
   it("lists the six prerendered city marketing pages in the sitemap", () => {
-    const sitemap = read("client/public/sitemap.xml");
+    const sitemap = buildTestSitemap();
     for (const slug of ["casablanca", "marrakech", "agadir", "rabat", "tangier", "fes"]) {
       expect(sitemap).toContain(`https://altusplace.vercel.app/city/${slug}`);
     }

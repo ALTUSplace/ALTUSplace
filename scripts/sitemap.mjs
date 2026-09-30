@@ -18,6 +18,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 
 const require = createRequire(import.meta.url);
 const ROOT = resolve(import.meta.dirname, "..");
@@ -126,27 +127,60 @@ async function loadPublishedListings() {
   }
 }
 
-async function main() {
-  const siteUrl = resolveSiteUrl();
+/**
+ * Composes the complete sitemap document from the fixed route list plus the
+ * supplied listings, and returns it as a string. Pure: no filesystem, no
+ * database, no environment lookup.
+ *
+ * Exported so tests can assert against the real generator output instead of
+ * reading `client/public/sitemap.xml` off disk. That file is a build artifact
+ * produced by `pnpm build` before `vite build`, and it is deliberately not
+ * tracked in git, so reading it from a test asserted against whatever the last
+ * local build happened to leave behind -- or, in CI, against a file that does
+ * not exist at all. The same pattern is already used by
+ * `server/_core/sitemap.ts` (`buildListingsSitemap(loader)`).
+ *
+ * `listings` rows are the shape `loadPublishedListings()` returns: an `id`, a
+ * `category`, and a creation timestamp under either `created_at` (the SQL
+ * alias) or `createdAt` (the Drizzle column name).
+ *
+ * @param {string} siteUrl origin to prefix every loc with, no trailing slash
+ * @param {Array<{id: number|string, category?: string, created_at?: unknown, createdAt?: unknown}>} [listings]
+ * @returns {string} a complete `<urlset>` document
+ */
+export function buildSitemapXml(siteUrl, listings = []) {
   const entries = ROUTES.map((route) => ({ loc: `${siteUrl}${route.path}`, ...route }));
-  const listings = await loadPublishedListings();
   for (const listing of listings) {
     entries.push({
       loc: `${siteUrl}${isCarCategory(listing.category) ? "/car/" : "/property/"}${listing.id}`,
-      lastmod: lastmodOf(listing.created_at),
+      lastmod: lastmodOf(listing.created_at ?? listing.createdAt),
       changefreq: "weekly",
       priority: "0.6",
     });
   }
+  return buildUrlset(entries);
+}
+
+async function main() {
+  const siteUrl = resolveSiteUrl();
+  const listings = await loadPublishedListings();
 
   mkdirSync(PUBLIC_DIR, { recursive: true });
-  writeFileSync(resolve(PUBLIC_DIR, "sitemap.xml"), buildUrlset(entries), "utf8");
+  writeFileSync(
+    resolve(PUBLIC_DIR, "sitemap.xml"),
+    buildSitemapXml(siteUrl, listings),
+    "utf8",
+  );
   console.log(
-    `[sitemap] wrote ${entries.length} URLs (${listings.length} listings, cap ${MAX_LISTING_URLS}) to client/public/sitemap.xml for ${siteUrl}`,
+    `[sitemap] wrote ${ROUTES.length + listings.length} URLs (${listings.length} listings, cap ${MAX_LISTING_URLS}) to client/public/sitemap.xml for ${siteUrl}`,
   );
 }
 
-main().catch((error) => {
-  console.error(`[sitemap] ${error instanceof Error ? error.message : error}`);
-  process.exit(1);
-});
+// Only generate when invoked as a script. Importing this module (from a test,
+// say) must not write a file as a side effect.
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main().catch((error) => {
+    console.error(`[sitemap] ${error instanceof Error ? error.message : error}`);
+    process.exit(1);
+  });
+}
