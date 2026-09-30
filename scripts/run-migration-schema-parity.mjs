@@ -66,21 +66,49 @@ function cleanup() {
   if (tempDir) rmSync(tempDir, { recursive: true, force: true });
 }
 
+// Probe script run on the host. Connects to the ephemeral server exactly the
+// way scripts/migrate.mjs is about to: same postgres.js client, same
+// user/password (scram auth), same host-facing published port. Exits 0 only
+// once a real query succeeds.
+const READY_PROBE = `
+import postgres from "postgres";
+const sql = postgres(process.env.PARITY_URL, { max: 1, connect_timeout: 3 });
+try {
+  await sql\`SELECT 1\`;
+  await sql.end();
+  process.exit(0);
+} catch {
+  try { await sql.end(); } catch {}
+  process.exit(1);
+}
+`;
+
 function waitForPostgres() {
   // Readiness is polled rather than slept on, so a slow machine cannot produce a
   // false pass and a fast one is not penalised with a fixed sleep.
   //
-  // `pg_isready` alone is not enough: it reports "accepting connections" during
-  // the tail end of startup, before the server can run a single query, and the
-  // first `scripts/migrate.mjs` connection then dies with "the database system
-  // is starting up" (observed flaking the required `gates` check on multiple
-  // PRs). Poll with a real `SELECT 1` on the default database instead, which
-  // only succeeds once the server can actually answer a query -- the exact
-  // capability migrate.mjs needs. The unix-socket "local" auth in the official
-  // postgres image is trust, so `docker exec psql -U <postgres user>` needs no
-  // password, matching the pg_isready call this replaces.
+  // The probe goes through the published host port with the same client and the
+  // same credentials scripts/migrate.mjs will use next, which matters twice over:
+  //
+  // 1. `pg_isready` reports "accepting connections" during the tail end of
+  //    startup, before the server can run a query -- migrate.mjs then dies with
+  //    "the database system is starting up".
+  // 2. A probe inside the container (unix socket, even a real SELECT 1) does not
+  //    exercise Docker's host-side port forwarding. For a beat after the
+  //    container accepts queries, the published port can still reset a
+  //    connection, which migrate.mjs surfaces as `read ECONNRESET` (observed on
+  //    pull request CI after the unix-socket poll started passing).
+  //
+  // Probing the exact path migrate.mjs takes removes both races.
   for (let attempt = 1; attempt <= 60; attempt += 1) {
-    if (dockerExec(["psql", "-U", USER, "-d", "postgres", "-tA", "-c", "SELECT 1"]).status === 0) return;
+    const probe = run(process.execPath, ["--input-type=module", "--eval", READY_PROBE], {
+      cwd: ROOT,
+      env: {
+        ...process.env,
+        PARITY_URL: `postgres://${USER}:${PASSWORD}@127.0.0.1:${PORT}/postgres`,
+      },
+    });
+    if (probe.status === 0) return;
     if (attempt === 60) {
       const logs = dockerExec(["logs", CONTAINER]);
       process.stderr.write(`${logs.stdout ?? ""}${logs.stderr ?? ""}`);

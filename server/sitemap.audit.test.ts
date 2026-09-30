@@ -4,13 +4,18 @@ import { describe, expect, it } from "vitest";
 import { buildSitemapIndex, buildUrlset } from "../shared/sitemap";
 import { buildListingsSitemap } from "./_core/sitemap";
 import { injectPrerenderMetadata } from "./_core/prerender";
+import { buildTestSitemap } from "./sitemap-fixture.mjs";
 
 const root = resolve(import.meta.dirname, "..");
 const read = (relativePath: string) => readFileSync(resolve(root, relativePath), "utf8");
 
 describe("sitemap + robots audit", () => {
   it("publishes a single deterministic sitemap.xml with marketing routes", () => {
-    const sitemap = read("client/public/sitemap.xml");
+    // Built through the generator rather than read from
+    // client/public/sitemap.xml: that path is a gitignored build artifact, so
+    // it is absent in CI and locally reflects the last build's database load
+    // rather than the generator's own behaviour.
+    const sitemap = buildTestSitemap();
     expect(sitemap).toContain('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">');
     expect(sitemap).toContain("https://altusplace.vercel.app/");
     for (const slug of ["casablanca", "marrakech", "agadir", "rabat", "tangier", "fes"]) {
@@ -26,8 +31,14 @@ describe("sitemap + robots audit", () => {
     expect(sitemap).not.toContain("sitemap-cities.xml");
   });
 
+  it("includes the searchable listings page", () => {
+    // /search is a crawlable marketing route with its own indexable metadata,
+    // so it belongs in the sitemap alongside /blog.
+    expect(buildTestSitemap()).toContain("https://altusplace.vercel.app/search");
+  });
+
   it("keeps only public marketing pages in the sitemap", () => {
-    const sitemap = read("client/public/sitemap.xml");
+    const sitemap = buildTestSitemap();
     // Redirects and protected routes must never be submitted.
     for (const forbidden of ["/add-car", "/help", "/dashboard", "/admin", "/checkout", "/owner-login", "/register", "/terms", "/locations/"]) {
       expect(sitemap).not.toContain(forbidden);
