@@ -45,7 +45,15 @@ describe("per-agency WhatsApp routing audit contracts", () => {
 
 describe("agency WhatsApp CTA gating (post-submission only)", () => {
   it("removes every WhatsApp CTA from the public listing pages (no wa.me link)", () => {
-    for (const page of ["client/src/pages/CarDetails.tsx", "client/src/pages/PropertyDetailWithVideo.tsx"]) {
+    for (const page of [
+      "client/src/pages/CarDetails.tsx",
+      "client/src/pages/PropertyDetailWithVideo.tsx",
+      "client/src/components/ui/ListingCard.tsx", // pre-submission browse surface
+      "client/src/pages/Home.tsx",
+      "client/src/pages/Search.tsx",
+      "client/src/pages/Favorites.tsx",
+      "client/src/pages/LocationLanding.tsx",
+    ]) {
       const source = read(page);
       expect(count(source, /https:\/\/wa\.me/g)).toBe(0);
       expect(count(source, /<WhatsAppContactButton/g)).toBe(0);
@@ -66,5 +74,21 @@ describe("agency WhatsApp CTA gating (post-submission only)", () => {
     // the main CTA and the download-dialog CTA both open that same single link.
     expect(count(success, /buildWaMeUrl\(/g)).toBe(1);
     expect(count(success, /onClick=\{handleWhatsappContact\}/g)).toBe(2);
+  });
+
+  it("exposes exactly one WhatsApp CTA on the post-submission bookings page", () => {
+    const myBookings = read("client/src/pages/MyBookings.tsx");
+    expect(count(myBookings, /<WhatsAppContactButton/g)).toBe(1);
+    expect(count(myBookings, /buildWaMeUrl\(/g)).toBe(1);
+    // Gated on confirmed bookings so a pending request never surfaces the CTA.
+    expect(myBookings).toMatch(/isConfirmed \? buildWaMeUrl\(booking\.agencyWhatsApp, waMessage\) : ""/);
+  });
+
+  it("never leaks an agency contact number for an unconfirmed booking", () => {
+    const routers = read("server/routers.ts");
+    // bookings.list and bookings.getById must both gate the number on status.
+    expect(routers).toMatch(/agencyWhatsApp: row\.status === "Confirmed" \? row\.agencyWhatsApp : null/);
+    expect(routers).toMatch(/agencyWhatsApp: booking\.status === "Confirmed" \? booking\.agencyWhatsApp : null/);
+    expect(count(routers, /agencyWhatsApp: users\.whatsappNumber/g)).toBe(2);
   });
 });
