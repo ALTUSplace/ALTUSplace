@@ -1,7 +1,7 @@
 {
   "name": "ALTUSplace",
   "short_name": "ALTUSplace",
-  "description": "منصة الوساطة الأولى لتأجير السيارات في المغرب — La première plateforme de location de voitures au Maroc.",
+  "description": "منصة الوساطة الأولى لتأجير السيارات والعقارات في المغرب — La première plateforme de location de voitures et de biens immobiliers au Maroc.",
   "id": "/",
   "start_url": "/",
   "scope": "/",
@@ -11,7 +11,7 @@
   "theme_color": "#1A56DB",
   "lang": "ar",
   "dir": "rtl",
-  "categories": ["travel", "business", "shopping"],
+  "categories": ["travel", "business", "shopping", "lifestyle"],
   "icons": [
     {
       "src": "/images/icon-192.png",
@@ -31,5 +31,22 @@
       "type": "image/png",
       "purpose": "maskable"
     }
-  ]
+  ],
+  "screenshots": [
+    {
+      "src": "/images/screenshots/home-mobile-1080x1920.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "ALTUSplace — تأجير السيارات والعقارات في المغرب"
+    },
+    {
+      "src": "/images/screenshots/home-desktop-1920x1080.png",
+      "sizes": "1920x1080",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "ALTUSplace — Location de voitures et de biens immobiliers au Maroc"
+    }
+  ],
+  "related_applications": []
 }
