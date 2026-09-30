@@ -8,7 +8,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { startLogin } from "@/const";
 import { useFavorites } from "@/hooks/useFavorites";
 import { isCarCategory } from "@/lib/categories";
-import { useNoIndex } from "@/lib/seo";
+import { useDocumentTitle, useNoIndex } from "@/lib/seo";
 
 /** Minimal listing shape returned inside a favorite row (server listings.list fields). */
 type FavoriteListing = {
@@ -29,6 +29,7 @@ type FavoriteListing = {
 type FilterType = 'all' | 'car' | 'property';
 
 export default function Favorites() {
+  useDocumentTitle("المفضلة | ALTUSplace");
   useNoIndex();
   const { direction, t } = useLanguage();
   const { isAuthenticated, loading: authLoading, user } = useAuth({ redirectOnUnauthenticated: false });

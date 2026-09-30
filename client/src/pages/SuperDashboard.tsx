@@ -6,8 +6,10 @@ import RevenueChart from "@/components/admin/RevenueChart";
 import EscrowLedgerTable from "@/components/admin/EscrowLedgerTable";
 import CommissionController from "@/components/admin/CommissionController";
 import { DashboardSkeleton } from "@/components/admin/skeletons";
+import { useDocumentTitle } from "@/lib/seo";
 
 export default function SuperDashboard() {
+  useDocumentTitle("لوحة الإدارة العليا | ALTUSplace");
   const { user, loading } = useAuth();
   const isSuperAdmin = user?.role === "SUPER_ADMIN";
 

@@ -26,9 +26,10 @@ const statusLabel: Record<TicketStatus, string> = {
 const formatDate = (value: Date | string) =>
   new Intl.DateTimeFormat('ar-MA', { dateStyle: 'medium' }).format(new Date(value));
 
-import { useNoIndex } from "@/lib/seo";
+import { useDocumentTitle, useNoIndex } from "@/lib/seo";
 
 export default function SupportTickets() {
+  useDocumentTitle("تذاكر الدعم | ALTUSplace");
   useNoIndex();
   const { direction } = useLanguage();
   const utils = trpc.useUtils();

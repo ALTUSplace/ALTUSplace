@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import { trpc } from '@/lib/trpc';
 import { useAuth } from '@/_core/hooks/useAuth';
 import { DashboardSkeleton } from '@/components/admin/skeletons';
+import { useDocumentTitle } from "@/lib/seo";
 
 type Section = 'overview' | 'moderation' | 'users' | 'health';
 
@@ -48,6 +49,7 @@ function formatMAD(value: number) {
 }
 
 export default function SuperAdminDashboard() {
+  useDocumentTitle("لوحة الإدارة العليا | ALTUSplace");
   const { user, loading } = useAuth();
   const isSuperAdmin = user?.role === 'SUPER_ADMIN';
   const [section, setSection] = useState<Section>('overview');

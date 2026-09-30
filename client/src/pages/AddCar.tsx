@@ -10,8 +10,10 @@ import { persistLegalConsent } from '@/lib/legalDisclosure';
 import { Link } from 'wouter';
 import { useLanguage } from "@/contexts/LanguageContext";
 import { CitySelect } from '@/components/CitySelect';
+import { useDocumentTitle } from "@/lib/seo";
 
 export default function AddCar() {
+  useDocumentTitle("أضف إعلانك | ALTUSplace");
   const { direction } = useLanguage();
   const [, setLocation] = useLocation();
   const [submitted, setSubmitted] = useState(false);

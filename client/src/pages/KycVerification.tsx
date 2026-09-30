@@ -8,9 +8,10 @@ import { KYC_STATUS_CONFIG, getKycStatusFromSubmission } from "@/components/KycD
 import type { KycStatus } from "@/lib/kyc";
 import { Badge } from "@/components/ui/badge";
 
-import { useNoIndex } from "@/lib/seo";
+import { useDocumentTitle, useNoIndex } from "@/lib/seo";
 
 export default function KycVerification() {
+  useDocumentTitle("التحقق من الهوية | ALTUSplace");
   useNoIndex();
   const { isAuthenticated, loading: authLoading } = useAuth({ redirectOnUnauthenticated: true });
   const { language, direction, t } = useLanguage();
