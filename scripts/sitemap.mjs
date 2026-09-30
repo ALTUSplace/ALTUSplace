@@ -61,6 +61,7 @@ const CITY_SLUGS = ["casablanca", "marrakech", "agadir", "rabat", "tangier", "fe
 const ROUTES = [
   { path: "/", changefreq: "daily", priority: "1.0" },
   { path: "/search", changefreq: "daily", priority: "0.9" },
+  { path: "/properties/for-rent", changefreq: "weekly", priority: "0.8" },
   ...CITY_SLUGS.map((slug) => ({ path: `/city/${slug}`, changefreq: "weekly", priority: "0.8" })),
   { path: "/privacy", changefreq: "yearly", priority: "0.3" },
   { path: "/conditions-utilisation", changefreq: "yearly", priority: "0.3" },

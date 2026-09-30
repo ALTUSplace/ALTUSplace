@@ -14,7 +14,7 @@ export function PageHeader({ title, subtitle, eyebrow, action, className }: Page
     <div className={cn("flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between", className)}>
       <div className="flex flex-col gap-3 max-w-2xl">
         {eyebrow && <span className="section-index">{eyebrow}</span>}
-        <h1 className="font-display text-2xl font-bold tracking-tight text-ink-primary sm:text-3xl lg:text-4xl">{title}</h1>
+        <h2 className="font-display text-2xl font-bold tracking-tight text-ink-primary sm:text-3xl lg:text-4xl">{title}</h2>
         {subtitle && <p className="text-sm text-ink-secondary sm:text-base">{subtitle}</p>}
       </div>
       {action && (

@@ -97,21 +97,21 @@ export default function SuperAdminDashboard() {
 
   if (loading) {
     return (
-      <main dir="rtl" className="min-h-screen bg-[#0b1220] px-4 py-6 text-slate-100 dark:text-[#F1F1F3] sm:px-6 lg:px-10">
+      <div dir="rtl" className="min-h-screen bg-[#0b1220] px-4 py-6 text-slate-100 dark:text-[#F1F1F3] sm:px-6 lg:px-10">
         <DashboardSkeleton />
-      </main>
+      </div>
     );
   }
 
   if (!isSuperAdmin) {
     return (
-      <main dir="rtl" className="grid min-h-screen place-items-center bg-[#0b1220] px-6 text-center">
+      <div dir="rtl" className="grid min-h-screen place-items-center bg-[#0b1220] px-6 text-center">
         <div className="max-w-md space-y-3">
           <ShieldCheck className="mx-auto h-12 w-12 text-rose-500" />
           <h1 className="text-2xl font-black text-slate-100 dark:text-[#F1F1F3]">الوصول مقيّد</h1>
           <p className="text-sm text-ink-secondary dark:text-[#B0B0B8]">هذه اللوحة متاحة حصرياً لحسابات SUPER_ADMIN.</p>
         </div>
-      </main>
+      </div>
     );
   }
 
@@ -123,7 +123,7 @@ export default function SuperAdminDashboard() {
   };
 
   return (
-    <main dir="rtl" className="min-h-screen bg-[#0b1220] text-slate-100 dark:text-[#F1F1F3]">
+    <div dir="rtl" className="min-h-screen bg-[#0b1220] text-slate-100 dark:text-[#F1F1F3]">
       <div className="mx-auto flex max-w-[1500px]">
         <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-l border-slate-800 dark:border-[#2C2C2E] bg-[#0d1728] p-4 md:flex">
           <div className="mb-5 flex items-center gap-2 px-2">
@@ -249,7 +249,7 @@ export default function SuperAdminDashboard() {
           </div>
         </div>
       </div>
-    </main>
+    </div>
   );
 }
 

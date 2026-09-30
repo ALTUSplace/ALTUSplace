@@ -26,7 +26,7 @@ export default function KycVerification() {
   const StatusBannerIcon = statusConfig.icon;
   const rejectedReason = status === "rejected" ? kycStatus.data?.lastRejectionReason ?? submissions.data?.find((item) => item.status === "Rejected")?.rejectionReason ?? null : null;
   return (
-    <main dir={direction} lang={language} className="min-h-screen bg-background px-4 py-8 text-foreground">
+    <div dir={direction} lang={language} className="min-h-screen bg-background px-4 py-8 text-foreground">
       <div className="mx-auto max-w-3xl space-y-6">
         <header className="rounded-3xl bg-gradient-to-br from-slate-900 dark:from-[#1C1C1E] via-slate-800 dark:via-[#2C2C2E] to-slate-900 dark:to-[#1C1C1E] p-6 text-white shadow-xl">
           <div className="flex items-start gap-3">
@@ -85,6 +85,6 @@ export default function KycVerification() {
           </section>
         )}
       </div>
-    </main>
+    </div>
   );
 }

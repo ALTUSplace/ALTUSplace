@@ -227,7 +227,7 @@ export default function ComponentsShowcase() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <main className="container max-w-6xl mx-auto">
+      <div className="container max-w-6xl mx-auto">
         <div className="space-y-2 justify-between flex">
           <h2 className="text-3xl font-bold tracking-tight mb-6">
             Shadcn/ui Component Library
@@ -1424,7 +1424,7 @@ export default function ComponentsShowcase() {
             </Card>
           </section>
         </div>
-      </main>
+      </div>
 
       <footer className="border-t py-6 mt-12">
         <div className="container text-center text-sm text-muted-foreground">

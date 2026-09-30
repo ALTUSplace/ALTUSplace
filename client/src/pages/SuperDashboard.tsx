@@ -29,21 +29,21 @@ export default function SuperDashboard() {
 
   if (loading) {
     return (
-      <main dir="rtl" className="min-h-screen bg-[#0b1220] px-4 py-6 text-slate-100 dark:text-[#F1F1F3] sm:px-6 lg:px-10">
+      <div dir="rtl" className="min-h-screen bg-[#0b1220] px-4 py-6 text-slate-100 dark:text-[#F1F1F3] sm:px-6 lg:px-10">
         <DashboardSkeleton />
-      </main>
+      </div>
     );
   }
 
   if (!isSuperAdmin) {
     return (
-      <main dir="rtl" className="grid min-h-screen place-items-center bg-[#0b1220] px-6 text-center">
+      <div dir="rtl" className="grid min-h-screen place-items-center bg-[#0b1220] px-6 text-center">
         <div className="max-w-md space-y-3">
           <ShieldCheck className="mx-auto h-12 w-12 text-rose-500" />
           <h1 className="text-2xl font-black text-slate-100 dark:text-[#F1F1F3]">الوصول مقيّد</h1>
           <p className="text-sm text-ink-secondary dark:text-[#B0B0B8]">هذه اللوحة متاحة حصرياً لحسابات SUPER_ADMIN.</p>
         </div>
-      </main>
+      </div>
     );
   }
 
@@ -52,7 +52,7 @@ export default function SuperDashboard() {
   const seriesData = series.data ?? [];
 
   return (
-    <main dir="rtl" className="min-h-screen bg-[#0b1220] px-4 py-6 text-slate-100 dark:text-[#F1F1F3] sm:px-6 lg:px-10">
+    <div dir="rtl" className="min-h-screen bg-[#0b1220] px-4 py-6 text-slate-100 dark:text-[#F1F1F3] sm:px-6 lg:px-10">
       <div className="mx-auto max-w-[1500px] space-y-5">
         <header className="flex flex-col gap-5 rounded-2xl border border-slate-800 dark:border-[#2C2C2E] bg-gradient-to-br from-brand-panel to-brand-panel-alt p-6 shadow-xl sm:flex-row sm:items-end sm:justify-between">
           <div>
@@ -112,7 +112,7 @@ export default function SuperDashboard() {
           </>
         )}
       </div>
-    </main>
+    </div>
   );
 }
 

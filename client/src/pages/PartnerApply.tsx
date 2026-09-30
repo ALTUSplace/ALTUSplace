@@ -484,7 +484,7 @@ export default function PartnerApply() {
 
   if (submitted) {
     return (
-      <main dir="rtl" className="grid min-h-screen place-items-center bg-[#f4f7f6] px-4 py-16 text-slate-900">
+      <div dir="rtl" className="grid min-h-screen place-items-center bg-[#f4f7f6] px-4 py-16 text-slate-900">
         <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
           <span className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-emerald-50 text-emerald-600">
             <CheckCircle2 className="h-9 w-9" />
@@ -503,7 +503,7 @@ export default function PartnerApply() {
             </Link>
           </div>
         </div>
-      </main>
+      </div>
     );
   }
 
@@ -522,7 +522,7 @@ export default function PartnerApply() {
   };
 
   return (
-    <main dir="rtl" className="min-h-screen bg-[#f4f7f6] px-4 py-10 text-slate-900 sm:px-6 lg:px-10">
+    <div dir="rtl" className="min-h-screen bg-[#f4f7f6] px-4 py-10 text-slate-900 sm:px-6 lg:px-10">
       <div className="mx-auto max-w-3xl">
         <Link href="/become-partner" className="inline-flex items-center gap-1 text-xs font-bold text-slate-500 hover:text-ink-primary">
           <ChevronRight className="h-4 w-4" />
@@ -973,6 +973,6 @@ export default function PartnerApply() {
           </p>
         </form>
       </div>
-    </main>
+    </div>
   );
 }

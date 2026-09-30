@@ -169,8 +169,7 @@ export default function Home() {
               id="hero-heading"
               className="mt-5 max-w-3xl font-display text-[clamp(1.75rem,5.5vw,3.5rem)] font-bold leading-[1.15] text-white text-balance"
             >
-              {t('heroTitlePrefix')} {t('heroTitleCars')} {t('heroTitleProperties')}
-              {t('heroTitleSuffix')}
+              {t('heroHeadline')}
             </h1>
 
             <p className="mt-4 max-w-2xl text-sm leading-relaxed text-white/90 sm:text-base md:text-lg">
@@ -453,27 +452,28 @@ export default function Home() {
         <div className="container mx-auto max-w-6xl px-4">
           <div className="mb-8 text-center md:mb-12">
             <span className="section-index justify-center text-white/60">ALTUSplace</span>
+            <h2 className="mt-3 text-2xl font-bold text-white md:text-3xl">{t('trustSectionTitle')}</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10">
             <div className="flex flex-col items-center text-center space-y-3">
               <div className="w-13 h-13 p-3 corner-cut-sm bg-accent-clay flex items-center justify-center text-white shadow-[var(--shadow-clay)]">
                 <ShieldCheck className="w-7 h-7" />
               </div>
-              <h4 className="font-bold text-base md:text-lg">{t('trustTitle1')}</h4>
+              <h3 className="font-bold text-base md:text-lg">{t('trustTitle1')}</h3>
               <p className="text-xs text-white/70 max-w-xs leading-relaxed">{t('trustDesc1')}</p>
             </div>
             <div className="flex flex-col items-center text-center space-y-3 md:border-s md:border-e md:border-white/10">
               <div className="w-13 h-13 p-3 corner-cut-sm bg-accent-clay flex items-center justify-center text-white shadow-[var(--shadow-clay)]">
                 <Award className="w-7 h-7" />
               </div>
-              <h4 className="font-bold text-base md:text-lg">{t('trustTitle2')}</h4>
+              <h3 className="font-bold text-base md:text-lg">{t('trustTitle2')}</h3>
               <p className="text-xs text-white/70 max-w-xs leading-relaxed">{t('trustDesc2')}</p>
             </div>
             <div className="flex flex-col items-center text-center space-y-3">
               <div className="w-13 h-13 p-3 corner-cut-sm bg-accent-clay flex items-center justify-center text-white shadow-[var(--shadow-clay)]">
                 <Clock className="w-7 h-7" />
               </div>
-              <h4 className="font-bold text-base md:text-lg">{t('trustTitle3')}</h4>
+              <h3 className="font-bold text-base md:text-lg">{t('trustTitle3')}</h3>
               <p className="text-xs text-white/70 max-w-xs leading-relaxed">{t('trustDesc3')}</p>
             </div>
           </div>

@@ -111,6 +111,31 @@ function cityJsonLd(city) {
   };
 }
 
+/**
+ * Structured data for the /properties/for-rent hub. Declared as a
+ * `CollectionPage` with a nested breadcrumb (rather than a bare
+ * `BreadcrumbList` like the city pages) because the hub is a real section of
+ * the site, not a single city entity.
+ */
+function propertiesHubJsonLd() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: "شقق للكراء في المغرب",
+    url: `${SITE_URL}/properties/for-rent`,
+    inLanguage: "ar-MA",
+    isPartOf: { "@id": `${SITE_URL}/#website` },
+    about: { "@id": `${SITE_URL}/#organization` },
+    breadcrumb: {
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "ALTUSplace", item: `${SITE_URL}/` },
+        { "@type": "ListItem", position: 2, name: "شقق للكراء", item: `${SITE_URL}/properties/for-rent` },
+      ],
+    },
+  };
+}
+
 /** Static + city routes in a stable order. `file` is relative to dist/public. */
 const STATIC_ROUTES = [
   {
@@ -125,6 +150,14 @@ const STATIC_ROUTES = [
     file: "search/index.html",
     title: "كراء السيارات والعقارات في المغرب | ALTUSplace",
     description: "قارن عروض كراء السيارات والعقارات في جميع مدن المغرب بأسعار واضحة وحجز آمن عبر الإنترنت.",
+  },
+  {
+    path: "/properties/for-rent",
+    file: "properties/for-rent/index.html",
+    title: "شقق للكراء في المغرب: أسعار واضحة وحجز آمن | ALTUSplace",
+    description:
+      "اكتشف شقق للكراء في المغرب: شقق مؤثثة وفلل ومكاتب للكراء الشهري في الدار البيضاء ومراكش وأغادير، مع وكالات محلية ودفع آمن عبر ALTUSplace.",
+    jsonLd: propertiesHubJsonLd(),
   },
   {
     path: "/privacy",

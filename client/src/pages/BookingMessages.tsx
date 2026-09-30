@@ -48,7 +48,7 @@ export default function BookingMessages() {
   }
 
   return (
-    <main dir={direction} className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6">
+    <div dir={direction} className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6">
       <div className="mx-auto max-w-3xl space-y-5">
         <div className="flex items-center justify-between gap-3">
           <div>
@@ -75,6 +75,6 @@ export default function BookingMessages() {
           </CardContent>
         </Card>
       </div>
-    </main>
+    </div>
   );
 }

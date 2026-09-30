@@ -33,7 +33,7 @@ export default function PartnerWithUs() {
   });
 
   return (
-    <main dir="rtl" className="min-h-screen bg-[#f4f7f6] text-slate-900">
+    <div dir="rtl" className="min-h-screen bg-[#f4f7f6] text-slate-900">
       <section className="relative overflow-hidden bg-brand-panel text-brand-panel-ink">
         <div className="pointer-events-none absolute inset-0 opacity-[0.07] [background-image:radial-gradient(#fff_1px,transparent_1px)] [background-size:22px_22px]" />
         <div className="relative mx-auto max-w-5xl px-4 py-16 sm:px-6 sm:py-20 text-center">
@@ -100,6 +100,6 @@ export default function PartnerWithUs() {
           </p>
         </div>
       </section>
-    </main>
+    </div>
   );
 }
