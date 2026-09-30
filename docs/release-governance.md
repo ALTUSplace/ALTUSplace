@@ -279,3 +279,23 @@ Also open and unaddressed:
   the detailed one-off migration runbook referenced in §2.
 - **`DEPLOYMENT_GUIDE.md`** — deployment steps. Migration material there predates
   the runner hardening in PR #17 and does not mention `MIGRATION_DATABASE_URL`.
+
+---
+
+## Deferred Follow-ups
+
+- [ ] sitemap audit test needs `DATABASE_URL` or a mock — fails in env-less CI
+      (`server/sitemap.audit.test.ts:22`)
+- [ ] `users.email` unique constraint — pending dedup audit on production data
+- [ ] zero-FK orphan audit — must precede any FK retrofit on populated tables
+- [ ] `MIGRATION_DATABASE_URL` provisioned in Vercel/Railway dashboard — verify and
+      check this box
+- [ ] gitleaks or trufflehog secret scanner in CI — 20+ live secrets in
+      `.env.production.local` with no automated protection
+- [ ] `DIRECT_LOGIN_PASSWORD` emptied in production env — `server/_core/env.ts:59`
+      warns; `DEPLOYMENT_GUIDE.md:79` requires removal before GA
+- [ ] `bp-test` worktree cleanup — locked at `6b4c54c` with 561 staged deletions,
+      needs manual resolution
+- [ ] `C:\Users\kml\AppData\Local\Temp\opencode\wt-vis` leftover directory — manual
+      cleanup
+- [ ] `C:\Users\kml\Documents\altus-incident` leftover directory — manual cleanup
