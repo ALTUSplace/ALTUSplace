@@ -1,4 +1,12 @@
-/** Prints the resolved colour values behind a few hero nodes, to validate the canvas resolver. */
+/**
+ * Prints the resolved colour values behind a few hero nodes, to validate the canvas resolver.
+ *
+ * DIAGNOSTIC ONLY - interactive one-off, not a gate.
+ * Requires a browser and a running dev server, and its output is for a human
+ * to read. Not wired into any npm script or CI workflow, and not covered by
+ * tests. Do not add it to a pipeline without first rewriting it as an
+ * assertion with a nonzero exit on failure.
+ */
 import { chromium } from "playwright";
 import { PAGE_HELPERS } from "./lib/page-helpers.mjs";
 

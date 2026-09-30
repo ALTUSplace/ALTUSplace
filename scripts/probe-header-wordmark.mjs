@@ -1,4 +1,12 @@
-/** Diagnostic: what colour is the header wordmark actually painted, and where is the crop? */
+/**
+ * Diagnostic: what colour is the header wordmark actually painted, and where is the crop?
+ *
+ * DIAGNOSTIC ONLY - interactive one-off, not a gate.
+ * Requires a browser and a running dev server, and its output is for a human
+ * to read. Not wired into any npm script or CI workflow, and not covered by
+ * tests. Do not add it to a pipeline without first rewriting it as an
+ * assertion with a nonzero exit on failure.
+ */
 import { chromium } from "playwright";
 import sharp from "sharp";
 

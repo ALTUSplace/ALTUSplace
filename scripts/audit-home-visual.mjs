@@ -1,4 +1,10 @@
 /**
+ * DIAGNOSTIC ONLY - interactive one-off, not a gate.
+ * Requires a browser and a running dev server, and its output is for a human
+ * to read. Not wired into any npm script or CI workflow, and not covered by
+ * tests. Do not add it to a pipeline without first rewriting it as an
+ * assertion with a nonzero exit on failure.
+ *
  * Measures the three classes of homepage defect the brief calls out, in both
  * themes and at every breakpoint, so a "fine in dark mode" fix cannot quietly
  * regress light mode (and vice versa):

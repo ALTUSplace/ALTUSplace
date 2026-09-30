@@ -1,4 +1,10 @@
 /**
+ * DIAGNOSTIC ONLY - interactive one-off, not a gate.
+ * Requires a browser and a running dev server, and its output is for a human
+ * to read. Not wired into any npm script or CI workflow, and not covered by
+ * tests. Do not add it to a pipeline without first rewriting it as an
+ * assertion with a nonzero exit on failure.
+ *
  * Reports the geometry of client/public/assets/images/logo.png: the alpha
  * bounding box (what is actually visible), how much of the canvas is
  * transparent padding, and therefore how many CSS pixels the visible mark
