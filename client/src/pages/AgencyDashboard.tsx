@@ -49,6 +49,7 @@ import { operationError, withTimeout } from "@/lib/mutationGuards";
 import { isPropertyCategory } from "@/lib/categories";
 import { CitySelect } from "@/components/CitySelect";
 import { cityFromSlug } from "@/data/moroccoCities";
+import { useDocumentTitle } from "@/lib/seo";
 
 const money = (value: number | string) => `${Number(value).toLocaleString("fr-MA")} درهم`;
 
@@ -603,6 +604,7 @@ function ActivityLog({ items }: { items: ActivityItem[] }) {
 }
 
 export default function AgencyDashboard() {
+  useDocumentTitle("لوحة الوكالة | ALTUSplace");
   const { user } = useAuth();
   const bookings = trpc.bookings.ownerList.useQuery(undefined, { enabled: !!user });
   const overview = trpc.agency.overview.useQuery(undefined, { enabled: !!user });

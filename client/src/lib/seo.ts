@@ -27,6 +27,11 @@ export const SITE_URL = (readEnvSiteUrl() || "https://altusplace.vercel.app").re
 /** @deprecated Use `SITE_URL`. Kept for existing imports. */
 export const BASE_URL = SITE_URL;
 
+export const DEFAULT_TITLE = "كراء السيارات والعقارات في المغرب | ALTUSplace";
+
+/** Brand suffix appended to every document title. */
+export const TITLE_SUFFIX = " | ALTUSplace";
+
 const OPEN_GRAPH_LOCALES: Record<SeoLanguage, string> = {
   ar: "ar_MA",
   fr: "fr_MA",
@@ -105,6 +110,27 @@ export type SeoInput = {
 
 const DEFAULT_ROBOTS = "index, follow, max-image-preview:large";
 
+/**
+ * Normalizes a page title: trims it, falls back to the site default when empty
+ * or missing, and appends the brand suffix exactly once (callers may pass
+ * either a bare title or one that already carries the suffix).
+ */
+export function formatTitle(title?: string | null, suffix: string = TITLE_SUFFIX): string {
+  const base = (title ?? "").trim() || DEFAULT_TITLE;
+  return base.endsWith(suffix) ? base : `${base}${suffix}`;
+}
+
+/**
+ * Sets `document.title` for the current route. Call from a page component body
+ * (same render-time pattern as `useSEO`) or from a route-level fallback that
+ * renders before the page so pages without an explicit title never inherit the
+ * previous page's title. No-ops outside the browser.
+ */
+export function useDocumentTitle(title?: string | null, suffix: string = TITLE_SUFFIX): void {
+  if (typeof document === "undefined") return;
+  document.title = formatTitle(title, suffix);
+}
+
 /** Set the page title + description and mirror them into social cards. */
 export function useSEO({
   title,
@@ -121,14 +147,17 @@ export function useSEO({
   const resolvedPath = canonicalPath ?? path ?? "/";
   const url = canonicalUrl(resolvedPath);
 
-  document.title = title;
+  // formatTitle keeps the "| ALTUSplace" suffix single even when a caller
+  // already wrote it into the title, and falls back to the site default.
+  const fullTitle = formatTitle(title);
+  document.title = fullTitle;
   upsertMeta("name", "description", description);
   upsertMeta("property", "og:type", type);
   upsertMeta("property", "og:site_name", "ALTUSplace");
-  upsertMeta("property", "og:title", title);
+  upsertMeta("property", "og:title", fullTitle);
   upsertMeta("property", "og:description", description);
   upsertMeta("property", "og:url", url);
-  upsertMeta("name", "twitter:title", title);
+  upsertMeta("name", "twitter:title", fullTitle);
   upsertMeta("name", "twitter:description", description);
 
   if (image) {
