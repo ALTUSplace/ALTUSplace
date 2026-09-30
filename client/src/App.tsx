@@ -8,6 +8,9 @@ import { LanguageProvider, useLanguage } from "./contexts/LanguageContext";
 import { CurrencyProvider } from "./contexts/CurrencyContext";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+import { SkipLink } from "./components/SkipLink";
+import { RouteAnnouncer } from "./components/RouteAnnouncer";
+import { MAIN_CONTENT_ID } from "./hooks/useRouteAnnouncer";
 import BottomNavigationBar from "./components/BottomNavigationBar";
 import ConsentAnalytics from "./components/ConsentAnalytics";
 import BreadcrumbNav from "./components/BreadcrumbNav";
@@ -230,10 +233,24 @@ export default function App() {
             <CurrencyProvider>
               <TooltipProvider>
                 <div className="min-h-screen flex flex-col bg-animated-gradient bg-background text-foreground font-sans">
+                  {/* First focusable element in the document: a keyboard user
+                      tabs here before ever reaching the nav. Must stay above
+                      <Navbar> to be useful. */}
+                  <SkipLink />
+                  {/* Persistent polite live regions announcing the new page
+                      after each client-side navigation. Never unmount these. */}
+                  <RouteAnnouncer />
                   <ConsentAnalytics />
                   <Navbar />
                   <BreadcrumbNav />
-                  <main className="b2-main-content flex-1 pb-16 md:pb-0">
+                  {/* MAIN_CONTENT_ID is the skip-link destination and the focus
+                      fallback for pages that render no <h1> (e.g. Checkout).
+                      tabIndex={-1} makes it focusable without adding a tab stop. */}
+                  <main
+                    id={MAIN_CONTENT_ID}
+                    tabIndex={-1}
+                    className="b2-main-content flex-1 pb-16 md:pb-0"
+                  >
                     <PageTransition>
                       <Suspense fallback={<PageLoader />}>
                         <Router />
