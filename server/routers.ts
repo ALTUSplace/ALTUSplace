@@ -11,7 +11,7 @@ import { adminProcedure, ownerProcedure, publicProcedure, protectedProcedure, ro
 import { getDb, withTransaction } from "./db";
 import { logger } from "./_core/logger";
 import { listings, listingAnalyticsEvents, listingComments, bookings, reviews, users, favorites, commercialLeaseContracts, notifications, platformSettings, commissionTiers, escrowEntries, payoutRequests, disputes, disputeAttachments, supportTickets, payments, invoices, kycSubmissions, bookingVouchers, bookingMessages, auditLogs, refundRequests, transactions, partnerApplications, translations } from "../drizzle/schema";
-import { eq, and, lte, gte, lt, gt, asc, desc, count, isNull, inArray, ne, or, not, ilike, sql, type SQL } from "drizzle-orm";
+import { eq, and, lte, gte, lt, gt, asc, desc, count, isNull, inArray, ne, or, not, ilike, sql, getTableColumns, type SQL } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { fetchListingRatingBreakdown, fetchListingReviewSummary, normalizeSummary } from "./reviewStats";
 import { safeNotifyUser, buildEmailContent, sendWhatsAppText, normalizeWhatsAppNumber, alertAdmins } from "./notificationService";
@@ -2236,10 +2236,22 @@ export const appRouter = router({
       const db = await getDb();
       if (!db) return [];
       try {
-        if (ctx.user!.role === 'admin') {
-          return await db.select().from(bookings).orderBy(desc(bookings.createdAt));
-        }
-        return await db.select().from(bookings).where(eq(bookings.renterId, ctx.user!.id));
+        // Join the listing owner so the renter page can offer a post-submission
+        // agency WhatsApp CTA. Direct contact is released only once the booking
+        // is confirmed, mirroring getById's ownerWhatsApp gate.
+        const base = db.select({
+          ...getTableColumns(bookings),
+          agencyWhatsApp: users.whatsappNumber,
+        }).from(bookings)
+          .leftJoin(listings, eq(bookings.listingId, listings.id))
+          .leftJoin(users, eq(listings.ownerId, users.id));
+        const rows = ctx.user!.role === 'admin'
+          ? await base.orderBy(desc(bookings.createdAt))
+          : await base.where(eq(bookings.renterId, ctx.user!.id)).orderBy(desc(bookings.createdAt));
+        return rows.map((row) => ({
+          ...row,
+          agencyWhatsApp: row.status === "Confirmed" ? row.agencyWhatsApp : null,
+        }));
       } catch (error) {
         console.error("[bookings.list] Failed to load bookings:", error);
         return [];
@@ -2276,7 +2288,13 @@ export const appRouter = router({
         if (!booking || (ctx.user!.role !== "admin" && booking.renterId !== ctx.user!.id)) {
           throw new TRPCError({ code: "NOT_FOUND", message: "الحجز غير موجود أو لا يخص حسابك." });
         }
-        return { ...booking, ownerWhatsApp: booking.status === "Confirmed" ? booking.ownerWhatsApp : null };
+        // Both the owner line and the agency line stay hidden until the booking
+        // is confirmed, so a pending request never hands out a contact number.
+        return {
+          ...booking,
+          ownerWhatsApp: booking.status === "Confirmed" ? booking.ownerWhatsApp : null,
+          agencyWhatsApp: booking.status === "Confirmed" ? booking.agencyWhatsApp : null,
+        };
       }),
 
     create: protectedProcedure

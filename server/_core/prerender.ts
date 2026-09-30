@@ -11,9 +11,9 @@
  *  - `GET /api/prerender` (serverless), which fetches `/index.html` from the
  *    canonical origin and returns the enriched document to edge middleware.
  */
-import { and, eq, inArray } from "drizzle-orm";
+import { and, avg, count, eq, inArray } from "drizzle-orm";
 import { getDb } from "../db";
-import { listings } from "../../drizzle/schema";
+import { listings, reviews } from "../../drizzle/schema";
 import { isCarCategory } from "../../client/src/lib/categories";
 import { cityFromSlug, cityLabelFr } from "../../client/src/data/moroccoCities";
 import { SEO_SITE_URL } from "./sitemap";
@@ -72,6 +72,38 @@ function canonicalFor(pathname: string, origin: string): string {
   return `${origin}${normalized}`;
 }
 
+/**
+ * Ratings summary for a listing, or `null` when it has no usable reviews.
+ *
+ * The client pages already emit `aggregateRating` (CarDetails / PropertyDetail),
+ * but Googlebot is proxied to the prerendered shell by `middleware.ts` and never
+ * runs the SPA, so without this the rating never reached the crawler. A listing
+ * with zero reviews must return `null` rather than a `ratingValue` of 0 —
+ * Google treats a zero rating as a manual-action-grade rich-result error.
+ */
+async function ratingSummary(
+  db: NonNullable<Awaited<ReturnType<typeof getDb>>>,
+  listingId: number,
+): Promise<{ average: number; count: number } | null> {
+  try {
+    const [row] = await db
+      .select({ average: avg(reviews.rating), total: count(reviews.id) })
+      .from(reviews)
+      .where(eq(reviews.listingId, listingId))
+      .limit(1);
+    const total = Number(row?.total ?? 0);
+    if (total === 0) return null;
+    // Postgres returns AVG() as a numeric string; Number() normalizes it.
+    const average = Number(row?.average ?? 0);
+    if (!Number.isFinite(average) || average <= 0) return null;
+    // Round to 1dp so the structured value matches the figure the UI shows
+    // instead of a 12-decimal float Google would round differently.
+    return { average: Math.round(average * 10) / 10, count: total };
+  } catch {
+    return null;
+  }
+}
+
 async function listingMetadata(id: number, origin: string): Promise<RouteMetadata | null> {
   try {
     const db = await getDb();
@@ -81,9 +113,16 @@ async function listingMetadata(id: number, origin: string): Promise<RouteMetadat
         title: listings.title,
         description: listings.description,
         pricePerDay: listings.pricePerDay,
+        pricePerMonth: listings.pricePerMonth,
         imageUrl: listings.imageUrl,
+        images: listings.images,
         category: listings.category,
         city: listings.city,
+        lat: listings.lat,
+        lng: listings.lng,
+        propertyType: listings.propertyType,
+        rooms: listings.rooms,
+        area: listings.area,
       })
       .from(listings)
       .where(and(eq(listings.id, id), inArray(listings.status, ["Published", "Available"])))
@@ -91,14 +130,80 @@ async function listingMetadata(id: number, origin: string): Promise<RouteMetadat
     if (!listing) return null;
 
     const isCar = isCarCategory(listing.category ?? "");
-    const price = Number(listing.pricePerDay).toLocaleString("fr-MA");
+    const url = canonicalFor(`/${isCar ? "car" : "property"}/${id}`, origin);
+    // Properties are priced per month and cars per day. Emitting the daily
+    // price in a RealEstateListing Offer put the wrong number in the money
+    // field, not merely an imprecise one.
+    const price = isCar ? Number(listing.pricePerDay) : Number(listing.pricePerMonth ?? listing.pricePerDay);
+    const unit = isCar ? "درهم / يوم" : "درهم / شهر";
+    const priceLabel = `${price.toLocaleString("fr-MA")} ${unit}`;
+    const gallery = listing.images?.length ? listing.images : listing.imageUrl ? [listing.imageUrl] : [];
+    const image = gallery[0] || `${origin}/images/og-default.png`;
     const title = `${listing.title} | ALTUSplace`;
     const description =
       listing.description ||
       (isCar
-        ? `استأجر ${listing.title} في ${listing.city} بسعر ${price} درهم لليوم عبر ALTUSplace.`
-        : `عقار للإيجار في ${listing.city} بسعر ${price} درهم عبر ALTUSplace.`);
-    const image = listing.imageUrl || `${origin}/images/og-default.png`;
+        ? `استأجر ${listing.title} في ${listing.city} بسعر ${priceLabel} عبر ALTUSplace مع دفع آمن وتأمين شامل.`
+        : `${listing.propertyType || "شقة"} للكراء في ${listing.city} بسعر ${priceLabel} عبر ALTUSplace مع دفع آمن.`);
+    const cityFr = cityLabelFr(listing.city);
+    const ratings = await ratingSummary(db, id);
+
+    const node: Record<string, unknown> = {
+      "@type": isCar ? "Product" : "RealEstateListing",
+      "@id": `${url}#listing`,
+      name: listing.title,
+      description,
+      url,
+      image: gallery.length ? gallery : [image],
+      ...(isCar
+        ? { sku: `car-${id}`, category: "Vehicles > Cars > Car Rentals" }
+        : {
+            ...(listing.propertyType ? { additionalType: listing.propertyType } : {}),
+            ...(listing.rooms ? { numberOfRooms: listing.rooms } : {}),
+            ...(listing.area
+              ? { floorSize: { "@type": "QuantitativeValue", value: listing.area, unitCode: "MTK" } }
+              : {}),
+            address: {
+              "@type": "PostalAddress",
+              addressLocality: listing.city,
+              ...(cityFr ? { addressRegion: cityFr } : {}),
+              addressCountry: "MA",
+              // Local SEO: coordinates are what let Google place the pin and
+              // qualify the listing for "near me" style queries.
+              ...(listing.lat != null && listing.lng != null
+                ? { geo: { "@type": "GeoCoordinates", latitude: listing.lat, longitude: listing.lng } }
+                : {}),
+            },
+          }),
+      offers: {
+        "@type": "Offer",
+        priceCurrency: "MAD",
+        price,
+        priceSpecification: {
+          "@type": "UnitPriceSpecification",
+          price,
+          priceCurrency: "MAD",
+          unitCode: isCar ? "DAY" : "MON",
+        },
+        availability: "https://schema.org/InStock",
+        url,
+        areaServed: { "@type": "City", name: listing.city },
+        // Points at the Organization node declared in the document head, so the
+        // offer is attributed to the site entity rather than a bare string.
+        seller: { "@id": `${origin}/#organization` },
+      },
+      ...(ratings
+        ? {
+            aggregateRating: {
+              "@type": "AggregateRating",
+              ratingValue: ratings.average,
+              reviewCount: ratings.count,
+              bestRating: 5,
+              worstRating: 1,
+            },
+          }
+        : {}),
+    };
 
     return {
       title,
@@ -106,16 +211,25 @@ async function listingMetadata(id: number, origin: string): Promise<RouteMetadat
       image,
       type: isCar ? "product" : "place",
       robots: "index, follow, max-image-preview:large",
-      canonical: canonicalFor(`/${isCar ? "car" : "property"}/${id}`, origin),
+      canonical: url,
       jsonLd: {
         "@context": "https://schema.org",
-        "@type": isCar ? "Product" : "RealEstateListing",
-        name: listing.title,
-        description,
-        image: [image],
-        ...(isCar
-          ? { offers: { "@type": "Offer", priceCurrency: "MAD", price: Number(listing.pricePerDay), availability: "https://schema.org/InStock" } }
-          : { address: { "@type": "PostalAddress", addressLocality: listing.city, addressCountry: "MA" } }),
+        "@graph": [
+          node,
+          {
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              { "@type": "ListItem", position: 1, name: "ALTUSplace", item: `${origin}/` },
+              {
+                "@type": "ListItem",
+                position: 2,
+                name: isCar ? "سيارات للكراء في المغرب" : "عقارات للكراء في المغرب",
+                item: `${origin}/search`,
+              },
+              { "@type": "ListItem", position: 3, name: listing.title, item: url },
+            ],
+          },
+        ],
       },
     };
   } catch {
@@ -167,6 +281,35 @@ export async function resolveRouteMetadata(pathname: string, origin: string = SE
       };
     }
     return { ...base, title: "مدن المغرب | ALTUSplace" };
+  }
+
+  if (path === "/properties/for-rent") {
+    // Dedicated hub for the "شقق للكراء" head term. Without a branch here the
+    // prerender would fall through to `base` and serve the homepage title and
+    // description to Googlebot for this URL.
+    return {
+      ...base,
+      title: "شقق للكراء في المغرب: أسعار واضحة وحجز آمن | ALTUSplace",
+      description:
+        "اكتشف شقق للكراء في المغرب: شقق مؤثثة وفلل ومكاتب للكراء الشهري في الدار البيضاء ومراكش وأغادير، مع وكالات محلية ودفع آمن عبر ALTUSplace.",
+      image: `${origin}/images/og-default.png`,
+      jsonLd: {
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        name: "شقق للكراء في المغرب",
+        url: canonicalFor(path, origin),
+        inLanguage: "ar-MA",
+        isPartOf: { "@id": `${origin}/#website` },
+        about: { "@id": `${origin}/#organization` },
+        breadcrumb: {
+          "@type": "BreadcrumbList",
+          itemListElement: [
+            { "@type": "ListItem", position: 1, name: "ALTUSplace", item: `${origin}/` },
+            { "@type": "ListItem", position: 2, name: "شقق للكراء", item: canonicalFor(path, origin) },
+          ],
+        },
+      },
+    };
   }
 
   if (path === "/search") {

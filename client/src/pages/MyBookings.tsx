@@ -9,6 +9,8 @@ import { OptimizedImage } from '@/components/OptimizedImage';
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/_core/hooks/useAuth";
 import ReviewDialog from '@/components/ReviewDialog';
+import { WhatsAppContactButton } from "@/components/ui/WhatsAppContactButton";
+import { buildAgencyWhatsAppMessage, buildWaMeUrl } from "@/lib/whatsapp";
 
 const formatDate = (value: string | Date) => new Date(value).toLocaleDateString('fr-MA');
 const formatMoney = (value: number) => new Intl.NumberFormat('fr-MA').format(value);
@@ -111,6 +113,12 @@ export default function MyBookings() {
             {dbBookings.map((booking) => {
               const listing = listingById.get(booking.listingId);
               const isContractLoading = contractBookingId === booking.id && contractQuery.isFetching;
+              const isConfirmed = booking.status === "Confirmed";
+              const waMessage = buildAgencyWhatsAppMessage(
+                listing?.title || `الإعلان رقم ${booking.listingId}`,
+                booking.listingId,
+              );
+              const waChatUrl = isConfirmed ? buildWaMeUrl(booking.agencyWhatsApp, waMessage) : "";
               return (
                 <div key={booking.id} className="bg-[#1C1C1E] border border-slate-800 rounded-3xl p-6 shadow-xl flex flex-col md:flex-row items-center gap-6">
                   <div className="w-full md:w-48 h-32 rounded-2xl overflow-hidden border border-slate-800 shrink-0 bg-[#1C1C1E]">
@@ -133,7 +141,7 @@ export default function MyBookings() {
                     </div>
                   </div>
                   <div className="w-full md:w-auto flex md:flex-col gap-2 shrink-0">
-                    {booking.status === 'Confirmed' && (
+                    {isConfirmed && (
                       <Button
                         disabled={isContractLoading}
                         onClick={() => setContractBookingId(booking.id)}
@@ -142,7 +150,7 @@ export default function MyBookings() {
                         {isContractLoading ? <span>جاري التحضير...</span> : <><Download className="w-4 h-4" /> عقد الكراء</>}
                       </Button>
                     )}
-                    {booking.status === 'Confirmed' && new Date(booking.endDate).getTime() <= Date.now() && (
+                    {isConfirmed && new Date(booking.endDate).getTime() <= Date.now() && (
                       <Button
                         type="button"
                         onClick={() => setReviewTarget({ bookingId: booking.id, listingId: booking.listingId })}
@@ -159,6 +167,11 @@ export default function MyBookings() {
                       >
                         <Receipt className="w-4 h-4" /> الفاتورة PDF
                       </Button>
+                    )}
+                    {waChatUrl && (
+                      <div className="flex-1 md:flex-none">
+                        <WhatsAppContactButton number={booking.agencyWhatsApp} message={waMessage} className="px-4 py-2.5 rounded-xl" />
+                      </div>
                     )}
                     <Link href={`/messages/${booking.id}`} className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-[#1C1C1E] hover:bg-[#1C1C1E]/90 text-white px-4 py-2.5 rounded-xl text-xs font-semibold">
                       <MessageCircle className="w-4 h-4" /> مراسلة الطرف الآخر

@@ -20,6 +20,7 @@ const HERO_KEYS = [
   "heroStepSearch",
   "heroShowcaseBadge",
   "heroShowcaseTitle",
+  "heroHeadline",
   "heroCatLuxuryCars",
   "heroCatFurnishedApts",
   "heroCatFamilyVillas",
@@ -31,6 +32,7 @@ const EXPECTED_AR: Record<(typeof HERO_KEYS)[number], string> = {
   heroStepSearch: "ابحث الآن",
   heroShowcaseBadge: "تصفح حسب الفئة",
   heroShowcaseTitle: "ابدأ من الفئة التي تناسبك",
+  heroHeadline: "كراء السيارات في المغرب: سيارات وشقق للكراء بأسعار واضحة",
   heroCatLuxuryCars: "سيارات فاخرة للكراء اليومي",
   heroCatFurnishedApts: "شقق مؤثثة للإيجار الشهري",
   heroCatFamilyVillas: "فللات عائلية للعطلات",
@@ -50,6 +52,18 @@ describe("hero redesign i18n", () => {
     for (const key of HERO_KEYS) {
       expect(getTranslation("ar", key)).toBe(EXPECTED_AR[key]);
     }
+  });
+
+  it("keeps the target head terms contiguous in the Arabic H1", () => {
+    // The H1 carries the site's two highest-volume head terms. Word order is
+    // not cosmetic in Arabic: inserting "والعقارات" between "السيارات" and
+    // "في المغرب" leaves both keywords present but breaks the exact phrase
+    // "كراء السيارات في المغرب", which is the phrase the page is meant to
+    // rank for. Pin both substrings so a future reword cannot silently cost
+    // the exact match.
+    const headline = getTranslation("ar", "heroHeadline");
+    expect(headline).toContain("كراء السيارات في المغرب");
+    expect(headline).toContain("شقق للكراء");
   });
 
   it("keeps the three category labels distinct per locale", () => {

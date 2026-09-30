@@ -62,7 +62,7 @@ export default function NotificationsPage() {
 
   if (!isAuthenticated) {
     return (
-      <main className="min-h-[70vh] bg-background px-4 py-16 text-foreground" dir={direction}>
+      <div className="min-h-[70vh] bg-background px-4 py-16 text-foreground" dir={direction}>
         <section className="mx-auto max-w-xl rounded-3xl border border-border bg-card p-8 text-center shadow-sm">
           <Bell className="mx-auto mb-4 h-10 w-10 text-amber-600" />
           <h1 className="text-2xl font-black">{language === "ar" ? "مركز الإشعارات" : "Centre de notifications"}</h1>
@@ -73,12 +73,12 @@ export default function NotificationsPage() {
             {language === "ar" ? "تسجيل الدخول" : "Se connecter"}
           </Button>
         </section>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className="min-h-screen bg-background px-4 py-8 text-foreground sm:py-12" dir={direction}>
+    <div className="min-h-screen bg-background px-4 py-8 text-foreground sm:py-12" dir={direction}>
       <div className="mx-auto max-w-5xl space-y-6">
         <section className="relative overflow-hidden rounded-3xl bg-[#1C1C1E] p-6 text-white shadow-xl sm:p-8">
           <div className="absolute -left-16 -top-20 h-48 w-48 rounded-full bg-amber-500/20 blur-3xl" aria-hidden="true" />
@@ -166,6 +166,6 @@ export default function NotificationsPage() {
 
         <Link href="/support-tickets" className="flex items-center justify-center gap-2 text-xs font-bold text-muted-foreground hover:text-foreground"><Settings className="h-4 w-4" />{language === "ar" ? "تحتاج مساعدة في إشعار؟ تواصل مع الدعم" : "Besoin d’aide ? Contacter le support"}</Link>
       </div>
-    </main>
+    </div>
   );
 }

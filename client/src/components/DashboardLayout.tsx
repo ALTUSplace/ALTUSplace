@@ -255,7 +255,9 @@ function DashboardLayoutContent({
             </div>
           </div>
         )}
-        <main className="flex-1 p-4">{children}</main>
+        {/* Not a <main>: App.tsx already owns the single document landmark,
+            and this wrapper renders inside it. */}
+        <div className="flex-1 p-4">{children}</div>
       </SidebarInset>
     </>
   );

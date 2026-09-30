@@ -32,6 +32,10 @@ const TAG = "[verify-og-assets]";
 
 // Facebook and Twitter reject cards over 5 MB.
 const MAX_BYTES = 5 * 1024 * 1024;
+// Social cards are downloaded by crawler and messaging clients on mobile
+// connections. The committed card is ~88 kB; this ceiling stops a regeneration
+// (or a swap to a new asset) from silently shipping a heavier one.
+const MAX_SOCIAL_BYTES = 100 * 1024;
 // A card that is mostly transparent padding previews as an empty box.
 const MAX_PADDING_RATIO = 0.35;
 
@@ -92,6 +96,12 @@ async function inspect(file) {
     if (bytes > MAX_BYTES) {
       verdict.problems.push(
         `${(bytes / 1024 / 1024).toFixed(1)} MB exceeds the 5 MB social-card limit`,
+      );
+    }
+    if (bytes > MAX_SOCIAL_BYTES) {
+      verdict.problems.push(
+        `${(bytes / 1024).toFixed(1)} kB exceeds the ${MAX_SOCIAL_BYTES / 1024} kB social-card budget ` +
+          `(use scripts/generate-og-image.mjs)`,
       );
     }
 

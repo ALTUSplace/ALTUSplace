@@ -1,15 +1,20 @@
 /**
- * Generates favicon.ico and PWA icons from client/public/images/logo.png
- * without native image tooling: decodes the RGBA PNG (8-bit, non-interlaced),
- * aspect-fits it onto square transparent canvases via nearest-neighbor
- * resampling, re-encodes PNGs, and packs the small sizes into a
- * PNG-compressed .ico container.
+ * Generates favicon.ico and PWA icons from client/public/images/logo.png:
+ * decodes the RGBA PNG (8-bit, non-interlaced), aspect-fits it onto square
+ * transparent canvases via nearest-neighbor resampling, encodes PNGs, runs a
+ * palette-optimization pass over every output (indexed PNG + tRNS alpha), and
+ * packs the small sizes into a PNG-compressed .ico container.
+ *
+ * The palette pass is load-bearing: the icons are a flat mark on a fully
+ * transparent canvas, so indexed colour is visually lossless, while the raw
+ * RGBA encodes are ~10-30x larger and regress mobile LCP on every page.
  *
  * Usage: node scripts/generate-favicons.mjs
  */
 import { readFileSync, writeFileSync } from "node:fs";
 import { inflateSync, deflateSync } from "node:zlib";
 import path from "node:path";
+import sharp from "sharp";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
 const SRC = path.join(ROOT, "client", "public", "images", "logo.png");
@@ -41,6 +46,8 @@ function decodePng(file) {
   let offset = 8;
   let header = null;
   const idat = [];
+  let palette = null;
+  let transparency = null;
   while (offset < buf.length) {
     const length = buf.readUInt32BE(offset);
     const type = buf.toString("ascii", offset + 4, offset + 8);
@@ -57,6 +64,10 @@ function decodePng(file) {
       };
     } else if (type === "IDAT") {
       idat.push(data);
+    } else if (type === "PLTE") {
+      palette = Buffer.from(data);
+    } else if (type === "tRNS") {
+      transparency = Buffer.from(data);
     } else if (type === "IEND") {
       break;
     }
@@ -64,13 +75,17 @@ function decodePng(file) {
   }
 
   const { width, height, bitDepth, colorType, interlace } = header;
-  if (bitDepth !== 8 || colorType !== 6 || interlace !== 0) {
+  // Accept both the truecolour+alpha output of image tooling (colour type 6)
+  // and the indexed+alpha output this project standardised on (colour type 3,
+  // see the palette pass below), so the source logo may be either format.
+  if (bitDepth !== 8 || interlace !== 0 || (colorType !== 6 && colorType !== 3)) {
     throw new Error(`Unsupported PNG: depth=${bitDepth} color=${colorType} interlace=${interlace}`);
   }
 
+  const channels = colorType === 6 ? 4 : 1;
+  const stride = width * channels;
   const raw = inflateSync(Buffer.concat(idat));
-  const stride = width * 4;
-  const pixels = Buffer.alloc(width * height * 4);
+  const plane = Buffer.alloc(width * height * channels);
   let previous = Buffer.alloc(stride);
 
   for (let y = 0; y < height; y++) {
@@ -78,9 +93,9 @@ function decodePng(file) {
     const line = raw.subarray(y * (stride + 1) + 1, (y + 1) * (stride + 1));
     const current = Buffer.alloc(stride);
     for (let i = 0; i < stride; i++) {
-      const a = i >= 4 ? current[i - 4] : 0;
+      const a = i >= channels ? current[i - channels] : 0;
       const b = previous[i];
-      const c = i >= 4 ? previous[i - 4] : 0;
+      const c = i >= channels ? previous[i - channels] : 0;
       let value;
       switch (filter) {
         case 0: value = line[i]; break;
@@ -97,8 +112,23 @@ function decodePng(file) {
       }
       current[i] = value & 0xff;
     }
-    current.copy(pixels, y * stride);
+    current.copy(plane, y * stride);
     previous = current;
+  }
+
+  if (colorType === 6) return { width, height, pixels: plane };
+
+  if (!palette) throw new Error("Indexed PNG is missing its PLTE chunk");
+  const entries = palette.length / 3;
+  const pixels = Buffer.alloc(width * height * 4);
+  for (let i = 0; i < width * height; i++) {
+    const index = plane[i];
+    if (index >= entries) throw new Error(`Palette index ${index} out of range (${entries} entries)`);
+    pixels[i * 4] = palette[index * 3];
+    pixels[i * 4 + 1] = palette[index * 3 + 1];
+    pixels[i * 4 + 2] = palette[index * 3 + 2];
+    // tRNS may be shorter than the palette; missing entries are fully opaque.
+    pixels[i * 4 + 3] = transparency && index < transparency.length ? transparency[index] : 255;
   }
   return { width, height, pixels };
 }
@@ -156,13 +186,25 @@ function encodePng({ size, pixels }) {
   ]);
 }
 
+// ---------- palette optimization ----------
+/**
+ * Post-encode pass: re-encode a generated RGBA PNG as an indexed PNG with a
+ * tRNS alpha channel. Deterministic and visually lossless for these flat icons,
+ * it is what keeps the committed icons small on every regeneration.
+ */
+async function optimizePng(buf) {
+  return sharp(buf)
+    .png({ palette: true, quality: 90, compressionLevel: 9, effort: 10 })
+    .toBuffer();
+}
+
 // ---------- build ----------
 const src = decodePng(SRC);
 console.log(`Source: ${src.width}x${src.height} RGBA`);
 
 const rendered = new Map();
 for (const size of [512, 192, 64, 48, 32, 16]) {
-  rendered.set(size, encodePng(fitSquare(src, size)));
+  rendered.set(size, await optimizePng(encodePng(fitSquare(src, size))));
 }
 
 // favicon.ico: PNG-compressed entries (valid on Windows Vista+ and all browsers)
@@ -193,5 +235,9 @@ writeFileSync(
 writeFileSync(path.join(OUT_DIR, "images", "icon-192.png"), rendered.get(192));
 writeFileSync(path.join(OUT_DIR, "images", "icon-512.png"), rendered.get(512));
 
-console.log("Written: favicon.ico (16/32/48), images/icon-192.png, images/icon-512.png");
+const kb = (n) => (n / 1024).toFixed(1);
+console.log(
+  `Written: favicon.ico (16/32/48), images/icon-192.png (${kb(rendered.get(192).length)} kB), ` +
+    `images/icon-512.png (${kb(rendered.get(512).length)} kB)`,
+);
 

@@ -63,6 +63,7 @@ const AgencyOnboardingPage = lazy(() => import("./pages/AgencyOnboarding"));
 const PartnerWithUsPage = lazy(() => import("./pages/PartnerWithUs"));
 const PartnerApplyPage = lazy(() => import("./pages/PartnerApply"));
 const LocationLandingPage = lazy(() => import("./pages/LocationLanding"));
+const PropertiesForRentPage = lazy(() => import("./pages/PropertiesForRent"));
 
 function PageLoader() {
   const { t } = useLanguage();
@@ -155,6 +156,7 @@ function Router() {
         )}
       </Route>
       <Route path="/property/:id" component={PropertyDetailPage} />
+      <Route path="/properties/for-rent">{() => <Suspense fallback={<PageLoader />}><PropertiesForRentPage /></Suspense>}</Route>
       <Route path="/locations/marrakech-car-rental">{() => <Suspense fallback={<PageLoader />}><LocationLandingPage location="marrakech" /></Suspense>}</Route>
       <Route path="/locations/mohammed-v-airport-car-rental">{() => <Suspense fallback={<PageLoader />}><LocationLandingPage location="casablancaAirport" /></Suspense>}</Route>
       <Route path="/locations">{() => <Suspense fallback={<PageLoader />}><LocationLandingPage /></Suspense>}</Route>

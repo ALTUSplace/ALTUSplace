@@ -216,7 +216,7 @@ export default function DirectLogin() {
   const canSubmit = mode === "loading" || mode === "unavailable" ? false : isSetup ? Boolean(password && confirm) : Boolean(password);
 
   return (
-    <main className="min-h-[70vh] bg-slate-50 px-4 py-10 sm:px-6" dir={direction}>
+    <div className="min-h-[70vh] bg-slate-50 px-4 py-10 sm:px-6" dir={direction}>
       <section className="mx-auto max-w-md">
         <form onSubmit={submit} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
           <div className="mb-2 flex items-center gap-2 text-sm font-bold text-amber-700">
@@ -289,6 +289,6 @@ export default function DirectLogin() {
           {str("back")}
         </Link>
       </section>
-    </main>
+    </div>
   );
 }

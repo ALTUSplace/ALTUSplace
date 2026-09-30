@@ -14,9 +14,13 @@
  * the middle, so dropping it in untrimmed would render the brand ~3% of the
  * card's width.
  *
- * Output is a flat PNG at exactly 1200x630 (the OG spec ratio, 1.905:1).
- * logo.png is 1000x558 (1.792:1), which forces letterboxing or centre-crop in
- * Twitter/X and LinkedIn previews.
+ * Output is a flat PNG at exactly 1200x630 (the OG spec ratio, 1.905:1),
+ * quantised to a 256-colour palette so the file lands well under the 100 kB
+ * social-card budget. A truecolour PNG of the same card is ~318 kB — 3.6x the
+ * bytes for output that looks identical at card scale — and the scrapers that
+ * ignore WebP (WhatsApp in particular) require a PNG or JPEG, so palette PNG is
+ * the format that satisfies both constraints. logo.png is 1000x558 (1.792:1),
+ * which forces letterboxing or centre-crop in Twitter/X and LinkedIn previews.
  *
  * Usage: node scripts/generate-og-image.mjs
  */
@@ -31,6 +35,11 @@ const OUT = path.join(ROOT, "client", "public", "images", "og-default.png");
 
 const WIDTH = 1200;
 const HEIGHT = 630;
+
+// Social-card download budget, in bytes. Enforced below so regenerating the
+// card can never silently ship a heavier file than the optimised one committed
+// to client/public/images/og-default.png.
+const OG_BUDGET_BYTES = 100 * 1024;
 
 // Lockup tile geometry. Sized so the icon+wordmark crop stays legible while
 // the two flex children still fit the 478px content box with slack to spare.
@@ -227,8 +236,22 @@ try {
 
   const card = await page.screenshot({ type: "png" });
 
-  // Flatten to sRGB 8-bit and assert exact dimensions.
-  const final = await sharp(card).toColorspace("srgb").png({ compressionLevel: 9 }).toBuffer();
+  // Flatten to sRGB 8-bit, quantise to a palette and assert exact dimensions.
+  // Palette PNG (not WebP): WhatsApp and several other link scrapers ignore
+  // WebP for og:image and fall back to a text-only preview, which defeats the
+  // point of shipping a smaller card.
+  const final = await sharp(card)
+    .toColorspace("srgb")
+    .png({ palette: true, quality: 88, compressionLevel: 9, effort: 10 })
+    .toBuffer();
+
+  if (final.length > OG_BUDGET_BYTES) {
+    throw new Error(
+      `Card is ${(final.length / 1024).toFixed(1)} kB, over the ${OG_BUDGET_BYTES / 1024} kB social-card ` +
+        `budget — lower png.quality in this script before shipping.`,
+    );
+  }
+
   const meta = await sharp(final).metadata();
   writeFileSync(OUT, final);
 
@@ -244,7 +267,9 @@ try {
   }
 
   console.log(
-    `Written: ${path.relative(ROOT, OUT)} (${meta.width}x${meta.height}, ${(final.length / 1024).toFixed(1)} kB, means r=${r.toFixed(1)} g=${g.toFixed(1)} b=${b.toFixed(1)})`,
+    `Written: ${path.relative(ROOT, OUT)} (${meta.width}x${meta.height}, ` +
+      `${(final.length / 1024).toFixed(1)} kB of ${OG_BUDGET_BYTES / 1024} kB budget, ` +
+      `means r=${r.toFixed(1)} g=${g.toFixed(1)} b=${b.toFixed(1)})`,
   );
   console.log(`Headline box: ${Math.round(headlineBox.width)}x${Math.round(headlineBox.height)} at y=${Math.round(headlineBox.y)}`);
 } finally {

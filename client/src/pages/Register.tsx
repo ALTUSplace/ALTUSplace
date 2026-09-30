@@ -23,7 +23,7 @@ export default function Register() {
   };
 
   return (
-    <main className="min-h-[70vh] bg-slate-50 px-4 py-10 sm:px-6" dir={direction}>
+    <div className="min-h-[70vh] bg-slate-50 px-4 py-10 sm:px-6" dir={direction}>
       <section className="mx-auto max-w-3xl space-y-6">
         <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -68,6 +68,6 @@ export default function Register() {
           {t("back")}
         </Link>
       </section>
-    </main>
+    </div>
   );
 }
