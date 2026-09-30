@@ -195,7 +195,7 @@ export async function resolveRouteMetadata(pathname: string, origin: string = SE
   // discover or index them (robots.txt also disallows them, and the route
   // guard redirects anonymous visitors to "/").
   const AUTH_ONLY_METADATA: Record<string, { title: string }> = {
-    "/owner-login": { title: "تسجيل الدخول المباشر | ALTUSplace" },
+    "/owner-login": { title: "دخول المالكين | ALTUSplace" },
     "/register": { title: "إنشاء حساب | ALTUSplace" },
     "/terms": { title: "شروط الاستخدام | ALTUSplace" },
   };
