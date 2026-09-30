@@ -17,7 +17,7 @@ import BreadcrumbNav from "./components/BreadcrumbNav";
 import { PageTransition } from "./components/PageTransition";
 import { lazy, Suspense, useState } from "react";
 import { useAuth } from "./_core/hooks/useAuth";
-import { useNoIndex } from "@/lib/seo";
+import { DEFAULT_TITLE, useDocumentTitle, useNoIndex } from "@/lib/seo";
 import { hasAuthIntent } from "@/lib/legalDisclosure";
 import { startLogin } from "./const";
 import { Button } from "@/components/ui/button";
@@ -91,6 +91,21 @@ function AccessGuard({ area, children }: { area: 'admin' | 'superadmin' | 'host'
   return <>{children}</>;
 }
 
+/**
+ * Route-level title fallback. Rendered before the page inside <Router>, so any
+ * page that calls `useSEO`/`useDocumentTitle` overwrites it during its own
+ * render. Without this, navigating into a page that declares no title leaves
+ * the previous page's title in the tab (e.g. Home -> /favorites) and Google
+ * sees duplicate titles across the site.
+ */
+function RouteTitleFallback() {
+  // Subscribing to the location makes this component re-render on every
+  // navigation, so the default is re-applied ahead of each page body.
+  useLocation();
+  useDocumentTitle(DEFAULT_TITLE);
+  return null;
+}
+
 function BottomNavGate() {
   const [location] = useLocation();
   const path = location.split("?")[0];
@@ -124,7 +139,9 @@ function AuthOnlyRoute({ children }: { children: React.ReactNode }) {
 
 function Router() {
   return (
-    <Switch>
+    <>
+      <RouteTitleFallback />
+      <Switch>
       <Route path={"/"}>
         <Suspense fallback={<PageLoader />}>
           <HomePage />
@@ -202,7 +219,8 @@ function Router() {
         <BlogPage />
       </Route>
       <Route component={NotFound} />
-    </Switch>
+      </Switch>
+    </>
   );
 }
 
