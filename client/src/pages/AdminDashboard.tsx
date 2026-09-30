@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { trpcUnbatched as trpc } from '@/lib/trpcUnbatched';
 import { useToken } from '@/lib/designTokens';
 import { useAuth } from '@/_core/hooks/useAuth';
+import { useDocumentTitle } from "@/lib/seo";
 
 const money = (value: number) => `${value.toLocaleString('fr-MA')} MAD`;
 const statusLabel: Record<string, string> = { active: 'نشط', suspended: 'موقوف', banned: 'محظور' };
@@ -57,6 +58,7 @@ const emptyListingForm: ListingForm = {
 };
 
 export default function AdminDashboard() {
+  useDocumentTitle("لوحة الإدارة | ALTUSplace");
   const { user, loading } = useAuth();
   // Recharts passes colour to SVG *attributes*, which cannot evaluate var(), so the
   // brand accent is resolved from the CSS token instead of being duplicated as a

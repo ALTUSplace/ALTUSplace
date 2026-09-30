@@ -25,9 +25,10 @@ const statusLabel: Record<string, string> = {
   Rejected: "مرفوض",
 };
 
-import { useNoIndex } from "@/lib/seo";
+import { useDocumentTitle, useNoIndex } from "@/lib/seo";
 
 export default function Profile() {
+  useDocumentTitle("الملف الشخصي | ALTUSplace");
   useNoIndex();
   const { user, loading: authLoading, isAuthenticated } = useAuth({ redirectOnUnauthenticated: true });
   const { theme, toggleTheme } = useTheme();
