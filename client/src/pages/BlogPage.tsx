@@ -133,9 +133,9 @@ export default function BlogPage() {
                     <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> {article.date}</span>
                     <span className="flex items-center gap-1"><User className="w-3.5 h-3.5" /> {article.author}</span>
                   </div>
-                  <h3 className="text-lg font-black text-[#1C1C1E] leading-snug group-hover:text-accent-clay transition-colors">
+                  <h2 className="text-lg font-black text-[#1C1C1E] leading-snug group-hover:text-accent-clay transition-colors">
                     {article.title}
-                  </h3>
+                  </h2>
                   <p className="text-slate-600 text-xs leading-relaxed line-clamp-3">
                     {article.excerpt}
                   </p>

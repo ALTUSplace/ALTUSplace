@@ -234,6 +234,9 @@ export default function PropertyDetailWithVideo() {
   }
 
   // Missing or invalid listing ID — show friendly message before query
+  // This branch returns before the real listing <h1> renders, so the document
+  // it produces needs its own <h1> — demoting it would leave the page with no
+  // top-level heading at all.
   if (listingId === null && !staticItem) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 px-4 text-center" dir={direction}>

@@ -744,6 +744,9 @@ export default function AgencyDashboard() {
   if (user && !isOwner) {
     return (
       <div className="container py-24 text-center space-y-4">
+        {/* This is a mutually-exclusive branch of the page's single <h1> (the
+            "لوحة وكالة التأجير" title below is not rendered on this path), so
+            keeping it an <h1> preserves exactly one per rendered document. */}
         <h1 className="text-2xl font-bold">هذه اللوحة مخصصة لوكالات التأجير</h1>
         <p className="text-sm text-muted-foreground">تسجيل الدخول بحساب وكالة للاطلاع على الحجوزات والوثائق.</p>
         <Link href="/my-bookings">

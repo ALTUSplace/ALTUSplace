@@ -343,7 +343,7 @@ export default function CarDetails() {
 
                 {/* Features */}
                 <div className="space-y-4">
-                  <h3 className="text-base font-bold text-white">مميزات السيارة والرفاهية</h3>
+                  <h2 className="text-base font-bold text-white">مميزات السيارة والرفاهية</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {car.features.map((feat, idx) => (
                       <div key={idx} className="flex items-center gap-2.5 bg-[#1C1C1E]/60 border border-slate-800/80 px-4 py-3 rounded-2xl text-xs text-slate-200">
@@ -362,7 +362,7 @@ export default function CarDetails() {
                     </div>
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <h4 className="font-bold text-white text-base">{car.agency.name}</h4>
+                        <h2 className="font-bold text-white text-base">{car.agency.name}</h2>
 
                       </div>
                       <p className="text-xs text-ink-secondary">{car.agency.address}</p>
@@ -391,10 +391,10 @@ export default function CarDetails() {
                 {(reviewsQuery.isLoading || reviewsQuery.isSuccess) && (
                   <div className="space-y-6 pt-6 border-t border-slate-800">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                      <h2 className="text-lg font-bold text-white flex items-center gap-2">
                         <Star className="w-5 h-5 text-amber-400 fill-amber-400" />
                         <span>{t("reviewsSectionTitle")}{reviews.length > 0 && (<span className="text-amber-400"> ({summary.average.toFixed(1)} ★ · {reviews.length})</span>)}</span>
-                      </h3>
+                      </h2>
                     </div>
 
                     <p className="text-xs text-ink-secondary">{t("reviewsOnlyConfirmedNote")}</p>
@@ -459,7 +459,7 @@ export default function CarDetails() {
 
             {/* Add-on options — flow through to the secure checkout */}
             <div className="bg-[#1C1C1E] border border-slate-800 rounded-3xl p-5 space-y-3">
-              <h4 className="text-sm font-bold text-white">إضافات الحجز</h4>
+              <h2 className="text-sm font-bold text-white">إضافات الحجز</h2>
               <button
                 type="button"
                 onClick={() => setIncludeInsurance((prev) => !prev)}

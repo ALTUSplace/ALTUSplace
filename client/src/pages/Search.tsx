@@ -557,7 +557,7 @@ export default function Search() {
                             />
                             <div className="flex-1 min-w-0 space-y-1">
                               <div className="flex items-center gap-1.5">
-                                <h5 className="text-xs font-bold text-ink-primary line-clamp-1 flex-1">{li.title}</h5>
+                                <h3 className="text-xs font-bold text-ink-primary line-clamp-1 flex-1">{li.title}</h3>
                                 {li.providerVerified && <PartnerVerifiedBadge className="shrink-0 px-2 py-0.5 text-[9px]" />}
                               </div>
                               <p className="text-[11px] text-ink-secondary flex items-center gap-1">
