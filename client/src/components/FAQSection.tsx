@@ -1,37 +1,27 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ChevronDown, HelpCircle, ShieldCheck, Car, Building2 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { renderJsonLd } from '@/lib/seo';
+import { FAQ_KEYS, buildFaqJsonLd } from '@/lib/faq';
+
+const FAQ_JSONLD_ID = 'home-faq-jsonld';
+const FAQ_ICONS = [Car, ShieldCheck, Building2, HelpCircle] as const;
+// Icons are paired positionally with the shared key list so the rendered
+// accordion and the FAQPage schema can never drift apart.
+const FAQS = FAQ_KEYS.map((entry, index) => ({ ...entry, icon: FAQ_ICONS[index] }));
 
 export function FAQSection() {
-  const { t, direction } = useLanguage();
+  const { t, direction, language } = useLanguage();
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
-  const faqs = [
-    {
-      categoryKey: "faqCategoryBooking",
-      icon: Car,
-      questionKey: "faqQuestion1",
-      answerKey: "faqAnswer1"
-    },
-    {
-      categoryKey: "faqCategorySecurity",
-      icon: ShieldCheck,
-      questionKey: "faqQuestion2",
-      answerKey: "faqAnswer2"
-    },
-    {
-      categoryKey: "faqCategoryPartners",
-      icon: Building2,
-      questionKey: "faqQuestion3",
-      answerKey: "faqAnswer3"
-    },
-    {
-      categoryKey: "faqCategoryCancellation",
-      icon: HelpCircle,
-      questionKey: "faqQuestion4",
-      answerKey: "faqAnswer4"
-    }
-  ];
+  useEffect(() => {
+    renderJsonLd(FAQ_JSONLD_ID, buildFaqJsonLd(t));
+    // Remove the node on unmount / language change so Home's FAQ never lingers
+    // on another route, or with the previous language's text.
+    return () => document.getElementById(FAQ_JSONLD_ID)?.remove();
+    // `t` is rebuilt by the language provider on every render; `language` is the
+    // real input, so it is the only dependency.
+  }, [language]);
 
   return (
     <section dir={direction} className="py-10 md:py-16 bg-bg-surface border-t border-border-subtle">
@@ -50,7 +40,7 @@ export function FAQSection() {
         </div>
 
         <div className="space-y-3 md:space-y-4">
-          {faqs.map((faq, idx) => {
+          {FAQS.map((faq, idx) => {
             const Icon = faq.icon;
             const isOpen = openIndex === idx;
             return (
@@ -80,11 +70,15 @@ export function FAQSection() {
                     <ChevronDown className="w-4 h-4" />
                   </div>
                 </button>
-                {isOpen && (
-                  <div className="px-4 md:px-6 pb-4 md:pb-6 pt-3 text-sm md:text-base text-ink-secondary leading-relaxed border-t border-border-subtle">
-                    {t(faq.answerKey)}
-                  </div>
-                )}
+                {/* Kept in the DOM and toggled with `hidden` instead of being
+                    unmounted, so the FAQPage JSON-LD always describes content a
+                    crawler can read no matter which item is expanded. */}
+                <div
+                  hidden={!isOpen}
+                  className="px-4 md:px-6 pb-4 md:pb-6 pt-3 text-sm md:text-base text-ink-secondary leading-relaxed border-t border-border-subtle"
+                >
+                  {t(faq.answerKey)}
+                </div>
               </div>
             );
           })}

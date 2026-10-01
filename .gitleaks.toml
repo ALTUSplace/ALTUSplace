@@ -44,6 +44,12 @@ regexes = [
   '''postgresql://postgres:postgres@''',
   # Placeholder JWT used only to satisfy a length check in a unit test.
   '''eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.placeholder''',
+  # i18n translation-key literals such as "faqQuestion1" / "faqAnswer1". These
+  # are dictionary keys, not credentials. The generic-api-key rule flags them
+  # only because the surrounding field is named `questionKey` / `answerKey` and
+  # the key text carries a little entropy. Scoped to the faq* namespace so no
+  # other key-shaped literal is excused.
+  '''faq(?:Category|Question|Answer)[A-Za-z0-9]*''',
 ]
 
 # A finding is only a problem if it is not already committed. `stopwords` is
