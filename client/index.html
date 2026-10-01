@@ -78,8 +78,15 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <!-- LCP: preload the homepage hero image (matches Home.tsx, fetchpriority high) -->
-    <link rel="preload" as="image" fetchpriority="high" href="https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=900">
+    <!-- LCP: preload the homepage hero image. Must match HERO_BACKDROP in
+         client/src/pages/Home.tsx (photo-1600585154340) AND its generated
+         srcset candidates (client/src/lib/imageUrl.ts, widths 320/640/960/1280,
+         q=76) with sizes="100vw", otherwise the browser downloads this asset
+         and then the <img> separately — two fetches, no LCP win. Keep the
+         photo id and candidate URLs in sync with Home.tsx. -->
+    <link rel="preload" as="image" fetchpriority="high" imagesizes="100vw"
+      imagesrcset="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=76&w=320 320w, https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=76&w=640 640w, https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=76&w=960 960w, https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=76&w=1280 1280w"
+      href="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=76&w=1280">
     <!-- Fonts, Arabic-first. Tajawal is the only Arabic face; Plus Jakarta Sans
          covers Latin + numerals. Cairo dropped: it sat BEHIND Tajawal in every
          stack, so it never painted — 79 KB of pure fallback liability.

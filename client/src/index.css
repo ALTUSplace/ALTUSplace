@@ -1078,7 +1078,7 @@
     width: min(100%, 28rem);
     margin-inline: auto;
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 0.25rem;
   }
 
@@ -1115,6 +1115,17 @@
     color: inherit;
     transition: background-color var(--dur-fast) var(--ease-smooth),
       color var(--dur-fast) var(--ease-smooth);
+  }
+
+  /* Five columns leave ~64px per item at 360px, so the French "Mes
+     réservations" cannot fit on one line. Wrapping onto a second line is fine —
+     the grid row grows and the tap target stays a full item — but the label
+     must never bleed sideways into the neighbouring tab, hence `anywhere`. */
+  .mobile-bottom-nav__label {
+    display: block;
+    max-width: 100%;
+    line-height: 1.15;
+    overflow-wrap: anywhere;
   }
 }
 
