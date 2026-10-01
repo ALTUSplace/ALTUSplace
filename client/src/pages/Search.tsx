@@ -1,11 +1,10 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useRef, lazy, Suspense } from 'react';
 import { useLocation } from 'wouter';
 import { ListingItem } from '@/data/altusplace';
 import { trpc } from '@/lib/trpc';
 import { Button } from '@/components/ui/button';
 import { Filter, Star, Users, Car as CarIcon, ArrowUpDown, Award, MapPin, Scale, X, Eye, Home, Map, LayoutGrid, Maximize2, Search as SearchIcon } from 'lucide-react';
 import { toast } from 'sonner';
-import { MapboxSearchMap } from '@/components/MapboxSearchMap';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useFavorites } from '@/hooks/useFavorites';
 import { MOROCCO_CENTER, cityToCoords, resolveListingCoords } from '@/lib/mapbox';
@@ -20,6 +19,13 @@ import { SearchBar, type SearchBarValues } from '@/components/SearchBar';
 import { toListingItem } from '@/lib/listingMappers';
 import { resolveCitySlug } from '@/data/moroccoCities';
 import { useSEO } from '@/lib/seo';
+
+// Loaded lazily, not statically: MapboxSearchMap renders the clustered map and,
+// on mount, pulls in the ~1.9 MB mapbox-gl module plus its stylesheet. It is
+// only shown in map view (viewMode defaults to 'grid'), so a static import
+// would put the map UI in the Search route chunk and fetch it for every visitor
+// who never opens the map. The build keeps it in its own chunk.
+const MapboxSearchMap = lazy(() => import('@/components/MapboxSearchMap'));
 
 const listingRoute = (item: ListingItem) => (item.type === 'property' ? `/property/${item.id}` : `/car/${item.id}`);
 
@@ -484,36 +490,47 @@ export default function Search() {
             {viewMode === 'map' && (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
                 <div className="lg:col-span-2 min-w-0">
-                  <MapboxSearchMap
-                    listings={mapMarkers}
-                    center={mapRegion.center}
-                    radiusKm={mapRadius}
-                    onSelectListing={(listing) =>
-                      // Route by listing type: properties used to dead-end on
-                      // /car/<id> because the map was car-only.
-                      //
-                      // VERIFIED end to end by verify-map-interactions.mjs: the
-                      // popup CTA reaches /car/1007 and /property/1017, i.e. both
-                      // directions, against the production build.
-                      //
-                      // CAVEAT: this only routes correctly if `listing.type` is
-                      // itself right, and that comes from isCarCategory. It
-                      // used to be a deny-list, so an unlisted category (a shop
-                      // or a house) was classified as a car and landed on
-                      // /car/<id> here too. Fixed: both sides now delegate to
-                      // shared/listingCategory.ts, which matches vehicles
-                      // positively. See README "Known defect" and
-                      // tests/unit/listing-category.test.ts.
-                      setLocation(listing.type === 'property' ? `/property/${listing.id}` : `/car/${listing.id}`)
+                  <Suspense
+                    fallback={
+                      // Matches the map's 640px height so switching to map view
+                      // does not shift the page while the chunk is fetched.
+                      <div
+                        aria-hidden="true"
+                        className="h-[640px] w-full animate-pulse rounded-3xl border border-border bg-muted"
+                      />
                     }
-                    onViewportChange={(viewport) => setMapRegion({ center: viewport.center, zoom: viewport.zoom })}
-                    // fullscreen / onExitFullscreen / pageSize 200 are NOT
-                    // verified: both need a database-backed result set to be
-                    // meaningful, and neither was exercised.
-                    fullscreen={mapFullscreen}
-                    onExitFullscreen={() => setMapFullscreen(false)}
-                    height="640px"
-                  />
+                  >
+                    <MapboxSearchMap
+                      listings={mapMarkers}
+                      center={mapRegion.center}
+                      radiusKm={mapRadius}
+                      onSelectListing={(listing) =>
+                        // Route by listing type: properties used to dead-end on
+                        // /car/<id> because the map was car-only.
+                        //
+                        // VERIFIED end to end by verify-map-interactions.mjs: the
+                        // popup CTA reaches /car/1007 and /property/1017, i.e. both
+                        // directions, against the production build.
+                        //
+                        // CAVEAT: this only routes correctly if `listing.type` is
+                        // itself right, and that comes from isCarCategory. It
+                        // used to be a deny-list, so an unlisted category (a shop
+                        // or a house) was classified as a car and landed on
+                        // /car/<id> here too. Fixed: both sides now delegate to
+                        // shared/listingCategory.ts, which matches vehicles
+                        // positively. See README "Known defect" and
+                        // tests/unit/listing-category.test.ts.
+                        setLocation(listing.type === 'property' ? `/property/${listing.id}` : `/car/${listing.id}`)
+                      }
+                      onViewportChange={(viewport) => setMapRegion({ center: viewport.center, zoom: viewport.zoom })}
+                      // fullscreen / onExitFullscreen / pageSize 200 are NOT
+                      // verified: both need a database-backed result set to be
+                      // meaningful, and neither was exercised.
+                      fullscreen={mapFullscreen}
+                      onExitFullscreen={() => setMapFullscreen(false)}
+                      height="640px"
+                    />
+                  </Suspense>
                 </div>
 
                 {!mapFullscreen && (
