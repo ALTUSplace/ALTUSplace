@@ -141,7 +141,11 @@ export const partnerApplications = pgTable("partner_applications", {
 
 export const listings = pgTable("listings", {
   id: integer("listing_id").generatedAlwaysAsIdentity().primaryKey(),
-  ownerId: integer("owner_id").notNull(),
+  // RESTRICT, not CASCADE: removing a user must never silently take their live
+  // listings with it. Every user-deletion path already drops listings first.
+  ownerId: integer("owner_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "restrict" }),
   title: text("title").notNull(),
   description: text("description"),
   category: varchar("category", { length: 64 }).notNull(), // car أو real_estate
@@ -243,7 +247,9 @@ export const bookings = pgTable("bookings", {
 
 export const reviews = pgTable("reviews", {
   id: integer("review_id").generatedAlwaysAsIdentity().primaryKey(),
-  bookingId: integer("booking_id").notNull(),
+  bookingId: integer("booking_id")
+    .notNull()
+    .references(() => bookings.id, { onDelete: "cascade" }),
   listingId: integer("listing_id").notNull(),
   userId: integer("user_id").notNull(),
   rating: integer("rating").notNull(),
@@ -282,8 +288,15 @@ export const reviews = pgTable("reviews", {
  */
 export const favorites = pgTable("favorites", {
   favoriteId: uuid("favorite_id").defaultRandom().primaryKey(),
-  userId: integer("user_id").notNull(),
-  listingId: integer("listing_id").notNull(),
+  // Both cascade: a favorite is a pure join row with no meaning once either
+  // parent is gone. Cascading also preserves the existing listing-deletion
+  // behaviour, which removes the listing without cleaning up related rows.
+  userId: integer("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  listingId: integer("listing_id")
+    .notNull()
+    .references(() => listings.id, { onDelete: "cascade" }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => ({
   userIdx: index("favorites_user_idx").on(table.userId),
