@@ -443,7 +443,7 @@ export function PaymentCheckoutModal({
                 </p>
               </div>
             </div>
-            <button onClick={handleClose} disabled={step === 'processing' || step === 'redirect'} className="text-ink-secondary dark:text-[#B0B0B8] hover:text-white w-8 h-8 rounded-full bg-slate-800 dark:bg-[#2C2C2E] flex items-center justify-center transition-colors disabled:opacity-50">
+            <button onClick={handleClose} disabled={step === 'processing' || step === 'redirect'} aria-label="Close" className="text-ink-secondary dark:text-[#B0B0B8] hover:text-white size-11 shrink-0 rounded-full bg-slate-800 dark:bg-[#2C2C2E] grid place-items-center transition-colors disabled:opacity-50">
               <X className="w-4 h-4" />
             </button>
           </div>

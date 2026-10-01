@@ -128,7 +128,7 @@ export function ListingCard(props: ListingCardProps) {
           </div>
         )}
         {onToggleFavorite && (
-          <button onClick={(e) => { e.stopPropagation(); onToggleFavorite?.(); }} className="absolute end-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-bg-surface/85 backdrop-blur-sm shadow-sm transition-all duration-200 hover:bg-bg-surface hover:scale-110 active:scale-95" aria-label={isFavorite ? t("ariaRemoveFavorite") : t("ariaAddFavorite")}>
+          <button onClick={(e) => { e.stopPropagation(); onToggleFavorite?.(); }} className="absolute end-3 top-3 grid size-11 place-items-center rounded-full bg-bg-surface/85 backdrop-blur-sm shadow-sm transition-all duration-200 hover:bg-bg-surface hover:scale-110 active:scale-95" aria-label={isFavorite ? t("ariaRemoveFavorite") : t("ariaAddFavorite")}>
             <Heart className={cn("h-4 w-4 transition-colors", isFavorite ? "fill-accent-red text-accent-red" : "text-ink-secondary")} />
           </button>
         )}
@@ -140,14 +140,26 @@ export function ListingCard(props: ListingCardProps) {
           </div>
         </div>
         {totalSlides > 1 && (<>
-          <button onClick={(e) => { e.stopPropagation(); goTo(-1); }} className="absolute start-2 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-bg-surface/85 shadow-sm backdrop-blur-sm transition-all duration-200 opacity-0 group-hover:opacity-100 hover:bg-bg-surface hover:scale-110" aria-label={t("ariaPreviousImage")}>
+          // The visible pill stays 32px, but `after:inset-[-6px]` adds a 44x44 hit area
+          // around it (32 + 6 + 6) without disturbing the card layout or the
+          // arrow's optical position over the photo.
+          <button onClick={(e) => { e.stopPropagation(); goTo(-1); }} className="absolute start-2 top-1/2 -translate-y-1/2 after:absolute after:inset-[-6px] after:content-[''] flex h-8 w-8 items-center justify-center rounded-full bg-bg-surface/85 shadow-sm backdrop-blur-sm transition-all duration-200 opacity-0 group-hover:opacity-100 hover:bg-bg-surface hover:scale-110" aria-label={t("ariaPreviousImage")}>
             <svg className="h-4 w-4 text-ink-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d={direction === "rtl" ? "M9 5l7 7-7 7" : "M15 19l-7-7 7-7"} /></svg>
           </button>
-          <button onClick={(e) => { e.stopPropagation(); goTo(1); }} className="absolute end-2 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-bg-surface/85 shadow-sm backdrop-blur-sm transition-all duration-200 opacity-0 group-hover:opacity-100 hover:bg-bg-surface hover:scale-110" aria-label={t("ariaNextImage")}>
+          <button onClick={(e) => { e.stopPropagation(); goTo(1); }} className="absolute end-2 top-1/2 -translate-y-1/2 after:absolute after:inset-[-6px] after:content-[''] flex h-8 w-8 items-center justify-center rounded-full bg-bg-surface/85 shadow-sm backdrop-blur-sm transition-all duration-200 opacity-0 group-hover:opacity-100 hover:bg-bg-surface hover:scale-110" aria-label={t("ariaNextImage")}>
             <svg className="h-4 w-4 text-ink-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d={direction === "rtl" ? "M15 19l-7-7 7-7" : "M9 5l7 7-7 7"} /></svg>
           </button>
+          {/* Dots expand to the 44px touch floor VERTICALLY only: padding grows
+              the border-box that hit-testing uses, and the matching negative
+              margin keeps the laid-out row at its original 6px height so the
+              overlay does not move. A 44px horizontal target is geometrically
+              impossible here — five of them would need 220px, while a
+              two-column card at 360px is ~160px wide, so adjacent hit areas
+              would overlap and mis-tap each other. The dots stay a secondary,
+              redundant control: the card itself is tappable and the arrows
+              (now 44px) do the same job. */}
           <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-            {displayImages.map((_, i) => (<button key={i} onClick={(e) => { e.stopPropagation(); setActiveSlide(i); }} className={cn("h-1.5 rounded-full transition-all duration-300", i === activeSlide ? "w-4 bg-white" : "w-1.5 bg-white/50 hover:bg-white/80")} aria-label={t("ariaGoToImage").replace("{n}", String(i + 1))} />))}
+            {displayImages.map((_, i) => (<button key={i} onClick={(e) => { e.stopPropagation(); setActiveSlide(i); }} className={cn("h-1.5 rounded-full py-[19px] -my-[19px] transition-all duration-300", i === activeSlide ? "w-4 bg-white" : "w-1.5 bg-white/50 hover:bg-white/80")} aria-label={t("ariaGoToImage").replace("{n}", String(i + 1))} />))}
           </div>
         </>)}
       </div>

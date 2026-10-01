@@ -32,7 +32,7 @@ const EXPECTED_AR: Record<(typeof HERO_KEYS)[number], string> = {
   heroStepSearch: "ابحث الآن",
   heroShowcaseBadge: "تصفح حسب الفئة",
   heroShowcaseTitle: "ابدأ من الفئة التي تناسبك",
-  heroHeadline: "كراء السيارات في المغرب: سيارات وشقق للكراء بأسعار واضحة",
+  heroHeadline: "أسهل طريقة لكراء السيارات والعقارات في المغرب",
   heroCatLuxuryCars: "سيارات فاخرة للكراء اليومي",
   heroCatFurnishedApts: "شقق مؤثثة للإيجار الشهري",
   heroCatFamilyVillas: "فللات عائلية للعطلات",
@@ -55,15 +55,17 @@ describe("hero redesign i18n", () => {
   });
 
   it("keeps the target head terms contiguous in the Arabic H1", () => {
-    // The H1 carries the site's two highest-volume head terms. Word order is
-    // not cosmetic in Arabic: inserting "والعقارات" between "السيارات" and
-    // "في المغرب" leaves both keywords present but breaks the exact phrase
-    // "كراء السيارات في المغرب", which is the phrase the page is meant to
-    // rank for. Pin both substrings so a future reword cannot silently cost
-    // the exact match.
+    // The H1 carries the site's highest-volume head terms. Pin both
+    // substrings so a future reword cannot silently drop "كراء السيارات" or
+    // the "والعقارات في المغرب" location qualifier. The previous copy's
+    // exact phrase "كراء السيارات في المغرب" is deliberately gone: the
+    // rewrite trades it for the cleaner, non-repeating headline. The
+    // "شقق للكراء" head term is preserved on the /properties/for-rent hub
+    // page instead, so it is intentionally not asserted here.
     const headline = getTranslation("ar", "heroHeadline");
-    expect(headline).toContain("كراء السيارات في المغرب");
-    expect(headline).toContain("شقق للكراء");
+    expect(headline).toContain("كراء السيارات");
+    expect(headline).toContain("والعقارات في المغرب");
+    expect(headline).not.toContain("للكراء بأسعار");
   });
 
   it("keeps the three category labels distinct per locale", () => {

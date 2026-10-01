@@ -21,11 +21,17 @@ const buttonVariants = cva(
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
-        default: "h-10 px-5 py-2 has-[>svg]:px-4",
-        sm: "h-8 gap-1.5 px-4 has-[>svg]:px-3",
-        lg: "h-11 px-7 has-[>svg]:px-5",
-        icon: "size-10",
-        "icon-sm": "size-8",
+        // 44px floor on every variant (WCAG 2.5.5 / iOS HIG / Material 48dp).
+        // Below that a finger reliably mis-taps, so `default` (was h-10/40px)
+        // and `sm` (was h-8/32px) are raised too. They now differ only in
+        // padding and type scale — a 32px hierarchy is not reachable by
+        // tapping anyway. `min-h-*` rather than `h-*` so a two-line label
+        // still grows instead of clipping.
+        default: "min-h-11 px-5 py-2 has-[>svg]:px-4",
+        sm: "min-h-11 gap-1.5 px-4 has-[>svg]:px-3",
+        lg: "min-h-11 px-7 has-[>svg]:px-5",
+        icon: "size-11",
+        "icon-sm": "size-11",
         "icon-lg": "size-11",
       },
     },
