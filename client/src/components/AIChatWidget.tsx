@@ -73,7 +73,15 @@ export default function AIChatWidget() {
       )}
 
       {isOpen && (
-        <div className="bg-white w-[350px] sm:w-[380px] h-[500px] rounded-2xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
+        // Was a fixed `w-[350px] sm:w-[380px]`, which overflowed the viewport at
+        // 360px: the panel is `left-6` (24px), so 24 + 350 = 374px and the whole
+        // page gained a horizontal scrollbar — the single most common mobile
+        // viewport width. `100vw - 3rem` leaves the 24px gutter on both sides
+        // (the container is pinned left, so the right edge is what must fit),
+        // and `max-w-[350px]` restores the intended width once there is room.
+        // `max-h` also replaces the fixed `h-[500px]` so the panel cannot
+        // exceed a short landscape viewport.
+        <div className="bg-white w-[calc(100vw-3rem)] max-w-[350px] sm:max-w-[380px] h-[500px] max-h-[calc(100dvh-5rem)] rounded-2xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
           
           {/* Chat Header */}
           <div className="bg-[#1C1C1E] text-white p-4 flex items-center justify-between border-b border-amber-500/30">
@@ -90,7 +98,13 @@ export default function AIChatWidget() {
             </div>
             <button 
               onClick={() => setIsOpen(false)}
-              className="text-slate-300 dark:text-[#D6D6DB] hover:text-white p-1 rounded-lg hover:bg-white/10 transition-colors"
+              aria-label="إغلاق"
+              // `p-1` around a 20px icon was a 28x28px target. Rather than
+              // sizing the box to 44px — the header is `justify-between` with no
+              // gap, so a wider box would sit on top of the title text — the
+              // `after` expander grows only the hit area (28 + 8 + 8 = 44px)
+              // and paints nothing.
+              className="relative text-slate-300 dark:text-[#D6D6DB] hover:text-white p-1 rounded-lg hover:bg-white/10 transition-colors after:absolute after:-inset-[8px] after:content-['']"
             >
               <X className="w-5 h-5" />
             </button>

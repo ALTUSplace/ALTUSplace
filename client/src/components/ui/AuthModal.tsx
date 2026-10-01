@@ -96,7 +96,7 @@ export function AuthModal({ isOpen, onClose, initialView = "signin", onSuccess }
       <div ref={modalRef} role="dialog" aria-modal="true" aria-label={view === "signup" ? t("createAccount") : view === "otp" ? t("verifyCode") : t("signIn")} tabIndex={-1} className="w-full max-w-md overflow-hidden rounded-lg bg-white shadow-xl ring-1 ring-stone-900/10 focus:outline-none">
         <div className="flex items-center justify-between border-b border-stone-200/70 px-6 py-4">
           <h2 className="text-lg font-extrabold text-stone-900">{view === "signup" ? t("createAccount") : view === "otp" ? t("enterCode") : t("signIn")}</h2>
-          <button type="button" onClick={onClose} aria-label={t("close")} className="flex h-9 w-9 items-center justify-center rounded-full text-stone-400 transition-colors hover:bg-stone-100 hover:text-stone-700"><X className="h-5 w-5" /></button>
+          <button type="button" onClick={onClose} aria-label={t("close")} className="grid size-11 shrink-0 place-items-center rounded-full text-stone-400 transition-colors hover:bg-stone-100 hover:text-stone-700"><X className="h-5 w-5" /></button>
         </div>
 
         <div className="px-6 py-6">

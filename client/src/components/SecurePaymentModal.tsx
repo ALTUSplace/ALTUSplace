@@ -187,7 +187,7 @@ export function SecurePaymentModal({
                 </p>
               </div>
             </div>
-            <button onClick={handleClose} disabled={loading} className="text-ink-secondary dark:text-[#B0B0B8] hover:text-white text-sm font-bold w-8 h-8 rounded-full bg-slate-800 dark:bg-[#2C2C2E] flex items-center justify-center transition-colors disabled:opacity-50">✕</button>
+            <button onClick={handleClose} disabled={loading} aria-label="Close" className="text-ink-secondary dark:text-[#B0B0B8] hover:text-white size-11 shrink-0 rounded-full bg-slate-800 dark:bg-[#2C2C2E] grid place-items-center transition-colors disabled:opacity-50">✕</button>
           </div>
         </div>
 
