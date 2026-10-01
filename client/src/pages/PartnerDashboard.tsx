@@ -168,9 +168,9 @@ export default function PartnerDashboard() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card className="p-6 border-border shadow-sm">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-bold flex items-center gap-2">
+                  <h2 className="text-lg font-bold flex items-center gap-2">
                     <TrendingUp className="w-5 h-5 text-primary" /> تطور الأرباح الشهرية (د.م)
-                  </h3>
+                  </h2>
                   <span className="text-xs text-muted-foreground bg-primary/10 px-2.5 py-1 rounded-full font-semibold">عمولة مخفضة 6% للشريك الذهبي</span>
                 </div>
                 <div className="h-64">
@@ -194,9 +194,9 @@ export default function PartnerDashboard() {
 
               <Card className="p-6 border-border shadow-sm">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-bold flex items-center gap-2">
+                  <h2 className="text-lg font-bold flex items-center gap-2">
                     <Calendar className="w-5 h-5 text-primary" /> عدد الحجوزات الشهرية المؤكدة
-                  </h3>
+                  </h2>
                   <span className="text-xs text-muted-foreground bg-emerald-500/10 text-emerald-600 px-2.5 py-1 rounded-full font-semibold">نمو قياسي مستمر</span>
                 </div>
                 <div className="h-64">
@@ -370,7 +370,7 @@ export default function PartnerDashboard() {
                   <Card key={booking.id} className="p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-border">
                     <div className="space-y-1">
                       <div className="flex items-center gap-3">
-                        <h4 className="font-bold text-lg">طلب حجز #{booking.id}</h4>
+                        <h3 className="font-bold text-lg">طلب حجز #{booking.id}</h3>
                         <Badge className={booking.status === 'Confirmed' ? 'bg-cyan-500/10 text-cyan-500' : 'bg-amber-500/10 text-amber-600'}>
                           {booking.status === 'Confirmed' ? 'مؤكد' : 'قيد الانتظار'}
                         </Badge>

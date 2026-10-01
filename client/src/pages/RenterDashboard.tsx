@@ -119,7 +119,7 @@ export default function RenterDashboard() {
                     <div key={invoice.id} className="p-4 rounded-xl bg-muted/30 border border-border space-y-3">
                       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <div>
-                          <h4 className="font-bold">فاتورة حجز #{invoice.bookingId}</h4>
+                          <h3 className="font-bold text-lg">فاتورة حجز #{invoice.bookingId}</h3>
                           <p className="text-sm text-muted-foreground">رقم الفاتورة: {invoice.invoiceNumber} | الإصدار: {new Date(invoice.issuedAt).toLocaleDateString('ar-MA')}</p>
                           <p className="text-sm font-semibold">القيمة الإجمالية: {invoice.total} {invoice.currency}</p>
                         </div>

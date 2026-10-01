@@ -447,7 +447,7 @@ export default function AgencyOnboarding() {
                       ) : (
                         <div className="space-y-4 pt-2">
                           <div className="text-start">
-                            <h3 className="text-lg font-black text-foreground">أنشئ حساب الشريك الخاص بك</h3>
+                            <h2 className="text-lg font-black text-foreground">أنشئ حساب الشريك الخاص بك</h2>
                             <p className="mt-1 text-sm text-muted-foreground">أدخل عنوان بريدك الإلكتروني لاستكمال التسجيل مجاناً — لا حاجة لبطاقة ائتمانية.</p>
                           </div>
                           <form onSubmit={submitEmailStep} noValidate>
