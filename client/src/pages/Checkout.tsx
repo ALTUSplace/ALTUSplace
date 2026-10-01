@@ -399,7 +399,7 @@ const result = await createBooking.mutateAsync({
                         placeholder="مثال: AT752"
                         value={flightNumber}
                         onChange={(e) => setFlightNumber(e.target.value)}
-                        className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-end placeholder:text-end"
+                        className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-start placeholder:text-start"
                       />
                     </div>
                     <div className="space-y-1.5">

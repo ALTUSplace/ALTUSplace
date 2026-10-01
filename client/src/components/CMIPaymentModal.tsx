@@ -75,6 +75,12 @@ export function CMIPaymentModal({ isOpen, onClose, onSuccess, amount }: CMIPayme
             <label className="text-xs font-bold text-slate-300 dark:text-[#D6D6DB]">رقم البطاقة البنكية (16 رقم)</label>
             <input
               type="text"
+              /* Fixed-format numeric string: `dir="ltr"` keeps the digit groups
+                 in reading order under the inherited `dir="rtl"`. The wrapper's
+                 `text-end` still right-aligns the field, which is the Arabic
+                 convention for labels. */
+              dir="ltr"
+              inputMode="numeric"
               maxLength={16}
               placeholder="4532 •••• •••• 8821"
               value={cardNumber}
@@ -89,6 +95,8 @@ export function CMIPaymentModal({ isOpen, onClose, onSuccess, amount }: CMIPayme
               <label className="text-xs font-bold text-slate-300 dark:text-[#D6D6DB]">تاريخ الانتهاء</label>
               <input
                 type="text"
+                dir="ltr"
+                inputMode="numeric"
                 placeholder="MM/YY"
                 maxLength={5}
                 value={expiry}
@@ -102,6 +110,8 @@ export function CMIPaymentModal({ isOpen, onClose, onSuccess, amount }: CMIPayme
               <label className="text-xs font-bold text-slate-300 dark:text-[#D6D6DB]">رمز التحقق (CVV)</label>
               <input
                 type="password"
+                dir="ltr"
+                inputMode="numeric"
                 maxLength={4}
                 placeholder="•••"
                 value={cvv}
