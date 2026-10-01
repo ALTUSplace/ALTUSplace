@@ -532,10 +532,10 @@
   from { transform: scaleX(0); }
   to   { transform: scaleX(1); }
 }
-@keyframes gradientShift {
-  0%   { background-position: 0% 50%; }
-  50%  { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+@keyframes gradient-drift {
+  0%   { transform: translate3d(-8%, -5%, 0); }
+  50%  { transform: translate3d(8%, 5%, 0); }
+  100% { transform: translate3d(-8%, -5%, 0); }
 }
 
 /* ── 5. Bespoke Utility Classes ─────────────────────────────────────────────── */
@@ -562,11 +562,32 @@
   /* Slow ambient canvas gradient — background only, never behind content cards.
      Scoped to the dark theme: the dark ink (#F2F3F5) clears 8.5:1 on every
      stop, while the light-theme ink (#1C1C1E) would collapse to ~1.1:1 and
-     render body copy unreadable. Light mode keeps its flat white canvas. */
+     render body copy unreadable. Light mode keeps its flat white canvas.
+
+     The drift is a compositor transform on an oversized fixed layer rather than
+     an animated background-position. Animating background-position invalidates
+     the background paint of this full-viewport element on every frame for the
+     whole 25s cycle — precisely the paint work low-end mobile drops frames on.
+     A transform on a promoted layer is handed to the compositor instead.
+
+     `isolation: isolate` makes this element its own stacking context so the
+     negative-z layer paints above the element's own background and below its
+     content. `position: fixed` keeps the oversized layer from adding scrollable
+     overflow, and keeps the ambient canvas still while the page scrolls. */
   .dark .bg-animated-gradient {
+    position: relative;
+    isolation: isolate;
+  }
+  .dark .bg-animated-gradient::before {
+    content: "";
+    position: fixed;
+    inset: -20%;
+    z-index: -1;
+    pointer-events: none;
     background-image: linear-gradient(-45deg, #0C4A6E, #1E3A8A, #172554, #0F172A);
-    background-size: 400% 400%;
-    animation: gradientShift 25s ease infinite;
+    background-size: 200% 200%;
+    animation: gradient-drift 25s ease-in-out infinite;
+    will-change: transform;
   }
   .card-hover { transition: var(--transition-interactive); }
   .card-hover:hover { animation: card-lift var(--dur-standard) var(--ease-smooth) forwards; }
@@ -690,11 +711,11 @@
     }
     .b2-press:active { transform: none; }
 
-    /* Motion sensitivity: stop the ambient gradient drift instantly and pin it
-       to the first keyframe so it never settles on a mid-cycle colour. */
-    .dark .bg-animated-gradient {
+    /* Motion sensitivity: the ambient drift lives on a ::before layer, so stop
+       it there and drop it back to a resting position. */
+    .dark .bg-animated-gradient::before {
       animation: none;
-      background-position: 0% 50%;
+      transform: none;
     }
   }
 }
@@ -1078,8 +1099,11 @@
     background: color-mix(in srgb, var(--bg-surface) 94%, transparent);
     border-top: 1px solid var(--border-default);
     box-shadow: 0 -10px 28px rgb(2 6 23 / 0.35);
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
+    /* 18px was re-blurring the whole strip on every scroll frame. The surface is
+       already 94% opaque, so the blur contributes very little visually; 10px
+       keeps the frosted edge at a fraction of the per-frame GPU cost. */
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
   }
 
   .mobile-bottom-nav__inner {
