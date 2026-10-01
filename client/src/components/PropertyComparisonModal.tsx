@@ -45,9 +45,9 @@ export default function PropertyComparisonModal({ isOpen, onClose, comparedPrope
           <table className="w-full border-collapse">
             <thead>
               <tr className="border-b border-slate-200">
-                <th className="py-3 px-4 text-right text-xs font-semibold text-slate-500 w-1/4">المواصفات الرئيسية</th>
+                <th className="py-3 px-4 text-end text-xs font-semibold text-slate-500 w-1/4">المواصفات الرئيسية</th>
                 {comparedProperties.map((prop) => (
-                  <th key={prop.id} className="py-3 px-4 text-right w-1/4 min-w-[200px]">
+                  <th key={prop.id} className="py-3 px-4 text-end w-1/4 min-w-[200px]">
                     <div className="relative group bg-slate-50 p-3 rounded-xl border border-slate-200">
                       <button
                         onClick={() => onRemove(prop.id)}

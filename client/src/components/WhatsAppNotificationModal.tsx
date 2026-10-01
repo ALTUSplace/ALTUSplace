@@ -64,7 +64,7 @@ export function WhatsAppNotificationModal({ isOpen, onClose, bookingDetails }: W
           </div>
         ) : (
           <div className="space-y-4">
-            <div className="space-y-1.5 text-right">
+            <div className="space-y-1.5 text-end">
               <label className="text-xs font-bold text-slate-300 dark:text-[#D6D6DB]">إرسال إلى:</label>
               <div className="grid grid-cols-2 gap-3">
                 <button
@@ -92,7 +92,7 @@ export function WhatsAppNotificationModal({ isOpen, onClose, bookingDetails }: W
               </div>
             </div>
 
-            <div className="space-y-1.5 text-right">
+            <div className="space-y-1.5 text-end">
               <label className="text-xs font-bold text-slate-300 dark:text-[#D6D6DB]">نص الرسالة التلقائية</label>
               <textarea
                 rows={4}

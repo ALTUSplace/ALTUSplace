@@ -54,7 +54,7 @@ export default function Help() {
             <div key={idx} className="bg-slate-950 dark:bg-[#111113] border border-slate-800 dark:border-[#2C2C2E] rounded-2xl overflow-hidden shadow-xl">
               <button
                 onClick={() => setOpenIndex(openIndex === idx ? null : idx)}
-                className="w-full flex items-center justify-between p-6 text-right font-bold text-white hover:text-amber-400 transition-colors"
+                className="w-full flex items-center justify-between p-6 text-end font-bold text-white hover:text-amber-400 transition-colors"
               >
                 <span>{faq.q}</span>
                 <ChevronDown className={`w-5 h-5 transition-transform ${openIndex === idx ? 'rotate-180 text-amber-400' : 'text-slate-500'}`} />
@@ -95,7 +95,7 @@ export default function Help() {
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-1.5 text-right">
+                <div className="space-y-1.5 text-end">
                   <label className="text-xs font-bold text-slate-300 dark:text-[#D6D6DB]">الاسم الكامل</label>
                   <input
                     type="text"
@@ -107,7 +107,7 @@ export default function Help() {
                   />
                 </div>
 
-                <div className="space-y-1.5 text-right">
+                <div className="space-y-1.5 text-end">
                   <label className="text-xs font-bold text-slate-300 dark:text-[#D6D6DB]">البريد الإلكتروني</label>
                   <input
                     type="email"
@@ -120,7 +120,7 @@ export default function Help() {
                 </div>
               </div>
 
-              <div className="space-y-1.5 text-right">
+              <div className="space-y-1.5 text-end">
                 <label className="text-xs font-bold text-slate-300 dark:text-[#D6D6DB]">موضوع الاستفسار</label>
                 <input
                   type="text"
@@ -132,7 +132,7 @@ export default function Help() {
                 />
               </div>
 
-              <div className="space-y-1.5 text-right">
+              <div className="space-y-1.5 text-end">
                 <label className="text-xs font-bold text-slate-300 dark:text-[#D6D6DB]">نص الرسالة أو الاستفسار</label>
                 <textarea
                   required

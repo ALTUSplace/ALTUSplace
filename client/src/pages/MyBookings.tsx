@@ -124,7 +124,7 @@ export default function MyBookings() {
                   <div className="w-full md:w-48 h-32 rounded-2xl overflow-hidden border border-slate-800 shrink-0 bg-[#1C1C1E]">
                     {listing?.imageUrl && <OptimizedImage src={listing.imageUrl} alt={listing.title} width={640} height={320} widthHint={640} sizes="(max-width: 768px) 100vw, 192px" className="w-full h-full object-cover" />}
                   </div>
-                  <div className="flex-1 space-y-3 text-right w-full">
+                  <div className="flex-1 space-y-3 text-end w-full">
                     <div className="flex items-center justify-between gap-3">
                       <span className="text-xs font-bold text-amber-400">#{booking.id}</span>
                       {booking.status === 'Confirmed' ? (

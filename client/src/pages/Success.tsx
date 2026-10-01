@@ -321,7 +321,7 @@ export default function Success() {
   return (
     <div className="min-h-screen bg-slate-900 dark:bg-[#1C1C1E] text-slate-100 dark:text-[#F1F1F3] py-12 px-4 relative">
       {voucherCode && !isPending && (
-        <div className="mx-auto mb-6 max-w-4xl rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-right shadow-sm">
+        <div className="mx-auto mb-6 max-w-4xl rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-end shadow-sm">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div><p className="font-bold text-emerald-900">تذكرة الوصول الذكي جاهزة</p><p className="mt-1 text-sm text-emerald-800">تم إصدار تذكرة الوصول برمز QR بعد نجاح الدفع. احتفظ بها لإبراز تفاصيل الحجز عند الوصول.</p><p className="mt-2 font-mono text-sm font-bold text-emerald-900">{voucherCode}</p></div>
             <Button onClick={() => setLocation(`/voucher/${voucherCode}`)} className="bg-emerald-700 text-white hover:bg-emerald-800">فتح التذكرة الذكية</Button>
@@ -356,7 +356,7 @@ export default function Success() {
           </div>
 
           {isPending && (
-            <div className="bg-amber-500/10 border border-amber-500/30 p-4 rounded-2xl text-right text-xs text-amber-100">
+            <div className="bg-amber-500/10 border border-amber-500/30 p-4 rounded-2xl text-end text-xs text-amber-100">
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-amber-400" />
                 <span>الحالة الحالية: <strong className="text-amber-300">قيد موافقة المالك</strong>. لا يتم إنشاء عقد الكراء أو اعتباره نهائياً قبل اعتماد الطلب.</span>
@@ -364,7 +364,7 @@ export default function Success() {
             </div>
           )}
 
-          <div className="bg-slate-900 dark:bg-[#1C1C1E] border border-slate-800 dark:border-[#2C2C2E] p-6 rounded-2xl text-right space-y-3 text-xs">
+          <div className="bg-slate-900 dark:bg-[#1C1C1E] border border-slate-800 dark:border-[#2C2C2E] p-6 rounded-2xl text-end space-y-3 text-xs">
             <div className="flex justify-between border-b border-slate-800 dark:border-[#2C2C2E] pb-2">
               <span className="text-ink-secondary dark:text-[#B0B0B8]">الرقم المرجعي:</span>
               <span className="font-bold text-white">{bookingRef}</span>
@@ -379,7 +379,7 @@ export default function Success() {
             </div>
           </div>
 
-          <div className="bg-slate-900 dark:bg-[#1C1C1E] border border-amber-500/30 p-5 rounded-2xl text-right space-y-3">
+          <div className="bg-slate-900 dark:bg-[#1C1C1E] border border-amber-500/30 p-5 rounded-2xl text-end space-y-3">
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2"><Receipt className="w-5 h-5 text-amber-400" /><span className="font-bold text-white">الفاتورة الإلكترونية</span></div>
               {invoice && (
@@ -393,7 +393,7 @@ export default function Success() {
             {invoiceQuery.isLoading ? <p className="text-xs text-ink-secondary dark:text-[#B0B0B8]">جاري التحقق من الفاتورة المحفوظة...</p> : invoice ? (
               <>
                 <div className="grid grid-cols-2 gap-3 text-xs"><div><span className="text-ink-secondary dark:text-[#B0B0B8] block">رقم الفاتورة</span><strong className="text-white">{invoice.invoiceNumber}</strong></div><div><span className="text-ink-secondary dark:text-[#B0B0B8] block">حالة الدفع</span><strong className="text-white">{({ Succeeded: "تم الدفع", Pending: "قيد الانتظار", Issued: "صادرة", Cancelled: "ملغي", Failed: "فشل الدفع", Void: "ملغي" } as Record<string, string>)[invoice.paymentStatus] ?? invoice.paymentStatus}</strong></div><div><span className="text-ink-secondary dark:text-[#B0B0B8] block">TVA</span><strong className="text-white">{invoice.vatAmount} {invoice.currency}</strong></div><div><span className="text-ink-secondary dark:text-[#B0B0B8] block">الإجمالي الكلي</span><strong className="text-amber-300">{invoice.total} {invoice.currency}</strong></div></div>
-                <Button type="button" onClick={handleInvoiceDownload} disabled={isGeneratingPDF} className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold disabled:opacity-50 disabled:cursor-not-allowed">{isGeneratingPDF ? <><div className="w-4 h-4 border-2 border-slate-950 dark:border-[#111113] border-t-transparent rounded-full animate-spin ml-2" /> جاري إنشاء الفاتورة...</> : <><Download className="w-4 h-4 ml-2" /> تنزيل الفاتورة PDF</>}</Button>
+                <Button type="button" onClick={handleInvoiceDownload} disabled={isGeneratingPDF} className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold disabled:opacity-50 disabled:cursor-not-allowed">{isGeneratingPDF ? <><div className="w-4 h-4 border-2 border-slate-950 dark:border-[#111113] border-t-transparent rounded-full animate-spin ms-2" /> جاري إنشاء الفاتورة...</> : <><Download className="w-4 h-4 ms-2" /> تنزيل الفاتورة PDF</>}</Button>
               </>
             ) : <p className="text-xs text-ink-secondary dark:text-[#B0B0B8]">{invoiceQuery.isError ? 'تعذر التحقق من الفاتورة لهذا الحجز. يمكنك مراجعة صفحة حجوزاتك.' : `تم تسجيل الدفع، رقم المبلغ المرجعي ${booking?.totalPrice ?? 0} درهم، وسيظهر المستند بعد اكتمال الحفظ.`}</p>}
           </div>
@@ -402,7 +402,7 @@ export default function Success() {
             <div className="bg-slate-900 dark:bg-[#1C1C1E] border border-slate-800 dark:border-[#2C2C2E] p-4 rounded-2xl flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <Stamp className="w-5 h-5 text-amber-400" />
-                <div className="text-right">
+                <div className="text-end">
                   <div className="text-xs font-bold text-white">إدراج الختم الرقمي الرسمي للوكالة</div>
                   <div className="text-[10px] text-ink-secondary dark:text-[#B0B0B8]">يثبت المصداقية القانونية والاعتماد الرسمي للوكالة</div>
                 </div>
@@ -417,7 +417,7 @@ export default function Success() {
           )}
 
           {!isPending && (
-            <div className="bg-slate-900 dark:bg-[#1C1C1E] border border-slate-800 dark:border-[#2C2C2E] p-6 rounded-2xl space-y-3 text-right">
+            <div className="bg-slate-900 dark:bg-[#1C1C1E] border border-slate-800 dark:border-[#2C2C2E] p-6 rounded-2xl space-y-3 text-end">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-bold text-slate-300 dark:text-[#D6D6DB] flex items-center gap-1.5">
                   <Edit3 className="w-4 h-4 text-amber-400" /> التوقيع الإلكتروني (ارسم توقيعك في المربع أدناه):
@@ -466,7 +466,7 @@ export default function Success() {
           )}
 
           {contractType && isPending && (
-            <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-5 text-right space-y-2">
+            <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-5 text-end space-y-2">
               <div className="flex items-center gap-3">
                 <FileCheck className="h-6 w-6 text-amber-400" />
                 <div>
@@ -478,7 +478,7 @@ export default function Success() {
           )}
 
           {contractType && !isPending && (
-            <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-5 text-right space-y-3">
+            <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-5 text-end space-y-3">
               <div className="flex items-center gap-3">
                 <FileCheck className="h-6 w-6 text-amber-400" />
                 <div>

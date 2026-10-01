@@ -399,7 +399,7 @@ const result = await createBooking.mutateAsync({
                         placeholder="مثال: AT752"
                         value={flightNumber}
                         onChange={(e) => setFlightNumber(e.target.value)}
-                        className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-right placeholder:text-right"
+                        className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-end placeholder:text-end"
                       />
                     </div>
                     <div className="space-y-1.5">
@@ -434,7 +434,7 @@ const result = await createBooking.mutateAsync({
                       key={id}
                       type="button"
                       onClick={() => toggleAddOn(id)}
-                      className={`w-full flex items-center gap-3 p-4 rounded-xl border-2 text-right transition-all ${
+                      className={`w-full flex items-center gap-3 p-4 rounded-xl border-2 text-end transition-all ${
                         selected
                           ? 'border-amber-500 bg-amber-50 shadow-sm'
                           : 'border-slate-200 hover:border-slate-300'
@@ -523,7 +523,7 @@ const result = await createBooking.mutateAsync({
                       <ShieldAlert className="h-4 w-4" />
                       لم تُرفق بعد: {missingDocumentLabels.join('، ')}
                     </p>
-                    <ul className="mt-1 list-disc pr-4 space-y-0.5">
+                    <ul className="mt-1 list-disc pe-4 space-y-0.5">
                       {missingDocumentLabels.map((label) => (
                         <li key={label}>
                           {label} — {!isPropertyBooking && label === 'رخصة السياقة (البيرمي)' ? 'مطلوبة لحجوزات السيارات' : residency === 'resident' ? 'مطلوبة للمقيمين' : 'مطلوب للأجانب'}
@@ -560,7 +560,7 @@ const result = await createBooking.mutateAsync({
                   disabled={!isFormValid || isSubmitting}
                   className="w-full bg-[#25D366] text-white hover:bg-[#1ebe5d] disabled:pointer-events-auto disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 disabled:opacity-100 disabled:hover:bg-slate-300"
                 >
-                  {isSubmitting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <MessageCircle className="mr-2 h-5 w-5" />}
+                  {isSubmitting ? <Loader2 className="me-2 h-5 w-5 animate-spin" /> : <MessageCircle className="me-2 h-5 w-5" />}
                   {isSubmitting ? 'جارٍ تسجيل الحجز ورفع الوثائق...' : 'تأكيد الحجز عبر الواتساب'}
                 </Button>
                 {!isFormValid ? (
@@ -648,7 +648,7 @@ const result = await createBooking.mutateAsync({
                       </p>
                     )}
                     <Button type="submit" size="lg" disabled={!isFormValid || isSubmitting} className="w-full bg-[#25D366] text-white hover:bg-[#1ebe5d] disabled:pointer-events-auto disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 disabled:opacity-100 disabled:hover:bg-slate-300">
-                      {isSubmitting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <MessageCircle className="mr-2 h-5 w-5" />}
+                      {isSubmitting ? <Loader2 className="me-2 h-5 w-5 animate-spin" /> : <MessageCircle className="me-2 h-5 w-5" />}
                       {isSubmitting ? 'جارٍ تسجيل الحجز ورفع الوثائق...' : `تأكيد الحجز عبر الواتساب (${showTotalDisplay})`}
                     </Button>
                   </div>

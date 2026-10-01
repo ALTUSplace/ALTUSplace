@@ -137,7 +137,7 @@ export default function SupportTickets() {
                 إلغاء
               </Button>
               <Button type="submit" disabled={createTicket.isPending} className="bg-amber-500 hover:bg-amber-600 disabled:opacity-60 text-slate-950 font-bold text-xs px-6 py-2.5 rounded-xl shadow-lg">
-                {createTicket.isPending ? 'جاري الإرسال...' : <><Send className="w-4 h-4 ml-2 inline-block" /> إرسال التذكرة</>}
+                {createTicket.isPending ? 'جاري الإرسال...' : <><Send className="w-4 h-4 ms-2 inline-block" /> إرسال التذكرة</>}
               </Button>
             </div>
           </form>

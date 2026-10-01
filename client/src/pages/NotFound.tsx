@@ -46,7 +46,7 @@ export default function NotFound() {
               onClick={handleGoHome}
               className="bg-accent-clay hover:bg-accent-clay-hover text-white px-6 py-2.5 rounded-xl transition-all duration-200 shadow-[var(--shadow-clay)] cursor-pointer"
             >
-              <Home className="w-4 h-4 mr-2" />
+              <Home className="w-4 h-4 me-2" />
               العودة إلى الرئيسية · Accueil
             </Button>
           </div>

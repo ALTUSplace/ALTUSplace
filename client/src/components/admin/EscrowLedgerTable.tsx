@@ -81,7 +81,7 @@ export default function EscrowLedgerTable({ rows, onChanged }: { rows: EscrowRow
       <div className="overflow-x-auto rounded-xl border border-slate-800 dark:border-[#2C2C2E]">
         <table className="w-full min-w-[1000px] text-sm">
           <thead>
-            <tr className="border-b border-slate-800 dark:border-[#2C2C2E] bg-slate-900/60 dark:bg-[#1C1C1E]/60 text-left text-[11px] uppercase tracking-wider text-slate-500">
+            <tr className="border-b border-slate-800 dark:border-[#2C2C2E] bg-slate-900/60 dark:bg-[#1C1C1E]/60 text-start text-[11px] uppercase tracking-wider text-slate-500">
               <th className="px-4 py-3">Booking ID</th>
               <th className="px-4 py-3">الضيف / Guest</th>
               <th className="px-4 py-3">المزوّد / Vendor</th>

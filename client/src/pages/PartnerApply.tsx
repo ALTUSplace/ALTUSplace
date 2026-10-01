@@ -556,7 +556,7 @@ export default function PartnerApply() {
                   <button
                     type="button"
                     onClick={() => setFocusField(key)}
-                    className="text-right text-xs font-bold text-red-700 underline decoration-red-300 underline-offset-4 hover:decoration-red-600"
+                    className="text-end text-xs font-bold text-red-700 underline decoration-red-300 underline-offset-4 hover:decoration-red-600"
                   >
                     {partnerFieldLabel(key)}: {errors[key]}
                   </button>
@@ -687,7 +687,7 @@ export default function PartnerApply() {
                   onClick={addVehicle}
                   disabled={vehicles.length >= MAX_VEHICLES}
                 >
-                  <Plus className="ml-1 h-4 w-4" />
+                  <Plus className="ms-1 h-4 w-4" />
                   إضافة مركبة
                 </Button>
               </div>
@@ -961,7 +961,7 @@ export default function PartnerApply() {
           <Button type="submit" disabled={submitting} className="w-full bg-brand-panel py-4 text-base font-black text-brand-panel-ink hover:bg-brand-panel-alt disabled:cursor-not-allowed disabled:opacity-60">
             {submitting ? (
               <>
-                <Loader2 className="ml-2 h-5 w-5 animate-spin" />
+                <Loader2 className="ms-2 h-5 w-5 animate-spin" />
                 جارٍ إرسال الطلب...
               </>
             ) : (

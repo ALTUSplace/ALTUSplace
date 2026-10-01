@@ -544,7 +544,7 @@ export default function Search() {
                     {!mapSearch.isLoading && (mapSearch.data?.total ?? 0) === 0 && (
                       <p className="text-xs text-ink-secondary leading-relaxed">{t('mapNoResults')}</p>
                     )}
-                    <div className="space-y-3 max-h-[520px] overflow-y-auto pl-1">
+                    <div className="space-y-3 max-h-[520px] overflow-y-auto ps-1">
                       {(mapSearch.data?.items ?? []).map((item) => {
                         const li = toListingItem(item);
                         return (
@@ -618,7 +618,7 @@ export default function Search() {
                   <span className="text-xs text-accent-clay font-bold">{quickViewItem.providerName}</span>
                   <h2 className="text-xl font-black text-ink-primary">{quickViewItem.title}</h2>
                 </div>
-                <div className="text-left">
+                <div className="text-start">
                   <div className="text-2xl font-black text-accent-clay">{quickViewItem.pricePerUnit} {quickViewItem.unitLabel}</div>
                   <div className="text-xs text-ink-tertiary">التقييمات الموثقة تظهر في صفحة الإعلان بعد توفرها</div>
                 </div>

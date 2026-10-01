@@ -111,7 +111,10 @@ export function AuthModal({ isOpen, onClose, initialView = "signin", onSuccess }
               <button type="submit" disabled={loading || otp.some((d)=>!d)} className="b2-press mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-sm bg-accent-clay text-sm font-bold text-white shadow-[var(--shadow-clay)] transition-all hover:bg-accent-clay-hover disabled:cursor-not-allowed disabled:opacity-50">
                 {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <><ShieldCheck className="h-4 w-4" /> {t("verifyAndContinue")}</>}
               </button>
-              <button type="button" onClick={() => { setView(initialView); setOtp(["","","","","",""]); }} className="mt-3 flex h-11 w-full items-center justify-center gap-1.5 text-xs font-semibold text-stone-500 hover:text-stone-800"><ArrowRight className="h-3.5 w-3.5 rotate-180" /> {t("backToEmail")}</button>
+              <button type="button" onClick={() => { setView(initialView); setOtp(["","","","","",""]); }} className="mt-3 flex h-11 w-full items-center justify-center gap-1.5 text-xs font-semibold text-stone-500 hover:text-stone-800">{/* "back" affordance: the glyph points toward wherever "back" leads, so it
+                  must mirror under `dir="rtl"`. A static `rotate-180` is
+                  direction-agnostic and leaves it pointing the wrong way. */}
+                <ArrowRight className="h-3.5 w-3.5 rotate-180 rtl:-scale-x-100" /> {t("backToEmail")}</button>
             </form>
           ) : (
             <>

@@ -56,7 +56,7 @@ export default function BookingMessages() {
             <h1 className="mt-1 text-2xl font-black text-[#1C1C1E]">مراسلات الحجز #{bookingId}</h1>
             <p className="mt-1 text-sm text-slate-500">تواصل مع الطرف الآخر داخل المنصة واحتفظ بسجل واضح للمحادثة.</p>
           </div>
-          <Link href="/my-bookings"><Button variant="outline"><ArrowRight className="ml-2 h-4 w-4" /> حجوزاتي</Button></Link>
+          <Link href="/my-bookings"><Button variant="outline"><ArrowRight className="ms-2 h-4 w-4" /> حجوزاتي</Button></Link>
         </div>
 
         <Card className="border-0 shadow-sm">
@@ -70,7 +70,7 @@ export default function BookingMessages() {
             </div>
             <form className="space-y-3" onSubmit={(event) => { event.preventDefault(); if (body.trim()) send.mutate({ bookingId, body: body.trim() }); }}>
               <Textarea value={body} onChange={(event) => setBody(event.target.value)} placeholder="اكتب رسالتك هنا..." maxLength={2000} rows={4} disabled={send.isPending} />
-              <div className="flex items-center justify-between gap-3"><span className="text-xs text-slate-500">لا تشارك بيانات البطاقة أو كلمات المرور داخل المحادثة.</span><Button type="submit" disabled={send.isPending || !body.trim()} className="bg-amber-500 text-slate-950 hover:bg-amber-400"><Send className="ml-2 h-4 w-4" /> {send.isPending ? "جارٍ الإرسال..." : "إرسال"}</Button></div>
+              <div className="flex items-center justify-between gap-3"><span className="text-xs text-slate-500">لا تشارك بيانات البطاقة أو كلمات المرور داخل المحادثة.</span><Button type="submit" disabled={send.isPending || !body.trim()} className="bg-amber-500 text-slate-950 hover:bg-amber-400"><Send className="ms-2 h-4 w-4" /> {send.isPending ? "جارٍ الإرسال..." : "إرسال"}</Button></div>
             </form>
           </CardContent>
         </Card>

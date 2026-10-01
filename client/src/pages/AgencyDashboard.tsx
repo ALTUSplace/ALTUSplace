@@ -996,12 +996,12 @@ export default function AgencyDashboard() {
               fleet.refetch();
             }}
           >
-            <RefreshCw className="ml-2 h-4 w-4" />
+            <RefreshCw className="ms-2 h-4 w-4" />
             تحديث
           </Button>
           <Link href="/host">
             <Button variant="outline" className="border-white/25 bg-transparent text-white hover:bg-white/10">
-              <ArrowRight className="ml-2 h-4 w-4" />
+              <ArrowRight className="ms-2 h-4 w-4" />
               لوحة المكاتب
             </Button>
           </Link>
@@ -1063,7 +1063,7 @@ export default function AgencyDashboard() {
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[860px] text-right text-sm">
+                <table className="w-full min-w-[860px] text-end text-sm">
                   <thead>
                     <tr className="border-b text-xs font-bold uppercase tracking-wide text-muted-foreground">
                       <th className="px-3 py-2.5">الطلب</th>
@@ -1116,7 +1116,7 @@ export default function AgencyDashboard() {
                         <td className="px-3 py-3">
                           {booking.drivingLicenseKey ? (
                             <Button size="sm" variant="outline" onClick={() => setDocBooking(booking)}>
-                              <Eye className="ml-1 h-3.5 w-3.5" />
+                              <Eye className="ms-1 h-3.5 w-3.5" />
                               عرض الوثائق
                             </Button>
                           ) : (
@@ -1127,17 +1127,17 @@ export default function AgencyDashboard() {
                           {booking.status === "Pending" ? (
                             <div className="flex gap-2">
                               <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => confirm(booking.id)} disabled={busyBookingId !== null}>
-                                {busyBookingId === booking.id ? <Loader2 className="ml-1 h-4 w-4 animate-spin" /> : <Check className="ml-1 h-4 w-4" />}
+                                {busyBookingId === booking.id ? <Loader2 className="ms-1 h-4 w-4 animate-spin" /> : <Check className="ms-1 h-4 w-4" />}
                                 {busyBookingId === booking.id ? "جارٍ التأكيد..." : "قبول"}
                               </Button>
                               <Button size="sm" variant="outline" className="text-red-600 border-red-300 hover:bg-red-50" onClick={() => decline(booking.id)} disabled={busyBookingId !== null}>
-                                {busyBookingId === booking.id ? <Loader2 className="ml-1 h-4 w-4 animate-spin" /> : <X className="ml-1 h-4 w-4" />}
+                                {busyBookingId === booking.id ? <Loader2 className="ms-1 h-4 w-4 animate-spin" /> : <X className="ms-1 h-4 w-4" />}
                                 {busyBookingId === booking.id ? "جارٍ..." : "رفض"}
                               </Button>
                             </div>
                           ) : booking.status === "Confirmed" ? (
                             <Button size="sm" variant="outline" onClick={() => handleGenerateContract(booking.id)} disabled={busyContractId !== null}>
-                              {busyContractId === booking.id ? <Loader2 className="ml-1 h-3.5 w-3.5 animate-spin" /> : <FileText className="ml-1 h-3.5 w-3.5" />}
+                              {busyContractId === booking.id ? <Loader2 className="ms-1 h-3.5 w-3.5 animate-spin" /> : <FileText className="ms-1 h-3.5 w-3.5" />}
                               {busyContractId === booking.id ? "جارٍ..." : "عقد PDF"}
                             </Button>
                           ) : (
@@ -1178,7 +1178,7 @@ export default function AgencyDashboard() {
                 </p>
               </div>
               <Button type="button" onClick={openAddCar}>
-                <Plus className="ml-1 h-4 w-4" />
+                <Plus className="ms-1 h-4 w-4" />
                 إضافة سيارة
               </Button>
             </div>
@@ -1191,7 +1191,7 @@ export default function AgencyDashboard() {
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[820px] text-right text-sm">
+                <table className="w-full min-w-[820px] text-end text-sm">
                   <thead>
                     <tr className="border-b text-xs font-bold uppercase tracking-wide text-muted-foreground">
                       <th className="px-3 py-2.5">السيارة</th>
@@ -1265,7 +1265,7 @@ export default function AgencyDashboard() {
                               </select>
                               {busyStatusId === car.id && <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />}
                               <Button size="sm" variant="outline" onClick={() => openEditCar(car)}>
-                                <Pencil className="ml-1 h-3.5 w-3.5" />
+                                <Pencil className="ms-1 h-3.5 w-3.5" />
                                 تعديل
                               </Button>
                             </div>
@@ -1306,7 +1306,7 @@ export default function AgencyDashboard() {
                 </p>
               </div>
               <Button type="button" onClick={openAddProperty}>
-                <Plus className="ml-1 h-4 w-4" />
+                <Plus className="ms-1 h-4 w-4" />
                 إضافة عقار
               </Button>
             </div>
@@ -1319,7 +1319,7 @@ export default function AgencyDashboard() {
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[820px] text-right text-sm">
+                <table className="w-full min-w-[820px] text-end text-sm">
                   <thead>
                     <tr className="border-b text-xs font-bold uppercase tracking-wide text-muted-foreground">
                       <th className="px-3 py-2.5">العقار</th>
@@ -1393,7 +1393,7 @@ export default function AgencyDashboard() {
                               </select>
                               {busyStatusId === property.id && <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />}
                               <Button size="sm" variant="outline" onClick={() => openEditProperty(property)}>
-                                <Pencil className="ml-1 h-3.5 w-3.5" />
+                                <Pencil className="ms-1 h-3.5 w-3.5" />
                                 تعديل
                               </Button>
                             </div>
@@ -1487,11 +1487,11 @@ export default function AgencyDashboard() {
               {docBooking.status === "Pending" && (
                 <DialogFooter className="flex flex-wrap gap-2 sm:justify-end">
                   <Button variant="outline" className="text-red-600 border-red-300 hover:bg-red-50" onClick={() => decline(docBooking.id)} disabled={busyBookingId !== null}>
-                    {busyBookingId === docBooking.id ? <Loader2 className="ml-1 h-4 w-4 animate-spin" /> : <X className="ml-1 h-4 w-4" />}
+                    {busyBookingId === docBooking.id ? <Loader2 className="ms-1 h-4 w-4 animate-spin" /> : <X className="ms-1 h-4 w-4" />}
                     {busyBookingId === docBooking.id ? "جارٍ الرفض..." : "رفض الطلب"}
                   </Button>
                   <Button className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => confirm(docBooking.id)} disabled={busyBookingId !== null}>
-                    {busyBookingId === docBooking.id ? <Loader2 className="ml-1 h-4 w-4 animate-spin" /> : <Check className="ml-1 h-4 w-4" />}
+                    {busyBookingId === docBooking.id ? <Loader2 className="ms-1 h-4 w-4 animate-spin" /> : <Check className="ms-1 h-4 w-4" />}
                     {busyBookingId === docBooking.id ? "جارٍ التأكيد..." : "قبول وتأكيد الحجز"}
                   </Button>
                 </DialogFooter>
@@ -1619,7 +1619,7 @@ export default function AgencyDashboard() {
                 إلغاء
               </Button>
               <Button type="submit" disabled={carBusy} className="bg-emerald-600 hover:bg-emerald-700 text-white">
-                {carBusy ? <><Loader2 className="ml-1 h-4 w-4 animate-spin" />جارٍ الحفظ...</> : editingCar ? "حفظ التعديلات" : "فحص الصور وإضافة السيارة"}
+                {carBusy ? <><Loader2 className="ms-1 h-4 w-4 animate-spin" />جارٍ الحفظ...</> : editingCar ? "حفظ التعديلات" : "فحص الصور وإضافة السيارة"}
               </Button>
             </DialogFooter>
           </form>
@@ -1752,7 +1752,7 @@ export default function AgencyDashboard() {
                 إلغاء
               </Button>
               <Button type="submit" disabled={propertyBusy} className="bg-emerald-600 hover:bg-emerald-700 text-white">
-                {propertyBusy ? <><Loader2 className="ml-1 h-4 w-4 animate-spin" />جارٍ الحفظ...</> : editingProperty ? "حفظ التعديلات" : "فحص الصور وإضافة العقار"}
+                {propertyBusy ? <><Loader2 className="ms-1 h-4 w-4 animate-spin" />جارٍ الحفظ...</> : editingProperty ? "حفظ التعديلات" : "فحص الصور وإضافة العقار"}
               </Button>
             </DialogFooter>
           </form>

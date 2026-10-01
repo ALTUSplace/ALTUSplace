@@ -182,7 +182,7 @@ export function TwoFactorAuthModal({ isOpen, onClose, onSuccess }: TwoFactorAuth
               </div>
             </div>
 
-            <div className="space-y-1.5 text-right">
+            <div className="space-y-1.5 text-end">
               <label className="text-xs font-bold text-slate-300 dark:text-[#D6D6DB]">أدخل رمز التحقق (6 أرقام)</label>
               <input
                 type="text"

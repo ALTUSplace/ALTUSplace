@@ -441,7 +441,7 @@ export default function AgencyOnboarding() {
                             <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-700">{serverError}</p>
                           ) : null}
                           <Button type="submit" className="w-full" disabled={submitting}>
-                            {submitting ? <><Loader2 className="ml-2 h-4 w-4 animate-spin" />جاري التسجيل...</> : "التسجيل كوكالة تأجير"}
+                            {submitting ? <><Loader2 className="ms-2 h-4 w-4 animate-spin" />جاري التسجيل...</> : "التسجيل كوكالة تأجير"}
                           </Button>
                         </form>
                       ) : (
@@ -517,7 +517,7 @@ export default function AgencyOnboarding() {
                           <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-700">{serverError}</p>
                         ) : null}
                         <Button type="submit" className="w-full" disabled={submitting}>
-                          {submitting ? <><Loader2 className="ml-2 h-4 w-4 animate-spin" />جاري الدخول...</> : "دخول"}
+                          {submitting ? <><Loader2 className="ms-2 h-4 w-4 animate-spin" />جاري الدخول...</> : "دخول"}
                         </Button>
                         <button type="button" onClick={() => startLogin()} className="w-full text-center text-xs font-bold text-brand-panel hover:underline">
                           {t("partnerExistingLogin")}
