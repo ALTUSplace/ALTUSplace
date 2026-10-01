@@ -34,7 +34,7 @@ export default function BottomNavigationBar() {
               <span className="mobile-bottom-nav__icon" aria-hidden="true">
                 <Icon className="h-[19px] w-[19px]" strokeWidth={isActive ? 2.5 : 1.9} />
               </span>
-              <span>{label}</span>
+              <span className="mobile-bottom-nav__label">{label}</span>
             </button>
           );
         })}
