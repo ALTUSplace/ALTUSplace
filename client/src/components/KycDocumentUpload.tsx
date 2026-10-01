@@ -245,8 +245,12 @@ export function KycDocumentUpload({
               <Hash className="h-3.5 w-3.5" />
               {language === "ar" ? "رقم الوثيقة (اختياري)" : "Numéro du document (optionnel)"}
             </span>
+            {/* `dir="ltr"`: a national ID / passport number is an identifier
+                typed character by character, and reversing its display order
+                under `dir="rtl"` invites transcription mistakes. */}
             <Input
               type="text"
+              dir="ltr"
               inputMode="numeric"
               maxLength={32}
               value={documentNumber}

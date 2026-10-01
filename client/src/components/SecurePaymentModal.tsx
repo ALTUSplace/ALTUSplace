@@ -239,7 +239,10 @@ export function SecurePaymentModal({
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-slate-300 dark:text-[#D6D6DB]">رقم البطاقة</label>
                   <div className="relative">
-                    <input type="text" inputMode="numeric" autoComplete="cc-number" placeholder="4532 •••• •••• 8821" value={cardNumber} onChange={handleCardNumberChange} className="w-full bg-slate-900 dark:bg-[#1C1C1E] border border-slate-700 dark:border-[#48484D] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-500 font-mono tracking-widest transition-colors" required />
+                    {/* Same reason as PaymentCheckoutModal: a card number is a
+                        fixed-format numeric string that must not inherit the
+                        page's `dir="rtl"`. */}
+                    <input type="text" dir="ltr" inputMode="numeric" autoComplete="cc-number" placeholder="4532 •••• •••• 8821" value={cardNumber} onChange={handleCardNumberChange} className="w-full bg-slate-900 dark:bg-[#1C1C1E] border border-slate-700 dark:border-[#48484D] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-500 font-mono tracking-widest transition-colors" required />
                     <div className="absolute left-3 top-1/2 -translate-y-1/2">{getCardIcon()}</div>
                   </div>
                 </div>
@@ -250,11 +253,11 @@ export function SecurePaymentModal({
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold text-slate-300 dark:text-[#D6D6DB]">تاريخ الانتهاء</label>
-                    <input type="text" inputMode="numeric" autoComplete="cc-exp" placeholder="MM/YY" maxLength={5} value={expiry} onChange={handleExpiryChange} className="w-full bg-slate-900 dark:bg-[#1C1C1E] border border-slate-700 dark:border-[#48484D] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-500 text-center font-mono transition-colors" required />
+                    <input type="text" dir="ltr" inputMode="numeric" autoComplete="cc-exp" placeholder="MM/YY" maxLength={5} value={expiry} onChange={handleExpiryChange} className="w-full bg-slate-900 dark:bg-[#1C1C1E] border border-slate-700 dark:border-[#48484D] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-500 text-center font-mono transition-colors" required />
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold text-slate-300 dark:text-[#D6D6DB]">CVV</label>
-                    <input ref={cvvInputRef} type="password" inputMode="numeric" autoComplete="cc-csc" maxLength={4} placeholder="•••" value={cvv} onChange={handleCvvChange} className="w-full bg-slate-900 dark:bg-[#1C1C1E] border border-slate-700 dark:border-[#48484D] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-500 text-center font-mono transition-colors" required />
+                    <input ref={cvvInputRef} type="password" dir="ltr" inputMode="numeric" autoComplete="cc-csc" maxLength={4} placeholder="•••" value={cvv} onChange={handleCvvChange} className="w-full bg-slate-900 dark:bg-[#1C1C1E] border border-slate-700 dark:border-[#48484D] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-500 text-center font-mono transition-colors" required />
                   </div>
                 </div>
               </div>
