@@ -592,10 +592,18 @@
     box-shadow: var(--shadow-xs);
   }
 
-  /* Editorial animated underline — grows from the inline side */
+  /* Editorial animated underline — grows from the inline end.
+     `background-position` has no logical keyword, so the RTL side is an explicit
+     override rather than a value swap: anchoring at `left` under `dir="rtl"` is
+     what makes the underline grow rightward, into the text, instead of away
+     from it. Selects on the [dir] attribute that LanguageContext already sets
+     on <html> at runtime. */
   .link-underline {
     background: linear-gradient(currentColor, currentColor) right bottom / 0% 1px no-repeat;
     transition: background-size var(--dur-standard) var(--ease-smooth);
+  }
+  [dir="rtl"] .link-underline {
+    background-position: left bottom;
   }
   .link-underline:hover {
     background-size: 100% 1px;

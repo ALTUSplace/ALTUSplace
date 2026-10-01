@@ -164,7 +164,7 @@ export function RegionalHighlights() {
       <div className="container mx-auto px-3 sm:px-4">
         <h2 className="sr-only">{t("seasonalHighlights")}</h2>
         <ul className="flex items-stretch gap-2 overflow-x-auto py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <li className="flex shrink-0 items-center gap-1.5 pr-1 text-[11px] font-bold uppercase tracking-wider text-white/60">
+          <li className="flex shrink-0 items-center gap-1.5 pe-1 text-[11px] font-bold uppercase tracking-wider text-white/60">
             <Sparkles className="h-3.5 w-3.5 text-accent-clay" aria-hidden="true" />
             {t("seasonalHighlights")}
           </li>

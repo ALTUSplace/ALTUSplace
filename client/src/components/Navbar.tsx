@@ -525,7 +525,7 @@ export default function Navbar() {
               </button>
 
               {notificationsOpen && (
-                <div className="absolute left-0 mt-3 w-[min(20rem,calc(100vw-2rem))] rounded-md border border-border-subtle bg-bg-elevated p-4 text-right text-ink-primary shadow-lg" role="dialog" aria-label={t("notificationsPanelLabel")}>
+                <div className="absolute left-0 mt-3 w-[min(20rem,calc(100vw-2rem))] rounded-md border border-border-subtle bg-bg-elevated p-4 text-end text-ink-primary shadow-lg" role="dialog" aria-label={t("notificationsPanelLabel")}>
                   <div className="flex items-center justify-between border-b border-border-subtle pb-3">
                     <h2 className="flex items-center gap-1.5 text-xs font-bold">
                       <Bell className="h-4 w-4 text-accent-clay" />

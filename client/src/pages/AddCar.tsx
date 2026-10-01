@@ -104,7 +104,7 @@ export default function AddCar() {
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-2 text-right">
+              <div className="space-y-2 text-end">
                 <label className="text-xs font-bold text-slate-300 dark:text-[#D6D6DB]">اسم السيارة / الموديل <span className="text-amber-500">*</span></label>
                 <input
                   type="text"
@@ -117,7 +117,7 @@ export default function AddCar() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2 text-right">
+                <div className="space-y-2 text-end">
                   <label className="text-xs font-bold text-slate-300 dark:text-[#D6D6DB]">الماركة (Brand) <span className="text-amber-500">*</span></label>
                   <input
                     type="text"
@@ -129,7 +129,7 @@ export default function AddCar() {
                   />
                 </div>
 
-                <div className="space-y-2 text-right">
+                <div className="space-y-2 text-end">
                   <label className="text-xs font-bold text-slate-300 dark:text-[#D6D6DB]">فئة المركبة</label>
                   <select
                     value={category}
@@ -145,7 +145,7 @@ export default function AddCar() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2 text-right">
+                <div className="space-y-2 text-end">
                   <label className="text-xs font-bold text-slate-300 dark:text-[#D6D6DB]">السعر اليومي (درهم) <span className="text-amber-500">*</span></label>
                   <input
                     type="number"
@@ -156,7 +156,7 @@ export default function AddCar() {
                   />
                 </div>
 
-                <div className="space-y-2 text-right">
+                <div className="space-y-2 text-end">
                   <label className="text-xs font-bold text-slate-300 dark:text-[#D6D6DB]">المدينة</label>
                   <CitySelect
                     value={city}
@@ -165,7 +165,7 @@ export default function AddCar() {
                   />
                 </div>
 
-                <div className="space-y-2 text-right">
+                <div className="space-y-2 text-end">
                   <label className="text-xs font-bold text-slate-300 dark:text-[#D6D6DB]">ناقل الحركة</label>
                   <select
                     value={transmission}
@@ -178,12 +178,12 @@ export default function AddCar() {
                 </div>
               </div>
 
-              <div className="space-y-2 text-right">
+              <div className="space-y-2 text-end">
                 <label className="text-xs font-bold text-slate-300 dark:text-[#D6D6DB]">صورة السيارة الرئيسية</label>
                 <AdvancedMediaUpload onImagesUploaded={(images) => { const first = images[0]; setImageUrl(first?.url ?? ''); setImageVerificationProof(first?.verificationProof ?? ''); }} />
               </div>
 
-              <div className="flex items-start gap-3 rounded-xl border border-slate-700 dark:border-[#48484D] bg-slate-950/70 dark:bg-[#111113]/70 p-4 text-right">
+              <div className="flex items-start gap-3 rounded-xl border border-slate-700 dark:border-[#48484D] bg-slate-950/70 dark:bg-[#111113]/70 p-4 text-end">
                 <Checkbox id="listing-legal-consent" checked={acceptedLegal} onCheckedChange={(value) => setAcceptedLegal(value === true)} className="mt-1 border-slate-500 data-[state=checked]:bg-amber-500 data-[state=checked]:text-slate-950" />
                 <label htmlFor="listing-legal-consent" className="text-xs leading-6 text-slate-300 dark:text-[#D6D6DB] cursor-pointer">
                   أوافق على الشروط والأحكام وسياسة الخصوصية الخاصين بـ ALTUSplace، وأقر بأن معلومات العرض وصوره أصلية ودقيقة.

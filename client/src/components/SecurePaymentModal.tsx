@@ -206,15 +206,15 @@ export function SecurePaymentModal({
             <div className="space-y-4">
               <p className="text-sm font-bold text-slate-300 dark:text-[#D6D6DB]">اختر طريقة الدفع</p>
               <div className="space-y-3">
-                <button onClick={() => { setPaymentMethod('cmi_card'); setStep('details'); }} className="w-full flex items-center gap-4 p-4 rounded-2xl border-2 border-amber-500 bg-amber-500/5 transition-all text-right">
+                <button onClick={() => { setPaymentMethod('cmi_card'); setStep('details'); }} className="w-full flex items-center gap-4 p-4 rounded-2xl border-2 border-amber-500 bg-amber-500/5 transition-all text-end">
                   <div className="bg-accent-clay-soft p-2.5 rounded-xl border border-accent-clay/30"><CreditCard className="w-5 h-5 text-accent-clay" /></div>
                   <div className="flex-1"><p className="font-bold text-sm">بطاقة بنكية (CMI)</p><p className="text-[11px] text-ink-secondary dark:text-[#B0B0B8]">Visa, Mastercard, CMI</p></div>
                 </button>
-                <button onClick={() => { setPaymentMethod('bank_transfer'); setStep('details'); }} className="w-full flex items-center gap-4 p-4 rounded-2xl border-2 border-slate-700 dark:border-[#48484D] hover:border-slate-600 bg-slate-900 dark:bg-[#1C1C1E] transition-all text-right">
+                <button onClick={() => { setPaymentMethod('bank_transfer'); setStep('details'); }} className="w-full flex items-center gap-4 p-4 rounded-2xl border-2 border-slate-700 dark:border-[#48484D] hover:border-slate-600 bg-slate-900 dark:bg-[#1C1C1E] transition-all text-end">
                   <div className="bg-emerald-500/10 p-2.5 rounded-xl border border-emerald-500/20"><Building2 className="w-5 h-5 text-emerald-400" /></div>
                   <div className="flex-1"><p className="font-bold text-sm">تحويل بنكي</p><p className="text-[11px] text-ink-secondary dark:text-[#B0B0B8]">تحويل مباشر إلى حساب الوكالة</p></div>
                 </button>
-                <button onClick={() => { setPaymentMethod('mobile_wallet'); setStep('details'); }} className="w-full flex items-center gap-4 p-4 rounded-2xl border-2 border-slate-700 dark:border-[#48484D] hover:border-slate-600 bg-slate-900 dark:bg-[#1C1C1E] transition-all text-right">
+                <button onClick={() => { setPaymentMethod('mobile_wallet'); setStep('details'); }} className="w-full flex items-center gap-4 p-4 rounded-2xl border-2 border-slate-700 dark:border-[#48484D] hover:border-slate-600 bg-slate-900 dark:bg-[#1C1C1E] transition-all text-end">
                   <div className="bg-purple-500/10 p-2.5 rounded-xl border border-purple-500/20"><Smartphone className="w-5 h-5 text-purple-400" /></div>
                   <div className="flex-1"><p className="font-bold text-sm">محفظة إلكترونية</p><p className="text-[11px] text-ink-secondary dark:text-[#B0B0B8]">Himti, Jumia Pay, Barid Cash</p></div>
                 </button>

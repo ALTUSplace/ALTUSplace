@@ -140,7 +140,7 @@ export default function ReviewsSection({ listingId, bookingId }: ReviewsSectionP
             <div>
               <label htmlFor="review-comment" className="mb-1 block text-sm font-medium">{t("reviewCommentLabel")}</label>
               <textarea id="review-comment" rows={4} value={newComment} onChange={(event) => setNewComment(event.target.value)} placeholder={t("reviewCommentPlaceholder")} className="w-full rounded-xl border border-border bg-background p-3 text-sm" minLength={10} maxLength={500} />
-              <p className={`mt-1 text-right text-[11px] ${trimmedLength >= 10 && trimmedLength <= 500 ? "text-emerald-600" : "text-muted-foreground"}`}>{trimmedLength} / 500</p>
+              <p className={`mt-1 text-end text-[11px] ${trimmedLength >= 10 && trimmedLength <= 500 ? "text-emerald-600" : "text-muted-foreground"}`}>{trimmedLength} / 500</p>
             </div>
             <Button type="submit" className="w-full font-bold" disabled={!canSubmit || createReview.isPending}>
               {createReview.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}

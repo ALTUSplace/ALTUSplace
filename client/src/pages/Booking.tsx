@@ -68,7 +68,7 @@ export default function BookingPage() {
   };
 
   if (listingQuery.isLoading) {
-    return <div className="min-h-screen flex items-center justify-center bg-background text-foreground"><Loader2 className="animate-spin mr-2" /> جاري التحقق من الإعلان...</div>;
+    return <div className="min-h-screen flex items-center justify-center bg-background text-foreground"><Loader2 className="animate-spin me-2" /> جاري التحقق من الإعلان...</div>;
   }
 
   // Missing or invalid listing ID — show friendly message before any query
@@ -87,7 +87,7 @@ export default function BookingPage() {
   }
 
   if (listingQuery.isLoading) {
-    return <div className="min-h-screen flex items-center justify-center bg-background text-foreground"><Loader2 className="animate-spin mr-2" /> جاري التحقق من الإعلان...</div>;
+    return <div className="min-h-screen flex items-center justify-center bg-background text-foreground"><Loader2 className="animate-spin me-2" /> جاري التحقق من الإعلان...</div>;
   }
 
   if (!listingQuery.data || listingQuery.isError) {

@@ -174,7 +174,7 @@ export default function ReviewDialog({
               maxLength={500}
               className="w-full rounded-xl border border-border bg-background p-3 text-sm"
             />
-            <p className={`mt-1 text-right text-[11px] ${trimmedLength >= 10 && trimmedLength <= 500 ? "text-emerald-600" : "text-muted-foreground"}`}>
+            <p className={`mt-1 text-end text-[11px] ${trimmedLength >= 10 && trimmedLength <= 500 ? "text-emerald-600" : "text-muted-foreground"}`}>
               {trimmedLength} / 500
             </p>
           </div>
@@ -184,7 +184,7 @@ export default function ReviewDialog({
               {t("reviewCancel")}
             </Button>
             <Button type="submit" disabled={!canSubmit}>
-              {createReview.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              {createReview.isPending ? <Loader2 className="me-2 h-4 w-4 animate-spin" /> : null}
               {t("reviewSubmit")}
             </Button>
           </DialogFooter>

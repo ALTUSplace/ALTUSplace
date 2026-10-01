@@ -307,7 +307,7 @@ export default function CommentSection({ listingId }: { listingId?: number }) {
             onClick={() => setCursor(commentsQuery.data.nextCursor)}
             disabled={commentsQuery.isLoading}
           >
-            {commentsQuery.isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : null}
+            {commentsQuery.isLoading ? <Loader2 className="h-4 w-4 animate-spin me-1.5" /> : null}
             {t("loadMoreComments")}
           </Button>
         </div>

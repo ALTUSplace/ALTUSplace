@@ -298,7 +298,9 @@ export default function Home() {
               <p className="text-white/70 text-sm leading-relaxed">{t('bentoFleetDescription')}</p>
               <span className="b2-press corner-cut-sm inline-flex items-center gap-2 rounded-sm bg-accent-clay px-5 py-2.5 text-xs font-extrabold text-white transition-colors group-hover:bg-accent-clay-hover shadow-[var(--shadow-clay)]">
                 {t('browseCarsAvailable')}
-                <ArrowRight className="w-4 h-4" />
+                {/* "forward" affordance: the glyph has to point the way the reader
+                    is about to travel, which is leftward under `dir="rtl"`. */}
+                <ArrowRight className="w-4 h-4 rtl:-scale-x-100" />
               </span>
             </div>
             <div className="relative z-10 mt-8 max-w-md self-start lg:self-auto lg:ms-auto lg:mt-0">
@@ -401,7 +403,7 @@ export default function Home() {
             <Link href="/blog">
               <Button variant="outline" className="b2-press corner-cut-sm rounded-sm border border-border-default bg-bg-surface text-ink-primary hover:border-accent-clay hover:text-accent-clay text-xs font-bold gap-2 shadow-xs">
                 <span>{t('browseAllArticles')}</span>
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight className="w-4 h-4 rtl:-scale-x-100" />
               </Button>
             </Link>
           </div>
@@ -435,7 +437,7 @@ export default function Home() {
                     <p className="mt-2 text-xs text-ink-secondary leading-relaxed line-clamp-2">{post.desc}</p>
                   </div>
                   <span className="link-underline text-xs font-bold text-ink-primary flex items-center gap-1 pt-2 w-fit">
-                    {t('readMore')} <ArrowRight className="w-3 h-3" />
+                    {t('readMore')} <ArrowRight className="w-3 h-3 rtl:-scale-x-100" />
                   </span>
                 </div>
               </Link>

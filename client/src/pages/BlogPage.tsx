@@ -102,7 +102,7 @@ export default function BlogPage() {
             <input 
               type="text" 
               placeholder="ابحث في المقالات والأخبار..." 
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 pr-10 pl-4 text-xs focus:outline-none focus:border-[#1C1C1E]"
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 pe-10 ps-4 text-xs focus:outline-none focus:border-[#1C1C1E]"
             />
           </div>
           <div className="flex gap-2 w-full md:w-auto overflow-x-auto">

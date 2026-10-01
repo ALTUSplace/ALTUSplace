@@ -147,7 +147,7 @@ export default function Profile() {
                 <span className="text-xs text-muted-foreground">يُدرج في عقد الكراء عند إنشاء العقد.</span>
               </label>
               <div className="md:col-span-2 flex justify-end">
-                <Button type="submit" disabled={profileMutation.isPending} className="bg-amber-500 text-slate-950 hover:bg-amber-400 font-bold"><Save className="w-4 h-4 ml-2" /> {profileMutation.isPending ? "جارٍ الحفظ..." : "حفظ بيانات الحساب"}</Button>
+                <Button type="submit" disabled={profileMutation.isPending} className="bg-amber-500 text-slate-950 hover:bg-amber-400 font-bold"><Save className="w-4 h-4 ms-2" /> {profileMutation.isPending ? "جارٍ الحفظ..." : "حفظ بيانات الحساب"}</Button>
               </div>
             </form>
             <div className="border-t border-border pt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -173,7 +173,7 @@ export default function Profile() {
                 </div>
                 <div className="flex items-center gap-3">
                   <strong className="text-amber-600">{money(booking.totalPrice)}</strong>
-                  {invoice && <Button type="button" size="sm" variant="outline" onClick={() => downloadInvoice(invoice)}><Download className="w-4 h-4 ml-1" /> الفاتورة</Button>}
+                  {invoice && <Button type="button" size="sm" variant="outline" onClick={() => downloadInvoice(invoice)}><Download className="w-4 h-4 ms-1" /> الفاتورة</Button>}
                 </div>
               </div>;
             }) : <EmptyState text="لا توجد حجوزات مرتبطة بهذا الحساب بعد." />}
@@ -189,7 +189,7 @@ export default function Profile() {
                 <p className="text-sm">حجز #{invoice.bookingId} · {invoice.listingTitle || "إعلان تأجير"}</p>
                 <p className="text-xs text-muted-foreground mt-1">TVA {invoice.vatRateBasisPoints / 100}% · الدفع: {statusLabel[invoice.paymentStatus] || invoice.paymentStatus} · {date(invoice.issuedAt)}</p>
               </div>
-              <div className="flex items-center gap-4"><strong className="text-lg">{money(invoice.total, invoice.currency)}</strong><Button type="button" className="bg-amber-500 text-slate-950 hover:bg-amber-400 font-bold" onClick={() => downloadInvoice(invoice)}><Download className="w-4 h-4 ml-1" /> تنزيل PDF</Button></div>
+              <div className="flex items-center gap-4"><strong className="text-lg">{money(invoice.total, invoice.currency)}</strong><Button type="button" className="bg-amber-500 text-slate-950 hover:bg-amber-400 font-bold" onClick={() => downloadInvoice(invoice)}><Download className="w-4 h-4 ms-1" /> تنزيل PDF</Button></div>
             </div>) : <EmptyState text="لا توجد فواتير لهذا الحساب بعد. ستظهر هنا بعد تسجيل الدفع." />}
           </section>
         )}

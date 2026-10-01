@@ -142,7 +142,12 @@ function CarouselContent({ className, ...props }: React.ComponentProps<"div">) {
       <div
         className={cn(
           "flex",
-          orientation === "horizontal" ? "-ml-4" : "-mt-4 flex-col",
+          // Logical to match `CarouselItem`'s `ps-4` below. This negative margin
+          // and that padding are a cancelling pair: each offsets the other by
+          // 1rem to bleed the first slide past the container edge. Keeping the
+          // margin physical while the padding is logical means the two stop
+          // cancelling under `dir="rtl"` and the gutter lands on the wrong edge.
+          orientation === "horizontal" ? "-ms-4" : "-mt-4 flex-col",
           className
         )}
         {...props}
@@ -161,7 +166,7 @@ function CarouselItem({ className, ...props }: React.ComponentProps<"div">) {
       data-slot="carousel-item"
       className={cn(
         "min-w-0 shrink-0 grow-0 basis-full",
-        orientation === "horizontal" ? "pl-4" : "pt-4",
+        orientation === "horizontal" ? "ps-4" : "pt-4",
         className
       )}
       {...props}

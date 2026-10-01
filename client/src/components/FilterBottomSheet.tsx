@@ -30,7 +30,7 @@ export default function FilterBottomSheet({ onApplyFilters }: { onApplyFilters?:
         </Button>
       </SheetTrigger>
       <SheetContent side="bottom" className="rounded-t-3xl max-h-[85vh] overflow-y-auto px-6 py-6" dir="rtl">
-        <SheetHeader className="text-right pb-4 border-b border-border">
+        <SheetHeader className="text-end pb-4 border-b border-border">
           <SheetTitle className="text-xl font-bold flex items-center gap-2">
             <SlidersHorizontal className="w-5 h-5 text-primary" /> خيارات التصفية والبحث
           </SheetTitle>

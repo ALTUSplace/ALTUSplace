@@ -70,7 +70,7 @@ export const DigitalContractModal: React.FC<ContractProps> = ({
               <p className="text-sm text-ink-secondary dark:text-[#B0B0B8] print:text-slate-600">رقم العقد: {bookingId}</p>
               <p className="text-xs text-amber-500/80">تاريخ الإصدار: {new Date().toLocaleDateString('ar-MA')}</p>
             </div>
-            <div className="text-left">
+            <div className="text-start">
               <span className="px-3 py-1 bg-amber-500/20 text-amber-400 text-xs font-semibold rounded-full border border-amber-500/30">
                 مصدق من الوسيط ALTUSplace
               </span>

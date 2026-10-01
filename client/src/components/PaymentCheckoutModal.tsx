@@ -380,7 +380,9 @@ export function PaymentCheckoutModal({
         return (
           <div className="flex items-center">
             <div className="w-4 h-4 rounded-full bg-red-500 opacity-80" />
-            <div className="w-4 h-4 rounded-full bg-yellow-500 opacity-80 -ml-2" />
+            {/* Overlaps the red disc to read as Mastercard's two circles. Logical
+                so the overlap follows the inline axis under `dir="rtl"`. */}
+            <div className="w-4 h-4 rounded-full bg-yellow-500 opacity-80 -ms-2" />
           </div>
         );
       case 'amex':
@@ -473,7 +475,7 @@ export function PaymentCheckoutModal({
               <p className="text-sm font-bold text-slate-300 dark:text-[#D6D6DB]">اختر طريقة الدفع</p>
               <div className="space-y-3">
                 {methodButtons.map((m) => (
-                  <button key={m.key} onClick={() => { setPaymentMethod(m.key); setStep('details'); }} className={`w-full flex items-center gap-4 p-4 rounded-2xl border-2 text-right transition-all ${m.accent}`}>
+                  <button key={m.key} onClick={() => { setPaymentMethod(m.key); setStep('details'); }} className={`w-full flex items-center gap-4 p-4 rounded-2xl border-2 text-end transition-all ${m.accent}`}>
                     <div className={cn('p-2.5 rounded-xl border', m.badge === 'عالمي' ? 'bg-blue-500/10 border-blue-500/20' : 'bg-slate-900/60 dark:bg-[#1C1C1E]/60 border-slate-800 dark:border-[#2C2C2E]')}>{m.icon}</div>
                     <div className="flex-1">
                       <p className="font-bold text-sm">{m.title}</p>

@@ -78,7 +78,7 @@ export const DisasterRecoveryTab: React.FC = () => {
             variant="outline"
             className="bg-slate-800 dark:bg-[#2C2C2E] border-slate-700 dark:border-[#48484D] text-slate-200 dark:text-[#E8E8EB] hover:bg-slate-700 dark:hover:bg-[#48484D]"
           >
-            <FileSpreadsheet className="w-4 h-4 ml-2 text-emerald-400" />
+            <FileSpreadsheet className="w-4 h-4 ms-2 text-emerald-400" />
             تصدير السجلات (CSV)
           </Button>
           <Button
@@ -86,7 +86,7 @@ export const DisasterRecoveryTab: React.FC = () => {
             disabled={isCreating}
             className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold shadow-lg"
           >
-            {isCreating ? <RefreshCw className="w-4 h-4 ml-2 animate-spin" /> : <HardDrive className="w-4 h-4 ml-2" />}
+            {isCreating ? <RefreshCw className="w-4 h-4 ms-2 animate-spin" /> : <HardDrive className="w-4 h-4 ms-2" />}
             {isCreating ? 'جاري إنشاء النسخة...' : 'إنشاء نسخة احتياطية الآن'}
           </Button>
         </div>
@@ -147,7 +147,7 @@ export const DisasterRecoveryTab: React.FC = () => {
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
-            <table className="w-full text-right border-collapse">
+            <table className="w-full text-end border-collapse">
               <thead>
                 <tr className="border-b border-slate-800 dark:border-[#2C2C2E] text-xs text-ink-secondary dark:text-[#B0B0B8]">
                   <th className="py-3 px-4">اسم الملف</th>
@@ -181,7 +181,7 @@ export const DisasterRecoveryTab: React.FC = () => {
                         className="bg-slate-800 dark:bg-[#2C2C2E] border-slate-700 dark:border-[#48484D] hover:bg-slate-700 dark:hover:bg-[#48484D] text-slate-200 dark:text-[#E8E8EB] text-xs"
                         onClick={() => toast.success(`جاري تحميل النسخة الاحتياطية: ${bk.name}`)}
                       >
-                        <Download className="w-3.5 h-3.5 ml-1" />
+                        <Download className="w-3.5 h-3.5 ms-1" />
                         تحميل
                       </Button>
                       <Button
@@ -190,7 +190,7 @@ export const DisasterRecoveryTab: React.FC = () => {
                         disabled={isRestoring}
                         onClick={() => handleRestore(bk.name)}
                       >
-                        <RefreshCw className="w-3.5 h-3.5 ml-1" />
+                        <RefreshCw className="w-3.5 h-3.5 ms-1" />
                         استعادة
                       </Button>
                     </td>
@@ -243,12 +243,12 @@ export const DisasterRecoveryTab: React.FC = () => {
               >
                 {isExporting ? (
                   <>
-                    <Loader2 className="w-4 h-4 ml-2 animate-spin" />
+                    <Loader2 className="w-4 h-4 ms-2 animate-spin" />
                     جاري التصدير...
                   </>
                 ) : (
                   <>
-                    <Download className="w-4 h-4 ml-2" />
+                    <Download className="w-4 h-4 ms-2" />
                     تأكيد وتحميل الملف
                   </>
                 )}

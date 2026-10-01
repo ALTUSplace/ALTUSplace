@@ -83,7 +83,7 @@ export default function PartnerWithUs() {
               <Link href={path.href} className="mt-auto pt-6">
                 <Button className="w-full bg-brand-panel text-brand-panel-ink hover:bg-brand-panel-alt">
                   {path.cta}
-                  <ChevronLeft className="mr-2 h-4 w-4" />
+                  <ChevronLeft className="me-2 h-4 w-4" />
                 </Button>
               </Link>
             </div>

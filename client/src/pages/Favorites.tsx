@@ -88,7 +88,7 @@ export default function Favorites() {
               {t(type === 'all' ? 'favoritesTypeAll' : type === 'car' ? 'favoritesTypeCars' : 'favoritesTypeProperties')}
             </button>
           ))}
-          <span className="mr-auto text-sm font-bold text-slate-500">{rows.length}</span>
+          <span className="me-auto text-sm font-bold text-slate-500">{rows.length}</span>
         </div>
 
         {isLoading && favorites === undefined && (

@@ -125,7 +125,7 @@ export default function SuperAdminDashboard() {
   return (
     <div dir="rtl" className="min-h-screen bg-[#0b1220] text-slate-100 dark:text-[#F1F1F3]">
       <div className="mx-auto flex max-w-[1500px]">
-        <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-l border-slate-800 dark:border-[#2C2C2E] bg-[#0d1728] p-4 md:flex">
+        <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-s border-slate-800 dark:border-[#2C2C2E] bg-[#0d1728] p-4 md:flex">
           <div className="mb-5 flex items-center gap-2 px-2">
             <Gauge className="h-5 w-5 text-cyan-400" />
             <div>
@@ -149,7 +149,7 @@ export default function SuperAdminDashboard() {
                   <Icon className="h-4 w-4" />
                   {item.label}
                   {item.key === 'moderation' && (queue.data?.length ?? 0) > 0 && (
-                    <Badge variant="destructive" className="mr-auto">{queue.data!.length}</Badge>
+                    <Badge variant="destructive" className="me-auto">{queue.data!.length}</Badge>
                   )}
                 </button>
               );
@@ -179,7 +179,7 @@ export default function SuperAdminDashboard() {
                 </div>
                 <div className="flex items-center gap-2">
                   <Button variant="outline" className="border-slate-700 dark:border-[#48484D] bg-transparent text-slate-200 dark:text-[#E8E8EB] hover:bg-slate-800 dark:hover:bg-[#2C2C2E]" onClick={refresh}>
-                    <RefreshCw className="ml-2 h-4 w-4" />
+                    <RefreshCw className="ms-2 h-4 w-4" />
                     تحديث
                   </Button>
                   <Link href="/admin">
@@ -305,7 +305,7 @@ function OverviewSection({ data, loading, onGoModeration }: {
               className="mt-3 w-full bg-slate-700 dark:bg-[#48484D] text-white hover:bg-slate-600"
               onClick={onGoModeration}
             >
-              <ListChecks className="ml-1.5 h-3.5 w-3.5" />
+              <ListChecks className="ms-1.5 h-3.5 w-3.5" />
               فتح قائمة المراجعة
             </Button>
           </CardContent>
@@ -397,7 +397,7 @@ function ModerationSection({ rows, loading, onDecision }: {
                   className="bg-emerald-600 font-bold text-white hover:bg-emerald-500"
                   onClick={() => onDecision({ listingId: row.id, action: 'approve' })}
                 >
-                  <Check className="ml-1 h-4 w-4" />
+                  <Check className="ms-1 h-4 w-4" />
                   نشر
                 </Button>
                 <Button
@@ -406,7 +406,7 @@ function ModerationSection({ rows, loading, onDecision }: {
                   className="border-rose-500/40 text-rose-300 hover:bg-rose-500/10"
                   onClick={() => { setRejecting(row.id); setReason(''); }}
                 >
-                  <X className="ml-1 h-4 w-4" />
+                  <X className="ms-1 h-4 w-4" />
                   رفض
                 </Button>
               </div>
@@ -489,7 +489,7 @@ function UsersSection({ rows, loading, query, onQuery, role, onRole, status, onS
               value={query}
               onChange={(e) => onQuery(e.target.value)}
               placeholder="بحث بالاسم، البريد، الوكالة، أو السجل التجاري..."
-              className="pr-9 text-slate-200 dark:text-[#E8E8EB] placeholder:text-slate-500"
+              className="pe-9 text-slate-200 dark:text-[#E8E8EB] placeholder:text-slate-500"
             />
           </div>
           <select
@@ -525,7 +525,7 @@ function UsersSection({ rows, loading, query, onQuery, role, onRole, status, onS
                       <p className="truncate font-bold text-white">{u.name || 'بدون اسم'}</p>
                       <Badge variant="outline">{roleLabel(u.role)}</Badge>
                       {u.kycVerificationStatus === 'verified' && (
-                        <Badge className="bg-emerald-500/15 text-emerald-300"><ShieldCheck className="ml-1 h-3 w-3" />توثيق</Badge>
+                        <Badge className="bg-emerald-500/15 text-emerald-300"><ShieldCheck className="ms-1 h-3 w-3" />توثيق</Badge>
                       )}
                     </div>
                     <p className="mt-1 truncate text-xs text-slate-500">
@@ -561,7 +561,7 @@ function UsersSection({ rows, loading, query, onQuery, role, onRole, status, onS
                         className="border-slate-700 dark:border-[#48484D] text-slate-300 dark:text-[#D6D6DB] hover:bg-slate-800 dark:hover:bg-[#2C2C2E]"
                         onClick={() => onSetStatus(u.id, u.accountStatus === 'suspended' ? 'active' : 'suspended')}
                       >
-                        {u.accountStatus === 'suspended' ? <><Check className="ml-1 h-3 w-3" />تفعيل</> : <><Ban className="ml-1 h-3 w-3" />إيقاف</>}
+                        {u.accountStatus === 'suspended' ? <><Check className="ms-1 h-3 w-3" />تفعيل</> : <><Ban className="ms-1 h-3 w-3" />إيقاف</>}
                       </Button>
                     )}
                     {u.accountStatus === 'active' && (
@@ -571,7 +571,7 @@ function UsersSection({ rows, loading, query, onQuery, role, onRole, status, onS
                         className="border-rose-500/40 text-rose-300 hover:bg-rose-500/10"
                         onClick={() => onSetStatus(u.id, 'banned')}
                       >
-                        <Ban className="ml-1 h-3 w-3" />حظر
+                        <Ban className="ms-1 h-3 w-3" />حظر
                       </Button>
                     )}
                   </div>
@@ -660,7 +660,7 @@ function HealthSection({ data, loading, onRefresh }: {
                 آخر فحص: <span className="font-mono text-xs text-slate-500">{data?.timestamp ? new Date(data.timestamp).toLocaleString('fr-MA') : '—'}</span>
               </p>
               <Button size="sm" variant="outline" className="border-slate-700 dark:border-[#48484D] text-slate-200 dark:text-[#E8E8EB] hover:bg-slate-800 dark:hover:bg-[#2C2C2E]" onClick={onRefresh}>
-                <RefreshCw className="ml-1.5 h-3.5 w-3.5" />
+                <RefreshCw className="ms-1.5 h-3.5 w-3.5" />
                 إعادة الفحص
               </Button>
             </div>

@@ -59,7 +59,7 @@ export function CMIPaymentModal({ isOpen, onClose, onSuccess, amount }: CMIPayme
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-1.5 text-right">
+          <div className="space-y-1.5 text-end">
             <label className="text-xs font-bold text-slate-300 dark:text-[#D6D6DB]">اسم حامل البطاقة</label>
             <input
               type="text"
@@ -71,7 +71,7 @@ export function CMIPaymentModal({ isOpen, onClose, onSuccess, amount }: CMIPayme
             />
           </div>
 
-          <div className="space-y-1.5 text-right">
+          <div className="space-y-1.5 text-end">
             <label className="text-xs font-bold text-slate-300 dark:text-[#D6D6DB]">رقم البطاقة البنكية (16 رقم)</label>
             <input
               type="text"
@@ -85,7 +85,7 @@ export function CMIPaymentModal({ isOpen, onClose, onSuccess, amount }: CMIPayme
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5 text-right">
+            <div className="space-y-1.5 text-end">
               <label className="text-xs font-bold text-slate-300 dark:text-[#D6D6DB]">تاريخ الانتهاء</label>
               <input
                 type="text"
@@ -98,7 +98,7 @@ export function CMIPaymentModal({ isOpen, onClose, onSuccess, amount }: CMIPayme
               />
             </div>
 
-            <div className="space-y-1.5 text-right">
+            <div className="space-y-1.5 text-end">
               <label className="text-xs font-bold text-slate-300 dark:text-[#D6D6DB]">رمز التحقق (CVV)</label>
               <input
                 type="password"

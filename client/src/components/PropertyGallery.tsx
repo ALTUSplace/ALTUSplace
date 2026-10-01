@@ -6,13 +6,13 @@
  * which pushed the description far down the page; the carousel keeps the gallery
  * to a single fixed-height band so the vertical order stays predictable.
  *
- * RTL: the shared shadcn `Carousel` wrapper hardcodes physical offsets
- * (`CarouselContent` → `-ml-4`, `CarouselItem` → `pl-4`). Under `dir="rtl"`
- * those land on the wrong edge and show as a lopsided gutter, so both are
- * overridden to zero here and the slide padding is left to logical properties
- * instead. Embla is put in `"rtl"` mode so `scrollPrev`/`scrollNext` move the
- * slides the way an RTL reader expects, and the arrow glyphs are swapped to
- * match — the arrow direction must never be assumed to be constant.
+ * RTL: the shared shadcn `Carousel` wrapper pairs `CarouselContent` → `-ms-4`
+ * with `CarouselItem` → `ps-4`, a 1rem gutter that bleeds the first slide past
+ * the container edge. Both are logical, so it mirrors correctly; here both are
+ * overridden to zero because one slide fills the viewport anyway. Embla is put
+ * in `"rtl"` mode so `scrollPrev`/`scrollNext` move the slides the way an RTL
+ * reader expects, and the arrow glyphs are swapped to match — the arrow
+ * direction must never be assumed to be constant.
  */
 import { useCallback, useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight, Images } from "lucide-react";
@@ -91,13 +91,14 @@ export function PropertyGallery({
         opts={{ loop: hasMultiple, align: "start", direction: isRtl ? "rtl" : "ltr" }}
         setApi={setApi}
         aria-label={title}
-        // Overrides the wrapper's physical `-ml-4` / `pl-4`, which mis-place the
-        // gutter under RTL. One slide fills the viewport, so no gutter is needed.
+        // Overrides the wrapper's `-ms-4` / `ps-4` gutter, which would otherwise
+        // add a 1rem inset. One slide fills the viewport, so no gutter is needed.
+        // Both are logical, so a single override works in either direction.
         className="rounded-3xl"
       >
-        <CarouselContent className="-ml-0">
+        <CarouselContent className="-ms-0">
           {images.map((src, index) => (
-            <CarouselItem key={`${src}-${index}`} className="pl-0">
+            <CarouselItem key={`${src}-${index}`} className="ps-0">
               <div className="relative aspect-[16/9] w-full overflow-hidden rounded-3xl bg-bg-muted sm:aspect-[2/1]">
                 <OptimizedImage
                   src={src}

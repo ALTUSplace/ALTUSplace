@@ -463,7 +463,7 @@ export default function CarDetails() {
               <button
                 type="button"
                 onClick={() => setIncludeInsurance((prev) => !prev)}
-                className={`w-full flex items-center justify-between gap-3 p-3.5 rounded-2xl border transition-all text-right ${
+                className={`w-full flex items-center justify-between gap-3 p-3.5 rounded-2xl border transition-all text-end ${
                   includeInsurance ? 'border-amber-500/70 bg-amber-500/10' : 'border-slate-800 hover:border-slate-700'
                 }`}
               >
@@ -481,7 +481,7 @@ export default function CarDetails() {
               <button
                 type="button"
                 onClick={() => setIncludeBabySeat((prev) => !prev)}
-                className={`w-full flex items-center justify-between gap-3 p-3.5 rounded-2xl border transition-all text-right ${
+                className={`w-full flex items-center justify-between gap-3 p-3.5 rounded-2xl border transition-all text-end ${
                   includeBabySeat ? 'border-amber-500/70 bg-amber-500/10' : 'border-slate-800 hover:border-slate-700'
                 }`}
               >
