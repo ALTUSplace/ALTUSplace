@@ -902,7 +902,7 @@ export const appRouter = router({
         db.select({ value: count() }).from(users).where(eq(users.role, 'renter')),
         db.select({ value: count() }).from(users).where(and(eq(users.role, 'owner'), eq(users.accountStatus, 'active'))),
         db.select({ value: count() }).from(listings),
-        db.select({ value: count() }).from(listings).where(eq(listings.status, 'Published')),
+        db.select({ value: count() }).from(listings).where(eq(listings.status, 'Pending')),
         db.select({ value: count() }).from(bookings),
         db.select({ gross: bookings.totalPrice, fees: bookings.commissionFee, createdAt: bookings.createdAt }).from(bookings).where(eq(bookings.status, 'Confirmed')),
         db.select({ createdAt: users.createdAt }).from(users).orderBy(desc(users.createdAt)).limit(100),
@@ -1439,7 +1439,7 @@ export const appRouter = router({
           if (before.status === 'Rejected' || before.status === 'Published') {
             throw new TRPCError({ code: 'CONFLICT', message: `الإعلان محسوم بالفعل (${before.status}).` });
           }
-          const nextStatus = input.action === 'approve' ? 'Published' : 'Rejected';
+          const nextStatus = input.action === 'approve' ? 'Approved' : 'Rejected';
           await db.update(listings).set({ status: nextStatus }).where(eq(listings.id, input.listingId));
           await writeAuditLog({
             actorId: ctx.user!.id, action: `listing.${input.action === 'approve' ? 'approved' : 'rejected'}`,
@@ -2096,27 +2096,27 @@ export const appRouter = router({
           pricePerMonth: input.pricePerMonth,
           fuelType: input.fuelType ?? undefined,
           transmission: input.transmission ?? undefined,
-          status: "Published",
+          status: "Pending",
         }).returning({ insertId: listings.id });
         const listingId = Number(inserted.insertId);
-        const notificationTitle = "تم نشر إعلانك / Annonce publiée";
-        const notificationMessage = `تم نشر إعلان «${input.title}» مباشرة بعد اجتياز فحص الصور.\n\nL'annonce «${input.title}» est publiée après validation automatique des images.`;
+        const notificationTitle = "تم استلام إعلانك للمراجعة / Annonce reçue pour examen";
+        const notificationMessage = `تم استلام إعلان «${input.title}» وهو الآن قيد المراجعة. سيتم إشعارك فور نشره.\n\nL'annonce «${input.title}» est en cours d'examen. Vous serez notifié dès sa publication.`;
         await safeNotifyUser({
           userId: ctx.user!.id,
-          type: "listing_approved",
+          type: "system",
           title: notificationTitle,
           message: notificationMessage,
           href: "/host",
           entityType: "listing",
           entityId: listingId,
-          dedupeKey: `listing-approved:${ctx.user!.id}:${listingId}`,
+          dedupeKey: `listing-submitted:${ctx.user!.id}:${listingId}`,
           email: ctx.user!.email ? { to: ctx.user!.email, subject: notificationTitle, ...buildEmailContent(notificationTitle, notificationMessage, "/host") } : undefined,
         });
         // Notify the admin inbox + operator accounts about the new submission.
         await alertAdmins({
           type: "system",
           title: "إعلان جديد / Nouvelle annonce",
-          message: `أضاف ${ctx.user!.name ?? "شريك"} إعلان «${input.title}» (${input.city}) للمراجعة والنشر.`,
+          message: `أضاف ${ctx.user!.name ?? "شريك"} إعلان «${input.title}» (${input.city}) للمراجعة.`,
           href: "/admin",
           entityType: "listing",
           entityId: listingId,
@@ -2155,7 +2155,13 @@ export const appRouter = router({
         if (fields.imageUrl !== undefined && (!imageVerificationProof || !verifyImageVerificationProof({ proof: imageVerificationProof, ownerId: ctx.user!.id, url: fields.imageUrl }))) {
           throw new TRPCError({ code: "BAD_REQUEST", message: "يجب إعادة رفع الصورة عبر أداة الفحص الآمن قبل تعديلها." });
         }
-        const nextStatus = owned[0].status === "Rejected" ? "Rejected" : "Published";
+        // A Pending listing must stay Pending when its owner edits it: promoting it to
+        // "Published" here would let any single edit bypass the moderation review that
+        // listings.create deliberately routes the submission through. Only the owner
+        // (or an admin via admin.moderateListing) may move a listing to Published.
+        const nextStatus = owned[0].status === "Rejected" ? "Rejected"
+          : owned[0].status === "Pending" ? "Pending"
+          : "Published";
         await db.update(listings).set({ ...fields, ...(amenities ? { amenities: amenities.join(',') } : {}), status: nextStatus }).where(eq(listings.id, id));
         const priceChanged = fields.pricePerDay !== undefined && fields.pricePerDay !== owned[0].pricePerDay;
         await writeAuditLog({
