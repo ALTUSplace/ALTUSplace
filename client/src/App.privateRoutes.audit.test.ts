@@ -54,6 +54,41 @@ describe("public routes stay public", () => {
   });
 });
 
+/**
+ * The moderation queue reads and writes pending work across four tables. Its
+ * procedures are `adminProcedure`, so server-side is the real boundary; these
+ * assertions exist so the page cannot be silently unwrapped to the default
+ * batched trpc client, which stalls against Supabase's transaction-mode pooler
+ * once one request carries 3+ procedures.
+ */
+describe("admin-tier routes", () => {
+  it("/admin/moderation requires the admin role", () => {
+    const block = routeBlock("/admin/moderation");
+    expect(block).toContain('area="admin"');
+    expect(block).toContain("AdminModerationPage");
+    expect(block).not.toContain("component={");
+  });
+
+  it("/admin/moderation uses the unbatched trpc provider", () => {
+    expect(routeBlock("/admin/moderation")).toContain("TrpcUnbatchedProvider");
+  });
+
+  it.each([
+    ["/admin", "AdminDashboardPage"],
+    ["/admin/moderation", "AdminModerationPage"],
+  ])("%s stays inside the unbatched trpc provider", (path, page) => {
+    const block = routeBlock(path);
+    expect(block).toContain("TrpcUnbatchedProvider");
+    expect(block).toContain(page);
+  });
+
+  it("does not place the queue behind the superadmin tier", () => {
+    // adminProcedure, not superAdminProcedure: an ordinary admin must reach it,
+    // and a regression to area="superadmin" would lock them out.
+    expect(routeBlock("/admin/moderation")).not.toContain('area="superadmin"');
+  });
+});
+
 describe("AccessGuard areas", () => {
   it("exposes an 'authenticated' tier for role-agnostic private routes", () => {
     expect(appSource).toContain("area: 'authenticated' | 'admin' | 'superadmin' | 'host'");

@@ -148,6 +148,13 @@
       "when": 1791500000000,
       "tag": "0022_add_core_fk_constraints",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1791600000000,
+      "tag": "0023_modERATION_queue_indexes",
+      "breakpoints": true
     }
   ]
 }
