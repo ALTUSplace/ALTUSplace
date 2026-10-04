@@ -1065,15 +1065,79 @@ export const appRouter = router({
       return db.select({ id: listings.id, title: listings.title, description: listings.description, category: listings.category, status: listings.status, isFeatured: listings.isFeatured, pricePerDay: listings.pricePerDay, city: listings.city, imageUrl: listings.imageUrl, lat: listings.lat, lng: listings.lng, fuelType: listings.fuelType, transmission: listings.transmission, rooms: listings.rooms, officeType: listings.officeType, rentalPeriod: listings.rentalPeriod, amenities: listings.amenities, propertyType: listings.propertyType, pricePerMonth: listings.pricePerMonth, ownerId: listings.ownerId, ownerName: users.name, createdAt: listings.createdAt })
         .from(listings).leftJoin(users, eq(listings.ownerId, users.id)).orderBy(desc(listings.createdAt)).limit(200);
     }),
+    // Single pending-work queue across the four tables an admin must act on.
+    //
+    // `counts` comes from count() over each full pending set and is never derived from
+    // `items`. That is the whole point: AdminDashboard today computes its pending
+    // badges client-side from lists the server already capped (.limit(200), then
+    // .slice(0, 20) for KYC), so a pending row can be invisible with nothing on
+    // screen saying so. Here a truncated page cannot under-report.
+    //
+    // Ordering is oldest-first, deliberately the opposite of every other list in this
+    // file: a moderation queue sorted newest-first starves old submissions forever.
+    // Each kind is fetched up to `limit` and the merge is then sliced back to
+    // `limit`, so the cap is global rather than per-kind.
+    moderationQueue: adminProcedure
+      .input(z.object({
+        kinds: z.array(z.enum(['listing', 'kyc', 'partner', 'refund'])).max(4).optional(),
+        limit: z.number().int().min(1).max(100).default(25),
+      }))
+      .query(async ({ input }) => {
+        const all = ['listing', 'kyc', 'partner', 'refund'] as const;
+        const kinds = input.kinds?.length ? input.kinds : [...all];
+        const wants = (kind: (typeof all)[number]) => kinds.includes(kind);
+        const db = await getDb();
+        // A bare [] would let the client read "database unreachable" as "queue empty".
+        if (!db) return { counts: { listing: 0, kyc: 0, partner: 0, refund: 0 }, items: [] };
+
+        const limit = input.limit;
+        const [listingCount, kycCount, partnerCount, refundCount, listingRows, kycRows, partnerRows, refundRows] = await Promise.all([
+          db.select({ value: count() }).from(listings).where(eq(listings.status, 'Pending')),
+          db.select({ value: count() }).from(kycSubmissions).where(eq(kycSubmissions.status, 'Pending')),
+          db.select({ value: count() }).from(partnerApplications).where(eq(partnerApplications.status, 'pending')),
+          db.select({ value: count() }).from(refundRequests).where(eq(refundRequests.status, 'Pending')),
+          db.select({ id: listings.id, title: listings.title, category: listings.category, city: listings.city, ownerId: listings.ownerId, ownerName: users.name, pricePerDay: listings.pricePerDay, imageUrl: listings.imageUrl, submittedAt: listings.createdAt })
+            .from(listings).leftJoin(users, eq(listings.ownerId, users.id)).where(eq(listings.status, 'Pending')).orderBy(asc(listings.createdAt)).limit(limit),
+          db.select({ id: kycSubmissions.id, userId: kycSubmissions.userId, userName: users.name, documentType: kycSubmissions.documentType, applicantRole: kycSubmissions.applicantRole, documentKey: kycSubmissions.documentKey, originalFileName: kycSubmissions.originalFileName, documentNumberMasked: kycSubmissions.documentNumberMasked, submittedAt: kycSubmissions.submittedAt })
+            .from(kycSubmissions).leftJoin(users, eq(kycSubmissions.userId, users.id)).where(eq(kycSubmissions.status, 'Pending')).orderBy(asc(kycSubmissions.submittedAt)).limit(limit),
+          db.select({ id: partnerApplications.id, agencyName: partnerApplications.agencyName, city: partnerApplications.city, contactPerson: partnerApplications.contactPerson, email: partnerApplications.email, phone: partnerApplications.phone, type: partnerApplications.type, description: partnerApplications.description, logoUrl: partnerApplications.logoUrl, galleryUrls: partnerApplications.galleryUrls, submittedAt: partnerApplications.createdAt })
+            .from(partnerApplications).where(eq(partnerApplications.status, 'pending')).orderBy(asc(partnerApplications.createdAt)).limit(limit),
+          db.select({ id: refundRequests.id, bookingId: refundRequests.bookingId, requesterName: users.name, amount: refundRequests.amount, reason: refundRequests.reason, submittedAt: refundRequests.createdAt })
+            .from(refundRequests).leftJoin(users, eq(refundRequests.requestedBy, users.id)).where(eq(refundRequests.status, 'Pending')).orderBy(asc(refundRequests.createdAt)).limit(limit),
+        ]);
+
+        const merged = [
+          ...(wants('listing') ? listingRows.map((row) => ({ kind: 'listing' as const, ...row })) : []),
+          ...(wants('kyc') ? kycRows.map((row) => ({ kind: 'kyc' as const, ...row })) : []),
+          ...(wants('partner') ? partnerRows.map((row) => ({ kind: 'partner' as const, ...row })) : []),
+          ...(wants('refund') ? refundRows.map((row) => ({ kind: 'refund' as const, ...row })) : []),
+        ];
+        const items = merged
+          .sort((a, b) => new Date(a.submittedAt).getTime() - new Date(b.submittedAt).getTime())
+          .slice(0, limit);
+
+        return {
+          counts: {
+            listing: Number(listingCount[0]?.value ?? 0),
+            kyc: Number(kycCount[0]?.value ?? 0),
+            partner: Number(partnerCount[0]?.value ?? 0),
+            refund: Number(refundCount[0]?.value ?? 0),
+          },
+          items,
+        };
+      }),
     moderateListing: adminProcedure
-      .input(z.object({ listingId: z.number().int().positive(), status: z.enum(['Published', 'Approved', 'Rejected']), isFeatured: z.boolean().optional() }))
+      .input(z.object({ listingId: z.number().int().positive(), status: z.enum(['Published', 'Approved', 'Rejected']), isFeatured: z.boolean().optional(), reason: z.string().trim().min(1).max(500).optional() }).refine((value) => value.status !== 'Rejected' || Boolean(value.reason), { message: 'سبب الرفض مطلوب عند رفض الإعلان.', path: ['reason'] }))
       .mutation(async ({ ctx, input }) => {
         const db = await getDb();
         if (!db) throw new Error('Database unavailable');
         const [before] = await db.select({ status: listings.status, isFeatured: listings.isFeatured }).from(listings).where(eq(listings.id, input.listingId)).limit(1);
         if (!before) throw new TRPCError({ code: 'NOT_FOUND', message: 'الإعلان غير موجود.' });
         await db.update(listings).set({ status: input.status, ...(input.isFeatured === undefined ? {} : { isFeatured: input.isFeatured }) }).where(eq(listings.id, input.listingId));
-        await writeAuditLog({ actorId: ctx.user.id, action: 'listing.moderated', entityType: 'listing', entityId: input.listingId, beforeData: before, afterData: { status: input.status, isFeatured: input.isFeatured ?? before.isFeatured } });
+        // The unpublish path reuses this mutation with status 'Rejected', so a reason is
+        // mandatory here too: without one the audit trail recorded a moderation decision
+        // that nobody could later justify.
+        await writeAuditLog({ actorId: ctx.user.id, action: 'listing.moderated', entityType: 'listing', entityId: input.listingId, beforeData: before, afterData: { status: input.status, isFeatured: input.isFeatured ?? before.isFeatured }, notes: input.reason ?? null });
         return { success: true as const };
       }),
     updateListing: adminProcedure

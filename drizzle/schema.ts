@@ -137,7 +137,12 @@ export const partnerApplications = pgTable("partner_applications", {
   adminNote: text("admin_note"),
   reviewedAt: timestamp("reviewed_at"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
+}, (table) => ({
+  // Partial, and the only index on this table. admin.moderationQueue filters on
+  // status = 'pending'; partner_applications had no index at all, so that filter
+  // was a sequential scan.
+  pendingStatusIdx: index("partner_applications_pending_status_idx").on(table.status).where(sql`status = 'pending'`),
+}));
 
 export const listings = pgTable("listings", {
   id: integer("listing_id").generatedAlwaysAsIdentity().primaryKey(),
@@ -325,6 +330,9 @@ export const kycSubmissions = pgTable("kyc_submissions", {
 }, (table) => ({
   providerSessionIdx: index("kyc_submissions_provider_session_idx").on(table.providerSessionId),
   userIdIdx: index("kyc_submissions_user_id_idx").on(table.userId),
+  // Partial: the moderation queue only ever asks for status = 'Pending'. A full
+  // index would carry every settled row to serve a query that never wants them.
+  pendingStatusIdx: index("kyc_submissions_pending_status_idx").on(table.status).where(sql`status = 'Pending'`),
 }));
 
 export const payments = pgTable("payments", {
@@ -465,6 +473,10 @@ export const refundRequests = pgTable("refund_requests", {
 }, (table) => ({
   bookingIdx: index("refund_requests_booking_idx").on(table.bookingId, table.createdAt),
   requesterIdx: index("refund_requests_requester_idx").on(table.requestedBy, table.status),
+  // Partial: same reasoning as kyc_submissions_pending_status_idx. The existing
+  // requesterIdx cannot serve a bare status filter either, because status is its
+  // second column and nothing constrains the first.
+  pendingStatusIdx: index("refund_requests_pending_status_idx").on(table.status).where(sql`status = 'Pending'`),
 }));
 
 export const platformSettings = pgTable("platform_settings", {

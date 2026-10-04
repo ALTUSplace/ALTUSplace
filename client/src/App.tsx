@@ -49,6 +49,7 @@ const BlogPage = lazy(() => import("./pages/BlogPage"));
 const CarDetailsPage = lazy(() => import("./pages/CarDetails"));
 const SuccessPage = lazy(() => import("./pages/Success"));
 const AdminDashboardPage = lazy(() => import("./pages/AdminDashboard"));
+const AdminModerationPage = lazy(() => import("./pages/AdminModeration"));
 const SuperDashboardPage = lazy(() => import("./pages/SuperDashboard"));
 const SuperAdminDashboardPage = lazy(() => import("./pages/SuperAdminDashboard"));
 const ProfilePage = lazy(() => import("./pages/Profile"));
@@ -187,6 +188,10 @@ function Router() {
       </Route>
       <Route path="/dashboard">{() => <AccessGuard area="host"><HostDashboard /></AccessGuard>}</Route>
       <Route path="/admin">{() => <AccessGuard area="admin"><Suspense fallback={<PageLoader />}><TrpcUnbatchedProvider><AdminDashboardPage /></TrpcUnbatchedProvider></Suspense></AccessGuard>}</Route>
+      {/* Admin tier, and requires the unbatched trpc client: the queue page mounts
+          one query and eight mutations, and the batched link stalls on Supabase's
+          transaction-mode pooler once a request carries 3+ procedures. */}
+      <Route path="/admin/moderation">{() => <AccessGuard area="admin"><Suspense fallback={<PageLoader />}><TrpcUnbatchedProvider><AdminModerationPage /></TrpcUnbatchedProvider></Suspense></AccessGuard>}</Route>
       <Route path="/admin/super">{() => <AccessGuard area="superadmin"><Suspense fallback={<PageLoader />}><SuperDashboardPage /></Suspense></AccessGuard>}</Route>
       <Route path="/admin/super/dashboard">{() => <AccessGuard area="superadmin"><Suspense fallback={<PageLoader />}><SuperAdminDashboardPage /></Suspense></AccessGuard>}</Route>
       <Route path="/dispute-resolution" component={DisputeResolutionPage} />
