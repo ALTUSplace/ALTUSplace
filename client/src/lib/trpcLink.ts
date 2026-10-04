@@ -1,29 +1,12 @@
-import { COOKIE_NAME } from "@shared/const";
-
 export const trpcApiUrl =
   (import.meta.env.VITE_API_URL as string | undefined) || "/api/trpc";
 
-/**
- * Preview auto-login fallback: when the browser blocks iframe cookies
- * (Safari ITP / private browsing / WebView), the runtime mirrors the
- * session into sessionStorage so we can forward it as a Bearer token.
- * The regular OAuth cookie flow keeps working and takes priority server-side.
- */
-export function trpcHeaders(): Record<string, string> {
-  try {
-    const raw = sessionStorage.getItem("manus-cookie");
-    if (raw) {
-      const prefix = `${COOKIE_NAME}=`;
-      const pair = raw.split(";").find((s) => s.trim().startsWith(prefix));
-      const token = pair?.trim().slice(prefix.length);
-      if (token) return { Authorization: `Bearer ${token}` };
-    }
-  } catch {
-    // sessionStorage unavailable
-  }
-  return {};
-}
-
+// No Authorization header is ever set from JS. The session lives in the
+// HttpOnly `app_session_id` cookie and reaches the API through
+// `credentials: "include"` alone, so no script in this origin can read it.
+// (A previous sessionStorage -> Bearer fallback was removed: nothing ever
+// wrote that key, and mirroring the cookie into JS-reachable storage made the
+// session token exfiltratable by any injected script.)
 export function trpcFetch(input: RequestInfo | URL, init?: RequestInit) {
   return globalThis.fetch(input, { ...(init ?? {}), credentials: "include" });
 }

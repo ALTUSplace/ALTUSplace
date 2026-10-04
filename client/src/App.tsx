@@ -76,7 +76,7 @@ function PageLoader() {
   );
 }
 
-function AccessGuard({ area, children }: { area: 'admin' | 'superadmin' | 'host'; children: React.ReactNode }) {
+function AccessGuard({ area, children }: { area: 'authenticated' | 'admin' | 'superadmin' | 'host'; children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const { t } = useLanguage();
   useNoIndex();
@@ -85,9 +85,14 @@ function AccessGuard({ area, children }: { area: 'admin' | 'superadmin' | 'host'
   if (user.accountStatus && user.accountStatus !== 'active') return <div className="min-h-[50vh] flex flex-col items-center justify-center gap-3 p-6 text-center"><h1 className="text-2xl font-bold">{t("accountInactive")}</h1><p className="text-muted-foreground">{t("accountInactiveDesc")}</p></div>;
   const allowed = area === 'admin'
     ? user.role === 'admin' || user.role === 'SUPER_ADMIN'
-    : area === 'superadmin'
-      ? user.role === 'SUPER_ADMIN'
-      : user.role === 'owner' || user.role === 'admin' || user.role === 'partner' || user.role === 'SUPER_ADMIN';
+    : area === 'authenticated'
+      // Any signed-in account, regardless of role. Used for private routes that
+      // own their own role rules (e.g. /voucher/:code, which the server scopes
+      // to the booking's renter, owner, or an admin).
+      ? true
+      : area === 'superadmin'
+        ? user.role === 'SUPER_ADMIN'
+        : user.role === 'owner' || user.role === 'admin' || user.role === 'partner' || user.role === 'SUPER_ADMIN';
   if (!allowed) return <div className="min-h-[50vh] flex flex-col items-center justify-center gap-3 p-6 text-center"><h1 className="text-2xl font-bold">{t("forbiddenTitle")}</h1><p className="text-muted-foreground">{t("forbiddenDesc")}</p></div>;
   return <>{children}</>;
 }
@@ -208,10 +213,10 @@ function Router() {
       <Route path={"/profile"} component={ProfilePage} />
       <Route path={"/checkout"} component={CheckoutPage} />
       <Route path={"/kyc"}>{() => <Suspense fallback={<PageLoader />}><KycVerificationPage /></Suspense>}</Route>
-      <Route path="/voucher/:code">{() => <Suspense fallback={<PageLoader />}><VoucherPage /></Suspense>}</Route>
-      <Route path="/messages/:bookingId">{() => <Suspense fallback={<PageLoader />}><BookingMessagesPage /></Suspense>}</Route>
+      <Route path="/voucher/:code">{() => <AccessGuard area="authenticated"><Suspense fallback={<PageLoader />}><VoucherPage /></Suspense></AccessGuard>}</Route>
+      <Route path="/messages/:bookingId">{() => <AccessGuard area="authenticated"><Suspense fallback={<PageLoader />}><BookingMessagesPage /></Suspense></AccessGuard>}</Route>
       <Route path={"/help"}>{() => <Redirect to="/support-tickets" replace />}</Route>
-      <Route path={"/support-tickets"} component={SupportTicketsPage} />
+      <Route path={"/support-tickets"}>{() => <AccessGuard area="authenticated"><SupportTicketsPage /></AccessGuard>}</Route>
       <Route path={"/notifications"} component={NotificationsPage} />
       <Route path={"/favorites"} component={FavoritesPage} />
       <Route path={"/about"}>
