@@ -25,11 +25,13 @@ describe("super admin dashboard audit contracts", () => {
     expect(routers).toContain(".limit(100)");
   });
 
-  it("writes an audit trail with before/after status and reason for approve and reject", () => {
+  it("writes an audit trail with before/after status and the reason in notes", () => {
     const routers = read("server/routers.ts");
     expect(routers).toMatch(/action: `listing\.\$\{input\.action === 'approve' \? 'approved' : 'rejected'\}`/);
     expect(routers).toContain("'approved' : 'rejected'");
-    expect(routers).toContain("afterData: { status: nextStatus, reason: input.reason ?? null }");
+    // The reason is its own column, not a key inside the afterData payload.
+    expect(routers).toContain("afterData: { status: nextStatus },");
+    expect(routers).toContain("notes: input.action === 'reject' ? input.reason ?? null : null,");
   });
 
   it("notifies the listing owner with the decision and the rejection reason", () => {
