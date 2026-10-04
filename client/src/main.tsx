@@ -1,5 +1,5 @@
 import { trpc } from "@/lib/trpc";
-import { trpcApiUrl, trpcFetch, trpcHeaders } from "./lib/trpcLink";
+import { trpcApiUrl, trpcFetch } from "./lib/trpcLink";
 import { UNAUTHED_ERR_MSG } from '@shared/const';
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { httpBatchLink, TRPCClientError } from "@trpc/client";
@@ -56,7 +56,6 @@ const trpcClient = trpc.createClient({
     httpBatchLink({
       url: trpcApiUrl,
       transformer: superjson,
-      headers: trpcHeaders,
       fetch: trpcFetch,
     }),
   ],

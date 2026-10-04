@@ -61,7 +61,11 @@ export const ownerProcedure = protectedProcedure.use(
   }),
 );
 
-export const adminProcedure = t.procedure.use(sanitizeInputMiddleware).use(
+// Composed off protectedProcedure (NOT t.procedure) so the admin tier runs the
+// same requireUser gate as every other authenticated tier. Before this, a
+// banned or suspended admin kept full access — including the ability to lift
+// their own ban via admin.updateUserStatus.
+export const adminProcedure = protectedProcedure.use(
   t.middleware(async opts => {
     const { ctx, next } = opts;
 
@@ -81,7 +85,9 @@ export const adminProcedure = t.procedure.use(sanitizeInputMiddleware).use(
 // Super-admin tier: the ONLY role that may query or view the executive
 // financial dashboard, escrow/ledger monitor and dynamic commission
 // controller. Enforced on every procedure of the `admin.super` router.
-export const superAdminProcedure = t.procedure.use(sanitizeInputMiddleware).use(
+// Same requireUser gate as the admin tier: a suspended/banned SUPER_ADMIN must
+// not retain the executive dashboard, escrow monitor or commission controller.
+export const superAdminProcedure = protectedProcedure.use(
   t.middleware(async opts => {
     const { ctx, next } = opts;
 

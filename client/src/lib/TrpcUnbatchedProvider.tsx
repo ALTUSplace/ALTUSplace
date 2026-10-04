@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { httpLink } from "@trpc/client";
 import superjson from "superjson";
 import type { ReactNode } from "react";
-import { trpcApiUrl, trpcFetch, trpcHeaders } from "./trpcLink";
+import { trpcApiUrl, trpcFetch } from "./trpcLink";
 import { trpcUnbatched } from "./trpcUnbatched";
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: 1 } } });
@@ -14,7 +14,6 @@ const client = trpcUnbatched.createClient({
     httpLink({
       url: trpcApiUrl,
       transformer: superjson,
-      headers: trpcHeaders,
       fetch: trpcFetch,
     }),
   ],
