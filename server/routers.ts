@@ -631,16 +631,33 @@ export const appRouter = router({
       return db.select().from(kycSubmissions).orderBy(desc(kycSubmissions.submittedAt)).limit(100);
     }),
     review: adminProcedure
-      .input(z.object({ id: z.number().int().positive(), status: z.enum(["Approved", "Rejected"]), rejectionReason: z.string().trim().max(500).optional() }))
-      .mutation(async ({ input }) => {
+      .input(z.object({
+        id: z.number().int().positive(),
+        status: z.enum(["Approved", "Rejected"]),
+        rejectionReason: z.string().trim().min(1).max(500).optional(),
+      }).refine((value) => value.status !== "Rejected" || Boolean(value.rejectionReason), {
+        message: "سبب الرفض مطلوب عند رفض طلب التحقق.",
+        path: ["rejectionReason"],
+      }))
+      .mutation(async ({ ctx, input }) => {
         const db = await getDb();
         if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "قاعدة البيانات غير متاحة." });
-        const [submission] = await db.select({ userId: kycSubmissions.userId }).from(kycSubmissions).where(eq(kycSubmissions.id, input.id)).limit(1);
-        await db.update(kycSubmissions).set({ status: input.status, rejectionReason: input.status === "Rejected" ? (input.rejectionReason || "لم يتم تقديم سبب.") : null, reviewedAt: new Date() }).where(eq(kycSubmissions.id, input.id));
-        if (submission) {
-          const userStatus = input.status === "Approved" ? "verified" : "rejected";
-          await db.update(users).set({ kycVerificationStatus: userStatus, ...(input.status === "Approved" ? { kycVerifiedAt: new Date() } : {}) }).where(eq(users.id, submission.userId));
-        }
+        const [submission] = await db.select({ userId: kycSubmissions.userId, status: kycSubmissions.status }).from(kycSubmissions).where(eq(kycSubmissions.id, input.id)).limit(1);
+        // Without this guard a missing id updated zero rows and still reported success.
+        if (!submission) throw new TRPCError({ code: "NOT_FOUND", message: "طلب التحقق غير موجود." });
+        const rejectionReason = input.status === "Rejected" && input.rejectionReason ? input.rejectionReason : null;
+        await db.update(kycSubmissions).set({ status: input.status, rejectionReason, reviewedAt: new Date() }).where(eq(kycSubmissions.id, input.id));
+        const userStatus = input.status === "Approved" ? "verified" : "rejected";
+        await db.update(users).set({ kycVerificationStatus: userStatus, ...(input.status === "Approved" ? { kycVerifiedAt: new Date() } : {}) }).where(eq(users.id, submission.userId));
+        await writeAuditLog({
+          actorId: ctx.user.id,
+          action: `kyc.${input.status === "Approved" ? "approved" : "rejected"}`,
+          entityType: "kyc_submission",
+          entityId: input.id,
+          beforeData: { status: submission.status },
+          afterData: { status: input.status, userId: submission.userId, kycVerificationStatus: userStatus },
+          notes: rejectionReason,
+        });
         return { success: true } as const;
       }),
     getByUserId: protectedProcedure
