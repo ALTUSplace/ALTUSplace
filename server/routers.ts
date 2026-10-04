@@ -72,6 +72,12 @@ async function writeAuditLog(input: {
   entityId?: number;
   beforeData?: unknown;
   afterData?: unknown;
+  /**
+   * Human-readable reason for a moderation decision. It gets its own column
+   * rather than living inside `afterData`, so the audit feed can render it
+   * without parsing JSON and it survives a change to the payload shape.
+   */
+  notes?: string | null;
 }) {
   const db = await getDb();
   if (!db) return;
@@ -82,6 +88,8 @@ async function writeAuditLog(input: {
     entityId: input.entityId,
     beforeData: input.beforeData === undefined ? null : JSON.stringify(input.beforeData),
     afterData: input.afterData === undefined ? null : JSON.stringify(input.afterData),
+    // `?? null` stores SQL NULL; `notes` must never be the string "undefined".
+    notes: input.notes ?? null,
   });
 }
 
@@ -365,6 +373,9 @@ export const appRouter = router({
         entityId: auditLogs.entityId,
         beforeData: auditLogs.beforeData,
         afterData: auditLogs.afterData,
+        // The agency owner is the person who most needs to read the rejection
+        // reason, so this feed carries it too.
+        notes: auditLogs.notes,
         createdAt: auditLogs.createdAt,
       }).from(auditLogs).leftJoin(users, eq(auditLogs.actorId, users.id))
         .where(or(...conds))
@@ -645,7 +656,7 @@ export const appRouter = router({
     auditLogs: adminProcedure.query(async () => {
       const db = await getDb();
       if (!db) return [];
-      return db.select({ id: auditLogs.id, actorId: auditLogs.actorId, actorName: users.name, action: auditLogs.action, entityType: auditLogs.entityType, entityId: auditLogs.entityId, beforeData: auditLogs.beforeData, afterData: auditLogs.afterData, createdAt: auditLogs.createdAt })
+      return db.select({ id: auditLogs.id, actorId: auditLogs.actorId, actorName: users.name, action: auditLogs.action, entityType: auditLogs.entityType, entityId: auditLogs.entityId, beforeData: auditLogs.beforeData, afterData: auditLogs.afterData, notes: auditLogs.notes, createdAt: auditLogs.createdAt })
         .from(auditLogs).leftJoin(users, eq(auditLogs.actorId, users.id)).orderBy(desc(auditLogs.createdAt)).limit(200);
     }),
     refundRequests: adminProcedure.query(async () => {
@@ -1444,7 +1455,10 @@ export const appRouter = router({
           await writeAuditLog({
             actorId: ctx.user!.id, action: `listing.${input.action === 'approve' ? 'approved' : 'rejected'}`,
             entityType: 'listing', entityId: input.listingId,
-            beforeData: { status: before.status }, afterData: { status: nextStatus, reason: input.reason ?? null },
+            beforeData: { status: before.status }, afterData: { status: nextStatus },
+            // An approval has no reason. A rejection's reason belongs in its own
+            // column, not inside the JSON payload.
+            notes: input.action === 'reject' ? input.reason ?? null : null,
           });
           const reasonLabel = input.reason ? ` — ${input.reason}` : '';
           await safeNotifyUser({
