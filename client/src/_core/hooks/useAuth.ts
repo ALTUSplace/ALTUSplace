@@ -1,4 +1,5 @@
 import { startLogin } from "@/const";
+import { AUTH_ME_QUERY_OPTIONS } from "@/lib/authMeQueryOptions";
 import { trpc } from "@/lib/trpc";
 import { TRPCClientError } from "@trpc/client";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -18,10 +19,10 @@ export function useAuth(options?: UseAuthOptions) {
   const { redirectOnUnauthenticated = false, redirectPath } = options ?? {};
   const utils = trpc.useUtils();
 
-  const meQuery = trpc.auth.me.useQuery(undefined, {
-    retry: false,
-    refetchOnWindowFocus: false,
-  });
+  // Shared cache-first session policy: read once, refetch only on an
+  // explicit action (`refresh` / logout invalidation) — see
+  // AUTH_ME_QUERY_OPTIONS for the audit finding this closes.
+  const meQuery = trpc.auth.me.useQuery(undefined, AUTH_ME_QUERY_OPTIONS);
 
   // If the auth/session fetch never settles (hung request, offline gateway),
   // stop blocking on `loading` after a timeout so guards and pages flip to

@@ -30,19 +30,28 @@ describe("final readiness security audit", () => {
     expect(success).not.toMatch(/searchParams\.get\(["'](?:phone|whatsapp|ownerPhone)["']\)/);
   });
 
-  it("enforces strict (5/min) + global (100/15min) rate limits on auth/booking/payment surfaces", () => {
+  it("enforces tiered rate limits (strict 5/min, session 60/min, public 500/min, health exempt)", () => {
     const security = read("server/_core/security.ts");
     expect(security).toMatch(/authStrictLimiter[\s\S]*?max:\s*5/);
     expect(security).toMatch(/bookingStrictLimiter[\s\S]*?max:\s*5/);
     expect(security).toMatch(/paymentStrictLimiter[\s\S]*?max:\s*5/);
-    expect(security).toMatch(/sensitiveApiLimiter[\s\S]*?max:\s*100/);
-    expect(security).toContain("strictRateLimitDispatcher");
+    // C5: tiers replace the single 100/15min budget that starved normal reads.
+    expect(security).toMatch(/publicReadLimiter[\s\S]*?max:\s*500/);
+    expect(security).toMatch(/sessionReadLimiter[\s\S]*?max:\s*60/);
+    expect(security).toMatch(/standardApiLimiter[\s\S]*?max:\s*300/);
+    expect(security).not.toMatch(/max:\s*100[^0-9]/);
+    // C6: the old `req.path === "/api/health"` guard was dead code (mount
+    // stripping); health must be exempt via originalUrl in EVERY limiter.
+    expect(security).toContain("isHealthProbe(req)");
+    expect(security).toContain("originalPath(req)");
+    expect(security).not.toContain('req.path === "/api/health"');
     const entry = read("server/_core/app.ts");
     // app.ts wires the shield via registerSecurity(), which mounts the
-    // strict dispatcher + global limiter internally (see registerSecurity).
+    // single tiered apiRateLimit middleware internally.
     expect(entry).toContain("registerSecurity");
-    expect(security).toContain("app.use(\"/api/\", strictRateLimitDispatcher)");
-    expect(security).toContain("app.use(\"/api/\", sensitiveApiLimiter)");
+    expect(security).toContain('app.use("/api/", apiRateLimit)');
+    expect(security).not.toContain('app.use("/api/", sensitiveApiLimiter)');
+    expect(security).not.toContain('app.use("/api/", strictRateLimitDispatcher)');
   });
 
   it("ships hardened secure headers (helmet-grade: CSP, DENY framing, HSTS preload)", () => {

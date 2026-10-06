@@ -17,7 +17,7 @@ import {
 import { ENV } from "./env";
 import { registerStorageProxy } from "./storageProxy";
 import { registerSitemapRoutes, SEO_SITE_URL } from "./sitemap";
-import { injectPrerenderMetadata } from "./prerender";
+import { renderSpaDocument } from "./prerender";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { leaseEndReminderHandler } from "../leaseReminder";
@@ -168,10 +168,17 @@ export function createApp() {
       const indexResponse = await fetch(`${prerenderFetchOrigin(req)}/index.html`);
       if (!indexResponse.ok) throw new Error(`index responded ${indexResponse.status}`);
       const template = await indexResponse.text();
-      const html = await injectPrerenderMetadata(template, targetPath, SEO_SITE_URL);
+      const rendered = await renderSpaDocument(template, targetPath, SEO_SITE_URL);
       res.setHeader("Content-Type", "text/html; charset=utf-8");
-      res.setHeader("Cache-Control", "public, max-age=300, s-maxage=3600");
-      res.status(200).send(html);
+      if (rendered.status === 404) {
+        // Undeclared URLs and missing listings: noindex and cache briefly so
+        // crawlers stop treating soft-404s as indexable canonicals.
+        res.setHeader("X-Robots-Tag", "noindex");
+        res.setHeader("Cache-Control", "public, max-age=60, s-maxage=300");
+      } else {
+        res.setHeader("Cache-Control", "public, max-age=300, s-maxage=3600");
+      }
+      res.status(rendered.status).send(rendered.html);
     } catch (error) {
       logger.warn("Prerender request failed", {
         error: error instanceof Error ? error.message : String(error),

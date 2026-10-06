@@ -21,6 +21,29 @@ function pruneBuckets(now: number): void {
   });
 }
 
+/**
+ * Query-stripped path of the ORIGINAL url, i.e. with the `/api` mount prefix
+ * still attached.
+ *
+ * `app.use("/api/", fn)` strips the mount path from `req.url` (and therefore
+ * from `req.path`), so a health check arrives with `req.path` equal to
+ * "/health". That is exactly why the old health guard — which compared
+ * `req.path` against the full `/api`-prefixed string — was dead code (audit
+ * finding C6) and why `/api/health` returned 429 under load.
+ * `originalUrl` is the only reliable input for a mount-agnostic matcher.
+ */
+function originalPath(req: { originalUrl?: string; url?: string; path?: string }): string {
+  const raw = req.originalUrl || req.url || req.path || "";
+  const q = raw.indexOf("?");
+  return q === -1 ? raw : raw.slice(0, q);
+}
+
+/** Health probes are exempt from EVERY tier (monitoring must never be throttled). */
+function isHealthProbe(req: { originalUrl?: string; url?: string; path?: string }): boolean {
+  const p = originalPath(req);
+  return p === "/api/health" || p === "/health" || p === "/healthz";
+}
+
 /** Sliding-window in-memory rate limiter (no extra dependency). */
 export function createRateLimiter(options: RateLimitOptions & { namespace?: string }) {
   const { windowMs, max } = options;
@@ -28,7 +51,7 @@ export function createRateLimiter(options: RateLimitOptions & { namespace?: stri
   const namespace = options.namespace ?? `rl:${max}:${windowMs}`;
 
   return (req: Request, res: Response, next: NextFunction) => {
-    if (req.method === "OPTIONS" || req.path === "/api/health") return next();
+    if (req.method === "OPTIONS" || isHealthProbe(req)) return next();
     const now = Date.now();
     pruneBuckets(now);
     const key = `${namespace}:${clientIp(req)}`;
@@ -51,12 +74,55 @@ export function createRateLimiter(options: RateLimitOptions & { namespace?: stri
   };
 }
 
-/** Sensitive endpoints: max 100 req / 15 min / IP (anti-DDoS/brute-force). */
-export const sensitiveApiLimiter = createRateLimiter({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  message: "Rate limit exceeded (100 requests per 15 minutes).",
-});
+/**
+ * ---------------------------------------------------------------------------
+ * TIERED API RATE LIMITING (audit findings C5 / C6 / C7)
+ * ---------------------------------------------------------------------------
+ *
+ * C5 — the old design funnelled EVERY /api request through one 100-req/15-min
+ *       bucket (~6.7 req/min/IP) *and* routed `auth.me` through the 5/min
+ *       strict bucket. In the audit load test that produced 58% 429s on
+ *       ordinary listing reads and 100% 429s on session checks: legitimate
+ *       users were locked out while a brute-forcer got the same 5/min budget
+ *       as a page load. It also meant a client polling `auth.me` on every
+ *       mount could spend the whole shared budget and break every other API
+ *       call on that IP.
+ *
+ * C6 — the health guard compared `req.path` against the full `/api`-prefixed
+ *       path. That check was dead code: `app.use("/api/", fn)` strips the
+ *       mount prefix, so health checks arrived as "/health" and were
+ *       throttled. The audit's health probe returned 429.
+ *
+ * C7 — buckets live in process memory. On Vercel each serverless instance has
+ *       its own Map, so the effective ceiling is `max x instances` and it
+ *       resets on every cold start (and is not shared across regions).
+ *       DOCUMENTED, NOT FIXED: a shared store (Redis / Upstash / Vercel KV)
+ *       is explicitly out of scope for this emergency PR. When one is added,
+ *       swap the `buckets` Map in `createRateLimiter` for a shared counter
+ *       and everything above keeps working unchanged.
+ *
+ * Tiers (per tier+IP bucket, independent of each other):
+ *   exempt        OPTIONS, /api/health                 — never throttled
+ *   public-read   listings.*, cities.* (GET only)      — 500/min
+ *   session-read  auth.me, notifications.* (GET only)  — 60/min
+ *   standard      everything else                      — 300/min
+ *   strict-*      auth / booking / payment surfaces    — 5/min (own buckets)
+ *
+ * Batches: tRPC GET batches arrive as `/api/trpc/a,b,c`, so a single HTTP
+ * request can carry several procedures. One response cannot be half-throttled,
+ * therefore the batch takes its MOST RESTRICTIVE member's tier. With the
+ * client-side fix (`AUTH_ME_QUERY_OPTIONS`: staleTime 5min, no refetch on
+ * mount) `auth.me` is fetched once per session, so real navigation stays out
+ * of the session-read tier.
+ */
+export type ApiRateTier =
+  | "exempt"
+  | "public-read"
+  | "session-read"
+  | "standard"
+  | "strict-auth"
+  | "strict-booking"
+  | "strict-payment";
 
 /** Strict buckets: 5 req / 1 min / IP for auth, booking & payment surfaces. */
 export const authStrictLimiter = createRateLimiter({
@@ -78,53 +144,151 @@ export const paymentStrictLimiter = createRateLimiter({
   message: "Too many payment attempts. Try again in a minute.",
 });
 
+/** Tier A — public catalogue reads. */
+export const publicReadLimiter = createRateLimiter({
+  windowMs: 60 * 1000,
+  max: 500,
+  namespace: "rl:tier:public-read:500:60000",
+  message: "Too many requests. Try again in a minute.",
+});
+/** Tier C — session reads (auth.me / notifications), its OWN bucket. */
+export const sessionReadLimiter = createRateLimiter({
+  windowMs: 60 * 1000,
+  max: 60,
+  namespace: "rl:tier:session-read:60:60000",
+  message: "Too many session checks. Try again in a minute.",
+});
+/** Residual bucket for everything else (replaces the old 100/15min budget). */
+export const standardApiLimiter = createRateLimiter({
+  windowMs: 60 * 1000,
+  max: 300,
+  namespace: "rl:tier:standard:300:60000",
+  message: "Too many requests. Try again in a minute.",
+});
+
 /**
- * Route-aware dispatcher: tRPC batches every procedure through
- * POST /api/trpc[/<procedure>], so inspect the URL + `batch` query for the
- * procedure name. Legacy REST (/api/auth/*, /api/bookings, /api/payments*)
- * is matched directly. Strict buckets run BEFORE the global bucket so a
- * brute-force burst is stopped at 5/min even though the global budget is 100.
+ * Least -> most restrictive. A batch takes the max over its members, and
+ * `exempt` is dropped as soon as anything else in the batch needs a bucket.
  */
-function matchesTrpcProcedure(req: Request, names: string[]): boolean {
-  const url = `${req.path}${typeof req.url === "string" ? req.url.slice(req.path.length) : ""}`;
-  const haystack = `${req.path} ${req.originalUrl} ${url}`.toLowerCase();
-  return names.some(n => haystack.includes(n.toLowerCase()));
+const TIER_RESTRICTIVENESS: Record<ApiRateTier, number> = {
+  exempt: 0,
+  "public-read": 1,
+  standard: 2,
+  "session-read": 3,
+  "strict-auth": 4,
+  "strict-booking": 4,
+  "strict-payment": 4,
+};
+
+function mostRestrictive(tiers: ApiRateTier[]): ApiRateTier {
+  let best: ApiRateTier = "exempt";
+  for (const tier of tiers) {
+    if (TIER_RESTRICTIVENESS[tier] > TIER_RESTRICTIVENESS[best]) best = tier;
+  }
+  return best;
 }
 
-export function strictRateLimitDispatcher(req: Request, res: Response, next: NextFunction) {
-  if (req.method === "OPTIONS" || req.path === "/api/health") return next();
-  const p = req.path.toLowerCase();
+/** tRPC procedure names carried by a request path (`a,b` for GET batches). */
+function trpcProcedures(path: string): string[] | null {
+  const m = /^\/api\/trpc\/([^/?#]+)/.exec(path);
+  if (!m?.[1]) return null;
+  return m[1].split(",").map(s => s.trim()).filter(Boolean);
+}
 
-  const isAuth =
-    p.startsWith("/api/auth/") ||
-    p.startsWith("/api/oauth/") ||
-    matchesTrpcProcedure(req, ["auth.", "auth/"]) ||
-    (p.startsWith("/api/trpc/auth") );
-  // tRPC auth surface: auth.me / auth.logout / auth.updateProfile are read-heavy;
-  // the login itself happens at /api/oauth/callback which is covered above.
+/**
+ * Tier for a single tRPC procedure. Read-only procedures only ever classify
+ * into a read tier — mutations fall through to `standard`, so `listings.create`
+ * cannot ride the public-read budget.
+ */
+function classifyProcedure(name: string): ApiRateTier {
+  const n = name.toLowerCase();
+  // Tier C: session reads. Deliberately NOT `auth.*` — auth.logout /
+  // auth.updateProfile are user-initiated and sit in `standard`.
+  if (n === "auth.me" || n.startsWith("notifications.")) return "session-read";
+  // Tier A: public catalogue reads.
+  if (n === "payments.exchangerates") return "public-read";
+  if (n.startsWith("listings.") || n.startsWith("cities.")) return "public-read";
+  // Strict surfaces (unchanged from the original policy).
+  if (n.startsWith("bookings.") || n.startsWith("messages.")) return "strict-booking";
+  if (n.startsWith("payments.") || n.startsWith("invoices.") || n.startsWith("refunds.")) return "strict-payment";
+  // Privilege-elevation mutation (H1 fix gates it on an approved application;
+  // the 5/min bucket is defence in depth).
+  if (n === "auth.becomeagency") return "strict-auth";
+  return "standard";
+}
 
-  const isBooking =
-    p.startsWith("/api/bookings") ||
-    matchesTrpcProcedure(req, ["bookings.", "booking"]) ||
-    (p.startsWith("/api/trpc/bookings") || p.startsWith("/api/trpc/messages"));
-
-  const isPayment =
+/** Tier for a legacy REST /api path. */
+function classifyRestPath(path: string, method: string): ApiRateTier {
+  const p = path.toLowerCase();
+  if (p === "/api/health" || p === "/health" || p === "/healthz") return "exempt";
+  // Credential endpoints — POST only; GETs under /api/auth are status reads.
+  if (method !== "GET" && method !== "HEAD" && p.startsWith("/api/auth/")) return "strict-auth";
+  // OAuth start/callback are credential exchanges regardless of method.
+  if (p.startsWith("/api/oauth/")) return "strict-auth";
+  if (p.startsWith("/api/bookings") || p.startsWith("/api/messages")) return "strict-booking";
+  if (
     p.startsWith("/api/payments") ||
     p.startsWith("/api/v1/payments") ||
-    matchesTrpcProcedure(req, ["payments.", "payment", "invoices.", "refunds."]) ||
-    p.startsWith("/api/trpc/payments") ||
-    p.startsWith("/api/trpc/invoices") ||
-    p.startsWith("/api/trpc/refunds");
+    p.startsWith("/api/invoices") ||
+    p.startsWith("/api/refunds") ||
+    p.startsWith("/api/escrow")
+  ) return "strict-payment";
+  // SEO/prerender is a public read used by the edge bot proxy.
+  if (p.startsWith("/api/prerender")) return "public-read";
+  return "standard";
+}
 
-  if (isPayment) return paymentStrictLimiter(req, res, next);
-  if (isBooking) return bookingStrictLimiter(req, res, next);
-  if (isAuth) return authStrictLimiter(req, res, next);
-  return next();
+/**
+ * Pure classifier: which bucket does this request belong to?
+ * Exported so guard tests can assert the policy without spinning up Express.
+ */
+export function classifyApiRequest(req: {
+  method?: string;
+  originalUrl?: string;
+  url?: string;
+  path?: string;
+}): ApiRateTier {
+  const method = (req.method ?? "GET").toUpperCase();
+  if (method === "OPTIONS") return "exempt";
+  const path = originalPath(req);
+  if (isHealthProbe(req)) return "exempt";
+
+  const procedures = trpcProcedures(path);
+  if (procedures && procedures.length > 0) {
+    const isRead = method === "GET" || method === "HEAD";
+    const tiers = procedures.map(name => {
+      const tier = classifyProcedure(name);
+      // tRPC GET = query, POST = mutation. A mutation must never ride a
+      // read-only tier's budget, so `listings.create` cannot spend the
+      // public-read 500/min allowance.
+      if (!isRead && (tier === "public-read" || tier === "session-read")) return "standard" as const;
+      return tier;
+    });
+    return mostRestrictive(tiers);
+  }
+  return classifyRestPath(path, method);
+}
+
+const TIER_LIMITERS: Record<Exclude<ApiRateTier, "exempt">, ReturnType<typeof createRateLimiter>> = {
+  "public-read": publicReadLimiter,
+  "session-read": sessionReadLimiter,
+  standard: standardApiLimiter,
+  "strict-auth": authStrictLimiter,
+  "strict-booking": bookingStrictLimiter,
+  "strict-payment": paymentStrictLimiter,
+};
+
+/** Single mount: `app.use("/api/", apiRateLimit)`. */
+export function apiRateLimit(req: Request, res: Response, next: NextFunction) {
+  const tier = classifyApiRequest(req);
+  if (tier === "exempt") return next();
+  return TIER_LIMITERS[tier](req, res, next);
 }
 /** Helmet-equivalent secure headers (compatible with Maps + Vite HMR). */
 export function securityHeaders(_req: Request, res: Response, next: NextFunction) {
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("X-Frame-Options", "DENY");
+  res.setHeader("X-XSS-Protection", "1; mode=block");
   res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
   res.setHeader("X-DNS-Prefetch-Control", "off");
   res.setHeader("X-Permitted-Cross-Domain-Policies", "none");
@@ -209,10 +373,11 @@ export function registerSecurity(app: Express) {
   app.set("trust proxy", 1);
   app.use(securityHeaders);
   app.use(csrfProtection);
-  // Strict per-surface buckets FIRST (5/min for auth/booking/payment),
-  // then the global budget (100/15min) for standard read queries.
-  app.use("/api/", strictRateLimitDispatcher);
-  app.use("/api/", sensitiveApiLimiter);
+  // One tiered bucket per request: see `classifyApiRequest`. Replaces the old
+  // `strictRateLimitDispatcher` + `sensitiveApiLimiter` pair, whose mount-stripped
+  // `req.path` matching (C6) and shared 100/15min budget (C5) mis-classified
+  // almost every route.
+  app.use("/api/", apiRateLimit);
 }
 
 /** Test helper: reset in-memory buckets between unit tests. */

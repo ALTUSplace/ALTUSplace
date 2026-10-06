@@ -5,7 +5,7 @@ import { nanoid } from "nanoid";
 import path from "path";
 import { createServer as createViteServer } from "vite";
 import viteConfig from "../../vite.config";
-import { injectPrerenderMetadata } from "./prerender";
+import { renderSpaDocument } from "./prerender";
 import { protectAuthOnlyPages } from "./routeGuard";
 
 
@@ -45,8 +45,14 @@ export async function setupVite(app: Express, server: Server) {
         `src="/src/main.tsx?v=${nanoid()}"`
       );
       const page = await vite.transformIndexHtml(url, template);
-      const pageWithMetadata = await injectPrerenderMetadata(page, url);
-      res.status(200).set({ "Content-Type": "text/html" }).end(pageWithMetadata);
+      const rendered = await renderSpaDocument(page, url);
+      // Undeclared URLs are real 404s: mark them noindex and let them be
+      // cached briefly like the prerender edge response.
+      if (rendered.status === 404) {
+        res.setHeader("X-Robots-Tag", "noindex");
+        res.setHeader("Cache-Control", "public, max-age=60, s-maxage=300");
+      }
+      res.status(rendered.status).set({ "Content-Type": "text/html" }).end(rendered.html);
     } catch (e) {
       vite.ssrFixStacktrace(e as Error);
       next(e);
@@ -76,8 +82,14 @@ export function serveStatic(app: Express) {
     try {
       const indexPath = path.resolve(distPath, "index.html");
       const template = await fs.promises.readFile(indexPath, "utf-8");
-      const page = await injectPrerenderMetadata(template, req.originalUrl);
-      res.status(200).set({ "Content-Type": "text/html" }).send(page);
+      const rendered = await renderSpaDocument(template, req.originalUrl);
+      // Undeclared URLs are real 404s: mark them noindex and let them be
+      // cached briefly like the prerender edge response.
+      if (rendered.status === 404) {
+        res.setHeader("X-Robots-Tag", "noindex");
+        res.setHeader("Cache-Control", "public, max-age=60, s-maxage=300");
+      }
+      res.status(rendered.status).set({ "Content-Type": "text/html" }).send(rendered.html);
     } catch (error) {
       next(error);
     }

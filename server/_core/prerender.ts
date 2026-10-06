@@ -16,6 +16,7 @@ import { getDb } from "../db";
 import { listings, reviews } from "../../drizzle/schema";
 import { isCarCategory } from "../../client/src/lib/categories";
 import { cityFromSlug, cityLabelFr } from "../../client/src/data/moroccoCities";
+import { classifySpaPath } from "../../shared/routes/spaPaths";
 import { SEO_SITE_URL } from "./sitemap";
 
 export function escapeHtml(value: unknown): string {
@@ -33,6 +34,8 @@ export type RouteMetadata = {
   robots: string;
   canonical: string;
   jsonLd?: Record<string, unknown>;
+  /** True when the URL is not a real document: rendered as HTTP 404 + noindex. */
+  notFound?: boolean;
 };
 
 const DEFAULT_TITLE = "كراء السيارات والعقارات في المغرب | ALTUSplace";
@@ -256,6 +259,7 @@ export async function resolveRouteMetadata(pathname: string, origin: string = SE
       ...base,
       title: "الإعلان غير متاح | ALTUSplace",
       robots: "noindex, follow",
+      notFound: true,
     };
   }
 
@@ -347,11 +351,31 @@ export async function resolveRouteMetadata(pathname: string, origin: string = SE
     return { ...base, title: authOnly.title, robots: "noindex, follow" };
   }
 
+  // Undeclared URLs are NOT the SPA shell: the client router has no route for
+  // them, so serving 200 + index, follow canonicalized this path was the
+  // soft-404 hole Google flagged. Unknown paths now render a real 404 with
+  // noindex and the homepage canonical so crawlers stop treating them as
+  // distinct indexable documents.
+  if (classifySpaPath(path) === "unknown") {
+    return {
+      ...base,
+      canonical: `${origin}/`,
+      robots: "noindex, follow",
+      notFound: true,
+    };
+  }
+
   return base;
 }
 
-export async function injectPrerenderMetadata(template: string, url: string, origin: string = SEO_SITE_URL): Promise<string> {
-  const metadata = await resolveRouteMetadata(url, origin);
+export type RenderedSpaDocument = {
+  html: string;
+  status: number;
+  metadata: RouteMetadata;
+};
+
+/** Build the document head from resolved metadata (pure string transform). */
+export function applyPrerenderMetadata(template: string, metadata: RouteMetadata): string {
   const tags = [
     `<title>${escapeHtml(metadata.title)}</title>`,
     `<meta name="description" content="${escapeHtml(metadata.description)}">`,
@@ -383,4 +407,32 @@ export async function injectPrerenderMetadata(template: string, url: string, ori
     .replace(/<link rel="alternate"[^>]*>/gi, "");
 
   return stripped.replace("</head>", `${tags}</head>`);
+}
+
+/**
+ * Render the SPA shell for `url`, returning the HTML plus the HTTP status the
+ * document merits (404 for undeclared/not-found URLs, 200 otherwise). Both
+ * `serveStatic`/Vite fallbacks and the `/api/prerender` edge target use this so
+ * crawlers and real users see the same status for the same URL.
+ */
+export async function renderSpaDocument(
+  template: string,
+  url: string,
+  origin: string = SEO_SITE_URL
+): Promise<RenderedSpaDocument> {
+  const metadata = await resolveRouteMetadata(url, origin);
+  return {
+    html: applyPrerenderMetadata(template, metadata),
+    status: metadata.notFound ? 404 : 200,
+    metadata,
+  };
+}
+
+/** Prerender target used by tests that only need the enriched HTML. */
+export async function injectPrerenderMetadata(
+  template: string,
+  url: string,
+  origin: string = SEO_SITE_URL
+): Promise<string> {
+  return (await renderSpaDocument(template, url, origin)).html;
 }

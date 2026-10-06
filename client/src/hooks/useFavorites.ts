@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
+import { AUTH_ME_QUERY_OPTIONS } from "@/lib/authMeQueryOptions";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -23,10 +24,7 @@ export function useFavorites() {
   // favorites.list is a protected procedure — fetch it only when signed in.
   // Firing it for anonymous visitors made the main.tsx UNAUTHORIZED handler
   // auto-redirect public homepage views to the owner login gate.
-  const { data: me } = trpc.auth.me.useQuery(undefined, {
-    retry: false,
-    refetchOnWindowFocus: false,
-  });
+  const { data: me } = trpc.auth.me.useQuery(undefined, AUTH_ME_QUERY_OPTIONS);
   const isAuthed = Boolean(me);
   const {
     data: favorites,
