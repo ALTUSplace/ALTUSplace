@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { AUTH_ME_QUERY_OPTIONS } from '@/lib/authMeQueryOptions';
 import { trpc } from '@/lib/trpc';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,7 +15,9 @@ import { useAuth } from "@/_core/hooks/useAuth";
 export default function RenterDashboard() {
   const { direction } = useLanguage();
   const { isAuthenticated, loading: authLoading } = useAuth();
-  const { data: user } = trpc.auth.me.useQuery();
+  // Shares useAuth()'s cache entry (C5: never let a second observer refetch
+  // the session with default staleTime on every mount).
+  const { data: user } = trpc.auth.me.useQuery(undefined, AUTH_ME_QUERY_OPTIONS);
   const enabled = isAuthenticated && !authLoading;
   const { data: bookings = [], isLoading } = trpc.bookings.list.useQuery(undefined, { enabled, retry: 1, refetchOnWindowFocus: false });
   const { data: invoices = [], isLoading: invoicesLoading } = trpc.invoices.list.useQuery(undefined, { enabled, retry: 1, refetchOnWindowFocus: false });

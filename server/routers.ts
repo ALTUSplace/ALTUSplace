@@ -9,6 +9,8 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { adminProcedure, ownerProcedure, publicProcedure, protectedProcedure, router, superAdminProcedure } from "./_core/trpc";
 import { getDb, withTransaction } from "./db";
+import { PLATFORM_SETTINGS_PUBLIC_COLUMNS, defaultPlatformSettings, sanitizePlatformSettingsSnapshot } from "./platformSettingsPolicy";
+import { evaluateBecomeAgencyAccess, isElevatedRole } from "./becomeAgencyPolicy";
 import { logger } from "./_core/logger";
 import { listings, listingAnalyticsEvents, listingComments, bookings, reviews, users, favorites, commercialLeaseContracts, notifications, platformSettings, commissionTiers, escrowEntries, payoutRequests, disputes, disputeAttachments, supportTickets, payments, invoices, kycSubmissions, bookingVouchers, bookingMessages, auditLogs, refundRequests, transactions, partnerApplications, translations } from "../drizzle/schema";
 import { eq, and, lte, gte, lt, gt, asc, desc, count, isNull, inArray, ne, or, not, ilike, sql, getTableColumns, type SQL } from "drizzle-orm";
@@ -141,8 +143,34 @@ export const appRouter = router({
       .mutation(async ({ ctx, input }) => {
         const db = await getDb();
         if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "قاعدة البيانات غير متاحة." });
-        if (['owner', 'admin', 'partner', 'SUPER_ADMIN'].includes(ctx.user!.role)) {
-          throw new TRPCError({ code: "CONFLICT", message: "أنت مسجل بالفعل كوكالة تأجير أو مشرف." });
+        // H1: self-service privilege elevation (user → owner/agency) must
+        // require an admin-approved partner application. An already-elevated
+        // role short-circuits to the original CONFLICT guard and needs no
+        // lookup. See server/becomeAgencyPolicy.ts for the full rationale.
+        const alreadyElevated = isElevatedRole(ctx.user!.role);
+        let hasApprovedApplication = false;
+        if (!alreadyElevated) {
+          // `partner_applications` has no userId — the join key is the
+          // normalized email (both writers trim + lowercase on input).
+          const email = ctx.user!.email?.trim().toLowerCase() || null;
+          if (email) {
+            const approved = await db
+              .select({ id: partnerApplications.id })
+              .from(partnerApplications)
+              .where(and(
+                eq(partnerApplications.email, email),
+                eq(partnerApplications.status, "approved"),
+              ))
+              .limit(1);
+            hasApprovedApplication = approved.length > 0;
+          }
+        }
+        const access = evaluateBecomeAgencyAccess({
+          role: ctx.user!.role,
+          hasApprovedApplication,
+        });
+        if (!access.allowed) {
+          throw new TRPCError({ code: access.code, message: access.message });
         }
         const beforeRole = ctx.user!.role;
         try {
@@ -1230,11 +1258,15 @@ export const appRouter = router({
         await writeAuditLog({ actorId: ctx.user.id, action: 'listing.deleted', entityType: 'listing', entityId: input.listingId, beforeData: before });
         return { success: true as const };
       }),
+    // C1: was `db.select().from(platformSettings)` (SELECT *), which shipped
+    // ownerPasswordHash / ownerPasswordSalt / sessionSecret to every admin
+    // session. The projection below is an explicit allowlist — see
+    // server/platformSettingsPolicy.ts.
     commissionSettings: adminProcedure.query(async () => {
       const db = await getDb();
-      if (!db) return { commissionRateBasisPoints: 1000, vatRateBasisPoints: 2000, platformName: 'ALTUSplace', contactEmail: '', contactPhone: '', maintenanceMode: false };
-      const rows = await db.select().from(platformSettings).limit(1);
-      return rows[0] ?? { commissionRateBasisPoints: 1000, vatRateBasisPoints: 2000, platformName: 'ALTUSplace', contactEmail: '', contactPhone: '', maintenanceMode: false };
+      if (!db) return defaultPlatformSettings();
+      const rows = await db.select(PLATFORM_SETTINGS_PUBLIC_COLUMNS).from(platformSettings).limit(1);
+      return sanitizePlatformSettingsSnapshot(rows[0]) ?? defaultPlatformSettings();
     }),
     updateCommission: adminProcedure
       .input(z.object({ commissionRateBasisPoints: z.number().int().min(0).max(3000) }))
@@ -1254,10 +1286,14 @@ export const appRouter = router({
       .mutation(async ({ ctx, input }) => {
         const db = await getDb();
         if (!db) throw new Error('Database unavailable');
-        const existing = await db.select().from(platformSettings).limit(1);
+        const existing = await db.select(PLATFORM_SETTINGS_PUBLIC_COLUMNS).from(platformSettings).limit(1);
         if (existing[0]) await db.update(platformSettings).set({ ...input, updatedBy: ctx.user.id }).where(eq(platformSettings.id, existing[0].id));
         else await db.insert(platformSettings).values({ ...input, updatedBy: ctx.user.id });
-        await writeAuditLog({ actorId: ctx.user.id, action: 'platform.settings.updated', entityType: 'platform_settings', beforeData: existing[0], afterData: input });
+        // C2: beforeData used to be the raw `SELECT *` row, which persisted
+        // ownerPasswordHash / ownerPasswordSalt / sessionSecret into
+        // audit_logs (9 of 52 rows). The snapshot now goes through the same
+        // allowlist projection as admin.commissionSettings above.
+        await writeAuditLog({ actorId: ctx.user.id, action: 'platform.settings.updated', entityType: 'platform_settings', beforeData: sanitizePlatformSettingsSnapshot(existing[0]), afterData: input });
         return { success: true as const };
       }),
     payouts: adminProcedure.query(async () => {

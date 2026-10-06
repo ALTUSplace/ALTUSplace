@@ -377,7 +377,7 @@ export default function Search() {
               <div className="text-sm text-ink-secondary">
                 {t('offersFoundPrefix')} <span className="text-accent-clay font-bold">{filteredListings.length}</span> {t('availableOffers')}
               </div>
-              <div className="flex items-center gap-3 w-full sm:w-auto">
+              <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
                 {/* View Toggle Buttons */}
                 <div className="flex items-center bg-bg-muted border border-border-default rounded-xl p-1">
                   <button

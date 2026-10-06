@@ -153,17 +153,21 @@ export function RegionalHighlights() {
   }, []);
 
   return (
-    // `overflow-x-clip` is load-bearing, not decoration. The <ul> below is a
-    // correct horizontal scroll container, but in an RTL document Chrome still
-    // folds its inline-start overflow into the *document's* scrollable width,
-    // which produced a phantom ~212px horizontal scrollbar at 375px. Clipping
-    // here keeps the strip scrollable while removing it from the page's scroll
-    // area. `clip` is used rather than `hidden` because it is the only value
-    // that leaves overflow-y as `visible` instead of coercing it to `auto`.
+    // Chrome's document scroll-area bug: this <ul> is a correct horizontal
+    // scroll container, but in an RTL document Chrome still folds the rail's
+    // inline-start (leftward) scrollable overflow into the *document's*
+    // scrollWidth, which produces a phantom ~212px horizontal scrollbar at
+    // 375px. `overflow-x-clip` on the wrapper below is NOT enough — verified in
+    // Chromium that clipping an ancestor does not remove a descendant scroll
+    // container from the root's scrollable area. What does contain it is paint
+    // containment directly on the scroll container (`contain-paint` on the
+    // <ul>), which clips the rail's content to its padding box for scrollable-
+    // overflow purposes while keeping the rail itself scrollable. The wrapper
+    // clip stays as harmless belt-and-suspenders.
     <div className="overflow-x-clip border-b border-white/10 bg-[var(--brand-navy)] text-white">
       <div className="container mx-auto px-3 sm:px-4">
         <h2 className="sr-only">{t("seasonalHighlights")}</h2>
-        <ul className="flex items-stretch gap-2 overflow-x-auto py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <ul className="flex items-stretch gap-2 overflow-x-auto contain-paint py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <li className="flex shrink-0 items-center gap-1.5 pe-1 text-[11px] font-bold uppercase tracking-wider text-white/60">
             <Sparkles className="h-3.5 w-3.5 text-accent-clay" aria-hidden="true" />
             {t("seasonalHighlights")}

@@ -37,6 +37,7 @@ export default function Profile() {
   const [name, setName] = useState("");
   const [whatsappPhone, setWhatsappPhone] = useState("");
   const [commercialRegister, setCommercialRegister] = useState("");
+  const utils = trpc.useUtils();
   const profileMutation = trpc.auth.updateProfile.useMutation();
 
   useEffect(() => {
@@ -59,7 +60,12 @@ export default function Profile() {
       whatsappPhone: whatsappPhone.trim() || null,
       commercialRegister: commercialRegister.trim() || null,
     }, {
-      onSuccess: () => toast.success("تم حفظ بيانات التواصل والسجل التجاري في حسابك."),
+      onSuccess: () => {
+        // auth.me is cached without refetch-on-mount (C5), so a profile edit
+        // must invalidate it explicitly for the change to show.
+        void utils.auth.me.invalidate();
+        toast.success("تم حفظ بيانات التواصل والسجل التجاري في حسابك.");
+      },
       onError: (error) => toast.error(error.message || "تعذر حفظ بيانات الحساب."),
     });
   };
