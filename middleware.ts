@@ -8,9 +8,9 @@
  * canonical and JSON-LD. Real users get the shell (known routes) or a real 404
  * (undeclared paths — previously a soft-200 that Google flagged as a soft-404).
  *
- * `middleware.ts` runs on Vercel only (Edge Runtime middleware; standard Web
- * Platform APIs only — no external runtime helpers); it is intentionally
- * outside tsconfig.json's include.
+ * `middleware.ts` runs on Vercel only (Routing Middleware, Node.js runtime via
+ * the `proxy` entrypoint; standard Web Platform APIs only — no external
+ * runtime helpers); it is intentionally outside tsconfig.json's include.
  */
 import { classifySpaPath } from "./shared/routes/spaPaths";
 
@@ -18,7 +18,6 @@ const BOT_USER_AGENT =
   /bot|crawler|spider|crawling|facebookexternalhit|facebot|slackbot|twitterbot|whatsapp|telegrambot|linkedinbot|pinterest|googlebot|bingbot|yandex|duckduckbot|baiduspider|applebot|discordbot|embedly|redditbot|skypeuripreview/i;
 
 export const config = {
-  runtime: "edge",
   // `storage` is excluded too: `/storage/(.*)` rewrites to `/api/index` and
   // extensionless storage keys must never be classified as unknown SPA paths.
   matcher: "/((?!api|storage|assets|_next/static|_next/image|favicon.ico|.*\\..*).*)",
