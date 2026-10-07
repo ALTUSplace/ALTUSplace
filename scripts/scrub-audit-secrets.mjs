@@ -106,11 +106,11 @@ export async function run({ apply = false, sql } = {}) {
 
   const patterns = FORBIDDEN_KEYS.map((key) => `%${key}%`);
   const rows = await client`
-    SELECT id, action, before_data, after_data
+    SELECT audit_log_id AS id, action, before_data, after_data
     FROM audit_logs
     WHERE before_data LIKE ANY(${patterns})
        OR after_data  LIKE ANY(${patterns})
-    ORDER BY id
+    ORDER BY audit_log_id
   `;
 
   const report = [];
@@ -123,8 +123,8 @@ export async function run({ apply = false, sql } = {}) {
     report.push({ id: row.id, action: row.action, keys });
     scrubbed += 1;
     if (apply) {
-      if (before.changed) await client`UPDATE audit_logs SET before_data = ${before.text} WHERE id = ${row.id}`;
-      if (after.changed) await client`UPDATE audit_logs SET after_data = ${after.text} WHERE id = ${row.id}`;
+      if (before.changed) await client`UPDATE audit_logs SET before_data = ${before.text} WHERE audit_log_id = ${row.id}`;
+      if (after.changed) await client`UPDATE audit_logs SET after_data = ${after.text} WHERE audit_log_id = ${row.id}`;
     }
   }
 

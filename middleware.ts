@@ -8,15 +8,17 @@
  * canonical and JSON-LD. Real users get the shell (known routes) or a real 404
  * (undeclared paths — previously a soft-200 that Google flagged as a soft-404).
  *
- * `middleware.ts` runs on Vercel only; it is intentionally outside
- * tsconfig.json's include (compiled by Vercel's edge runtime).
+ * `middleware.ts` runs on Vercel only (Routing Middleware, Node.js runtime);
+ * it is intentionally outside tsconfig.json's include.
  */
+import { next } from "@vercel/functions";
 import { classifySpaPath } from "./shared/routes/spaPaths";
 
 const BOT_USER_AGENT =
   /bot|crawler|spider|crawling|facebookexternalhit|facebot|slackbot|twitterbot|whatsapp|telegrambot|linkedinbot|pinterest|googlebot|bingbot|yandex|duckduckbot|baiduspider|applebot|discordbot|embedly|redditbot|skypeuripreview/i;
 
 export const config = {
+  runtime: "nodejs",
   // `storage` is excluded too: `/storage/(.*)` rewrites to `/api/index` and
   // extensionless storage keys must never be classified as unknown SPA paths.
   matcher: "/((?!api|storage|assets|_next/static|_next/image|favicon.ico|.*\\..*).*)",
@@ -44,7 +46,7 @@ const NOT_FOUND_HEADERS: Record<string, string> = {
   "x-robots-tag": "noindex",
 };
 
-export async function middleware(request: Request): Promise<Response | undefined> {
+export default async function middleware(request: Request): Promise<Response> {
   const userAgent = request.headers.get("user-agent") || "";
   const isBot = BOT_USER_AGENT.test(userAgent);
 
@@ -53,7 +55,7 @@ export async function middleware(request: Request): Promise<Response | undefined
   if (!isBot) {
     // Real users: let known SPA routes fall through to the catch-all rewrite.
     // Undeclared paths are hard 404s (no SPA shell, no inline JS).
-    if (classifySpaPath(url.pathname) === "known") return undefined;
+    if (classifySpaPath(url.pathname) === "known") return next();
     return new Response(NOT_FOUND_HTML, { status: 404, headers: NOT_FOUND_HEADERS });
   }
 
@@ -67,7 +69,7 @@ export async function middleware(request: Request): Promise<Response | undefined
   // 4xx (including 404 for missing listings/undeclared paths) must be
   // forwarded so crawlers see the real status. Only degrade to the SPA shell
   // when the prerenderer itself is failing (5xx).
-  if (response.status >= 500) return undefined;
+  if (response.status >= 500) return next();
 
   const robots =
     response.headers.get("x-robots-tag") || (response.status === 404 ? "noindex" : "");
