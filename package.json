@@ -57,7 +57,6 @@
     "@trpc/react-query": "^11.6.0",
     "@trpc/server": "^11.6.0",
     "@upstash/redis": "^1.38.4",
-    "@vercel/functions": "^3.9.11",
     "axios": "^1.19.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
