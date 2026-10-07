@@ -81,6 +81,12 @@
          ink-2 5.51:1   line 1.6:1 (decorative only, never carries text) */
     --brand-panel-ink-2: rgba(255, 255, 255, 0.72);
     --brand-panel-line:  rgba(255, 255, 255, 0.16);
+    /* Brand-blue accent for ACTIVE chrome on the always-dark panel (nav pills,
+       selected options). Theme-independent like the rest of the panel family.
+       #8AB4FF clears AA normal text on both panel surfaces:
+         8.96:1 on #0B1220 (--brand-navy, the header)
+         4.90:1 on #123A93 (--brand-panel, console/hero headers) */
+    --brand-panel-accent: #8AB4FF;
 
     /* Border Tokens — crisp hairlines */
     --border-subtle:  #EBEBEB;
@@ -261,6 +267,7 @@
   --color-brand-panel-ink:  hsl(from var(--brand-panel-ink) h s l / alpha);
   --color-brand-panel-ink-2: hsl(from var(--brand-panel-ink-2) h s l / alpha);
   --color-brand-panel-line:  hsl(from var(--brand-panel-line) h s l / alpha);
+  --color-brand-panel-accent: hsl(from var(--brand-panel-accent) h s l / alpha);
 
   /* backward-compatible accent aliases consumed by existing components */
   --color-accent-indigo:     hsl(from var(--accent-primary) h s l / alpha);

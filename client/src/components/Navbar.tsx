@@ -152,8 +152,8 @@ function NavSelector({
               }}
               className={`flex min-h-9 w-full items-center justify-between gap-2 rounded-sm px-3 text-xs font-bold transition-colors duration-150 ${
                 option.current
-                  ? "bg-accent-clay-soft text-accent-clay"
-                  : "text-white/80 hover:bg-white/10 hover:text-white"
+                  ? "bg-accent-clay text-[var(--primary-ink)]"
+                  : "text-ink-secondary hover:bg-bg-muted hover:text-ink-primary"
               }`}
             >
               <span>{option.label}</span>
@@ -374,12 +374,12 @@ export default function Navbar() {
             mobile
               ? `flex min-h-11 items-center gap-3 rounded-sm px-4 py-3 text-sm font-bold transition-colors ${
                   active
-                    ? "bg-accent-clay text-white"
-                    : "text-white/80 hover:bg-white/10 hover:text-white"
+                    ? "bg-accent-clay text-[var(--primary-ink)]"
+                    : "text-ink-secondary hover:bg-bg-muted hover:text-ink-primary"
                 }`
               : `flex items-center gap-1.5 rounded-sm border px-2.5 py-2 text-xs font-bold transition-colors ${
                   active
-                    ? "border-border-default bg-accent-clay-soft text-accent-clay"
+                    ? "border-brand-panel-line bg-white/10 text-brand-panel-accent"
                     : "border-transparent text-white/65 hover:bg-white/10 hover:text-white"
                 }`
           }
@@ -408,10 +408,10 @@ export default function Navbar() {
     />
   </div>
   <div className="flex flex-col">
-    <span className="font-display font-bold text-lg sm:text-xl leading-none text-ink-primary">
-      ALTUS<span className="font-medium text-accent-clay">place</span>
+    <span className="font-display font-bold text-lg sm:text-xl leading-none text-brand-panel-ink">
+      ALTUS<span className="font-medium text-brand-panel-accent">place</span>
     </span>
-    <span className="text-[9px] sm:text-[10px] tracking-[0.18em] text-ink-tertiary uppercase -mt-1 font-semibold">
+    <span className="text-[9px] sm:text-[10px] tracking-[0.18em] text-brand-panel-ink-2 uppercase -mt-1 font-semibold">
       Rent. Drive. Live.
     </span>
   </div>
@@ -422,7 +422,7 @@ export default function Navbar() {
           </nav>
 
           <div className="hidden shrink-0 items-center gap-2 md:flex">
-            <Link href="/become-partner" className="b2-press corner-cut-sm hidden min-h-10 items-center gap-1.5 rounded-sm bg-accent-clay px-3 text-xs font-extrabold text-white shadow-[var(--shadow-clay)] transition-colors hover:bg-accent-clay-hover lg:inline-flex" aria-label={t("partnerJoinCta")} title={t("partnerJoinCta")}>
+            <Link href="/become-partner" className="b2-press corner-cut-sm hidden min-h-10 items-center gap-1.5 rounded-sm bg-accent-clay px-3 text-xs font-extrabold text-[var(--primary-ink)] shadow-[var(--shadow-clay)] transition-colors hover:bg-accent-clay-hover lg:inline-flex" aria-label={t("partnerJoinCta")} title={t("partnerJoinCta")}>
               <Handshake className="h-4 w-4" />
               <span>{t("partnerJoinCta")}</span>
             </Link>
@@ -671,7 +671,7 @@ export default function Navbar() {
                 <p className="mb-2 flex items-center gap-1.5 text-xs font-bold text-ink-secondary"><Coins className="h-3.5 w-3.5 text-accent-clay" /> {t("currency")}</p>
                 <div className="b2-segmented-control w-full">
                   {(["MAD", "EUR", "USD"] as Currency[]).map((item) => (
-                    <button key={item} type="button" aria-pressed={currency === item} onClick={() => selectCurrency(item)} className={currency === item ? "bg-accent-clay text-white" : "text-white/80 hover:bg-white/10 hover:text-white"}>{item}</button>
+                    <button key={item} type="button" aria-pressed={currency === item} onClick={() => selectCurrency(item)} className={currency === item ? "bg-accent-clay text-[var(--primary-ink)]" : "text-ink-secondary hover:bg-bg-muted hover:text-ink-primary"}>{item}</button>
                   ))}
                 </div>
               </div>
@@ -680,7 +680,7 @@ export default function Navbar() {
                 <p className="mb-2 flex items-center gap-1.5 text-xs font-bold text-ink-secondary"><Globe className="h-3.5 w-3.5 text-accent-clay" /> {t("language")}</p>
                 <div className="b2-segmented-control w-full">
                   {(["ar", "fr", "en"] as const).map((item) => (
-                    <button key={item} type="button" aria-pressed={language === item} onClick={() => selectLanguage(item)} className={language === item ? "bg-accent-clay text-white" : "text-white/80 hover:bg-white/10 hover:text-white"}>{item === "ar" ? t("arabic") : item === "fr" ? t("french") : t("english")}</button>
+                    <button key={item} type="button" aria-pressed={language === item} onClick={() => selectLanguage(item)} className={language === item ? "bg-accent-clay text-[var(--primary-ink)]" : "text-ink-secondary hover:bg-bg-muted hover:text-ink-primary"}>{item === "ar" ? t("arabic") : item === "fr" ? t("french") : t("english")}</button>
                   ))}
                 </div>
               </div>
@@ -705,11 +705,11 @@ export default function Navbar() {
                 </button>
               )}
 
-              <Link href="/become-partner" onClick={() => setMobileMenuOpen(false)} className="b2-press corner-cut-sm flex min-h-11 items-center justify-center gap-2 rounded-sm bg-accent-green px-4 py-3 text-sm font-extrabold text-white transition-colors hover:bg-accent-green/90">
+              <Link href="/become-partner" onClick={() => setMobileMenuOpen(false)} className="b2-press corner-cut-sm flex min-h-11 items-center justify-center gap-2 rounded-sm bg-accent-green px-4 py-3 text-sm font-extrabold text-[var(--brand-navy)] transition-colors hover:bg-accent-green/90">
                 <Handshake className="h-4 w-4" />
                 {t("partnerJoinCta")}
               </Link>
-              <Link href="/add-car" onClick={() => setMobileMenuOpen(false)} className="b2-press corner-cut-sm flex min-h-11 items-center justify-center rounded-sm bg-accent-clay px-4 py-3 text-sm font-extrabold text-white shadow-[var(--shadow-clay)] transition-colors hover:bg-accent-clay-hover">
+              <Link href="/add-car" onClick={() => setMobileMenuOpen(false)} className="b2-press corner-cut-sm flex min-h-11 items-center justify-center rounded-sm bg-accent-clay px-4 py-3 text-sm font-extrabold text-[var(--primary-ink)] shadow-[var(--shadow-clay)] transition-colors hover:bg-accent-clay-hover">
                 {t("addCar")}
               </Link>
             </div>

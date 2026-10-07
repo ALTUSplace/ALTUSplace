@@ -117,6 +117,7 @@ const PANEL: Pair[] = [
   ['panel ink on panel', '--brand-panel-ink', '--brand-panel'],
   ['panel muted ink on panel', '--brand-panel-ink-2', '--brand-panel'],
   ['panel ink on panel gradient stop', '--brand-panel-ink', '--brand-panel-2'],
+  ['panel accent on panel', '--brand-panel-accent', '--brand-panel'],
 ];
 
 function assertPairs(scope: Scope, pairs: Pair[]) {
