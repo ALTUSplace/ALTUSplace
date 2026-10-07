@@ -101,7 +101,7 @@ export function SearchBar({
   // stays legible against the translucent card instead of rendering black.
   const fieldControlClass = isOverlay
     ? "w-full min-w-0 border-0 bg-transparent outline-none text-sm font-bold text-white placeholder:text-white/60 cursor-pointer [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:cursor-pointer"
-    : "w-full min-w-0 bg-transparent outline-none text-sm font-bold text-ink-primary placeholder:text-ink-tertiary cursor-pointer [color-scheme:light] [&::-webkit-calendar-picker-indicator]:cursor-pointer";
+    : "w-full min-w-0 bg-transparent outline-none text-sm font-bold text-ink-primary placeholder:text-ink-tertiary cursor-pointer [&::-webkit-calendar-picker-indicator]:cursor-pointer";
 
   const tabButtonClass = (active: boolean) => {
     if (isOverlay) {
@@ -113,7 +113,7 @@ export function SearchBar({
     }
     return `inline-flex items-center gap-2 rounded-full px-5 py-2 text-sm font-bold transition-colors duration-200 ${
       active
-        ? "bg-accent-clay text-white shadow-[var(--shadow-clay)]"
+        ? "bg-accent-clay text-[var(--primary-ink)] shadow-[var(--shadow-clay)]"
         : "text-ink-secondary hover:text-ink-primary"
     }`;
   };
@@ -227,8 +227,8 @@ export function SearchBar({
               isOverlay
                 ? "b2-press flex shrink-0 items-center justify-center gap-2 self-stretch rounded-lg bg-accent-clay px-6 py-3 text-sm font-extrabold text-[var(--primary-ink)] shadow-[var(--shadow-clay)] transition-colors hover:bg-accent-clay-hover lg:ms-1"
                 : isCompact
-                  ? "b2-press flex shrink-0 items-center justify-center gap-2 self-stretch rounded-xl bg-accent-clay px-6 py-3 text-sm font-extrabold text-white shadow-[var(--shadow-clay)] transition-colors hover:bg-accent-clay-hover lg:ms-1"
-                  : "b2-press flex shrink-0 items-center justify-center gap-2 self-stretch rounded-full bg-accent-clay px-8 py-3.5 text-sm font-extrabold text-white shadow-[var(--shadow-clay)] transition-colors hover:bg-accent-clay-hover lg:ms-1"
+                  ? "b2-press flex shrink-0 items-center justify-center gap-2 self-stretch rounded-xl bg-accent-clay px-6 py-3 text-sm font-extrabold text-[var(--primary-ink)] shadow-[var(--shadow-clay)] transition-colors hover:bg-accent-clay-hover lg:ms-1"
+                  : "b2-press flex shrink-0 items-center justify-center gap-2 self-stretch rounded-full bg-accent-clay px-8 py-3.5 text-sm font-extrabold text-[var(--primary-ink)] shadow-[var(--shadow-clay)] transition-colors hover:bg-accent-clay-hover lg:ms-1"
             }
           >
             <Search className="h-4 w-4" strokeWidth={2.5} />
