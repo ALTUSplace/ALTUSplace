@@ -4,6 +4,9 @@
   "buildCommand": "pnpm install && pnpm build",
   "outputDirectory": "dist/public",
   "trailingSlash": false,
+  "proxy": {
+    "entrypoint": "middleware.ts"
+  },
   "headers": [
     {
       "source": "/(.*)",
