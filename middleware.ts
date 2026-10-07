@@ -12,7 +12,7 @@
  * the `proxy` entrypoint; standard Web Platform APIs only — no external
  * runtime helpers); it is intentionally outside tsconfig.json's include.
  */
-import { classifySpaPath } from "./shared/routes/spaPaths";
+import { classifySpaPath } from "./shared/routes/spaPaths.js";
 
 const BOT_USER_AGENT =
   /bot|crawler|spider|crawling|facebookexternalhit|facebot|slackbot|twitterbot|whatsapp|telegrambot|linkedinbot|pinterest|googlebot|bingbot|yandex|duckduckbot|baiduspider|applebot|discordbot|embedly|redditbot|skypeuripreview/i;
