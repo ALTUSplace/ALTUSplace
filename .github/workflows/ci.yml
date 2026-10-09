@@ -51,6 +51,17 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      # Authenticated pulls from Docker Hub. The Migration schema parity step
+      # below launches an ephemeral postgres container via `docker run`, and
+      # unauthenticated pulls were hitting Docker Hub's per-IP rate limit
+      # (`toomanyrequests`) and failing CI. Logging in with the repo secrets
+      # keeps those pulls under the authenticated (much higher) window.
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
       # Reads the exact pnpm version from the `packageManager` field in
       # package.json (pnpm@10.4.1) and activates it through corepack, so CI can
       # never silently drift onto a different package manager than local dev.
