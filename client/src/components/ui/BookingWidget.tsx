@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { ShieldCheck } from "lucide-react";
+import { useRef, useState } from "react";
+import { ShieldCheck, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -38,6 +38,9 @@ const COPY = {
     total: "المجموع",
     secure: "دفع آمن · إلغاء مجاني قبل الاستلام",
     bookingDetails: "تفاصيل الحجز",
+    tomorrow: "غداً",
+    nextWeekend: "عطلة نهاية الأسبوع",
+    customRange: "نطاق مخصص",
   },
   fr: {
     perNight: "/ nuit",
@@ -55,6 +58,9 @@ const COPY = {
     total: "Total",
     secure: "Paiement sécurisé · Annulation gratuite avant l'arrivée",
     bookingDetails: "Détails de la réservation",
+    tomorrow: "Demain",
+    nextWeekend: "Week-end prochain",
+    customRange: "Période personnalisée",
   },
   en: {
     perNight: "/ night",
@@ -72,6 +78,9 @@ const COPY = {
     total: "Total",
     secure: "Secure payment · Free cancellation before check-in",
     bookingDetails: "Booking details",
+    tomorrow: "Tomorrow",
+    nextWeekend: "Next weekend",
+    customRange: "Custom range",
   },
 } as const;
 
@@ -83,6 +92,25 @@ export function BookingWidget(props: BookingWidgetProps) {
   const [checkIn, setCheckIn] = useState(initialCheckIn ?? "");
   const [checkOut, setCheckOut] = useState(initialCheckOut ?? "");
   const [guests, setGuests] = useState(1);
+  const checkInRef = useRef<HTMLInputElement>(null);
+
+  // Quick-select drives the native date inputs (they remain the "custom" path).
+  // Prices recompute instantly because nights/total derive from state below.
+  const setQuickDates = (mode: "tomorrow" | "weekend") => {
+    const offset = (n: number) => {
+      const d = new Date();
+      d.setDate(d.getDate() + n);
+      return d.toISOString().slice(0, 10);
+    };
+    if (mode === "tomorrow") {
+      setCheckIn(offset(1));
+      setCheckOut(offset(2));
+      return;
+    }
+    const daysToFriday = (5 - new Date().getDay() + 7) % 7; // 0 when today is Friday
+    setCheckIn(offset(daysToFriday));
+    setCheckOut(offset(daysToFriday + 2));
+  };
   const nights = calculateRentalDays(checkIn, checkOut) || minNights;
   // Shared calculator keeps the guest preview identical to the server total —
   // no ad-hoc service fee: base rental only (add-ons are chosen at checkout).
@@ -98,10 +126,25 @@ export function BookingWidget(props: BookingWidgetProps) {
         <span className="text-sm font-medium text-ink-secondary">{currency}</span>
         <span className="text-sm text-ink-tertiary">{copy.perNight}</span>
       </div>
-      {rating && (<div className="flex items-center gap-1.5 text-sm"><span className="font-semibold text-ink-primary">★ {rating.toFixed(1)}</span>{reviewCount && <span className="text-ink-tertiary">· {reviewCount} {copy.reviews}</span>}</div>)}
+      {rating != null && rating > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5 text-sm">
+          <span className="flex items-center gap-0.5 text-accent-amber" aria-hidden="true">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Star key={i} className={cn("size-3.5", i < Math.round(rating) ? "fill-accent-amber" : "text-ink-tertiary")} />
+            ))}
+          </span>
+          <span className="font-semibold text-ink-primary">{rating.toFixed(1)}</span>
+          {reviewCount != null && <span className="text-ink-tertiary">({reviewCount} {copy.reviews})</span>}
+        </div>
+      )}
+      <div className="flex flex-wrap gap-2">
+        <button type="button" onClick={() => setQuickDates("tomorrow")} className="rounded-full border border-border-default px-3 py-1.5 text-xs font-semibold text-ink-secondary transition-colors hover:border-accent-clay hover:text-ink-primary">{copy.tomorrow}</button>
+        <button type="button" onClick={() => setQuickDates("weekend")} className="rounded-full border border-border-default px-3 py-1.5 text-xs font-semibold text-ink-secondary transition-colors hover:border-accent-clay hover:text-ink-primary">{copy.nextWeekend}</button>
+        <button type="button" onClick={() => { checkInRef.current?.focus(); try { (checkInRef.current as HTMLInputElement & { showPicker?: () => void })?.showPicker?.(); } catch { /* focus is enough */ } }} className="rounded-full border border-border-default px-3 py-1.5 text-xs font-semibold text-ink-secondary transition-colors hover:border-accent-clay hover:text-ink-primary">{copy.customRange}</button>
+      </div>
       <div className="rounded-xl border border-border-default overflow-hidden">
         <div className="grid grid-cols-2 divide-x divide-border-default">
-          <div className="px-3 py-2.5"><label className="block text-[10px] font-bold uppercase tracking-wider text-ink-tertiary">{copy.checkIn}</label><input type="date" value={checkIn} onChange={(e) => setCheckIn(e.target.value)} className="mt-1 w-full bg-transparent text-sm font-medium text-ink-primary outline-none" /></div>
+          <div className="px-3 py-2.5"><label className="block text-[10px] font-bold uppercase tracking-wider text-ink-tertiary">{copy.checkIn}</label><input ref={checkInRef} type="date" value={checkIn} onChange={(e) => setCheckIn(e.target.value)} className="mt-1 w-full bg-transparent text-sm font-medium text-ink-primary outline-none" /></div>
           <div className="px-3 py-2.5"><label className="block text-[10px] font-bold uppercase tracking-wider text-ink-tertiary">{copy.checkOut}</label><input type="date" value={checkOut} onChange={(e) => setCheckOut(e.target.value)} className="mt-1 w-full bg-transparent text-sm font-medium text-ink-primary outline-none" /></div>
         </div>
         <div className="border-t border-border-default px-3 py-2.5"><label className="block text-[10px] font-bold uppercase tracking-wider text-ink-tertiary">{copy.guestsLabel}</label><div className="mt-1 flex items-center justify-between"><span className="text-sm font-medium text-ink-primary">{guests} {guestLabel}</span><div className="flex items-center gap-2"><button onClick={() => setGuests(Math.max(1, guests - 1))} className="grid size-11 place-items-center rounded-full border border-border-default text-ink-secondary transition-colors hover:bg-bg-muted" aria-label="Decrease guests">−</button><button onClick={() => setGuests(Math.min(maxGuests, guests + 1))} className="grid size-11 place-items-center rounded-full border border-border-default text-ink-secondary transition-colors hover:bg-bg-muted" aria-label="Increase guests">+</button></div></div></div>
