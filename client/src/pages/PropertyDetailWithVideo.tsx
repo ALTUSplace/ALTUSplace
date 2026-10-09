@@ -318,6 +318,25 @@ export default function PropertyDetailWithVideo() {
     setLocation(`/checkout?${checkoutParams.toString()}`);
   };
 
+  // Quick-select drives the native date inputs. Tomorrow = +1/+2 days; the next
+  // weekend = the upcoming Friday → Sunday (always in the future). The total
+  // recalculates instantly because daysCount/totalPrice derive from state.
+  const applyQuickDates = (mode: "tomorrow" | "weekend") => {
+    const offset = (n: number) => {
+      const date = new Date();
+      date.setDate(date.getDate() + n);
+      return date.toISOString().slice(0, 10);
+    };
+    if (mode === "tomorrow") {
+      setStartDate(offset(1));
+      setEndDate(offset(2));
+      return;
+    }
+    const daysToFriday = (5 - new Date().getDay() + 7) % 7; // 0 when today is Friday
+    setStartDate(offset(daysToFriday));
+    setEndDate(offset(daysToFriday + 2));
+  };
+
   const typeLabel = listing.officeType
     ? (language === "fr" ? OFFICE_TYPE_LABEL_FR[listing.officeType] : OFFICE_TYPE_LABEL[listing.officeType]) || listing.officeType
     : listing.propertyType || listing.category;
@@ -585,6 +604,11 @@ export default function PropertyDetailWithVideo() {
                   <Calendar className="size-4 text-accent-clay" aria-hidden="true" />
                   {language === "fr" ? "Sélectionner les dates" : "اختر تواريخ الحجز"}
                 </div>
+                <div className="flex flex-wrap gap-2">
+                  <button type="button" onClick={() => applyQuickDates("tomorrow")} className="rounded-full border border-border-default px-3 py-1.5 text-xs font-semibold text-ink-secondary transition-colors hover:border-accent-clay hover:text-ink-primary">{language === "fr" ? "Demain" : "غداً"}</button>
+                  <button type="button" onClick={() => applyQuickDates("weekend")} className="rounded-full border border-border-default px-3 py-1.5 text-xs font-semibold text-ink-secondary transition-colors hover:border-accent-clay hover:text-ink-primary">{language === "fr" ? "Week-end prochain" : "عطلة نهاية الأسبوع"}</button>
+                  <button type="button" onClick={() => document.getElementById("booking-start")?.focus()} className="rounded-full border border-border-default px-3 py-1.5 text-xs font-semibold text-ink-secondary transition-colors hover:border-accent-clay hover:text-ink-primary">{language === "fr" ? "Période personnalisée" : "نطاق مخصص"}</button>
+                </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
                     <label htmlFor="booking-start" className="text-xs font-semibold text-ink-secondary">
@@ -617,6 +641,11 @@ export default function PropertyDetailWithVideo() {
                   </span>
                   <span className="font-bold text-accent-clay">{totalPrice.toLocaleString("fr-MA")} {language === "fr" ? "MAD" : "درهم"}</span>
                 </div>
+                {!rangeBlocked && startDate && endDate && (
+                  <p className="rounded-xl bg-bg-muted p-3 text-xs font-semibold text-ink-primary">
+                    ✅ {language === "fr" ? "Disponible à vos dates." : "متاح في تواريخك."}
+                  </p>
+                )}
                 {rangeBlocked && (
                   /* Red text sits on the neutral muted surface, not on a red
                      tint: --accent-red on a 10% red wash is only 4.14:1 in the

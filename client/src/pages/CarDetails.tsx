@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useRoute, useLocation, useSearch } from 'wouter';
 import { Button } from '@/components/ui/button';
-import InteractiveCalendar from '@/components/InteractiveCalendar';
 import { Star, ShieldCheck, Users, Car as CarIcon, Fuel, MapPin, MessageCircle, CheckCircle2, Award, Calendar, ChevronRight, Share2, Copy, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { trpc } from '@/lib/trpc';
@@ -450,6 +449,8 @@ export default function CarDetails() {
             <BookingWidget
               pricePerDay={car.pricePerDay}
               currency="MAD"
+              rating={summary.count > 0 ? summary.average : undefined}
+              reviewCount={summary.count > 0 ? summary.count : undefined}
               initialCheckIn={startDate}
               initialCheckOut={endDate}
               onReserve={({ checkIn, checkOut }) => {
