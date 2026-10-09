@@ -51,16 +51,39 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      # Authenticated pulls from Docker Hub. The Migration schema parity step
-      # below launches an ephemeral postgres container via `docker run`, and
-      # unauthenticated pulls were hitting Docker Hub's per-IP rate limit
-      # (`toomanyrequests`) and failing CI. Logging in with the repo secrets
-      # keeps those pulls under the authenticated (much higher) window.
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      # Authenticated pulls from Docker Hub with retry. The Migration schema
+      # parity step below launches an ephemeral postgres container via
+      # `docker run`; unauthenticated pulls were hitting Docker Hub's per-IP
+      # rate limit (`toomanyrequests`), and docker/login-action@v3 has no
+      # retry of its own, so a single transient egress timeout to
+      # auth.docker.io from a shared runner IP sinks the whole gate. This
+      # inline loop retries until the login sticks (MAX_RETRIES attempts,
+      # 15s backoff) and fails loudly only if every attempt fails. On success
+      # the credentials remain in ~/.docker/config.json for the rest of the
+      # job, so the postgres pull below runs authenticated.
+      - name: Authenticate Docker with Retry
+        env:
+          DOCKER_USER: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKER_PASS: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          set -u
+          MAX_RETRIES=5
+          RETRY_DELAY=15
+          attempt=0
+          while [ "$attempt" -lt "$MAX_RETRIES" ]; do
+            attempt=$((attempt + 1))
+            echo "Docker Hub login attempt ${attempt}/${MAX_RETRIES}..."
+            if echo "$DOCKER_PASS" | docker login --username "$DOCKER_USER" --password-stdin registry-1.docker.io; then
+              echo "Docker Hub login succeeded."
+              exit 0
+            fi
+            if [ "$attempt" -lt "$MAX_RETRIES" ]; then
+              echo "Login failed on attempt ${attempt}/${MAX_RETRIES}; retrying in ${RETRY_DELAY}s..."
+              sleep "$RETRY_DELAY"
+            fi
+          done
+          echo "Docker Hub login failed after ${MAX_RETRIES} attempts." >&2
+          exit 1
 
       # Reads the exact pnpm version from the `packageManager` field in
       # package.json (pnpm@10.4.1) and activates it through corepack, so CI can
