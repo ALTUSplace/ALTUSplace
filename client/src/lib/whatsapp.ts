@@ -33,7 +33,7 @@ export function buildWhatsAppUrl(phone: string | null | undefined, message: stri
  * the fallback is a clearly-placeholder Moroccan range that agencies replace.
  */
 export const SUPPORT_WHATSAPP_NUMBER: string = (() => {
-  const fallback = "212600000000";
+  const fallback = "212754382654";
   try {
     const configured = (import.meta.env.VITE_WHATSAPP_SUPPORT_PHONE as string | undefined)?.trim();
     return configured ? (normalizeWhatsAppNumber(configured) || fallback) : fallback;
