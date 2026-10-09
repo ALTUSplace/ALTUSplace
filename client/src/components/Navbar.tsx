@@ -442,12 +442,12 @@ export default function Navbar() {
 
             <NavSelector
               icon={Globe}
-              title={t("chooseLanguage")}
-              value={language === "ar" ? "عربي" : language === "fr" ? "FR" : "EN"}
+              title={t("language")}
+              value={language === "ar" ? t("arabic") : language === "fr" ? t("french") : t("english")}
               options={[
-                { value: "ar", label: "عربي", current: language === "ar" },
-                { value: "fr", label: "FR", current: language === "fr" },
-                { value: "en", label: "EN", current: language === "en" },
+                { value: "ar", label: t("arabic"), current: language === "ar" },
+                { value: "fr", label: t("french"), current: language === "fr" },
+                { value: "en", label: t("english"), current: language === "en" },
               ]}
               onSelect={(value) => selectLanguage(value as Language)}
             />
