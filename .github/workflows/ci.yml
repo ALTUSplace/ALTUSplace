@@ -51,16 +51,20 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      # Authenticated pulls from Docker Hub with retry. The Migration schema
-      # parity step below launches an ephemeral postgres container via
-      # `docker run`; unauthenticated pulls were hitting Docker Hub's per-IP
-      # rate limit (`toomanyrequests`), and docker/login-action@v3 has no
-      # retry of its own, so a single transient egress timeout to
-      # auth.docker.io from a shared runner IP sinks the whole gate. This
-      # inline loop retries until the login sticks (MAX_RETRIES attempts,
-      # 15s backoff) and fails loudly only if every attempt fails. On success
-      # the credentials remain in ~/.docker/config.json for the rest of the
-      # job, so the postgres pull below runs authenticated.
+      # Authenticated pulls from Docker Hub with retry, bound to the Docker Hub
+      # registry scope. Logging in with server `docker.io` makes the daemon
+      # store the credential under `https://index.docker.io/v1/` in
+      # ~/.docker/config.json -- the exact key it consults when pulling
+      # `postgres:16-alpine` (a default docker.io namespace image), so
+      # `docker run` uses the session with no extra flags. Logging in against
+      # `registry-1.docker.io` instead keyed the entry to a host the default
+      # pull flow never looks up: the pull's token request then went out
+      # unauthenticated (the CI log showed `account=githubactions`) and fell
+      # back into the same per-IP rate limit / egress-drop class of failure.
+      #
+      # The loop retries until the login sticks (5 attempts, 15s backoff)
+      # because auth.docker.io egress from shared runner IPs has been observed
+      # dropping transiently; it fails loudly only if every attempt fails.
       - name: Authenticate Docker with Retry
         env:
           DOCKER_USER: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -73,7 +77,7 @@ jobs:
           while [ "$attempt" -lt "$MAX_RETRIES" ]; do
             attempt=$((attempt + 1))
             echo "Docker Hub login attempt ${attempt}/${MAX_RETRIES}..."
-            if echo "$DOCKER_PASS" | docker login --username "$DOCKER_USER" --password-stdin registry-1.docker.io; then
+            if echo "$DOCKER_PASS" | docker login --username "$DOCKER_USER" --password-stdin docker.io; then
               echo "Docker Hub login succeeded."
               exit 0
             fi
@@ -227,8 +231,34 @@ jobs:
       # with #25 instead, so that the hand-written 0021 migration could not reach
       # main on an advisory gate. Splitting it out afterwards is still worthwhile if
       # a separately-reviewed promotion is preferred.
+      #
+      # Retry wrapper: even with the login correctly bound to docker.io above,
+      # the manifest/token request inside the parity run has itself been
+      # observed timing out on auth.docker.io egress. Retrying the whole parity
+      # command is safe -- each invocation spawns and deletes its own
+      # throwaway postgres container (no real database, no shared mutable
+      # state), so a transient network failure simply re-runs the comparison.
+      # Fails loudly only if all 3 attempts fail.
       - name: Migration schema parity
-        run: pnpm check:schema-parity
+        run: |
+          set -u
+          MAX_RETRIES=3
+          RETRY_DELAY=20
+          attempt=0
+          while [ "$attempt" -lt "$MAX_RETRIES" ]; do
+            attempt=$((attempt + 1))
+            echo "Migration schema parity attempt ${attempt}/${MAX_RETRIES}..."
+            if pnpm check:schema-parity; then
+              echo "Migration schema parity passed."
+              exit 0
+            fi
+            if [ "$attempt" -lt "$MAX_RETRIES" ]; then
+              echo "Parity failed on attempt ${attempt}/${MAX_RETRIES}; retrying in ${RETRY_DELAY}s..."
+              sleep "$RETRY_DELAY"
+            fi
+          done
+          echo "Migration schema parity failed after ${MAX_RETRIES} attempts." >&2
+          exit 1
 
       # Sub-AA contrast token regression guard. Blocking, and currently passing.
       #
