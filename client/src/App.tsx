@@ -59,6 +59,7 @@ const VoucherPage = lazy(() => import("./pages/Voucher"));
 const BookingMessagesPage = lazy(() => import("./pages/BookingMessages"));
 const AgencyDashboardPage = lazy(() => import("./pages/AgencyDashboard"));
 const RegisterPage = lazy(() => import("./pages/Register"));
+const LoginPage = lazy(() => import("./pages/Login"));
 const DirectLoginPage = lazy(() => import("./pages/DirectLogin"));
 const AgencyOnboardingPage = lazy(() => import("./pages/AgencyOnboarding"));
 const PartnerWithUsPage = lazy(() => import("./pages/PartnerWithUs"));
@@ -123,13 +124,16 @@ function BottomNavGate() {
 }
 
 /**
- * Strict auth-only route isolation for /register, /terms and /owner-login.
- * Anonymous visitors (no session) are redirected to the public homepage "/"
- * instead of seeing the login/consent/terms UI — the SPA-side counterpart of
- * the server middleware in server/_core/routeGuard.ts (which matters on
- * Vercel static hosting, where page requests never hit Express). The
- * short-lived b2_auth_intent marker set by startLogin() lets the ACTIVE
- * login/consent flow pass through before a session exists.
+ * Strict auth-only route isolation for /owner-login only. Anonymous visitors
+ * (no session AND no active owner-login intent cookie) are redirected to the
+ * public homepage "/" instead of seeing the owner login UI — the SPA-side
+ * counterpart of the server middleware in server/_core/routeGuard.ts (which
+ * matters on Vercel static hosting, where page requests never hit Express).
+ * The short-lived b2_auth_intent marker set by startOwnerLogin() lets the
+ * ACTIVE owner-login flow pass through before a session exists.
+ *
+ * /register, /terms and /login are PUBLIC routes (native renter signup, legal
+ * content and native renter login respectively) and are NOT wrapped here.
  */
 function AuthOnlyRoute({ children }: { children: React.ReactNode }) {
   const { t } = useLanguage();
@@ -195,11 +199,12 @@ function Router() {
       <Route path="/admin/super">{() => <AccessGuard area="superadmin"><Suspense fallback={<PageLoader />}><SuperDashboardPage /></Suspense></AccessGuard>}</Route>
       <Route path="/admin/super/dashboard">{() => <AccessGuard area="superadmin"><Suspense fallback={<PageLoader />}><SuperAdminDashboardPage /></Suspense></AccessGuard>}</Route>
       <Route path="/dispute-resolution" component={DisputeResolutionPage} />
-      <Route path="/terms">{() => <Suspense fallback={<PageLoader />}><AuthOnlyRoute><TermsPage /></AuthOnlyRoute></Suspense>}</Route>
+      <Route path="/terms">{() => <Suspense fallback={<PageLoader />}><TermsPage /></Suspense>}</Route>
       <Route path="/conditions-utilisation" component={ConditionsUtilisationPage} />
       <Route path="/politique-confidentialite" component={PolitiqueConfidentialitePage} />
       <Route path="/mentions-legales" component={MentionsLegalesPage} />
-      <Route path="/register">{() => <Suspense fallback={<PageLoader />}><AuthOnlyRoute><RegisterPage /></AuthOnlyRoute></Suspense>}</Route>
+      <Route path="/register">{() => <Suspense fallback={<PageLoader />}><RegisterPage /></Suspense>}</Route>
+      <Route path="/login">{() => <Suspense fallback={<PageLoader />}><LoginPage /></Suspense>}</Route>
       <Route path="/owner-login">{() => <Suspense fallback={<PageLoader />}><AuthOnlyRoute><DirectLoginPage /></AuthOnlyRoute></Suspense>}</Route>
       <Route path="/become-partner">{() => <Suspense fallback={<PageLoader />}><PartnerWithUsPage /></Suspense>}</Route>
       <Route path="/become-partner/car-rental">{() => <Suspense fallback={<PageLoader />}><PartnerApplyPage /></Suspense>}</Route>

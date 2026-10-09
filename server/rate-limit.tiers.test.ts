@@ -165,20 +165,20 @@ describe("C5 — auth.me uses a SEPARATE bucket from login", () => {
     expect(fire(req("GET", "/api/trpc/auth.me?batch=1"))).toBe(200);
     // ...and the reverse: burning auth.me must not block a login.
     __resetRateLimitBucketsForTests();
-    for (let i = 0; i < 61; i++) fire(req("GET", "/api/trpc/auth.me?batch=1"));
+    for (let i = 0; i < 301; i++) fire(req("GET", "/api/trpc/auth.me?batch=1"));
     expect(fire(req("POST", "/api/auth/direct-login"))).toBe(200);
   });
 
-  it("caps session reads at 60/min so polling cannot be free", () => {
+  it("caps session reads at 300/min so polling cannot be free", () => {
     const statuses: number[] = [];
-    for (let i = 0; i < 61; i++) statuses.push(fire(req("GET", "/api/trpc/auth.me?batch=1")));
-    expect(statuses.slice(0, 60).every(s => s === 200)).toBe(true);
-    expect(statuses[60]).toBe(429);
+    for (let i = 0; i < 301; i++) statuses.push(fire(req("GET", "/api/trpc/auth.me?batch=1")));
+    expect(statuses.slice(0, 300).every(s => s === 200)).toBe(true);
+    expect(statuses[300]).toBe(429);
   });
 
   it("keeps notifications on the same session tier as auth.me", () => {
-    for (let i = 0; i < 61; i++) fire(req("GET", "/api/trpc/notifications.unreadCount?batch=1"));
-    // 60 spent: auth.me shares the session-read budget, NOT the login budget.
+    for (let i = 0; i < 301; i++) fire(req("GET", "/api/trpc/notifications.unreadCount?batch=1"));
+    // 300 spent: auth.me shares the session-read budget, NOT the login budget.
     expect(fire(req("GET", "/api/trpc/auth.me?batch=1"))).toBe(429);
     expect(fire(req("POST", "/api/auth/direct-login"))).toBe(200);
   });

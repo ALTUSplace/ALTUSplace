@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation, useSearch } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -246,7 +246,7 @@ export default function CheckoutPage() {
 
   // KYC gate — mirrors the server-side enforcement in bookings.create:
   // unverified/pending/rejected profiles cannot open the booking flow.
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loading: authLoading } = useAuth();
   const kycStatusQuery = trpc.kyc.status.useQuery(undefined, { enabled: isAuthenticated });
   const kycVerified = !isAuthenticated
     || (kycStatusQuery.data
@@ -256,6 +256,18 @@ export default function CheckoutPage() {
   const kycStatusLabel = kycStatusQuery.data
     ? KYC_STATUS_CONFIG[kycStatusQuery.data.status as KycStatus]?.label.ar
     : '';
+
+  // Auth gate — a booking always belongs to a signed-in user. Once both the
+  // auth session and the listing query have settled, anonymous visitors are
+  // sent to the native renter login, carrying the exact checkout URL (path +
+  // query) so they return to this same page after signing in.
+  useEffect(() => {
+    if (authLoading || isLoading || !resolvedListing) return;
+    if (!isAuthenticated) {
+      const currentUrl = `${window.location.pathname}${window.location.search}`;
+      setLocation(`/login?next=${encodeURIComponent(currentUrl)}`);
+    }
+  }, [authLoading, isLoading, isAuthenticated, resolvedListing, setLocation]);
 
   const toggleAddOn = (id: AddOnId) => {
     setSelectedAddOns((prev) => {
@@ -338,7 +350,7 @@ const result = await createBooking.mutateAsync({
           arrivalTime: isAirportPickupMohammedV ? (arrivalTime || undefined) : undefined,
         });
       toast.success(`تم تسجيل طلب الحجز ورفع وثائقك. رقم الطلب: #${result.bookingId}`);
-      openWhatsApp();
+      setLocation(`/success?bookingId=${result.bookingId}`);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'تعذر تسجيل الحجز. يرجى المحاولة مجدداً.';
       toast.error(message);
@@ -539,7 +551,7 @@ const result = await createBooking.mutateAsync({
             <Card>
               <CardHeader>
                 <CardTitle className="text-xl flex items-center gap-2">
-                  <MessageCircle className="w-5 h-5 text-[#25D366]" />
+                  <MessageCircle className="w-5 h-5 text-emerald-700" />
                   تأكيد الحجز عبر الواتساب
                 </CardTitle>
               </CardHeader>
@@ -558,7 +570,7 @@ const result = await createBooking.mutateAsync({
                   type="submit"
                   size="lg"
                   disabled={!isFormValid || isSubmitting}
-                  className="w-full bg-[#25D366] text-white hover:bg-[#1ebe5d] disabled:pointer-events-auto disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 disabled:opacity-100 disabled:hover:bg-slate-300"
+                  className="w-full bg-emerald-700 dark:bg-[#047857] text-white hover:bg-emerald-800 dark:hover:bg-[#065F46] disabled:pointer-events-auto disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 disabled:opacity-100 disabled:hover:bg-slate-300"
                 >
                   {isSubmitting ? <Loader2 className="me-2 h-5 w-5 animate-spin" /> : <MessageCircle className="me-2 h-5 w-5" />}
                   {isSubmitting ? 'جارٍ تسجيل الحجز ورفع الوثائق...' : 'تأكيد الحجز عبر الواتساب'}
@@ -647,7 +659,7 @@ const result = await createBooking.mutateAsync({
                         الوثائق مكتملة — تُضمَّن في رسالة الحجز للفحص المسبق من الوكالة.
                       </p>
                     )}
-                    <Button type="submit" size="lg" disabled={!isFormValid || isSubmitting} className="w-full bg-[#25D366] text-white hover:bg-[#1ebe5d] disabled:pointer-events-auto disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 disabled:opacity-100 disabled:hover:bg-slate-300">
+                    <Button type="submit" size="lg" disabled={!isFormValid || isSubmitting} className="w-full bg-emerald-700 dark:bg-[#047857] text-white hover:bg-emerald-800 dark:hover:bg-[#065F46] disabled:pointer-events-auto disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 disabled:opacity-100 disabled:hover:bg-slate-300">
                       {isSubmitting ? <Loader2 className="me-2 h-5 w-5 animate-spin" /> : <MessageCircle className="me-2 h-5 w-5" />}
                       {isSubmitting ? 'جارٍ تسجيل الحجز ورفع الوثائق...' : `تأكيد الحجز عبر الواتساب (${showTotalDisplay})`}
                     </Button>

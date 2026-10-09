@@ -205,6 +205,11 @@ describe('stray brand hexes are not reintroduced', () => {
  * outside the brand-blue scope, so they are recorded rather than silently
  * re-tuned. Each is marked `it.fails`, which means:
  *
+ * NOTE: the two `tertiary ink on base` entries were removed on 2026-10-08 — the
+ * production-audit P0-3 fix darkened the always-dark ink ramp (#8A8A90→#6E6E73
+ * light, #71757D→#8A8F98 dark), so those markers flipped green and were deleted
+ * per the "delete when fixed" contract below.
+ *
  *   · the suite stays green while the colour is still too light, and
  *   · the moment someone darkens the token to fix it, the marker flips red and
  *     asks to be deleted — so the debt cannot be forgotten.
@@ -213,8 +218,6 @@ describe('known pre-existing AA debt (it.fails — delete when fixed)', () => {
   const DEBT: Array<{ label: string; scope: Scope; fg: string; bg: string }> = [
     { label: 'light: success green on base', scope: { name: 'light', source: light, min: 4.5 }, fg: '--accent-green', bg: '--bg-base' },
     { label: 'light: warm secondary on base', scope: { name: 'light', source: light, min: 4.5 }, fg: '--accent-warm', bg: '--bg-base' },
-    { label: 'light: tertiary ink on base', scope: { name: 'light', source: light, min: 4.5 }, fg: '--ink-tertiary', bg: '--bg-base' },
-    { label: 'dark: tertiary ink on base', scope: { name: 'dark', source: dark, min: 4.5 }, fg: '--ink-tertiary', bg: '--bg-base' },
   ];
 
   for (const { label, scope, fg, bg } of DEBT) {

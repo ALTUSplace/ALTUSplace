@@ -20,9 +20,9 @@ export default function Footer() {
               />
               <div className="flex flex-col">
                 <span className="font-display font-bold text-lg leading-none text-white">
-                  ALTUS<span className="font-medium text-accent-clay">place</span>
+                  ALTUS<span className="font-medium text-[#8AB4FF]">place</span>
                 </span>
-                <span className="text-[9px] tracking-[0.18em] text-white/40 uppercase -mt-1 font-semibold">
+                <span className="text-[9px] tracking-[0.18em] text-[#98989E] uppercase -mt-1 font-semibold">
                   Rent. Drive. Live.
                 </span>
               </div>
@@ -70,7 +70,7 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="mt-12 border-t border-white/10 pt-6 flex flex-col items-center gap-3 text-center text-xs text-white/40">
+        <div className="mt-12 border-t border-white/10 pt-6 flex flex-col items-center gap-3 text-center text-xs text-[#98989E]">
           <p>{t("footerNoticeText")}</p>
           <p>{t("footerAddress")}</p>
           <nav className="flex flex-wrap items-center justify-center gap-5 pt-1" aria-label="Host">

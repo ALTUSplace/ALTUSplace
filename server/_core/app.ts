@@ -3,6 +3,7 @@ import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
 import { registerDirectAuthRoutes } from "./directAuth";
 import { registerPartnerAuthRoutes } from "./partnerAuth";
+import { registerRenterAuthRoutes } from "./renterAuth";
 import { registerPartnerApplicationRoutes } from "./partnerApplication";
 import { createPaymentsWebhookHandler, paymentStrictLimiter, registerSecurity } from "./security";
 import { createVerificationWebhookHandler } from "../verification/webhook";
@@ -144,6 +145,7 @@ export function createApp() {
   registerOAuthRoutes(app);
   registerDirectAuthRoutes(app);
   registerPartnerAuthRoutes(app);
+  registerRenterAuthRoutes(app);
   registerPartnerApplicationRoutes(app);
   // tRPC API
   app.post("/api/scheduled/lease-end-reminder", leaseEndReminderHandler);

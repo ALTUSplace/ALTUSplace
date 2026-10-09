@@ -11,10 +11,13 @@ import { logger } from "./logger";
  * visitors (no valid session) are redirected straight to the public homepage
  * "/" instead of being shown the login/consent/terms UI — including crawlers
  * and direct hotlinks. A short-lived `b2_auth_intent` cookie, written by
- * startLogin() / login buttons immediately before navigating, lets an ACTIVE
- * login/consent flow pass through before a session exists.
+ * startOwnerLogin() / login buttons immediately before navigating, lets an
+ * ACTIVE owner-login flow pass through before a session exists.
+ *
+ * /register, /terms and /login are PUBLIC: /register is the native renter
+ * signup page, /terms is legal content, and /login is the native renter login.
  */
-export const AUTH_ONLY_PATHS = ["/register", "/terms", "/owner-login"] as const;
+export const AUTH_ONLY_PATHS = ["/owner-login"] as const;
 
 /** Cookie set by startLogin() right before navigating into the auth flow. */
 export const AUTH_INTENT_COOKIE = "b2_auth_intent";

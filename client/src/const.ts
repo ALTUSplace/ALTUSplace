@@ -3,36 +3,25 @@ import { persistAuthIntent } from "@/lib/legalDisclosure";
 
 export { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 
-// Start the Manus OAuth login. Call this from an event handler or effect at the
+// Start the renter login flow. Call this from an event handler or effect at the
 // moment you want to navigate, e.g. `onClick={() => startLogin()}`.
 //
-// It has SIDE EFFECTS — it mints a one-time nonce, writes the __Host- state
-// cookie, and navigates immediately — so the cookie nonce always matches the
-// `state` it sends. Do NOT call it during render (no `href={startLogin()}` /
+// When the external OAuth portal is configured this starts the Manus OAuth
+// login. It has SIDE EFFECTS — it mints a one-time nonce, writes the __Host-
+// state cookie, and navigates immediately — so the cookie nonce always matches
+// the `state` it sends. Do NOT call it during render (no `href={startLogin()}` /
 // `loginUrl={...}`): each call overwrites the cookie, so a stray render-phase
 // call would desync it from an in-flight login and the callback would reject it
 // with "invalid oauth state". It returns void by design, so there is no URL to
 // stash across renders.
+//
+// With NO OAuth portal configured, it falls back to the PUBLIC native renter
+// login page `/login` (no auth-intent marker needed — the page is public).
 export const startLogin = () => {
-  const hasConsent = typeof document !== "undefined" && document.cookie.split("; ").some((cookie) => cookie.trim().startsWith("b2_legal_consent=platform-protection-v1"));
-  if (!hasConsent) {
-    // Mark this navigation as an ACTIVE login flow so the auth-only route
-    // guard (/register is session-gated for anonymous visitors) lets us
-    // through to the legal-consent page.
-    persistAuthIntent();
-    window.location.href = "/register?next=login";
-    return;
-  }
-
   const oauthPortalUrl = import.meta.env.VITE_OAUTH_PORTAL_URL;
   const appId = import.meta.env.VITE_APP_ID;
   if (!oauthPortalUrl || !appId) {
-    // No external OAuth portal configured: fall back to the password-gated
-    // direct owner login instead of looping back to the register page. The
-    // owner login lives ONLY at /owner-login (hidden from nav/footer/robots),
-    // and an active login-flow marker is required for anonymous visitors.
-    persistAuthIntent();
-    window.location.href = "/owner-login";
+    window.location.href = "/login";
     return;
   }
   const redirectUri = `${window.location.origin}/api/oauth/callback`;
@@ -48,4 +37,13 @@ export const startLogin = () => {
   url.searchParams.set("type", "signIn");
 
   window.location.href = url.toString();
+};
+
+// Start the OWNER login flow (platform owners / partners / admins). This is
+// separate from the renter login: it marks the navigation as an ACTIVE login
+// flow (b2_auth_intent) and opens the auth-only /owner-login page, which
+// anonymous visitors cannot reach without that marker.
+export const startOwnerLogin = () => {
+  persistAuthIntent();
+  window.location.href = "/owner-login";
 };
