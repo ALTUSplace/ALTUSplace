@@ -337,12 +337,14 @@ export async function resolveRouteMetadata(pathname: string, origin: string = SE
     return { ...base, ...legalPage };
   }
 
-  // The owner/admin login, registration/consent and terms pages are
-  // auth-flow-only: noindex them in the prerendered shell so crawlers never
-  // discover or index them (robots.txt also disallows them, and the route
-  // guard redirects anonymous visitors to "/").
+  // The owner/admin login is auth-flow-only: noindex it in the prerendered
+  // shell so crawlers never discover or index it (robots.txt also disallows
+  // it, and the route guard redirects anonymous visitors to "/"). The renter
+  // login, signup and terms pages are PUBLIC but still noindexed — they are
+  // app surfaces, not SEO landing pages.
   const AUTH_ONLY_METADATA: Record<string, { title: string }> = {
     "/owner-login": { title: "دخول المالكين | ALTUSplace" },
+    "/login": { title: "دخول المستأجرين | ALTUSplace" },
     "/register": { title: "إنشاء حساب | ALTUSplace" },
     "/terms": { title: "شروط الاستخدام | ALTUSplace" },
   };

@@ -453,7 +453,7 @@ export default function Home() {
       <section className="py-12 md:py-16 bg-ink-primary dark:bg-[#1C1C1E] text-white">
         <div className="container mx-auto max-w-6xl px-4">
           <div className="mb-8 text-center md:mb-12">
-            <span className="section-index justify-center text-white/60">ALTUSplace</span>
+            <span className="section-index justify-center text-[#98989E]! text-white/60">ALTUSplace</span>
             <h2 className="mt-3 text-2xl font-bold text-white md:text-3xl">{t('trustSectionTitle')}</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10">

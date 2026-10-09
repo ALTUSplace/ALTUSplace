@@ -41,6 +41,7 @@ export const SPA_STATIC_ROUTES: readonly string[] = [
   "/politique-confidentialite",
   "/mentions-legales",
   "/register",
+  "/login",
   "/owner-login",
   "/become-partner",
   "/become-partner/car-rental",

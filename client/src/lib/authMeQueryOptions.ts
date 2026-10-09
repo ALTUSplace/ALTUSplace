@@ -21,7 +21,7 @@
  *  - `refetchOnWindowFocus: false` / `retry: false` — a session check must
  *    never hammer or block on a slow gateway.
  *
- * Server side, `auth.me` is bucketed as `session-read` (60/min, its own
+ * Server side, `auth.me` is bucketed as `session-read` (300/min, its own
  * bucket) by `classifyApiRequest` in server/_core/security.ts — it can never
  * spend the login budget.
  */

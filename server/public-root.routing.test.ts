@@ -62,40 +62,53 @@ describe("GET / public routing boundary", () => {
     expect(html).not.toContain('name="robots" content="noindex');
   });
 
-  it.each(["/register", "/terms", "/owner-login"])(
+  it.each(["/owner-login"])(
     'anonymous GET "%s" is redirected to the public homepage "/" (no auth UI)',
     async (path) => {
       const response = await fetch(`${baseUrl}${path}`, { redirect: "manual" });
       expect(response.status).toBe(302);
       expect(response.headers.get("location")).toBe("/");
       expect(response.headers.get("cache-control")).toBe("no-store");
-      // The login/consent/terms form must never reach an anonymous visitor.
+      // The owner-login form must never reach an anonymous visitor.
       const body = await response.text();
       expect(body).not.toContain("direct-password");
       expect(body).not.toContain('id="root"');
     },
   );
 
-  it('anonymous GET "/register?next=login" also redirects (query preserved on the path)', async () => {
+  it.each(["/register", "/terms", "/login"])(
+    'anonymous GET "%s" is PUBLIC — SPA shell serves (no redirect)',
+    async (path) => {
+      const response = await fetch(`${baseUrl}${path}`, { redirect: "manual" });
+      expect(response.status).toBe(200);
+      expect(response.headers.get("location")).toBeNull();
+      const html = await response.text();
+      expect(html).toContain('id="root"');
+      // Public app surfaces, but never indexed.
+      expect(html).toContain('name="robots" content="noindex');
+    },
+  );
+
+  it('anonymous GET "/register?next=login" is public too — query never redirects', async () => {
     const response = await fetch(`${baseUrl}/register?next=login`, { redirect: "manual" });
-    expect(response.status).toBe(302);
-    expect(response.headers.get("location")).toBe("/");
+    expect(response.status).toBe(200);
+    expect(response.headers.get("location")).toBeNull();
   });
 
-  it('an ACTIVE login flow (b2_auth_intent marker) reaches /register for legal consent', async () => {
-    const response = await fetch(`${baseUrl}/register?next=login`, {
+  it('an ACTIVE owner-login flow (b2_auth_intent marker) reaches /owner-login', async () => {
+    const response = await fetch(`${baseUrl}/owner-login`, {
       headers: { Cookie: `${AUTH_INTENT_COOKIE}=1` },
     });
     expect(response.status).toBe(200);
     const html = await response.text();
     expect(html).toContain('id="root"');
-    // Consent page stays hidden from crawlers even when the flow is allowed.
+    // Owner login stays hidden from crawlers even when the flow is allowed.
     expect(html).toContain('name="robots" content="noindex');
   });
 
-  it('a valid session reaches the auth-only pages (session-gated, not blanket-blocked)', async () => {
+  it('a valid session reaches the auth-only page (session-gated, not blanket-blocked)', async () => {
     const headers = { Cookie: `${COOKIE_NAME}=${sessionToken}` };
-    for (const path of ["/register", "/terms", "/owner-login"]) {
+    for (const path of ["/owner-login"]) {
       const response = await fetch(`${baseUrl}${path}`, { headers });
       expect(response.status).toBe(200);
       expect(response.headers.get("location")).toBeNull();
@@ -114,8 +127,8 @@ describe("GET / public routing boundary", () => {
     expect(response.headers.get("location")).toBe("/");
   });
 
-  it('resolves noindex crawler metadata for /register, /terms and /owner-login', async () => {
-    for (const path of ["/register", "/terms", "/owner-login"]) {
+  it('resolves noindex crawler metadata for /owner-login, /login, /register and /terms', async () => {
+    for (const path of ["/owner-login", "/login", "/register", "/terms"]) {
       const metadata = await resolveRouteMetadata(path, "https://altusplace.vercel.app");
       expect(metadata.robots).toContain("noindex");
     }
@@ -142,13 +155,19 @@ describe("public/private route isolation audit", () => {
     expect(homeRoute).not.toContain("startLogin");
   });
 
-  it("wraps /register, /terms and /owner-login in the AuthOnlyRoute guard", () => {
+  it("wraps /owner-login in the AuthOnlyRoute guard (register/terms/login are public)", () => {
     const app = read("client/src/App.tsx");
-    for (const path of ["/register", "/terms", "/owner-login"]) {
-      const index = app.indexOf(`path="${path}"`);
-      expect(index).toBeGreaterThan(-1);
-      const block = app.slice(index, index + 240);
-      expect(block).toContain("AuthOnlyRoute");
+    // Scope each assertion to its own <Route>/</Route> element: /login sits
+    // directly above /owner-login, so a fixed-width window would bleed into
+    // the neighbouring (guarded) block.
+    const element = (path: string) => {
+      const start = app.indexOf(`path="${path}"`);
+      expect(start).toBeGreaterThan(-1);
+      return app.slice(start, app.indexOf("</Route>", start) + 8);
+    };
+    expect(element("/owner-login")).toContain("AuthOnlyRoute");
+    for (const path of ["/register", "/terms", "/login"]) {
+      expect(element(path)).not.toContain("AuthOnlyRoute");
     }
     // The guard itself redirects anonymous visitors to the public homepage.
     const guard = app.slice(app.indexOf("function AuthOnlyRoute"), app.indexOf("function AuthOnlyRoute") + 1200);
@@ -225,13 +244,19 @@ describe("public/private route isolation audit", () => {
   it("route-guard decision logic: only anonymous, intent-less hits on auth-only paths redirect", () => {
     expect(shouldRedirectAuthOnlyPage({ pathname: "/", sessionToken: null, hasAuthIntent: false })).toBe(false);
     expect(shouldRedirectAuthOnlyPage({ pathname: "/search", sessionToken: null, hasAuthIntent: false })).toBe(false);
-    expect(shouldRedirectAuthOnlyPage({ pathname: "/register", sessionToken: null, hasAuthIntent: false })).toBe(true);
-    expect(shouldRedirectAuthOnlyPage({ pathname: "/register/", sessionToken: null, hasAuthIntent: false })).toBe(true);
-    expect(shouldRedirectAuthOnlyPage({ pathname: "/terms", sessionToken: null, hasAuthIntent: false })).toBe(true);
+    // /register, /terms and /login are PUBLIC — never redirected by the guard.
+    expect(shouldRedirectAuthOnlyPage({ pathname: "/register", sessionToken: null, hasAuthIntent: false })).toBe(false);
+    expect(shouldRedirectAuthOnlyPage({ pathname: "/register/", sessionToken: null, hasAuthIntent: false })).toBe(false);
+    expect(shouldRedirectAuthOnlyPage({ pathname: "/terms", sessionToken: null, hasAuthIntent: false })).toBe(false);
+    expect(shouldRedirectAuthOnlyPage({ pathname: "/login", sessionToken: null, hasAuthIntent: false })).toBe(false);
+    // Only /owner-login is auth-only: anonymous + no intent -> redirect.
     expect(shouldRedirectAuthOnlyPage({ pathname: "/owner-login", sessionToken: null, hasAuthIntent: false })).toBe(true);
+    expect(shouldRedirectAuthOnlyPage({ pathname: "/owner-login/", sessionToken: null, hasAuthIntent: false })).toBe(true);
+    expect(shouldRedirectAuthOnlyPage({ pathname: "/owner-login", sessionToken: "tok", hasAuthIntent: false })).toBe(false);
+    expect(shouldRedirectAuthOnlyPage({ pathname: "/owner-login", sessionToken: null, hasAuthIntent: true })).toBe(false);
+    // ...and public paths stay untouched whatever the session/intent state.
     expect(shouldRedirectAuthOnlyPage({ pathname: "/register", sessionToken: "tok", hasAuthIntent: false })).toBe(false);
     expect(shouldRedirectAuthOnlyPage({ pathname: "/register", sessionToken: null, hasAuthIntent: true })).toBe(false);
-    expect(shouldRedirectAuthOnlyPage({ pathname: "/owner-login", sessionToken: null, hasAuthIntent: true })).toBe(false);
     // Anything else must never be touched by the guard.
     expect(shouldRedirectAuthOnlyPage({ pathname: "/terms-of-foo", sessionToken: null, hasAuthIntent: false })).toBe(false);
     expect(shouldRedirectAuthOnlyPage({ pathname: "/api/auth/direct-login", sessionToken: null, hasAuthIntent: false })).toBe(false);

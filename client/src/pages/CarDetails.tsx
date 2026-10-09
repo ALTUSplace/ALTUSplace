@@ -259,7 +259,7 @@ export default function CarDetails() {
             {numericListingId !== null && (
               <FavoriteButton listingId={numericListingId} size="sm" />
             )}
-            <button onClick={() => handleShare('whatsapp')} className="bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600 hover:text-white px-3 py-1 rounded-xl text-xs font-bold transition-all border border-emerald-500/30">
+            <button onClick={() => handleShare('whatsapp')} className="bg-emerald-700 text-white hover:bg-emerald-800 px-3 py-1 rounded-xl text-xs font-bold transition-all border border-emerald-500/30">
               واتساب
             </button>
             <button onClick={() => handleShare('facebook')} className="bg-accent-clay-soft text-accent-clay hover:bg-accent-clay hover:text-white px-3 py-1 rounded-xl text-xs font-bold transition-all border border-accent-clay/30">
@@ -316,27 +316,27 @@ export default function CarDetails() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="bg-[#1C1C1E] border border-slate-800 p-4 rounded-2xl text-center space-y-1">
                     <CarIcon className="w-5 h-5 text-amber-400 mx-auto" />
-                    <div className="text-[10px] text-ink-secondary">ناقل الحركة</div>
+                    <div className="text-[10px] text-[#98989E]">ناقل الحركة</div>
                     <div className="text-xs font-bold text-white">{car.transmission}</div>
                   </div>
                   <div className="bg-[#1C1C1E] border border-slate-800 p-4 rounded-2xl text-center space-y-1">
                     <Users className="w-5 h-5 text-amber-400 mx-auto" />
-                    <div className="text-[10px] text-ink-secondary">المقاعد</div>
+                    <div className="text-[10px] text-[#98989E]">المقاعد</div>
                     <div className="text-xs font-bold text-white">{typeof car.seats === "number" ? `${car.seats} مقاعد` : car.seats}</div>
                   </div>
                   <div className="bg-[#1C1C1E] border border-slate-800 p-4 rounded-2xl text-center space-y-1">
                     <Fuel className="w-5 h-5 text-amber-400 mx-auto" />
-                    <div className="text-[10px] text-ink-secondary">نوع الوقود</div>
+                    <div className="text-[10px] text-[#98989E]">نوع الوقود</div>
                     <div className="text-xs font-bold text-white">{car.fuel}</div>
                   </div>
                   <div className="bg-[#1C1C1E] border border-slate-800 p-4 rounded-2xl text-center space-y-1">
                     <Calendar className="w-5 h-5 text-amber-400 mx-auto" />
-                    <div className="text-[10px] text-ink-secondary">سنة الصنع</div>
+                    <div className="text-[10px] text-[#98989E]">سنة الصنع</div>
                     <div className="text-xs font-bold text-white">{car.year}</div>
                   </div>
                   <div className="bg-[#1C1C1E] border border-slate-800 p-4 rounded-2xl text-center space-y-1">
                     <MapPin className="w-5 h-5 text-amber-400 mx-auto" />
-                    <div className="text-[10px] text-ink-secondary">المدينة</div>
+                    <div className="text-[10px] text-[#98989E]">المدينة</div>
                     <div className="text-xs font-bold text-white">{car.cityName}</div>
                   </div>
                 </div>
@@ -365,7 +365,7 @@ export default function CarDetails() {
                         <h2 className="font-bold text-white text-base">{car.agency.name}</h2>
 
                       </div>
-                      <p className="text-xs text-ink-secondary">{car.agency.address}</p>
+                      <p className="text-xs text-[#98989E]">{car.agency.address}</p>
                     </div>
                   </div>
                   <div className="w-full sm:w-auto flex flex-col items-center gap-2">
@@ -377,11 +377,11 @@ export default function CarDetails() {
                         }
                         handleProceedBooking();
                       }}
-                      className="w-full sm:w-64 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-3 rounded-2xl text-xs flex items-center justify-center gap-2 shadow-lg"
+                      className="w-full sm:w-64 bg-emerald-700 dark:bg-[#047857] hover:bg-emerald-800 dark:hover:bg-[#065F46] text-white font-bold px-5 py-3 rounded-2xl text-xs flex items-center justify-center gap-2 shadow-lg"
                     >
                       <MessageCircle className="w-4 h-4" /> تأكيد الحجز عبر الواتساب
                     </button>
-                    <p className="text-[10px] text-ink-secondary text-center leading-relaxed">
+                    <p className="text-[10px] text-[#98989E] text-center leading-relaxed">
                       يُوجَّه طلبك إلى صفحة التأكيد حيث يكون إرفاق البيرمي ووثيقة الهوية إلزامياً قبل الحجز.
                     </p>
                   </div>
@@ -397,15 +397,15 @@ export default function CarDetails() {
                       </h2>
                     </div>
 
-                    <p className="text-xs text-ink-secondary">{t("reviewsOnlyConfirmedNote")}</p>
+                    <p className="text-xs text-[#98989E]">{t("reviewsOnlyConfirmedNote")}</p>
 
                     <div className="space-y-4">
                       {reviewsQuery.isLoading ? (
-                        <div className="bg-[#1C1C1E] border border-slate-800 p-6 rounded-3xl text-sm text-ink-secondary">{t("reviewsLoading")}</div>
+                        <div className="bg-[#1C1C1E] border border-slate-800 p-6 rounded-3xl text-sm text-[#98989E]">{t("reviewsLoading")}</div>
                       ) : reviewsQuery.isError ? (
                         <div className="bg-rose-950/30 border border-rose-800/60 p-6 rounded-3xl text-sm text-rose-200">{t("reviewsLoadError")}</div>
                       ) : reviews.length === 0 ? (
-                        <div className="bg-[#1C1C1E] border border-slate-800 p-6 rounded-3xl text-sm text-ink-secondary text-center">{t("reviewsNewEmpty")}</div>
+                        <div className="bg-[#1C1C1E] border border-slate-800 p-6 rounded-3xl text-sm text-[#98989E] text-center">{t("reviewsNewEmpty")}</div>
                       ) : reviews.map((rev) => (
                       <div key={rev.id} className="bg-[#1C1C1E] border border-slate-800 p-6 rounded-3xl space-y-2">
                         <div className="flex items-center justify-between">
@@ -417,7 +417,7 @@ export default function CarDetails() {
                               </span>
                             )}
                           </span>
-                          <span className="text-xs text-slate-500">{new Date(rev.createdAt).toLocaleDateString('ar-MA')}</span>
+                          <span className="text-xs text-[#98989E]">{new Date(rev.createdAt).toLocaleDateString('ar-MA')}</span>
                         </div>
                         <div className="flex items-center gap-1 text-amber-400">
                           {Array.from({ length: rev.rating }).map((_, i) => (
@@ -473,7 +473,7 @@ export default function CarDetails() {
                   </div>
                   <div>
                     <p className="text-xs font-bold text-white">تأمين شامل كل يوم</p>
-                    <p className="text-[10px] text-ink-secondary flex items-center gap-1"><ShieldCheck className="w-3 h-3 text-amber-400" /> تغطية كاملة {INSURANCE_FEE_PER_DAY} درهم/يوم</p>
+                    <p className="text-[10px] text-[#98989E] flex items-center gap-1"><ShieldCheck className="w-3 h-3 text-amber-400" /> تغطية كاملة {INSURANCE_FEE_PER_DAY} درهم/يوم</p>
                   </div>
                 </div>
                 <span className="text-xs font-black text-amber-400">{insurancePrice} درهم</span>
@@ -491,12 +491,12 @@ export default function CarDetails() {
                   </div>
                   <div>
                     <p className="text-xs font-bold text-white">كرسي أطفال</p>
-                    <p className="text-[10px] text-ink-secondary">{BABY_SEAT_FEE_PER_DAY} درهم/يوم</p>
+                    <p className="text-[10px] text-[#98989E]">{BABY_SEAT_FEE_PER_DAY} درهم/يوم</p>
                   </div>
                 </div>
                 <span className="text-xs font-black text-amber-400">{babySeatPrice} درهم</span>
               </button>
-              <p className="text-[10px] text-slate-500 text-center pt-1 border-t border-slate-800/80">
+              <p className="text-[10px] text-[#98989E] text-center pt-1 border-t border-slate-800/80">
                 تُضاف الاختيارات تلقائياً إلى ملخص الدفع الآمن
               </p>
             </div>

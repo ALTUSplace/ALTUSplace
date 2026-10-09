@@ -10,7 +10,7 @@ export default function About() {
         <div className="text-center space-y-3">
           <span className="text-xs font-bold text-amber-400 uppercase tracking-widest">منصة ALTUSplace الرائدة</span>
           <h1 className="text-4xl font-extrabold text-white">نعيد تعريف تجربة تأجير السيارات في المغرب</h1>
-          <p className="text-ink-secondary dark:text-[#B0B0B8] max-w-2xl mx-auto text-base">
+          <p className="text-[#98989E] max-w-2xl mx-auto text-base">
             تأسست ALTUSplace لتكون الجسر الموثوق بين أفضل وكالات تأجير السيارات والعملاء الباحثين عن الفخامة، الأمان، والشفافية التامة في أغادير، مراكش، الدار البيضاء، وطنجة.
           </p>
         </div>
@@ -19,7 +19,7 @@ export default function About() {
           <div className="bg-slate-950 dark:bg-[#111113] border border-slate-800 dark:border-[#2C2C2E] p-8 rounded-3xl space-y-3 shadow-xl">
             <ShieldCheck className="w-10 h-10 text-amber-400 mb-2" />
             <h2 className="text-xl font-bold text-white">موثوقية تامة</h2>
-            <p className="text-ink-secondary dark:text-[#B0B0B8] text-sm leading-relaxed">
+            <p className="text-[#98989E] text-sm leading-relaxed">
               جميع الوكالات مسجلة قانونياً وتخضع لمعايير جودة صارمة لضمان راحة البال التامة.
             </p>
           </div>
@@ -27,7 +27,7 @@ export default function About() {
           <div className="bg-slate-950 dark:bg-[#111113] border border-slate-800 dark:border-[#2C2C2E] p-8 rounded-3xl space-y-3 shadow-xl">
             <Award className="w-10 h-10 text-amber-400 mb-2" />
             <h2 className="text-xl font-bold text-white">أسطول متنوع</h2>
-            <p className="text-ink-secondary dark:text-[#B0B0B8] text-sm leading-relaxed">
+            <p className="text-[#98989E] text-sm leading-relaxed">
               من سيارات الدفع الرباعي الفاخرة لرحلات الصحراء إلى السيارات الاقتصادية للتنقل الحضري.
             </p>
           </div>
@@ -35,7 +35,7 @@ export default function About() {
           <div className="bg-slate-950 dark:bg-[#111113] border border-slate-800 dark:border-[#2C2C2E] p-8 rounded-3xl space-y-3 shadow-xl">
             <Users className="w-10 h-10 text-amber-400 mb-2" />
             <h2 className="text-xl font-bold text-white">دعم مستمر</h2>
-            <p className="text-ink-secondary dark:text-[#B0B0B8] text-sm leading-relaxed">
+            <p className="text-[#98989E] text-sm leading-relaxed">
               فريق خدمة عملاء ودعم فوري عبر واتساب متواجد طوال أيام الأسبوع لمساعدتك في أي وقت.
             </p>
           </div>

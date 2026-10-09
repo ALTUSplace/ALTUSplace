@@ -30,14 +30,14 @@ describe("final readiness security audit", () => {
     expect(success).not.toMatch(/searchParams\.get\(["'](?:phone|whatsapp|ownerPhone)["']\)/);
   });
 
-  it("enforces tiered rate limits (strict 5/min, session 60/min, public 500/min, health exempt)", () => {
+  it("enforces tiered rate limits (strict 5/min, session 300/min, public 500/min, health exempt)", () => {
     const security = read("server/_core/security.ts");
     expect(security).toMatch(/authStrictLimiter[\s\S]*?max:\s*5/);
     expect(security).toMatch(/bookingStrictLimiter[\s\S]*?max:\s*5/);
     expect(security).toMatch(/paymentStrictLimiter[\s\S]*?max:\s*5/);
     // C5: tiers replace the single 100/15min budget that starved normal reads.
     expect(security).toMatch(/publicReadLimiter[\s\S]*?max:\s*500/);
-    expect(security).toMatch(/sessionReadLimiter[\s\S]*?max:\s*60/);
+    expect(security).toMatch(/sessionReadLimiter[\s\S]*?max:\s*300/);
     expect(security).toMatch(/standardApiLimiter[\s\S]*?max:\s*300/);
     expect(security).not.toMatch(/max:\s*100[^0-9]/);
     // C6: the old `req.path === "/api/health"` guard was dead code (mount

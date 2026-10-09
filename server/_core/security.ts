@@ -104,7 +104,7 @@ export function createRateLimiter(options: RateLimitOptions & { namespace?: stri
  * Tiers (per tier+IP bucket, independent of each other):
  *   exempt        OPTIONS, /api/health                 — never throttled
  *   public-read   listings.*, cities.* (GET only)      — 500/min
- *   session-read  auth.me, notifications.* (GET only)  — 60/min
+ *   session-read  auth.me, notifications.* (GET only)  — 300/min
  *   standard      everything else                      — 300/min
  *   strict-*      auth / booking / payment surfaces    — 5/min (own buckets)
  *
@@ -154,8 +154,8 @@ export const publicReadLimiter = createRateLimiter({
 /** Tier C — session reads (auth.me / notifications), its OWN bucket. */
 export const sessionReadLimiter = createRateLimiter({
   windowMs: 60 * 1000,
-  max: 60,
-  namespace: "rl:tier:session-read:60:60000",
+  max: 300,
+  namespace: "rl:tier:session-read:300:60000",
   message: "Too many session checks. Try again in a minute.",
 });
 /** Residual bucket for everything else (replaces the old 100/15min budget). */

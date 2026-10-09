@@ -35,8 +35,8 @@
 
     /* Ink Tokens — cool charcoal scale */
     --ink-primary:    #1C1C1E;
-    --ink-secondary:  #6E6E73;
-    --ink-tertiary:   #8A8A90;
+    --ink-secondary:  #5E5E65;
+    --ink-tertiary:   #6E6E73;
 
     /* Accent Tokens — a single deep trust blue */
     --accent-primary:   #1A56DB;
@@ -173,7 +173,7 @@
 
     --ink-primary:    #F2F3F5;
     --ink-secondary:  #A8ABB2;
-    --ink-tertiary:   #71757D;
+    --ink-tertiary:   #8A8F98;
 
     --accent-primary:   #4F86F7;
     --accent-primary-h: #6EA0F8;
@@ -829,7 +829,7 @@
     --ramp-n-200: #E8E8EB;
     --ramp-n-300: #D6D6DB;
     --ramp-n-400: #B0B0B8;
-    --ramp-n-500: #8A8A90;
+    --ramp-n-500: #6E6E73;
     --ramp-n-600: #6E6E73;
     --ramp-n-700: #48484D;
     --ramp-n-800: #2C2C2E;
@@ -895,7 +895,7 @@
     --ramp-n-200: #2A2E36;
     --ramp-n-300: #343941;
     --ramp-n-400: #454B54;
-    --ramp-n-500: #71757D;
+    --ramp-n-500: #8A8F98;
     --ramp-n-600: #9CA0A8;
     --ramp-n-700: #A8ABB2;
     --ramp-n-800: #C7CAD0;
