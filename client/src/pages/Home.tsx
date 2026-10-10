@@ -3,7 +3,7 @@ import { trpc } from '@/lib/trpc';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { OptimizedImage } from '@/components/OptimizedImage';
-import { Search, Car, ShieldCheck, ArrowRight, CheckCircle2, Award, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Car, ShieldCheck, ArrowRight, CheckCircle2, Award, Clock, ChevronLeft, ChevronRight, Lock, MapPin, Phone, Star } from 'lucide-react';
 import { LISTINGS } from '@/data/altusplace';
 import { SmartRecommendations } from '@/components/SmartRecommendations';
 import { FAQSection } from '@/components/FAQSection';
@@ -13,6 +13,8 @@ import { useFavorites } from '@/hooks/useFavorites';
 import { CatalogShowcase } from '@/components/CatalogShowcase';
 import { SearchBar } from '@/components/SearchBar';
 import { isCarCategory, isPropertyCategory } from '@/lib/categories';
+import { resolveCitySlug, cityLabelFr } from '@/data/moroccoCities';
+import { useCurrency } from '@/contexts/CurrencyContext';
 import { useSEO } from '@/lib/seo';
 
 /**
@@ -61,10 +63,37 @@ const HERO_CATEGORIES = [
   },
 ] as const;
 
+/**
+ * Editorial geo shortlist for the homepage quick-search rail. Slugs are exact
+ * catalogue aliases, so /search?city=<slug> resolves to the canonical Arabic
+ * city. Casablanca leads by the same editorial rule as POPULAR_CITY_SLUGS — no
+ * bookings-by-city aggregate exists to measure demand (see moroccoCities.ts),
+ * so "most popular" is the editorial first slot, not a measured ranking.
+ */
+const HERO_CITY_RAIL = [
+  { slug: 'casablanca', popular: true },
+  { slug: 'marrakech', popular: false },
+  { slug: 'rabat', popular: false },
+  { slug: 'tangier', popular: false },
+  { slug: 'agadir', popular: false },
+] as const;
+
+/** ISO date (YYYY-MM-DD, local) for `days` from today — the same format the
+ *  search and detail pages read from query params. */
+function isoDaysFromNow(days: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  const y = d.getFullYear();
+  const m = `${d.getMonth() + 1}`.padStart(2, '0');
+  const day = `${d.getDate()}`.padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 export default function Home() {
   const [, setLocation] = useLocation();
-  const { t, direction } = useLanguage();
+  const { t, direction, language } = useLanguage();
   const favorites = useFavorites();
+  const { formatPrice } = useCurrency();
 
   useSEO({
     title: 'كراء السيارات والعقارات في المغرب | ALTUSplace',
@@ -122,6 +151,34 @@ export default function Home() {
       }
     })) : LISTINGS.filter(item => item.type === 'property');
 
+  // ── V2: live deals · geo quick-search ──────────────────────────────────
+  // "Available tomorrow": query tomorrow→day-after; the server already
+  // filters to listings with no blocked/confirmed booking overlap.
+  const dealStart = isoDaysFromNow(1);
+  const dealEnd = isoDaysFromNow(2);
+  const { data: tomorrowListings = [] } = trpc.listings.list.useQuery(
+    { startDate: dealStart, endDate: dealEnd },
+    { staleTime: 5 * 60 * 1000 }
+  );
+  // Top-rated (>4.5, reviewed) first, then cheapest = "competitive price".
+  const hotDeals = tomorrowListings
+    .filter((item) => (item.averageRating ?? 0) > 4.5 && (item.reviewCount ?? 0) > 0)
+    .sort((a, b) => (a.pricePerDay ?? 0) - (b.pricePerDay ?? 0))
+    .slice(0, 4);
+
+  const cityLabel = (slug: string) => {
+    if (language === 'ar') return resolveCitySlug(slug);
+    if (language === 'fr') return cityLabelFr(resolveCitySlug(slug));
+    return slug.charAt(0).toUpperCase() + slug.slice(1);
+  };
+
+  const dealHref = (item: (typeof tomorrowListings)[number]) => {
+    const base = isCarCategory(item.category)
+      ? `/car/${item.id}`
+      : `/property/${item.id}`;
+    return `${base}?startDate=${dealStart}&endDate=${dealEnd}`;
+  };
+
   return (
     <div className="min-h-screen bg-bg-base text-ink-primary flex flex-col" dir={direction}>
 
@@ -176,6 +233,31 @@ export default function Home() {
               {t('heroDescription')}
             </p>
 
+            {/* Trust signal strip — glass pills with the hero's verified
+                clay-icon chip treatment (same combo as the step numerals:
+                clay fill + primary-ink glyph keeps contrast on every crop). */}
+            <ul className="mt-6 flex flex-wrap items-center justify-center gap-3" aria-label={t('verified_partners')}>
+              <li className="inline-flex items-center gap-2.5 rounded-xl border border-white/15 bg-white/10 px-4 py-2.5 backdrop-blur-md">
+                <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent-clay text-[var(--primary-ink)]" aria-hidden="true">
+                  <ShieldCheck className="h-4 w-4" />
+                </span>
+                <span className="text-xs font-bold text-white sm:text-sm">{t('verified_partners')}</span>
+              </li>
+              <li className="inline-flex items-center gap-2.5 rounded-xl border border-white/15 bg-white/10 px-4 py-2.5 backdrop-blur-md">
+                <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center gap-0.5 rounded-full bg-accent-clay text-[var(--primary-ink)]" aria-hidden="true">
+                  <Lock className="h-3.5 w-3.5" />
+                  <Phone className="h-3.5 w-3.5" />
+                </span>
+                <span className="text-xs font-bold text-white sm:text-sm">{t('secure_whatsapp_pay')}</span>
+              </li>
+              <li className="inline-flex items-center gap-2.5 rounded-xl border border-white/15 bg-white/10 px-4 py-2.5 backdrop-blur-md">
+                <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent-clay text-[var(--primary-ink)]" aria-hidden="true">
+                  <Star className="h-4 w-4" />
+                </span>
+                <span className="text-xs font-bold text-white sm:text-sm">{t('real_reviews')}</span>
+              </li>
+            </ul>
+
             <div className="mt-7 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
               <Button
                 onClick={() => setLocation('/search')}
@@ -228,9 +310,90 @@ export default function Home() {
             <div className="mt-8 w-full">
               <SearchBar variant="heroOverlay" />
             </div>
+
+            {/* Geo-targeted quick search — one-tap city searches deep-link
+                into /search. `type=all` and `city` are honored today, and the
+                dated params exercise the same tomorrow-availability filter the
+                search and detail pages read. `availability=tomorrow` is kept
+                as a forward-compatible signal (ignored for now). */}
+            <nav className="mt-6 w-full" aria-label={t('popular_cities_label')}>
+              <div className="flex flex-col items-center gap-2">
+                <span className="text-xs font-bold text-white">{t('popular_cities_label')}</span>
+                <ul className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+                  {HERO_CITY_RAIL.map(({ slug, popular }) => (
+                    <li key={slug}>
+                      <Link
+                        href={`/search?type=all&city=${slug}&availability=tomorrow&startDate=${dealStart}&endDate=${dealEnd}`}
+                        className={`b2-press inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-xs font-bold backdrop-blur-md transition-colors ${
+                          popular
+                            ? 'border-transparent bg-accent-clay text-[var(--primary-ink)]'
+                            : 'border-white/25 bg-white/10 text-white hover:bg-white/20'
+                        }`}
+                      >
+                        <MapPin className={popular ? 'h-3.5 w-3.5' : 'h-3.5 w-3.5 text-white/80'} aria-hidden="true" />
+                        {cityLabel(slug)}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </nav>
           </div>
         </div>
       </section>
+
+      {/* ── V2: live deals — top-rated, price-sorted, bookable tomorrow ── */}
+      {hotDeals.length > 0 && (
+        <section className="border-b border-border-subtle bg-bg-muted/60" aria-labelledby="hot-deals-title">
+          <div className="container mx-auto max-w-6xl px-4 py-10 md:py-14">
+            <div className="mb-5 flex flex-col gap-2 md:mb-7">
+              <h2 id="hot-deals-title" className="text-xl font-bold text-ink-primary sm:text-2xl md:text-3xl">
+                {t('hot_deals_title')}
+              </h2>
+            </div>
+
+            <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+              {hotDeals.map((item) => (
+                <li key={item.id} className="flex">
+                  <Link
+                    href={dealHref(item)}
+                    className="group flex flex-col overflow-hidden rounded-lg border border-border-subtle bg-bg-surface shadow-xs transition-all duration-300 hover:-translate-y-1 hover:border-border-default hover:shadow-lg"
+                  >
+                    <div className="relative aspect-[16/10] w-full overflow-hidden">
+                      <OptimizedImage
+                        src={item.images?.[0] || item.imageUrl || ''}
+                        alt={item.title}
+                        width={480}
+                        height={300}
+                        loading="lazy"
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                        className="h-full w-full object-cover transition-transform duration-300 ease-out group-hover:scale-105"
+                      />
+                    </div>
+                    <div className="flex flex-1 flex-col gap-2 border-t-2 border-accent-clay/70 p-4">
+                      <h3 className="line-clamp-1 text-sm font-bold leading-snug text-ink-primary">{item.title}</h3>
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <span className="text-base font-extrabold text-ink-primary">{formatPrice(item.pricePerDay)}</span>
+                        <span className="inline-flex items-center gap-1 text-xs font-bold text-ink-secondary">
+                          <Star className="h-3.5 w-3.5 fill-accent-clay/25 text-accent-clay" aria-hidden="true" />
+                          {(item.averageRating ?? 0).toFixed(1)} ({item.reviewCount})
+                        </span>
+                      </div>
+                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-ink-secondary">
+                        <MapPin className="h-3 w-3 text-accent-clay" aria-hidden="true" />
+                        {item.city || 'الدار البيضاء'}
+                      </span>
+                      <span className="b2-press mt-auto inline-flex items-center justify-center gap-1.5 rounded-md bg-accent-clay px-4 py-2 text-xs font-extrabold text-[var(--primary-ink)] shadow-[var(--shadow-clay)] transition-colors group-hover:bg-accent-clay-hover">
+                        {t('book_tomorrow_btn')}
+                      </span>
+                    </div>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )}
 
       {/* ── Category showcase: photographic rail below the search card ── */}
       <section className="container mx-auto max-w-6xl px-4 py-10 md:py-14" aria-labelledby="hero-showcase-title">
