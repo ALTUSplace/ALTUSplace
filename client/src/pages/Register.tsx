@@ -6,6 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { startOwnerLogin } from "@/const";
 import { legalDisclosure, persistLegalConsent, LEGAL_CONSENT_VERSION } from "@/lib/legalDisclosure";
+import { trackEvent } from "@/lib/analytics";
 
 import { useSEO } from "@/lib/seo";
 
@@ -122,6 +123,7 @@ export default function Register() {
       }
       if (response.ok) {
         persistLegalConsent();
+        trackEvent("signup_completed", { method: "password" });
         window.location.href = payload.redirectTo || "/";
         return;
       }

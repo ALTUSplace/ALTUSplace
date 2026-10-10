@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_TITLE, TITLE_SUFFIX, formatTitle } from "./seo";
+import { DEFAULT_TITLE, TITLE_SUFFIX, formatTitle, serializeJsonLd } from "./seo";
 
 describe("formatTitle", () => {
   it("appends the brand suffix to a bare title", () => {
@@ -33,5 +33,39 @@ describe("formatTitle", () => {
   it("keeps the default title free of a duplicated suffix", () => {
     expect(DEFAULT_TITLE.endsWith(TITLE_SUFFIX)).toBe(true);
     expect(formatTitle(DEFAULT_TITLE)).toBe(DEFAULT_TITLE);
+  });
+});
+
+describe("serializeJsonLd", () => {
+  it("escapes < so a </script> in dynamic content cannot break out of the script block", () => {
+    const serialized = serializeJsonLd({
+      "@context": "https://schema.org",
+      "@type": "Product",
+      name: "</script><script>alert(1)</script>",
+    });
+    expect(serialized).not.toContain("</script>");
+    expect(serialized).toContain("\\u003c/script>");
+  });
+
+  it("remains valid JSON that round-trips to the original entry", () => {
+    const entry = {
+      "@context": "https://schema.org",
+      "@type": "Offer",
+      priceCurrency: "MAD",
+      price: 400,
+      availability: "https://schema.org/InStock",
+      validFrom: "2026-10-11",
+      priceValidUntil: "2026-10-16",
+    };
+    expect(JSON.parse(serializeJsonLd(entry))).toEqual(entry);
+  });
+
+  it("serializes nested structures (aggregateRating) unchanged", () => {
+    const entry = {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      aggregateRating: { "@type": "AggregateRating", ratingValue: 4.8, reviewCount: 12 },
+    };
+    expect(JSON.parse(serializeJsonLd(entry))).toEqual(entry);
   });
 });

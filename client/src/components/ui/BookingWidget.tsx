@@ -18,6 +18,8 @@ interface BookingWidgetProps {
   initialCheckIn?: string;
   initialCheckOut?: string;
   onReserve?: (data: { checkIn: string; checkOut: string; guests: number }) => void;
+  /** Fired when a quick-date chip is chosen, for conversion tracking. */
+  onQuickDate?: (mode: "tomorrow" | "weekend") => void;
   className?: string;
 }
 
@@ -85,7 +87,7 @@ const COPY = {
 } as const;
 
 export function BookingWidget(props: BookingWidgetProps) {
-  const { pricePerDay, currency = "MAD", minNights = 1, maxGuests = 10, rating, reviewCount, initialCheckIn, initialCheckOut, onReserve, className } = props;
+  const { pricePerDay, currency = "MAD", minNights = 1, maxGuests = 10, rating, reviewCount, initialCheckIn, initialCheckOut, onReserve, onQuickDate, className } = props;
   const isMobile = useIsMobile();
   const { language } = useLanguage();
   const copy = COPY[language] ?? COPY.en;
@@ -97,6 +99,7 @@ export function BookingWidget(props: BookingWidgetProps) {
   // Quick-select drives the native date inputs (they remain the "custom" path).
   // Prices recompute instantly because nights/total derive from state below.
   const setQuickDates = (mode: "tomorrow" | "weekend") => {
+    onQuickDate?.(mode);
     const offset = (n: number) => {
       const d = new Date();
       d.setDate(d.getDate() + n);
