@@ -261,7 +261,7 @@ export default function Home() {
             <div className="mt-7 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
               <Button
                 onClick={() => setLocation('/search')}
-                className="b2-press rounded-lg bg-accent-clay px-6 py-3 text-sm font-bold text-[var(--primary-ink)] shadow-[var(--shadow-clay)] transition-colors hover:bg-accent-clay-hover"
+                className="b2-press rounded-lg bg-accent-clay px-8 py-4 text-base font-bold text-[var(--primary-ink)] shadow-[var(--shadow-clay)] transition-colors hover:bg-accent-clay-hover"
               >
                 <Search className="h-4 w-4" aria-hidden="true" />
                 <span>{t('heroSearchCta')}</span>
