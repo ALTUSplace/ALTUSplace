@@ -152,10 +152,10 @@ export default function Home() {
     })) : LISTINGS.filter(item => item.type === 'property');
 
   // ── V2: live deals · geo quick-search ──────────────────────────────────
-  // "Available tomorrow": query a 48h window starting tomorrow; the server
-  // already filters to listings with no blocked/confirmed booking overlap.
+  // "Available tomorrow": query tomorrow→day-after; the server already
+  // filters to listings with no blocked/confirmed booking overlap.
   const dealStart = isoDaysFromNow(1);
-  const dealEnd = isoDaysFromNow(3);
+  const dealEnd = isoDaysFromNow(2);
   const { data: tomorrowListings = [] } = trpc.listings.list.useQuery(
     { startDate: dealStart, endDate: dealEnd },
     { staleTime: 5 * 60 * 1000 }
@@ -312,9 +312,10 @@ export default function Home() {
             </div>
 
             {/* Geo-targeted quick search — one-tap city searches deep-link
-                into /search. `type=all` and `city` are honored today; the
-                `availability=tomorrow` param is forward-compatible (the search
-                page ignores unknown params, so nothing breaks). */}
+                into /search. `type=all` and `city` are honored today, and the
+                dated params exercise the same tomorrow-availability filter the
+                search and detail pages read. `availability=tomorrow` is kept
+                as a forward-compatible signal (ignored for now). */}
             <nav className="mt-6 w-full" aria-label={t('popular_cities_label')}>
               <div className="flex flex-col items-center gap-2">
                 <span className="text-xs font-bold text-white">{t('popular_cities_label')}</span>
@@ -322,7 +323,7 @@ export default function Home() {
                   {HERO_CITY_RAIL.map(({ slug, popular }) => (
                     <li key={slug}>
                       <Link
-                        href={`/search?type=all&city=${slug}&availability=tomorrow`}
+                        href={`/search?type=all&city=${slug}&availability=tomorrow&startDate=${dealStart}&endDate=${dealEnd}`}
                         className={`b2-press inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-xs font-bold backdrop-blur-md transition-colors ${
                           popular
                             ? 'border-transparent bg-accent-clay text-[var(--primary-ink)]'
