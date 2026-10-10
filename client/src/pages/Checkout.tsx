@@ -20,6 +20,7 @@ import {
 import { LISTINGS, PARTNERS } from '@/data/altusplace';
 import { buildContactWhatsAppUrl } from '@/lib/whatsapp';
 import { isPropertyCategory } from '@/lib/categories';
+import { trackEvent } from '@/lib/analytics';
 
 function formatMAD(amount: number): string {
   return `${new Intl.NumberFormat('fr-MA').format(amount)} درهم`;
@@ -300,6 +301,11 @@ export default function CheckoutPage() {
     }
 
     const openWhatsApp = () => {
+      trackEvent("whatsapp_handoff", {
+        listing_id: Number.isFinite(parsedListingId) ? parsedListingId : undefined,
+        listing_type: isPropertyBooking ? "property" : "car",
+        context: "checkout",
+      });
       window.open(whatsappUrl, '_blank');
       toast.success('تم تجهيز رسالة الحجز مع تفاصيله. أرسلها عبر الواتساب لتأكيد الحجز.');
     };

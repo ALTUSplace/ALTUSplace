@@ -26,6 +26,22 @@ export function escapeHtml(value: unknown): string {
   );
 }
 
+/**
+ * Residential property types map to the concrete schema.org type Google
+ * understands; everything else keeps `RealEstateListing`. Mirrors the client
+ * (PropertyDetailWithVideo) so SSR and hydrated JSON-LD never disagree.
+ */
+const RESIDENTIAL_SCHEMA_TYPE: Record<string, string> = {
+  apartment: "Apartment",
+  apartment_share: "Apartment",
+  studio: "Apartment",
+  villa: "House",
+  riad: "House",
+};
+function propertySchemaType(propertyType: string | null | undefined): string {
+  return RESIDENTIAL_SCHEMA_TYPE[String(propertyType ?? "").toLowerCase()] ?? "RealEstateListing";
+}
+
 export type RouteMetadata = {
   title: string;
   description: string;
@@ -152,7 +168,7 @@ async function listingMetadata(id: number, origin: string): Promise<RouteMetadat
     const ratings = await ratingSummary(db, id);
 
     const node: Record<string, unknown> = {
-      "@type": isCar ? "Product" : "RealEstateListing",
+      "@type": isCar ? "Product" : propertySchemaType(listing.propertyType),
       "@id": `${url}#listing`,
       name: listing.title,
       description,

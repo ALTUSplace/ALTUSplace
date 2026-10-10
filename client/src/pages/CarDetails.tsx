@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRoute, useLocation, useSearch } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Star, ShieldCheck, Users, Car as CarIcon, Fuel, MapPin, MessageCircle, CheckCircle2, Award, Calendar, ChevronRight, Share2, Copy, Check } from 'lucide-react';
@@ -7,7 +7,9 @@ import { trpc } from '@/lib/trpc';
 import { LISTINGS } from '@/data/altusplace';
 import { OptimizedImage } from '@/components/OptimizedImage';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useSEO, SITE_URL } from '@/lib/seo';
+import { useSEO, SITE_URL, serializeJsonLd } from '@/lib/seo';
+import { trackEvent } from '@/lib/analytics';
+import { isRangeBlocked, normalizeBlockedRanges } from '@/lib/bookingAvailability';
 import { BABY_SEAT_FEE_PER_DAY, calculateRentalDays, calculateRentalSubtotal, INSURANCE_FEE_PER_DAY } from '@/lib/pricing';
 import { RENTAL_TERMS } from '@/lib/rentalTerms';
 import CommentSection from '@/components/CommentSection';
@@ -121,6 +123,24 @@ export default function CarDetails() {
   const reviews = reviewsQuery.data ?? [];
   const summary = summaryQuery.data ?? { average: 0, count: 0 };
 
+  // Offer availability for the current selection, feeding both the JSON-LD
+  // Offer and (indirectly) the checkout guard. Unavailable/errored lookups
+  // fall back to InStock rather than over-claiming OutOfStock.
+  const blockedRanges = normalizeBlockedRanges(bookedDatesData ?? []);
+  const availability = isRangeBlocked(startDate, endDate, blockedRanges)
+    ? "https://schema.org/OutOfStock"
+    : "https://schema.org/InStock";
+
+  // Conversion funnel: a listing view, fired once the car is resolved.
+  useEffect(() => {
+    if (!car) return;
+    trackEvent("view_listing", {
+      listing_id: numericListingId ?? car.id,
+      listing_type: "car",
+      city: car.cityName,
+    });
+  }, [car?.id]);
+
   if (listingQuery.isLoading) {
     return <div className="min-h-screen flex items-center justify-center bg-[#1C1C1E] text-slate-200">جاري تحميل تفاصيل الإعلان...</div>;
   }
@@ -159,6 +179,11 @@ export default function CarDetails() {
     const text = `استأجر ${car.name} في ${car.cityName} عبر منصة ALTUSplace الرائدة!`;
     if (platform === 'whatsapp') {
       window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text + ' ' + url)}`, '_blank');
+      trackEvent("whatsapp_handoff", {
+        listing_id: numericListingId ?? car.id,
+        listing_type: "car",
+        context: "share",
+      });
     } else if (platform === 'facebook') {
       window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank');
     } else if (platform === 'copy') {
@@ -189,6 +214,15 @@ export default function CarDetails() {
       endDate: end,
     });
     if (addOnsParam) checkoutParams.set('addOns', addOnsParam);
+    trackEvent("initiate_booking", {
+      listing_id: numericListingId ?? car.id,
+      listing_type: "car",
+      value: totalPrice,
+      currency: "MAD",
+      check_in: start,
+      check_out: end,
+      nights: daysCount,
+    });
     setLocation(`/checkout?${checkoutParams.toString()}`);
   };
 
@@ -206,10 +240,13 @@ export default function CarDetails() {
       "@type": "Offer",
       "priceCurrency": "MAD",
       "price": car.pricePerDay,
-      "availability": "https://schema.org/InStock",
-      "areaServed": car.cityName
+      "availability": availability,
+      "validFrom": startDate,
+      "priceValidUntil": endDate,
+      "areaServed": car.cityName,
+      "url": `${SITE_URL}/car/${car.id}`
     },
-    ...(reviews.length > 0
+    ...(reviews.length > 0 && Number(summary.average) > 0
       ? {
           "aggregateRating": {
             "@type": "AggregateRating",
@@ -234,11 +271,11 @@ export default function CarDetails() {
     <div className="min-h-screen bg-slate-50 py-10 px-4 sm:px-6 lg:px-8">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(carSchema) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(carSchema) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(breadcrumbSchema) }}
       />
       <div className="container mx-auto px-4 space-y-8">
         
@@ -456,6 +493,13 @@ export default function CarDetails() {
               onReserve={({ checkIn, checkOut }) => {
                 handleProceedBooking({ checkIn, checkOut });
               }}
+              onQuickDate={(mode) =>
+                trackEvent("click_quick_date", {
+                  listing_id: numericListingId ?? car.id,
+                  listing_type: "car",
+                  mode,
+                })
+              }
             />
 
             {/* Add-on options — flow through to the secure checkout */}

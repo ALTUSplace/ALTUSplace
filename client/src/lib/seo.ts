@@ -176,6 +176,16 @@ export function useSEO({
 type JsonLdEntry = { "@context": string } & Record<string, unknown>;
 
 /**
+ * Serializes a JSON-LD entry for inline `<script type="application/ld+json">`
+ * embedding. Escaping `<` prevents a dynamic value containing `</script>`
+ * (listing titles, descriptions) from breaking out of the script context.
+ * Mirrors the server prerender, which already escapes the same way.
+ */
+export function serializeJsonLd(entry: JsonLdEntry): string {
+  return JSON.stringify(entry).replace(/</g, "\\u003c");
+}
+
+/**
  * (Re)mounts a JSON-LD script given a stable id. Call from component effects
  * once data is available (listings, blog articles, breadcrumbs).
  */
@@ -186,7 +196,7 @@ export function renderJsonLd<T extends JsonLdEntry>(id: string, entry: T): void 
   const script = document.createElement("script");
   script.type = "application/ld+json";
   script.id = id;
-  script.textContent = JSON.stringify(entry);
+  script.textContent = serializeJsonLd(entry);
   document.head.appendChild(script);
 }
 

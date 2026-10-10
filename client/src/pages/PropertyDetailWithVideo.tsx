@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useParams, useSearch } from "wouter";
 import {
   ArrowLeft,
@@ -21,7 +21,9 @@ import { Button } from "@/components/ui/button";
 import { trpc } from "@/lib/trpc";
 import { calculateRentalDays, calculateRentalSubtotal } from "@/lib/pricing";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useSEO, SITE_URL } from "@/lib/seo";
+import { useSEO, SITE_URL, serializeJsonLd } from "@/lib/seo";
+import { trackEvent } from "@/lib/analytics";
+import { isRangeBlocked, normalizeBlockedRanges } from "@/lib/bookingAvailability";
 import { LISTINGS, type ListingItem } from "@/data/altusplace";
 import { toast } from "sonner";
 import CommentSection from "@/components/CommentSection";
@@ -105,6 +107,20 @@ const RENTAL_LABEL_FR: Record<string, string> = {
   daily: "Quotidien",
   monthly: "Mensuel",
   yearly: "Annuel",
+};
+
+/**
+ * Residential listings map to the concrete schema.org type Google understands;
+ * non-residential categories keep `RealEstateListing` (valid, just not a
+ * Product/Apartment rich-result target). Kept in sync with the server
+ * prerender so SSR and client JSON-LD never disagree.
+ */
+const RESIDENTIAL_SCHEMA_TYPE: Record<string, string> = {
+  apartment: "Apartment",
+  apartment_share: "Apartment",
+  studio: "Apartment",
+  villa: "House",
+  riad: "House",
 };
 
 const isIsoDay = (value: string | null): value is string => /^\d{4}-\d{2}-\d{2}$/.test(value ?? "");
@@ -211,21 +227,26 @@ export default function PropertyDetailWithVideo() {
   );
 
   // Blocked date ranges from confirmed bookings, manual availability blocks
-  // and iCal imports — used to warn renters and stop checkout on overlaps.
+  // and iCal imports — used to warn renters, stop checkout on overlaps and
+  // derive the JSON-LD Offer availability.
   const blockedRanges = useMemo(
-    () => (bookedDatesQuery.data ?? []).map((range) => ({ start: String(range.start).slice(0, 10), end: String(range.end).slice(0, 10) })),
+    () => normalizeBlockedRanges(bookedDatesQuery.data ?? []),
     [bookedDatesQuery.data],
   );
-  const rangeBlocked = useMemo(() => {
-    if (!startDate || !endDate || new Date(endDate) <= new Date(startDate)) return false;
-    const s = new Date(`${startDate}T00:00:00`);
-    const e = new Date(`${endDate}T00:00:00`);
-    return blockedRanges.some((range) => {
-      const rs = new Date(`${range.start}T00:00:00`);
-      const re = new Date(`${range.end}T00:00:00`);
-      return s.getTime() < re.getTime() && e.getTime() > rs.getTime();
+  const rangeBlocked = useMemo(
+    () => isRangeBlocked(startDate, endDate, blockedRanges),
+    [blockedRanges, startDate, endDate],
+  );
+
+  // Conversion funnel: a listing view, fired once the listing resolves.
+  useEffect(() => {
+    if (!listing) return;
+    trackEvent("view_listing", {
+      listing_id: listingId ?? listing.id,
+      listing_type: "property",
+      city: listing.city,
     });
-  }, [blockedRanges, startDate, endDate]);
+  }, [listing?.id]);
 
   const monthlyPrice = Number(listing?.pricePerMonth) || 0;
 
@@ -257,9 +278,10 @@ export default function PropertyDetailWithVideo() {
     );
   }
 
+  const schemaType = RESIDENTIAL_SCHEMA_TYPE[String(listing.propertyType ?? "").toLowerCase()] ?? "RealEstateListing";
   const schema = {
     "@context": "https://schema.org",
-    "@type": "RealEstateListing",
+    "@type": schemaType,
     name: listing.title,
     description,
     image: galleryImages.length ? galleryImages : [],
@@ -271,8 +293,16 @@ export default function PropertyDetailWithVideo() {
         ? { geo: { "@type": "GeoCoordinates", latitude: exactCoords.lat, longitude: exactCoords.lng } }
         : {}),
     },
-    offers: { "@type": "Offer", priceCurrency: "MAD", price: safePrice, availability: "https://schema.org/InStock" },
-    ...(summary.count > 0
+    offers: {
+      "@type": "Offer",
+      priceCurrency: "MAD",
+      price: safePrice,
+      availability: rangeBlocked ? "https://schema.org/OutOfStock" : "https://schema.org/InStock",
+      validFrom: startDate,
+      priceValidUntil: endDate,
+      url: `${SITE_URL}/property/${listing.id}`,
+    },
+    ...(summary.count > 0 && Number(summary.average) > 0
       ? {
           "aggregateRating": {
             "@type": "AggregateRating",
@@ -314,6 +344,15 @@ export default function PropertyDetailWithVideo() {
       pricePerDay: String(safePrice),
       startDate,
       endDate,
+    });
+    trackEvent("initiate_booking", {
+      listing_id: listingId ?? listing.id,
+      listing_type: "property",
+      value: totalPrice,
+      currency: "MAD",
+      check_in: startDate,
+      check_out: endDate,
+      nights: daysCount,
     });
     setLocation(`/checkout?${checkoutParams.toString()}`);
   };
@@ -362,8 +401,8 @@ export default function PropertyDetailWithVideo() {
 
   return (
     <div className="min-h-screen bg-background text-foreground pb-20" dir={direction}>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(schema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(breadcrumbSchema) }} />
       <div className="container mx-auto px-4 space-y-8">
         <div className="flex items-center justify-between gap-3 pt-6">
           <Button variant="ghost" onClick={() => window.history.back()} className="gap-2 px-0 text-ink-secondary">
@@ -605,8 +644,8 @@ export default function PropertyDetailWithVideo() {
                   {language === "fr" ? "Sélectionner les dates" : "اختر تواريخ الحجز"}
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <button type="button" onClick={() => applyQuickDates("tomorrow")} className="rounded-full border border-border-default px-3 py-1.5 text-xs font-semibold text-ink-secondary transition-colors hover:border-accent-clay hover:text-ink-primary">{language === "fr" ? "Demain" : "غداً"}</button>
-                  <button type="button" onClick={() => applyQuickDates("weekend")} className="rounded-full border border-border-default px-3 py-1.5 text-xs font-semibold text-ink-secondary transition-colors hover:border-accent-clay hover:text-ink-primary">{language === "fr" ? "Week-end prochain" : "عطلة نهاية الأسبوع"}</button>
+                  <button type="button" onClick={() => { trackEvent("click_quick_date", { listing_id: listingId ?? params.id, listing_type: "property", mode: "tomorrow" }); applyQuickDates("tomorrow"); }} className="rounded-full border border-border-default px-3 py-1.5 text-xs font-semibold text-ink-secondary transition-colors hover:border-accent-clay hover:text-ink-primary">{language === "fr" ? "Demain" : "غداً"}</button>
+                  <button type="button" onClick={() => { trackEvent("click_quick_date", { listing_id: listingId ?? params.id, listing_type: "property", mode: "weekend" }); applyQuickDates("weekend"); }} className="rounded-full border border-border-default px-3 py-1.5 text-xs font-semibold text-ink-secondary transition-colors hover:border-accent-clay hover:text-ink-primary">{language === "fr" ? "Week-end prochain" : "عطلة نهاية الأسبوع"}</button>
                   <button type="button" onClick={() => document.getElementById("booking-start")?.focus()} className="rounded-full border border-border-default px-3 py-1.5 text-xs font-semibold text-ink-secondary transition-colors hover:border-accent-clay hover:text-ink-primary">{language === "fr" ? "Période personnalisée" : "نطاق مخصص"}</button>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
