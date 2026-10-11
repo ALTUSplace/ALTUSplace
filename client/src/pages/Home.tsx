@@ -175,7 +175,7 @@ export default function Home() {
             priority
             className="h-full w-full object-cover"
           />
-          <div className="absolute inset-0 bg-white/90 backdrop-blur-[1px]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-white/90 via-white/80 to-transparent" />
         </div>
 
         <div className="container mx-auto max-w-4xl px-4 py-20 md:py-32">
@@ -183,25 +183,23 @@ export default function Home() {
 
             <h1
               id="hero-heading"
-              className="max-w-4xl font-display text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight text-ink-primary text-balance"
+              className="max-w-4xl font-display text-4xl md:text-5xl font-extrabold tracking-tight leading-tight text-ink-primary text-balance"
             >
-              Rent Cars & Homes in Morocco Easily
+              {t('heroHeadline')}
             </h1>
 
             <p className="max-w-2xl text-base md:text-lg leading-relaxed text-ink-secondary">
               {t('heroDescription')}
             </p>
 
-            {/* Prominent single search bar container */}
-            <div className="mt-2 w-full max-w-3xl rounded-2xl bg-bg-surface p-2 shadow-md ring-1 ring-border-default">
-              <SearchBar variant="heroOverlay" />
-            </div>
+            {/* Glass search card over the photographic hero (gate-pinned: translucent + blurred + rounded-xl) */}
+            <SearchBar variant="heroOverlay" />
 
             {/* Trust signals below search bar */}
             <div className="mt-4 flex flex-wrap items-center justify-center gap-4 text-sm text-ink-secondary">
-              <span>• Verified Partners</span>
-              <span>• Secure Payment</span>
-              <span>• Real Reviews</span>
+              <span>• {t('verified_partners')}</span>
+              <span>• {t('secure_payment')}</span>
+              <span>• {t('real_reviews')}</span>
             </div>
 
             <div className="mt-7 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
@@ -298,7 +296,7 @@ export default function Home() {
                 <li key={item.id} className="flex">
                   <Link
                     href={dealHref(item)}
-                    className="group flex flex-col overflow-hidden rounded-lg border border-border-subtle bg-bg-surface shadow-xs transition-all duration-300 hover:-translate-y-1 hover:border-border-default hover:shadow-lg"
+                    className="group flex flex-col overflow-hidden rounded-xl border border-border-subtle bg-bg-surface shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-border-default hover:shadow-lg"
                   >
                     <div className="relative aspect-[16/10] w-full overflow-hidden">
                       <OptimizedImage
