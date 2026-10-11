@@ -93,3 +93,94 @@ export function calculateCheckoutTotal(pricePerDay: number, days: number, select
   const addOnsTotal = calculateAddOnsTotal(selected ?? [], days);
   return { subtotal, addOnsTotal, total: subtotal + addOnsTotal };
 }
+
+// ── Display price semantics ──────────────────────────────────────────────────
+// Single source of truth for how a listing's price is labelled across the
+// marketplace: cars price per day, long-term properties per month/year, and
+// short-term stays per night. Every card, search row and detail header must
+// resolve its unit through `resolvePriceUnit` so the cadence never diverges
+// between surfaces.
+
+/** Canonical rental cadence shown next to a price. */
+export type PriceUnit = "day" | "night" | "month" | "year";
+
+/** i18n key holding the localized suffix for each unit (see LanguageContext). */
+export const PRICE_UNIT_LABEL_KEY: Record<PriceUnit, string> = {
+  day: "madPerDay",
+  night: "madPerNight",
+  month: "madPerMonth",
+  year: "madPerYear",
+};
+
+/**
+ * i18n key holding the currency-free unit suffix, for surfaces that render the
+ * currency separately (e.g. a currency chip). Example: `unitPerDay` -> "/ day".
+ * Use this alongside a chip; use `PRICE_UNIT_LABEL_KEY` when the currency is
+ * part of the suffix.
+ */
+export const PRICE_UNIT_SUFFIX_KEY: Record<PriceUnit, string> = {
+  day: "unitPerDay",
+  night: "unitPerNight",
+  month: "unitPerMonth",
+  year: "unitPerYear",
+};
+
+/**
+ * Resolves a listing's price unit. Cars always price per day; properties use
+ * their declared long-term period and fall back to nightly for short stays.
+ */
+export function resolvePriceUnit(input: {
+  type?: "car" | "property" | null;
+  category?: string | null;
+  rentalPeriod?: "daily" | "monthly" | "yearly" | null;
+}): PriceUnit {
+  if (input.type === "car") return "day";
+  if (input.rentalPeriod === "yearly") return "year";
+  if (input.rentalPeriod === "monthly") return "month";
+  return "night";
+}
+
+/**
+ * A publishable price is finite and strictly positive. Missing, zero, negative
+ * and NaN values must render the localized "price on request" instead of a
+ * misleading `0 MAD`; the same predicate gates listing publication.
+ */
+export function hasValidPrice(amount: unknown): boolean {
+  const value = Number(amount);
+  return Number.isFinite(value) && value > 0;
+}
+
+/** Groups thousands with a comma: `1200` -> `"1,200"` (never `"1200 DH"`). */
+export function formatPriceAmount(amount: number): string {
+  if (!Number.isFinite(amount)) return "0";
+  return Math.round(amount).toLocaleString("en-US");
+}
+
+/** Field-level pricing problems that block publishing a listing. */
+export type PricingValidationError = "price-missing" | "price-not-positive" | "unit-missing";
+
+/**
+ * Publication guardrail: a property listing may only be published with a
+ * positive price and an explicit rental period (its unit is derived from that
+ * period). Cars carry an implicit daily unit. Whitelisted demo/seed rows are
+ * exempted by their caller, not here.
+ */
+export function validateListingPricing(input: {
+  pricePerDay?: unknown;
+  rentalPeriod?: "daily" | "monthly" | "yearly" | null;
+  type?: "car" | "property" | null;
+}): PricingValidationError[] {
+  const errors: PricingValidationError[] = [];
+  const raw = input.pricePerDay;
+  if (raw === null || raw === undefined || raw === "") {
+    errors.push("price-missing");
+  } else if (!hasValidPrice(raw)) {
+    errors.push("price-not-positive");
+  }
+  const period = input.rentalPeriod;
+  const hasUnit = period === "daily" || period === "monthly" || period === "yearly";
+  if (input.type !== "car" && !hasUnit) {
+    errors.push("unit-missing");
+  }
+  return errors;
+}

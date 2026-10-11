@@ -1,10 +1,9 @@
-﻿import { Link, useLocation } from 'wouter';
+import { Link, useLocation } from 'wouter';
 import { trpc } from '@/lib/trpc';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { OptimizedImage } from '@/components/OptimizedImage';
 import { Search, Car, ShieldCheck, ArrowRight, CheckCircle2, Award, Clock, ChevronLeft, ChevronRight, Lock, MapPin, Phone, Star } from 'lucide-react';
-import { LISTINGS } from '@/data/altusplace';
 import { SmartRecommendations } from '@/components/SmartRecommendations';
 import { FAQSection } from '@/components/FAQSection';
 import { ListingCard } from '@/components/ui/ListingCard';
@@ -16,6 +15,9 @@ import { isCarCategory, isPropertyCategory } from '@/lib/categories';
 import { resolveCitySlug, cityLabelFr } from '@/data/moroccoCities';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useSEO } from '@/lib/seo';
+import { filterMarketplaceListings } from '@/lib/listingFilters';
+import { toListingItem } from '@/lib/listingMappers';
+import { hasValidPrice } from '@/lib/pricing';
 
 /**
  * Hero backdrop.
@@ -95,12 +97,22 @@ export default function Home() {
   const favorites = useFavorites();
   const { formatPrice } = useCurrency();
 
-  useSEO({
-    title: 'كراء السيارات والعقارات في المغرب | ALTUSplace',
-    description: 'احجز سيارات وعقارات للكراء في المغرب بضمان المنصة ودفع آمن: أسعار واضحة ووكالات محلية موثوقة.',
-    path: '/',
-    type: 'website',
-  });
+  useSEO(
+    language === 'fr'
+      ? {
+          title: 'Location de voitures et de biens au Maroc | ALTUSplace',
+          description:
+            'Réservez voitures et logements au Maroc avec la garantie de la plateforme et un paiement sécurisé : prix clairs et agences locales de confiance.',
+          path: '/',
+          type: 'website',
+        }
+      : {
+          title: 'كراء السيارات والعقارات في المغرب | ALTUSplace',
+          description: 'احجز سيارات وعقارات للكراء في المغرب بضمان المنصة ودفع آمن: أسعار واضحة ووكالات محلية موثوقة.',
+          path: '/',
+          type: 'website',
+        },
+  );
 
   // The flow's connector points along the reading direction, so it mirrors in
   // Arabic rather than assuming a left-to-right progression.
@@ -108,48 +120,9 @@ export default function Home() {
 
   // Database listings formatted as unified car items
   const { data: dbListings = [] } = trpc.listings.list.useQuery();
-  const activeListings = dbListings.length > 0 ? dbListings
-    .filter(item => isCarCategory(item.category))
-    .map(item => ({
-    id: String(item.id),
-    title: item.title,
-    category: t('listingCategoryCar'),
-    type: 'car' as const,
-    pricePerUnit: item.pricePerDay,
-    image: item.images?.[0] || item.imageUrl || '',
-    images: item.images?.length ? item.images : item.imageUrl ? [item.imageUrl] : [],
-    city: item.city || 'الدار البيضاء',
-    providerName: t('providerNamePlaceholder'),
-    year: item.year ?? undefined,
-    rating: item.averageRating ?? 0,
-    reviewCount: item.reviewCount ?? 0,
-    specs: {
-      transmission: item.transmission || t('transmissionAutomatic'),
-      fuel: item.fuelType || t('fuelDieselPetrol'),
-      seats: item.seats ? String(item.seats) : undefined
-    }
-  })) : [];
-
-  const activeProperties = dbListings.length > 0 ? dbListings
-    .filter(item => isPropertyCategory(item.category))
-    .map(item => ({
-      id: String(item.id),
-      title: item.title,
-      category: item.category,
-      type: 'property' as const,
-      pricePerUnit: item.pricePerDay,
-      image: item.images?.[0] || item.imageUrl || '',
-      images: item.images?.length ? item.images : item.imageUrl ? [item.imageUrl] : [],
-      city: item.city || 'الدار البيضاء',
-      providerName: item.ownerName || 'وكالة عقارية',
-      year: item.year ?? undefined,
-      rating: item.averageRating ?? 0,
-      reviewCount: item.reviewCount ?? 0,
-      specs: {
-        rooms: item.rooms && item.rooms > 0 ? String(item.rooms) : undefined,
-        area: item.area && item.area > 0 ? `${item.area} m²` : undefined,
-      }
-    })) : LISTINGS.filter(item => item.type === 'property');
+  const dbRows = filterMarketplaceListings(dbListings.map(toListingItem));
+  const activeListings = dbRows.filter((item) => isCarCategory(item.category));
+  const activeProperties = dbRows.filter((item) => isPropertyCategory(item.category));
 
   // ── V2: live deals · geo quick-search ──────────────────────────────────
   // "Available tomorrow": query tomorrow→day-after; the server already
@@ -161,7 +134,7 @@ export default function Home() {
     { staleTime: 5 * 60 * 1000 }
   );
   // Top-rated (>4.5, reviewed) first, then cheapest = "competitive price".
-  const hotDeals = tomorrowListings
+  const hotDeals = filterMarketplaceListings(tomorrowListings)
     .filter((item) => (item.averageRating ?? 0) > 4.5 && (item.reviewCount ?? 0) > 0)
     .sort((a, b) => (a.pricePerDay ?? 0) - (b.pricePerDay ?? 0))
     .slice(0, 4);
@@ -183,24 +156,15 @@ export default function Home() {
     <div className="min-h-screen bg-bg-base text-ink-primary flex flex-col" dir={direction}>
 
       {/* ── Hero: photographic backdrop, glass search card, numbered flow ── */}
-      <section className="relative isolate overflow-hidden bg-ink-primary" aria-labelledby="hero-heading">
+      <section className="relative isolate overflow-hidden bg-white" aria-labelledby="hero-heading">
         {/* Backdrop photograph. alt is empty because it is decorative — the
             heading beside it carries the message.
 
-            Scrim contract: the darkest-to-lightest stop here is a FLOOR of 0.75,
-            not a stylistic choice, and it may not be lowered without a fresh
-            contrast measurement. The hero H1 is pure white on a photo whose
-            brightest regions are near-white; the two failures that follow from
-            a thin scrim are (a) the headline and (b) the 10-11px field captions
-            in the glass search card, which need 4.5:1 and have no weight to
-            spare. Measured on the brightest crop of this asset, the old
-            via-black/70 midpoint put the white H1 at ~3.3:1 — under AA — and a
-            flat 0.40 scrim (the value first proposed for this redesign) put it
-            at 2.85:1. Hence 0.85 -> 0.75 -> 0.90: the raised midpoint keeps
-            every text stop >= 4.5:1 even where the photo is pure white, and
-            keeps the 0.90 foot opaque enough that the category rail's leading
-            edge never washes out. If you lower any stop, re-measure contrast
-            against the *brightest* crop, not the average. */}
+            The facelift moved the hero to a light surface: the photo is washed
+            with a 90% white overlay and every foreground element uses the
+            ink/`bg-surface` tokens, so the old dark-scrim contrast floor no
+            longer applies. If the overlay opacity changes, re-check the hero
+            copy and the field captions against the *brightest* crop. */}
         <div className="absolute inset-0 -z-10" aria-hidden="true">
           <OptimizedImage
             src={HERO_BACKDROP}
@@ -208,55 +172,37 @@ export default function Home() {
             width={1920}
             height={1080}
             sizes="100vw"
-            fetchPriority="high"
+            priority
             className="h-full w-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/85 via-black/75 to-black/90" />
+          <div className="absolute inset-0 bg-white/90 backdrop-blur-[1px]" />
         </div>
 
-        <div className="container mx-auto max-w-6xl px-4 pt-10 pb-12 md:pt-16 md:pb-16">
-          <div className="flex flex-col items-center text-center">
-
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-2 text-xs font-bold text-white backdrop-blur-md sm:text-sm">
-              <ShieldCheck className="h-4 w-4 shrink-0" aria-hidden="true" />
-              <span>{t('heroBadge')}</span>
-            </div>
+        <div className="container mx-auto max-w-4xl px-4 py-20 md:py-32">
+          <div className="flex flex-col items-center text-center gap-6">
 
             <h1
               id="hero-heading"
-              className="mt-5 max-w-3xl font-display text-[clamp(1.75rem,5.5vw,3.5rem)] font-bold leading-[1.15] text-white text-balance"
+              className="max-w-4xl font-display text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight text-ink-primary text-balance"
             >
-              {t('heroHeadline')}
+              Rent Cars & Homes in Morocco Easily
             </h1>
 
-            <p className="mt-4 max-w-2xl text-sm leading-relaxed text-white/90 sm:text-base md:text-lg">
+            <p className="max-w-2xl text-base md:text-lg leading-relaxed text-ink-secondary">
               {t('heroDescription')}
             </p>
 
-            {/* Trust signal strip — glass pills with the hero's verified
-                clay-icon chip treatment (same combo as the step numerals:
-                clay fill + primary-ink glyph keeps contrast on every crop). */}
-            <ul className="mt-6 flex flex-wrap items-center justify-center gap-3" aria-label={t('verified_partners')}>
-              <li className="inline-flex items-center gap-2.5 rounded-xl border border-white/15 bg-white/10 px-4 py-2.5 backdrop-blur-md">
-                <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent-clay text-[var(--primary-ink)]" aria-hidden="true">
-                  <ShieldCheck className="h-4 w-4" />
-                </span>
-                <span className="text-xs font-bold text-white sm:text-sm">{t('verified_partners')}</span>
-              </li>
-              <li className="inline-flex items-center gap-2.5 rounded-xl border border-white/15 bg-white/10 px-4 py-2.5 backdrop-blur-md">
-                <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center gap-0.5 rounded-full bg-accent-clay text-[var(--primary-ink)]" aria-hidden="true">
-                  <Lock className="h-3.5 w-3.5" />
-                  <Phone className="h-3.5 w-3.5" />
-                </span>
-                <span className="text-xs font-bold text-white sm:text-sm">{t('secure_whatsapp_pay')}</span>
-              </li>
-              <li className="inline-flex items-center gap-2.5 rounded-xl border border-white/15 bg-white/10 px-4 py-2.5 backdrop-blur-md">
-                <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent-clay text-[var(--primary-ink)]" aria-hidden="true">
-                  <Star className="h-4 w-4" />
-                </span>
-                <span className="text-xs font-bold text-white sm:text-sm">{t('real_reviews')}</span>
-              </li>
-            </ul>
+            {/* Prominent single search bar container */}
+            <div className="mt-2 w-full max-w-3xl rounded-2xl bg-bg-surface p-2 shadow-md ring-1 ring-border-default">
+              <SearchBar variant="heroOverlay" />
+            </div>
+
+            {/* Trust signals below search bar */}
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-4 text-sm text-ink-secondary">
+              <span>• Verified Partners</span>
+              <span>• Secure Payment</span>
+              <span>• Real Reviews</span>
+            </div>
 
             <div className="mt-7 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
               <Button
@@ -269,12 +215,12 @@ export default function Home() {
               <Button
                 onClick={() => setLocation('/search')}
                 variant="outline"
-                className="b2-press rounded-lg border border-white/40 bg-white/10 px-6 py-2.5 text-sm font-bold text-white backdrop-blur-md transition-colors hover:bg-white/20"
+                className="b2-press rounded-lg border border-border-default bg-bg-surface/70 px-6 py-2.5 text-sm font-bold text-ink-primary backdrop-blur-md transition-colors hover:bg-bg-muted"
               >
                 <Award className="h-4 w-4" aria-hidden="true" />
                 <span>{t('heroReviewButton')}</span>
               </Button>
-              <span className="hidden items-center gap-1.5 text-xs font-bold text-white/90 md:inline-flex">
+              <span className="hidden items-center gap-1.5 text-xs font-bold text-ink-secondary md:inline-flex">
                 <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
                 {t('trustTitle1')}
               </span>
@@ -287,7 +233,7 @@ export default function Home() {
             <ol className="mt-8 flex flex-wrap items-center justify-center gap-x-2 gap-y-3 sm:gap-x-3">
               {HERO_STEPS.map((step, index) => (
                 <li key={step.n} className="flex items-center gap-2 sm:gap-3">
-                  <span className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3 py-1.5 text-xs font-bold text-white backdrop-blur-md sm:text-sm">
+                  <span className="inline-flex items-center gap-2 rounded-full border border-border-default bg-bg-surface/70 px-3 py-1.5 text-xs font-bold text-ink-primary backdrop-blur-md sm:text-sm">
                     <span
                       aria-hidden="true"
                       className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent-clay text-[11px] font-extrabold text-[var(--primary-ink)]"
@@ -298,18 +244,13 @@ export default function Home() {
                   </span>
                   {index < HERO_STEPS.length - 1 && (
                     <FlowChevron
-                      className="hidden h-4 w-4 shrink-0 text-white/85 sm:block"
+                      className="hidden h-4 w-4 shrink-0 text-ink-tertiary sm:block"
                       aria-hidden="true"
                     />
                   )}
                 </li>
               ))}
             </ol>
-
-            {/* Glass search card — tabs switch in place, no reload. */}
-            <div className="mt-8 w-full">
-              <SearchBar variant="heroOverlay" />
-            </div>
 
             {/* Geo-targeted quick search — one-tap city searches deep-link
                 into /search. `type=all` and `city` are honored today, and the
@@ -318,7 +259,7 @@ export default function Home() {
                 as a forward-compatible signal (ignored for now). */}
             <nav className="mt-6 w-full" aria-label={t('popular_cities_label')}>
               <div className="flex flex-col items-center gap-2">
-                <span className="text-xs font-bold text-white">{t('popular_cities_label')}</span>
+                <span className="text-xs font-bold text-ink-primary">{t('popular_cities_label')}</span>
                 <ul className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
                   {HERO_CITY_RAIL.map(({ slug, popular }) => (
                     <li key={slug}>
@@ -327,10 +268,10 @@ export default function Home() {
                         className={`b2-press inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-xs font-bold backdrop-blur-md transition-colors ${
                           popular
                             ? 'border-transparent bg-accent-clay text-[var(--primary-ink)]'
-                            : 'border-white/25 bg-white/10 text-white hover:bg-white/20'
+                            : 'border-border-default bg-bg-surface/70 text-ink-primary hover:bg-bg-muted'
                         }`}
                       >
-                        <MapPin className={popular ? 'h-3.5 w-3.5' : 'h-3.5 w-3.5 text-white/80'} aria-hidden="true" />
+                        <MapPin className={popular ? 'h-3.5 w-3.5' : 'h-3.5 w-3.5 text-ink-tertiary'} aria-hidden="true" />
                         {cityLabel(slug)}
                       </Link>
                     </li>
@@ -373,7 +314,7 @@ export default function Home() {
                     <div className="flex flex-1 flex-col gap-2 border-t-2 border-accent-clay/70 p-4">
                       <h3 className="line-clamp-1 text-sm font-bold leading-snug text-ink-primary">{item.title}</h3>
                       <div className="flex flex-wrap items-center justify-between gap-2">
-                        <span className="text-base font-extrabold text-ink-primary">{formatPrice(item.pricePerDay)}</span>
+                        <span className="text-base font-extrabold text-ink-primary">{hasValidPrice(item.pricePerDay) ? formatPrice(item.pricePerDay) : t('priceOnRequest')}</span>
                         <span className="inline-flex items-center gap-1 text-xs font-bold text-ink-secondary">
                           <Star className="h-3.5 w-3.5 fill-accent-clay/25 text-accent-clay" aria-hidden="true" />
                           {(item.averageRating ?? 0).toFixed(1)} ({item.reviewCount})
@@ -438,8 +379,8 @@ export default function Home() {
         </ul>
       </section>
 
-      {/* ── Static 2026 catalog showcase (always visible, DB-independent) ── */}
-      <CatalogShowcase />
+      {/* ── Static 2026 catalog showcase — only when the cleaned dataset is empty ── */}
+      {dbRows.length === 0 && <CatalogShowcase />}
 
       {/* ── Bento Grid Section (Separating Cars and Properties cleanly) ── */}
       <section className="py-10 md:py-16 px-4 container mx-auto max-w-6xl">
@@ -490,23 +431,26 @@ export default function Home() {
         />
 
         {/* Listing Cards Grid */}
-        <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-8 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
           {activeListings.slice(0, 6).map((item, index) => (
             <ListingCard
               key={item.id}
-              id={item.id}
+              id={String(item.id)}
               title={item.title}
+              titleFr={item.titleFr}
               city={item.city}
               pricePerDay={item.pricePerUnit}
-              images={item.images}
+              priceUnit={item.priceUnit}
+              priceOnRequest={item.priceOnRequest}
+              images={item.images?.length ? item.images : item.image ? [item.image] : []}
               type="car"
-              rating={(item as { rating?: number }).rating ?? 0}
-              reviewCount={(item as { reviewCount?: number }).reviewCount ?? 0}
+              rating={item.rating}
+              reviewCount={item.reviewCount}
               specs={{
-                transmission: (item as { specs?: { transmission?: string } }).specs?.transmission,
-                fuel: (item as { specs?: { fuel?: string } }).specs?.fuel,
-                seats: (item as { specs?: { seats?: string } }).specs?.seats ? Number((item as { specs?: { seats?: string } }).specs?.seats) : undefined,
-                year: (item as { year?: number }).year ?? undefined,
+                transmission: item.specs?.transmission,
+                fuel: item.specs?.fuel,
+                seats: item.specs?.seats ? Number(item.specs.seats) : undefined,
+                year: item.specs?.year,
               }}
               isFavorite={favorites.isFavorite(Number(item.id))}
               onToggleFavorite={() => favorites.toggleFavorite(Number(item.id))}
@@ -525,22 +469,25 @@ export default function Home() {
         />
 
         {activeProperties.length > 0 ? (
-          <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-8 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {activeProperties.slice(0, 6).map((item, index) => (
               <ListingCard
                 key={item.id}
-                id={item.id}
+                id={String(item.id)}
                 title={item.title}
+                titleFr={item.titleFr}
                 city={item.city}
                 pricePerDay={item.pricePerUnit}
-                images={item.images}
+                priceUnit={item.priceUnit}
+                priceOnRequest={item.priceOnRequest}
+                images={item.images?.length ? item.images : item.image ? [item.image] : []}
                 type="property"
-                rating={(item as { rating?: number }).rating ?? 0}
-                reviewCount={(item as { reviewCount?: number }).reviewCount ?? 0}
+                rating={item.rating}
+                reviewCount={item.reviewCount}
                 specs={{
                   rooms: item.specs?.rooms ? Number(item.specs.rooms) : undefined,
                   area: item.specs?.area,
-                  year: (item as { year?: number }).year ?? undefined,
+                  year: item.specs?.year,
                 }}
                 isFavorite={Number.isFinite(Number(item.id)) ? favorites.isFavorite(Number(item.id)) : false}
                 onToggleFavorite={Number.isFinite(Number(item.id)) ? () => favorites.toggleFavorite(Number(item.id)) : undefined}

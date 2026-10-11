@@ -79,15 +79,21 @@
     color-scheme: light;
 
     /* Surface Tokens — clean white canvas */
-    --bg-base:        #FFFFFF;
-    --bg-surface:     #FFFFFF;
-    --bg-muted:       #F7F7F8;
-    --bg-elevated:    #FFFFFF;
+    --bg-page:         #F9FAFB;  /* page sections */
+    --bg-base:         #FFFFFF;
+    --bg-surface:      #FFFFFF;  /* cards/content */
+    --bg-muted:        #F7F7F8;
+    --bg-elevated:     #FFFFFF;
 
     /* Ink Tokens — cool charcoal scale */
-    --ink-primary:    #1C1C1E;
-    --ink-secondary:  #5E5E65;
-    --ink-tertiary:   #6E6E73;
+    --ink-primary:     #111827;  /* near-black for headings (requested) */
+    --ink-secondary:   #6B7280;  /* medium gray for body/subtitles */
+    --ink-tertiary:    #6E6E73;
+
+    /* Semantic aliases (requested naming) */
+    --text-primary:    var(--ink-primary);
+    --text-secondary:  var(--ink-secondary);
+    --text-tertiary:   var(--ink-tertiary);
 
     /* Accent Tokens — a single deep trust blue */
     --accent-primary:   #1A56DB;
@@ -218,6 +224,7 @@
     color-scheme: dark;
 
     --bg-base:        #0F1115;
+    --bg-page:        #0F1115;
     --bg-surface:     #16181D;
     --bg-muted:       #1E2127;
     --bg-elevated:    #22252C;
@@ -288,6 +295,7 @@
 
   /* bespoke surface + ink tokens */
   --color-bg-base:          hsl(from var(--bg-base) h s l / alpha);
+  --color-bg-page:          hsl(from var(--bg-page) h s l / alpha);
   --color-bg-surface:       hsl(from var(--bg-surface) h s l / alpha);
   --color-bg-muted:         hsl(from var(--bg-muted) h s l / alpha);
   --color-bg-elevated:      hsl(from var(--bg-elevated) h s l / alpha);
@@ -354,6 +362,7 @@
 
   /* fonts */
   --font-sans:    var(--font-body);
+  --font-inter:   'Plus Jakarta Sans','Inter','Tajawal','Cairo',system-ui,-apple-system,'Segoe UI',sans-serif;
   --font-mono:    'Fraunces', ui-monospace, SFMono-Regular, Menlo, monospace;
 
   /* sidebar */

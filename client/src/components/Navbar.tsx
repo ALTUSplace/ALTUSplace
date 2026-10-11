@@ -372,15 +372,15 @@ export default function Navbar() {
           onClick={() => setMobileMenuOpen(false)}
           className={
             mobile
-              ? `flex min-h-11 items-center gap-3 rounded-sm px-4 py-3 text-sm font-bold transition-colors ${
+              ? `flex min-h-11 items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors ${
                   active
                     ? "bg-accent-clay text-[var(--primary-ink)]"
                     : "text-ink-secondary hover:bg-bg-muted hover:text-ink-primary"
                 }`
-              : `flex items-center gap-1.5 rounded-sm border px-2.5 py-2 text-xs font-bold transition-colors ${
+              : `flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors ${
                   active
-                    ? "border-brand-panel-line bg-white/10 text-brand-panel-accent"
-                    : "border-transparent text-white/65 hover:bg-white/10 hover:text-white"
+                    ? "text-ink-primary font-semibold underline decoration-accent-clay underline-offset-4"
+                    : "text-ink-secondary hover:text-ink-primary"
                 }`
           }
           aria-current={active ? "page" : undefined}
@@ -394,7 +394,7 @@ export default function Navbar() {
   return (
     <>
       <header
-        className="sticky top-0 z-50 border-b border-white/10 bg-[var(--brand-navy)] text-white shadow-xs backdrop-blur-xl supports-[backdrop-filter]:bg-[var(--brand-navy)]/90"
+        className="sticky top-0 z-50 h-16 border-b border-border-default bg-bg-surface text-ink-primary shadow-sm supports-[backdrop-filter]:bg-bg-surface/95"
         dir={direction}
       >
         <div className="container mx-auto flex h-16 sm:h-20 items-center justify-between gap-2 sm:gap-4 px-3 sm:px-4">
@@ -408,10 +408,10 @@ export default function Navbar() {
     />
   </div>
   <div className="flex flex-col">
-    <span className="font-display font-bold text-lg sm:text-xl leading-none text-brand-panel-ink">
-      ALTUS<span className="font-medium text-brand-panel-accent">place</span>
+    <span className="font-display font-bold text-lg sm:text-xl leading-none text-ink-primary">
+      ALTUS<span className="font-medium text-accent-clay">place</span>
     </span>
-    <span className="text-[9px] sm:text-[10px] tracking-[0.18em] text-brand-panel-ink-2 uppercase -mt-1 font-semibold">
+    <span className="text-[9px] sm:text-[10px] tracking-[0.18em] text-ink-tertiary uppercase -mt-1 font-semibold">
       Rent. Drive. Live.
     </span>
   </div>
@@ -634,13 +634,6 @@ export default function Navbar() {
         <WhatsAppNotificationModal
           isOpen={whatsappModalOpen}
           onClose={() => setWhatsappModalOpen(false)}
-          bookingDetails={{
-            id: "ALT-9942",
-            carName: "Dacia Duster 2026",
-            customerName: "محمد العلوي",
-            customerPhone: "",
-            totalPrice: 1500,
-          }}
         />
         <TwoFactorAuthModal
           isOpen={twoFaModalOpen}

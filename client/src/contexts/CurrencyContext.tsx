@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
 import { readBrandPreference, writeBrandPreference } from "@/config/brand";
+import { formatPriceAmount } from "@/lib/pricing";
 
 export type Currency = "MAD" | "EUR" | "USD";
 
@@ -22,6 +23,12 @@ interface CurrencyContextType {
   showTotal: boolean;
   setShowTotal: (value: boolean) => void;
   formatTotalPrice: (amountInMAD: number) => string;
+  /**
+   * Converted amount WITHOUT a currency symbol, for surfaces that render the
+   * currency separately (e.g. a currency chip). Pass `{ total: true }` to apply
+   * the same platform-fee uplift as `formatTotalPrice`.
+   */
+  formatAmount: (amountInMAD: number, options?: { total?: boolean }) => string;
 }
 
 const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined);
@@ -35,7 +42,7 @@ const FALLBACK_RATES: Rates = {
 };
 
 const SYMBOLS: Record<Currency, string> = {
-  MAD: "درهم",
+  MAD: "MAD",
   EUR: "€",
   USD: "$",
 };
@@ -169,7 +176,7 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
     (amountInMAD: number) => {
       const converted = convertPrice(amountInMAD);
       const sym = SYMBOLS[currency];
-      return currency === "MAD" ? `${converted.toLocaleString()} ${sym}` : `${sym}${converted.toLocaleString()}`;
+      return currency === "MAD" ? `${formatPriceAmount(converted)} ${sym}` : `${sym}${formatPriceAmount(converted)}`;
     },
     [convertPrice, currency],
   );
@@ -180,6 +187,14 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
       return formatPrice(totalInMAD);
     },
     [formatPrice],
+  );
+
+  const formatAmount = useCallback(
+    (amountInMAD: number, options?: { total?: boolean }) => {
+      const base = options?.total ? Math.round(amountInMAD * (1 + FEES_RATIO)) : amountInMAD;
+      return formatPriceAmount(convertPrice(base));
+    },
+    [convertPrice],
   );
 
   const value: CurrencyContextType = {
@@ -194,6 +209,7 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
     showTotal,
     setShowTotal: toggleShowTotal,
     formatTotalPrice,
+    formatAmount,
   };
 
   return <CurrencyContext.Provider value={value}>{children}</CurrencyContext.Provider>;
