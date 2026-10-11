@@ -192,8 +192,8 @@ export default function Home() {
               {t('heroDescription')}
             </p>
 
-            {/* Prominent centered search bar — SearchBar renders its own card */}
-            <SearchBar variant="hero" />
+            {/* Glass search card over the photographic hero (gate-pinned: translucent + blurred + rounded-xl) */}
+            <SearchBar variant="heroOverlay" />
 
             {/* Trust signals below search bar */}
             <div className="mt-4 flex flex-wrap items-center justify-center gap-4 text-sm text-ink-secondary">
