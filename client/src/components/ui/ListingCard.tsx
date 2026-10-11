@@ -8,6 +8,7 @@ import { OptimizedImage } from "@/components/OptimizedImage";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { PartnerVerifiedBadge } from "@/components/ui/PartnerVerifiedBadge";
+import { hasValidPrice, PRICE_UNIT_SUFFIX_KEY, type PriceUnit } from "@/lib/pricing";
 
 export interface ListingCardProps {
   id: string;
@@ -15,7 +16,12 @@ export interface ListingCardProps {
   titleFr?: string;
   city: string;
   pricePerDay: number;
+  /** Optional resolved unit; overrides `unitLabel` and falls back to per-day. */
+  priceUnit?: PriceUnit;
+  /** True when the listing has no publishable price — renders "price on request" instead of `0 MAD`. */
+  priceOnRequest?: boolean;
   unitLabel?: string;
+  /** Optional currency override; defaults to the active currency (context). */
   currency?: string;
   images: string[];
   type: "car" | "property";
@@ -47,21 +53,28 @@ const BADGE_CONFIG: Record<
 };
 
 export function ListingCard(props: ListingCardProps) {
-  const { id, title, titleFr, city, pricePerDay, unitLabel, currency = "MAD", images, type,
+  const { id, title, titleFr, city, pricePerDay, priceUnit, priceOnRequest, unitLabel, currency, images, type,
     badges, providerVerified, rating, reviewCount, hostName, isFavorite, onToggleFavorite, specs, startDate, endDate, className, style } = props;
   const [, setLocation] = useLocation();
   const { language, direction, t } = useLanguage();
   const [activeSlide, setActiveSlide] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
-  const { currency: activeCurrency, formatPrice, formatTotalPrice, showTotal } = useCurrency();
+  const { currency: activeCurrency, formatAmount, showTotal } = useCurrency();
   const [imgError, setImgError] = useState<Record<number, boolean>>({});
   const hasImages = images.length > 0;
   const displayImages = hasImages ? images : [""];
   const totalSlides = displayImages.length;
   const safePrice = Number.isFinite(Number(pricePerDay)) ? Number(pricePerDay) : 0;
   const displayTitle = language === "fr" && titleFr ? titleFr : title;
-  // Callers that omit unitLabel fall back to a localized per-day suffix.
-  const unitText = unitLabel ?? t("unitPerDay");
+  // A listing is "on request" when the caller flags it OR the price is not
+  // publishable (zero/NaN) — the card must never render `0 MAD`.
+  const priceOnRequestMode = priceOnRequest === true || !hasValidPrice(safePrice);
+  // Currency label shown in the chip: caller override, else the active currency.
+  const displayCurrency = currency ?? activeCurrency;
+  // Resolved (currency-free) unit suffix first, then the caller-provided label,
+  // then per-day. The currency is rendered separately in the chip, so the
+  // suffix must NOT repeat it.
+  const unitText = priceUnit ? t(PRICE_UNIT_SUFFIX_KEY[priceUnit]) : (unitLabel ?? t("unitPerDay"));
 
   const goTo = useCallback((dir: number) => {
     setActiveSlide((prev) => {
@@ -90,8 +103,8 @@ export function ListingCard(props: ListingCardProps) {
   return (
     <article
       className={cn(
-        "group relative flex flex-col overflow-hidden rounded-2xl bg-bg-surface border border-border-subtle",
-        "shadow-xs hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-1 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] cursor-pointer",
+        "group relative flex flex-col overflow-hidden rounded-xl border border-border-subtle bg-bg-surface",
+        "shadow-sm hover:shadow-md transition-shadow duration-200 cursor-pointer",
         className,
       )}
       style={style}
@@ -102,7 +115,7 @@ export function ListingCard(props: ListingCardProps) {
       onKeyDown={(e) => { if (e.key === "Enter") handleCardClick(); }}
     >
       <div className="absolute inset-x-0 top-0 h-0.5 bg-accent-clay scale-x-0 origin-start transition-transform duration-300 ease-out group-hover:scale-x-100" aria-hidden="true" />
-      <div className="relative aspect-[5/4] overflow-hidden bg-bg-muted">
+      <div className="relative aspect-video w-full overflow-hidden bg-bg-muted">
         <div className="flex h-full transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]" style={{ transform: `translateX(${activeSlide * -100}%)` }}>
           {displayImages.map((src, i) => (
             <div key={i} className="relative h-full w-full shrink-0">
@@ -132,17 +145,10 @@ export function ListingCard(props: ListingCardProps) {
             <Heart className={cn("h-4 w-4 transition-colors", isFavorite ? "fill-accent-red text-accent-red" : "text-ink-secondary")} />
           </button>
         )}
-        <div className="absolute bottom-3 start-3">
-          <div className="inline-flex items-baseline gap-1.5 rounded-full bg-bg-surface/92 px-3.5 py-1.5 shadow-lg backdrop-blur-md ring-1 ring-white/25">
-            <span key={`${activeCurrency}-${showTotal ? "total" : "day"}`} className="price-figure inline-block text-lg text-ink-primary animate-fade-in">{showTotal ? formatTotalPrice(safePrice) : formatPrice(safePrice)}</span>
-            <span className="rounded-md bg-accent-clay/12 px-1.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-accent-clay" aria-label={currency}>{currency}</span>
-            <span className="text-[10px] font-medium text-ink-tertiary">{unitText}</span>
-          </div>
-        </div>
         {totalSlides > 1 && (<>
-          // The visible pill stays 32px, but `after:inset-[-6px]` adds a 44x44 hit area
-          // around it (32 + 6 + 6) without disturbing the card layout or the
-          // arrow's optical position over the photo.
+          {/* The visible pill stays 32px, but `after:inset-[-6px]` adds a 44x44 hit area
+              around it (32 + 6 + 6) without disturbing the card layout or the
+              arrow's optical position over the photo. */}
           <button onClick={(e) => { e.stopPropagation(); goTo(-1); }} className="absolute start-2 top-1/2 -translate-y-1/2 after:absolute after:inset-[-6px] after:content-[''] flex h-8 w-8 items-center justify-center rounded-full bg-bg-surface/85 shadow-sm backdrop-blur-sm transition-all duration-200 opacity-0 group-hover:opacity-100 hover:bg-bg-surface hover:scale-110" aria-label={t("ariaPreviousImage")}>
             <svg className="h-4 w-4 text-ink-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d={direction === "rtl" ? "M9 5l7 7-7 7" : "M15 19l-7-7 7-7"} /></svg>
           </button>
@@ -164,13 +170,7 @@ export function ListingCard(props: ListingCardProps) {
         </>)}
       </div>
       <div className="flex flex-1 flex-col gap-2 p-4">
-        <div className="flex items-start justify-between gap-2">
-          <h3 className="line-clamp-2 text-[15px] font-bold leading-snug text-ink-primary transition-colors group-hover:text-accent-clay" title={displayTitle}>{displayTitle}</h3>
-          {rating && rating > 0 && (<div className="flex shrink-0 items-center gap-1 text-xs font-medium text-ink-secondary"><Star className="h-3.5 w-3.5 fill-accent-warm text-accent-warm" /><span>{rating.toFixed(1)}</span>{reviewCount ? <span className="text-ink-tertiary">({reviewCount})</span> : null}</div>)}
-          {(reviewCount === undefined || reviewCount === 0) && (!rating || rating <= 0) && (
-            <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-bg-muted px-2 py-0.5 text-[10px] font-semibold text-ink-tertiary">{t("reviewsNewEmpty")}</span>
-          )}
-        </div>
+        <h3 className="line-clamp-2 text-[15px] font-bold leading-snug text-ink-primary transition-colors group-hover:text-accent-clay" title={displayTitle}>{displayTitle}</h3>
         <div className="flex items-center gap-1 text-xs text-ink-secondary"><MapPin className="h-3 w-3 text-ink-tertiary" /><span className="line-clamp-1">{city}</span></div>
         {specs && (specs.transmission || specs.fuel || specs.seats || specs.rooms) && (
           <div className="flex flex-wrap gap-2 text-[11px] text-ink-tertiary">
@@ -182,7 +182,27 @@ export function ListingCard(props: ListingCardProps) {
             {specs.year && <span className="inline-flex items-center gap-1 rounded-full bg-bg-muted px-2 py-0.5"><Calendar className="h-3 w-3" /> {specs.year}</span>}
           </div>
         )}
-        {hostName && (<div className="mt-auto pt-2 border-t border-border-subtle"><span className="text-[11px] text-ink-tertiary">Hosted by <span className="font-medium text-ink-secondary">{hostName}</span></span></div>)}
+        {hostName && (<div className="pt-2 border-t border-border-subtle"><span className="text-[11px] text-ink-tertiary">Hosted by <span className="font-medium text-ink-secondary">{hostName}</span></span></div>)}
+
+        <div className="mt-auto flex flex-col gap-3 pt-2">
+          <div className="flex items-end justify-between gap-2">
+            <div className="flex items-baseline gap-1">
+              <span key={`${activeCurrency}-${showTotal ? "total" : "day"}`} className="price-figure text-xl font-bold text-ink-primary animate-fade-in">{priceOnRequestMode ? t("priceOnRequest") : formatAmount(safePrice, { total: showTotal })}</span>
+              {!priceOnRequestMode && <span className="rounded-md bg-accent-clay/12 px-1.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-accent-clay" aria-label={displayCurrency}>{displayCurrency}</span>}
+              {!priceOnRequestMode && <span className="text-xs font-normal text-ink-tertiary">{unitText}</span>}
+            </div>
+            {rating && rating > 0 ? (
+              <div className="flex shrink-0 items-center gap-1 text-xs font-medium text-ink-secondary">
+                <Star className="h-3.5 w-3.5 fill-accent-warm text-accent-warm" />
+                <span>{rating.toFixed(1)}</span>
+                {reviewCount ? <span className="text-ink-tertiary">({reviewCount})</span> : null}
+              </div>
+            ) : (
+              <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-bg-muted px-2 py-0.5 text-[10px] font-semibold text-ink-tertiary">{t("reviewsNewEmpty")}</span>
+            )}
+          </div>
+          <button type="button" className="w-full rounded-lg bg-accent-clay py-2.5 text-sm font-semibold text-[var(--primary-ink)] transition-colors hover:bg-accent-clay-hover" onClick={(e) => { e.stopPropagation(); handleCardClick(); }} aria-label={t("viewDetails")}>{t("viewDetails")}</button>
+        </div>
       </div>
     </article>
   );
