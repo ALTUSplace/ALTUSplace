@@ -290,7 +290,7 @@ export default function Home() {
                       </div>
                       <span className="inline-flex items-center gap-1 text-[11px] font-bold text-ink-secondary">
                         <MapPin className="h-3 w-3 text-accent-clay" aria-hidden="true" />
-                        {item.city || 'الدار البيضاء'}
+                        {item.city || cityLabel('casablanca')}
                       </span>
                       <span className="b2-press mt-auto inline-flex items-center justify-center gap-1.5 rounded-md bg-accent-clay px-4 py-2 text-xs font-extrabold text-[var(--primary-ink)] shadow-[var(--shadow-clay)] transition-colors group-hover:bg-accent-clay-hover">
                         {t('book_tomorrow_btn')}
@@ -399,33 +399,39 @@ export default function Home() {
         />
 
         {/* Listing Cards Grid */}
-        <div className="mt-8 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-          {activeListings.slice(0, 6).map((item, index) => (
-            <ListingCard
-              key={item.id}
-              id={String(item.id)}
-              title={item.title}
-              titleFr={item.titleFr}
-              city={item.city}
-              pricePerDay={item.pricePerUnit}
-              priceUnit={item.priceUnit}
-              priceOnRequest={item.priceOnRequest}
-              images={item.images?.length ? item.images : item.image ? [item.image] : []}
-              type="car"
-              rating={item.rating}
-              reviewCount={item.reviewCount}
-              specs={{
-                transmission: item.specs?.transmission,
-                fuel: item.specs?.fuel,
-                seats: item.specs?.seats ? Number(item.specs.seats) : undefined,
-                year: item.specs?.year,
-              }}
-              isFavorite={favorites.isFavorite(Number(item.id))}
-              onToggleFavorite={() => favorites.toggleFavorite(Number(item.id))}
-              className={`stagger-${Math.min(index + 1, 8)} animate-fade-up`}
-            />
-          ))}
-        </div>
+        {activeListings.length > 0 ? (
+          <div className="mt-8 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+            {activeListings.slice(0, 6).map((item, index) => (
+              <ListingCard
+                key={item.id}
+                id={String(item.id)}
+                title={item.title}
+                titleFr={item.titleFr}
+                city={item.city}
+                pricePerDay={item.pricePerUnit}
+                priceUnit={item.priceUnit}
+                priceOnRequest={item.priceOnRequest}
+                images={item.images?.length ? item.images : item.image ? [item.image] : []}
+                type="car"
+                rating={item.rating}
+                reviewCount={item.reviewCount}
+                specs={{
+                  transmission: item.specs?.transmission,
+                  fuel: item.specs?.fuel,
+                  seats: item.specs?.seats ? Number(item.specs.seats) : undefined,
+                  year: item.specs?.year,
+                }}
+                isFavorite={favorites.isFavorite(Number(item.id))}
+                onToggleFavorite={() => favorites.toggleFavorite(Number(item.id))}
+                className={`stagger-${Math.min(index + 1, 8)} animate-fade-up`}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="mt-8 rounded-2xl border border-dashed border-border-default bg-bg-surface p-10 text-center text-sm text-ink-secondary">
+            {t('noCarsYet')}
+          </div>
+        )}
       </section>
 
       {/* Featured Properties Section */}
@@ -531,7 +537,7 @@ export default function Home() {
       <section className="py-12 md:py-16 bg-ink-primary dark:bg-[#1C1C1E] text-white">
         <div className="container mx-auto max-w-6xl px-4">
           <div className="mb-8 text-center md:mb-12">
-            <span className="section-index justify-center text-[#98989E]! text-white/60">ALTUSplace</span>
+            <span className="section-index justify-center text-white/60">ALTUSplace</span>
             <h2 className="mt-3 text-2xl font-bold text-white md:text-3xl">{t('trustSectionTitle')}</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10">
