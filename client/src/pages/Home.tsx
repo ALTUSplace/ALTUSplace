@@ -9,7 +9,6 @@ import { FAQSection } from '@/components/FAQSection';
 import { ListingCard } from '@/components/ui/ListingCard';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { useFavorites } from '@/hooks/useFavorites';
-import { CatalogShowcase } from '@/components/CatalogShowcase';
 import { SearchBar } from '@/components/SearchBar';
 import { isCarCategory, isPropertyCategory } from '@/lib/categories';
 import { resolveCitySlug, cityLabelFr } from '@/data/moroccoCities';
@@ -346,9 +345,6 @@ export default function Home() {
           ))}
         </ul>
       </section>
-
-      {/* ── Static 2026 catalog showcase — only when the cleaned dataset is empty ── */}
-      {dbRows.length === 0 && <CatalogShowcase />}
 
       {/* ── Bento Grid Section (Separating Cars and Properties cleanly) ── */}
       <section className="py-10 md:py-16 px-4 container mx-auto max-w-6xl">

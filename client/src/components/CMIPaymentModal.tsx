@@ -29,9 +29,10 @@ export function CMIPaymentModal({ isOpen, onClose, onSuccess, amount }: CMIPayme
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
-      const txnId = 'CMI-MA-' + Math.floor(100000 + Math.random() * 900000);
-      toast.success(`تمت عملية الدفع بنجاح عبر CMI! رقم المعاملة: ${txnId}`);
-      onSuccess(txnId);
+      // No gateway call is made here; report a request, not a settled charge.
+      const reference = 'PENDING-' + Math.floor(100000 + Math.random() * 900000);
+      toast.info('تم إرسال طلب الدفع — سيتم تأكيد الحجز بعد تحقق CMI.');
+      onSuccess(reference);
     }, 1500);
   };
 

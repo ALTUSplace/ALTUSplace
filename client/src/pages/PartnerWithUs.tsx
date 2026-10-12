@@ -42,7 +42,7 @@ export default function PartnerWithUs() {
             شريك ALTUSplace
           </span>
           <h1 className="mx-auto mt-6 max-w-2xl text-3xl font-black leading-tight sm:text-5xl">
-            كن شريكاً وعُدّ منتجاتك للكراء
+            كن شريكاً واعرض أسعارك للكراء
             <span className="block text-[#f5b85b]">مع ALTUSplace</span>
           </h1>
           <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-white/70 sm:text-base">

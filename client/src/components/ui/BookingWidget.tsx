@@ -11,13 +11,12 @@ interface BookingWidgetProps {
   pricePerDay: number;
   currency?: string;
   minNights?: number;
-  maxGuests?: number;
   rating?: number;
   reviewCount?: number;
   /** Pre-fill from search dates threaded through the listing link. */
   initialCheckIn?: string;
   initialCheckOut?: string;
-  onReserve?: (data: { checkIn: string; checkOut: string; guests: number }) => void;
+  onReserve?: (data: { checkIn: string; checkOut: string }) => void;
   /** Fired when a quick-date chip is chosen, for conversion tracking. */
   onQuickDate?: (mode: "tomorrow" | "weekend") => void;
   className?: string;
@@ -25,17 +24,14 @@ interface BookingWidgetProps {
 
 const COPY = {
   ar: {
-    perNight: "/ ليلة",
+    perDay: "/ يوم",
     reviews: "مراجعة",
     checkIn: "الاستلام",
     checkOut: "الإرجاع",
-    guestsLabel: "المسافرون",
-    guestSingular: "مسافر",
-    guestPlural: "مسافرون",
     reserve: "احجز الآن",
     notCharged: "لن يتم خصم أي مبلغ الآن",
-    nightSingular: "ليلة",
-    nightPlural: "ليالٍ",
+    daySingular: "يوم",
+    dayPlural: "أيام",
     subtotal: "الإيجار",
     total: "المجموع",
     secure: "دفع آمن · إلغاء مجاني قبل الاستلام",
@@ -45,17 +41,14 @@ const COPY = {
     customRange: "نطاق مخصص",
   },
   fr: {
-    perNight: "/ nuit",
+    perDay: "/ jour",
     reviews: "avis",
     checkIn: "Arrivée",
     checkOut: "Départ",
-    guestsLabel: "Voyageurs",
-    guestSingular: "voyageur",
-    guestPlural: "voyageurs",
     reserve: "Réserver",
     notCharged: "Aucun montant prélevé maintenant",
-    nightSingular: "nuit",
-    nightPlural: "nuits",
+    daySingular: "jour",
+    dayPlural: "jours",
     subtotal: "Location",
     total: "Total",
     secure: "Paiement sécurisé · Annulation gratuite avant l'arrivée",
@@ -65,17 +58,14 @@ const COPY = {
     customRange: "Période personnalisée",
   },
   en: {
-    perNight: "/ night",
+    perDay: "/ day",
     reviews: "reviews",
     checkIn: "Check-in",
     checkOut: "Check-out",
-    guestsLabel: "Guests",
-    guestSingular: "guest",
-    guestPlural: "guests",
     reserve: "Reserve",
     notCharged: "You won't be charged yet",
-    nightSingular: "night",
-    nightPlural: "nights",
+    daySingular: "day",
+    dayPlural: "days",
     subtotal: "Rental",
     total: "Total",
     secure: "Secure payment · Free cancellation before check-in",
@@ -87,13 +77,12 @@ const COPY = {
 } as const;
 
 export function BookingWidget(props: BookingWidgetProps) {
-  const { pricePerDay, currency = "MAD", minNights = 1, maxGuests = 10, rating, reviewCount, initialCheckIn, initialCheckOut, onReserve, onQuickDate, className } = props;
+  const { pricePerDay, currency = "MAD", minNights = 1, rating, reviewCount, initialCheckIn, initialCheckOut, onReserve, onQuickDate, className } = props;
   const isMobile = useIsMobile();
   const { language } = useLanguage();
   const copy = COPY[language] ?? COPY.en;
   const [checkIn, setCheckIn] = useState(initialCheckIn ?? "");
   const [checkOut, setCheckOut] = useState(initialCheckOut ?? "");
-  const [guests, setGuests] = useState(1);
   const checkInRef = useRef<HTMLInputElement>(null);
 
   // Quick-select drives the native date inputs (they remain the "custom" path).
@@ -115,19 +104,18 @@ export function BookingWidget(props: BookingWidgetProps) {
     setCheckOut(offset(daysToFriday + 2));
   };
   const nights = calculateRentalDays(checkIn, checkOut) || minNights;
-  // Shared calculator keeps the guest preview identical to the server total —
+  // Shared calculator keeps the day preview identical to the server total —
   // no ad-hoc service fee: base rental only (add-ons are chosen at checkout).
   const { subtotal, total } = calculateCheckoutTotal(pricePerDay, nights, []);
-  const nightLabel = nights > 1 ? copy.nightPlural : copy.nightSingular;
-  const guestLabel = guests > 1 ? copy.guestPlural : copy.guestSingular;
-  const handleReserve = () => { if (onReserve && checkIn && checkOut) onReserve({ checkIn, checkOut, guests }); };
+  const dayLabel = nights > 1 ? copy.dayPlural : copy.daySingular;
+  const handleReserve = () => { if (onReserve && checkIn && checkOut) onReserve({ checkIn, checkOut }); };
 
   const widgetContent = (
     <div className="flex flex-col gap-4">
       <div className="flex items-baseline gap-1.5">
         <span className="text-2xl font-bold text-ink-primary">{pricePerDay.toLocaleString()}</span>
         <span className="text-sm font-medium text-ink-secondary">{currency}</span>
-        <span className="text-sm text-ink-tertiary">{copy.perNight}</span>
+        <span className="text-sm text-ink-tertiary">{copy.perDay}</span>
       </div>
       {rating != null && rating > 0 && (
         <div className="flex flex-wrap items-center gap-1.5 text-sm">
@@ -150,12 +138,11 @@ export function BookingWidget(props: BookingWidgetProps) {
           <div className="px-3 py-2.5"><label className="block text-[10px] font-bold uppercase tracking-wider text-ink-tertiary">{copy.checkIn}</label><input ref={checkInRef} type="date" value={checkIn} onChange={(e) => setCheckIn(e.target.value)} className="mt-1 w-full bg-transparent text-sm font-medium text-ink-primary outline-none" /></div>
           <div className="px-3 py-2.5"><label className="block text-[10px] font-bold uppercase tracking-wider text-ink-tertiary">{copy.checkOut}</label><input type="date" value={checkOut} onChange={(e) => setCheckOut(e.target.value)} className="mt-1 w-full bg-transparent text-sm font-medium text-ink-primary outline-none" /></div>
         </div>
-        <div className="border-t border-border-default px-3 py-2.5"><label className="block text-[10px] font-bold uppercase tracking-wider text-ink-tertiary">{copy.guestsLabel}</label><div className="mt-1 flex items-center justify-between"><span className="text-sm font-medium text-ink-primary">{guests} {guestLabel}</span><div className="flex items-center gap-2"><button onClick={() => setGuests(Math.max(1, guests - 1))} className="grid size-11 place-items-center rounded-full border border-border-default text-ink-secondary transition-colors hover:bg-bg-muted" aria-label="Decrease guests">−</button><button onClick={() => setGuests(Math.min(maxGuests, guests + 1))} className="grid size-11 place-items-center rounded-full border border-border-default text-ink-secondary transition-colors hover:bg-bg-muted" aria-label="Increase guests">+</button></div></div></div>
       </div>
       <Button onClick={handleReserve} disabled={!checkIn || !checkOut} className="w-full rounded-xl bg-accent-clay py-3.5 text-sm font-bold text-white shadow-md transition-all duration-200 hover:bg-accent-clay-hover hover:shadow-lg disabled:opacity-50">{copy.reserve}</Button>
       <p className="text-center text-xs text-ink-tertiary">{copy.notCharged}</p>
       <div className="flex flex-col gap-3 border-t border-border-subtle pt-4">
-        <div className="flex justify-between text-sm"><span className="text-ink-secondary underline decoration-dotted">{pricePerDay.toLocaleString()} × {nights} {nightLabel}</span><span className="font-medium text-ink-primary">{subtotal.toLocaleString()} {currency}</span></div>
+        <div className="flex justify-between text-sm"><span className="text-ink-secondary underline decoration-dotted">{pricePerDay.toLocaleString()} × {nights} {dayLabel}</span><span className="font-medium text-ink-primary">{subtotal.toLocaleString()} {currency}</span></div>
         <div className="flex justify-between border-t border-border-subtle pt-3"><span className="text-sm font-bold text-ink-primary">{copy.total}</span><span className="text-sm font-bold text-ink-primary">{total.toLocaleString()} {currency}</span></div>
       </div>
       <div className="flex items-center gap-2 rounded-lg bg-bg-muted px-3 py-2.5"><ShieldCheck className="h-4 w-4 text-accent-green" /><span className="text-xs text-ink-secondary">{copy.secure}</span></div>
@@ -166,7 +153,7 @@ export function BookingWidget(props: BookingWidgetProps) {
     return (
       <div className={cn("fixed bottom-0 left-0 right-0 z-50 border-t border-border-subtle bg-bg-surface px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]", className)}>
         <div className="flex items-center justify-between">
-          <div className="flex items-baseline gap-1"><span className="text-lg font-bold text-ink-primary">{pricePerDay.toLocaleString()}</span><span className="text-xs font-medium text-ink-secondary">{currency}{copy.perNight}</span></div>
+          <div className="flex items-baseline gap-1"><span className="text-lg font-bold text-ink-primary">{pricePerDay.toLocaleString()}</span><span className="text-xs font-medium text-ink-secondary">{currency}{copy.perDay}</span></div>
           <Sheet><SheetTrigger asChild><Button className="rounded-xl bg-accent-clay px-6 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:bg-accent-clay-hover">{copy.reserve}</Button></SheetTrigger><SheetContent side="bottom" className="rounded-t-2xl px-5 pb-8 pt-4"><SheetHeader className="mb-4"><SheetTitle className="text-end text-lg font-bold text-ink-primary">{copy.bookingDetails}</SheetTitle></SheetHeader>{widgetContent}</SheetContent></Sheet>
         </div>
       </div>
