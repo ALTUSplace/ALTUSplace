@@ -8,8 +8,6 @@ import {
   BookOpen,
   Building2,
   Car,
-  Check,
-  ChevronDown,
   Coins,
   CreditCard,
   Globe,
@@ -18,9 +16,11 @@ import {
   LayoutDashboard,
   Menu,
   Moon,
+  Settings,
   Shield,
   ShieldAlert,
   Sun,
+  UserRound,
   X,
   BookmarkCheck,
   Heart,
@@ -75,101 +75,11 @@ function isActiveLink(currentLocation: string, href: string) {
   );
 }
 
-type SelectorOption = {
-  value: string;
-  label: string;
-  current?: boolean;
-};
-
-/**
- * Compact editorial dropdown selector (language / currency) for the paper
- * header. A sharp pill-to-square trigger that opens a matte floating menu.
- */
-function NavSelector({
-  icon: Icon,
-  title,
-  value,
-  options,
-  onSelect,
-}: {
-  icon: typeof Globe;
-  title: string;
-  value: string;
-  options: SelectorOption[];
-  onSelect: (value: string) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const selectorRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const handlePointerDown = (event: MouseEvent) => {
-      if (selectorRef.current && !selectorRef.current.contains(event.target as Node)) {
-        setOpen(false);
-      }
-    };
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
-    };
-    document.addEventListener("mousedown", handlePointerDown);
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("mousedown", handlePointerDown);
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [open]);
-
-  return (
-    <div className="relative" ref={selectorRef}>
-      <button
-        type="button"
-        onClick={() => setOpen((current) => !current)}
-        aria-expanded={open}
-        aria-haspopup="listbox"
-        title={title}
-        className="b2-press inline-flex min-h-10 items-center gap-1.5 rounded-sm border border-border-subtle bg-bg-surface px-3 text-xs font-bold text-ink-primary shadow-xs transition-colors hover:border-border-default hover:bg-bg-muted"
-      >
-        <Icon className="h-4 w-4 text-accent-clay" aria-hidden="true" />
-        <span>{value}</span>
-        <ChevronDown className={`h-3.5 w-3.5 text-ink-tertiary transition-transform duration-200 ${open ? "rotate-180" : ""}`} aria-hidden="true" />
-      </button>
-
-      {open && (
-        <div
-          role="listbox"
-          aria-label={title}
-          className="absolute left-0 top-full z-50 mt-2 w-44 origin-top animate-fade-in overflow-hidden rounded-md border border-border-subtle bg-bg-elevated p-1 shadow-lg shadow-[var(--shadow-lg)]"
-        >
-          {options.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              role="option"
-              aria-selected={option.current}
-              onClick={() => {
-                onSelect(option.value);
-                setOpen(false);
-              }}
-              className={`flex min-h-9 w-full items-center justify-between gap-2 rounded-sm px-3 text-xs font-bold transition-colors duration-150 ${
-                option.current
-                  ? "bg-accent-clay text-[var(--primary-ink)]"
-                  : "text-ink-secondary hover:bg-bg-muted hover:text-ink-primary"
-              }`}
-            >
-              <span>{option.label}</span>
-              {option.current && <Check className="h-3.5 w-3.5" aria-hidden="true" />}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
 export default function Navbar() {
   const [location] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [cmiModalOpen, setCmiModalOpen] = useState(false);
   const [whatsappModalOpen, setWhatsappModalOpen] = useState(false);
   const [twoFaModalOpen, setTwoFaModalOpen] = useState(false);
@@ -311,12 +221,14 @@ export default function Navbar() {
         !notificationRef.current.contains(event.target as Node)
       ) {
         setNotificationsOpen(false);
+        setSettingsOpen(false);
       }
     };
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setMobileMenuOpen(false);
         setNotificationsOpen(false);
+        setSettingsOpen(false);
       }
     };
 
@@ -359,9 +271,9 @@ export default function Navbar() {
 
   const renderNavLinks = (mobile = false) =>
     navLinks
-      // Desktop keeps the five primary destinations; role-gated dashboards and
-      // support remain reachable from the drawer, footer and dashboards.
-      .filter((link) => mobile || !["admin", "dashboard", "help"].includes(link.labelKey ?? ""))
+      // Desktop keeps only the two shopping flows; every other destination
+      // stays reachable from the mobile drawer via the hamburger.
+      .filter((link) => mobile || ["cars", "properties"].includes(link.labelKey ?? ""))
       .map((link) => {
       const Icon = link.icon;
       const active = isActiveLink(location, link.href);
@@ -428,104 +340,133 @@ export default function Navbar() {
             </Link>
             <NavbarCitySelect className="hidden xl:block" />
 
-            <NavSelector
-              icon={Coins}
-              title={t("chooseCurrency")}
-              value={currency}
-              options={(["MAD", "EUR", "USD"] as Currency[]).map((item) => ({
-                value: item,
-                label: item,
-                current: currency === item,
-              }))}
-              onSelect={(value) => selectCurrency(value as Currency)}
-            />
-
-            <NavSelector
-              icon={Globe}
-              title={t("language")}
-              value={language === "ar" ? t("arabic") : language === "fr" ? t("french") : t("english")}
-              options={[
-                { value: "ar", label: t("arabic"), current: language === "ar" },
-                { value: "fr", label: t("french"), current: language === "fr" },
-                { value: "en", label: t("english"), current: language === "en" },
-              ]}
-              onSelect={(value) => selectLanguage(value as Language)}
-            />
-
-            {/* Secondary controls, hidden below xl.
-                The header row is a single non-wrapping flex line: at 768–1023px
-                this cluster plus the logo needs ~813px, which pushed the
-                hamburger (the only way into the mobile menu, and therefore the
-                only way into the mobile city selector) completely off-screen at
-                left: -45. Hiding these two recovers 104px, which is more than
-                the ~61px deficit, and loses nothing: both are already offered
-                inside the mobile panel as full-width rows (see the twoFaModal
-                and cmiModal triggers below).
-
-                Wrapped in a div rather than given `hidden xl:inline-flex`
-                because `.b2-icon-button` declares `display: inline-flex` in
-                the same `utilities` cascade layer *after* Tailwind generates
-                `.hidden`, so it would win on source order and the utility
-                would silently do nothing. A plain div has no competing rule.
-
-                VERIFIED by scripts/verify-navbar-clipping.mjs: no header
-                control is clipped at 375/768/1024/1280px, and
-                verify-city-selector-responsive.mjs asserts the menu button is
-                fully on-screen at every width as a standing regression guard —
-                it is the only route into the mobile city selector. */}
-            <div className="hidden items-center gap-2 xl:flex">
-              <button
-                type="button"
-                className="b2-icon-button border border-border-subtle bg-bg-surface text-ink-secondary hover:bg-bg-muted hover:text-ink-primary"
-                onClick={() => setTwoFaModalOpen(true)}
-                title={t("securityTwoFactor")}
-                aria-label={t("securityTwoFactor")}
-              >
-                <Shield className="h-4 w-4 text-accent-clay" />
-              </button>
-              <button
-                type="button"
-                className="b2-icon-button border border-border-subtle bg-bg-surface text-ink-secondary hover:bg-bg-muted hover:text-ink-primary"
-                onClick={() => setCmiModalOpen(true)}
-                title={t("cmiPayment")}
-                aria-label={t("cmiPortal")}
-              >
-                <CreditCard className="h-4 w-4 text-accent-clay" />
-              </button>
-            </div>
-            <button
-              type="button"
-              className="b2-icon-button border border-accent-green/30 bg-accent-green-s text-accent-green hover:bg-accent-green/15"
-              onClick={() => setWhatsappModalOpen(true)}
-              title={t("whatsappNotify")}
-              aria-label={t("whatsappNotify")}
-            >
-              <MessageSquare className="h-4 w-4" />
-            </button>
-
+            {/* Consolidated desktop menu: theme, notifications, language,
+                currency, 2FA, CMI and WhatsApp live behind one settings gear,
+                so the desktop header stays a calm "Logo | Cars · Properties |
+                CTA" row. Panels anchor `end-0` under this wrapper (RTL-safe);
+                the wrapper carries notificationRef, so the outside-click
+                handler below closes settings and notifications together. */}
             <div className="relative" ref={notificationRef}>
+              <Link
+                href={isAuthenticated ? "/profile" : "/login"}
+                className="b2-icon-button border border-border-subtle bg-bg-surface text-ink-secondary hover:bg-bg-muted hover:text-ink-primary"
+                aria-label={isAuthenticated ? t("profile") : t("login")}
+                title={isAuthenticated ? t("profile") : t("login")}
+              >
+                <UserRound className="h-4 w-4 text-accent-clay" aria-hidden="true" />
+              </Link>
+
               <button
                 type="button"
-                className={`b2-icon-button relative border border-border-subtle bg-bg-surface text-ink-secondary hover:bg-bg-muted hover:text-ink-primary ${notificationPulse ? "ring-2 ring-accent-red/50 ring-offset-2 ring-offset-bg-base motion-safe:animate-pulse" : ""}`}
+                className={`b2-icon-button relative border border-border-subtle bg-bg-surface text-ink-secondary hover:bg-bg-muted hover:text-ink-primary ${settingsOpen ? "ring-1 ring-border-default" : ""}`}
                 onClick={() => {
-                  setNotificationsOpen((open) => !open);
-                  setNotificationPulse(false);
+                  setSettingsOpen((open) => !open);
+                  setNotificationsOpen(false);
                 }}
-                aria-expanded={notificationsOpen}
-                aria-haspopup="dialog"
-                aria-label={unreadCount ? t("notificationsWithUnread") : t("notifications")}
-                title={t("notifications")}
+                aria-expanded={settingsOpen}
+                aria-haspopup="menu"
+                aria-label={t("settingsLabel")}
+                title={t("settingsLabel")}
               >
-                <Bell className="h-4 w-4 text-accent-clay" />
-                {unreadCount > 0 && (
-                  <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent-red px-1 text-[9px] font-black text-white">
-                    {unreadCount}
-                  </span>
-                )}
+                <Settings className="h-4 w-4 text-accent-clay" aria-hidden="true" />
               </button>
 
+              {settingsOpen && (
+                <div className="absolute end-0 top-full z-50 mt-2 w-64 origin-top animate-fade-in rounded-md border border-border-subtle bg-bg-elevated p-2 shadow-lg">
+                  {/* Theme */}
+                  <div className="flex items-center justify-between gap-2 rounded-sm px-2 py-1.5">
+                    <span className="text-xs font-bold text-ink-primary">{t("toggleThemeLabel")}</span>
+                    {toggleTheme && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          toggleTheme();
+                          toast.success(theme === "dark" ? t("themeToLightToast") : t("themeToDarkToast"));
+                        }}
+                        className="b2-icon-button border border-border-subtle bg-bg-surface text-ink-secondary hover:bg-bg-muted hover:text-ink-primary"
+                        aria-label={t("toggleThemeLabel")}
+                      >
+                        {theme === "dark" ? <Sun className="h-4 w-4 text-accent-warm" aria-hidden="true" /> : <Moon className="h-4 w-4 text-accent-clay" aria-hidden="true" />}
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Language */}
+                  <div className="mt-1 border-t border-border-subtle pt-2">
+                    <p className="mb-2 flex items-center gap-1.5 px-2 text-xs font-bold text-ink-secondary">
+                      <Globe className="h-3.5 w-3.5 text-accent-clay" aria-hidden="true" /> {t("language")}
+                    </p>
+                    <div className="b2-segmented-control w-full">
+                      {(["ar", "fr", "en"] as const).map((item) => (
+                        <button key={item} type="button" aria-pressed={language === item} onClick={() => selectLanguage(item)} className={language === item ? "bg-accent-clay text-[var(--primary-ink)]" : "text-ink-secondary hover:bg-bg-muted hover:text-ink-primary"}>{item === "ar" ? t("arabic") : item === "fr" ? t("french") : t("english")}</button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Currency */}
+                  <div className="mt-2 border-t border-border-subtle pt-2">
+                    <p className="mb-2 flex items-center gap-1.5 px-2 text-xs font-bold text-ink-secondary">
+                      <Coins className="h-3.5 w-3.5 text-accent-clay" aria-hidden="true" /> {t("currency")}
+                    </p>
+                    <div className="b2-segmented-control w-full">
+                      {(["MAD", "EUR", "USD"] as Currency[]).map((item) => (
+                        <button key={item} type="button" aria-pressed={currency === item} onClick={() => selectCurrency(item)} className={currency === item ? "bg-accent-clay text-[var(--primary-ink)]" : "text-ink-secondary hover:bg-bg-muted hover:text-ink-primary"}>{item}</button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Secondary actions */}
+                  <div className="mt-2 space-y-1 border-t border-border-subtle pt-2">
+                    <button
+                      type="button"
+                      className={`flex min-h-10 w-full items-center justify-between gap-2 rounded-sm px-2 text-xs font-bold text-ink-secondary hover:bg-bg-muted hover:text-ink-primary ${notificationPulse ? "motion-safe:animate-pulse ring-2 ring-accent-red/50" : ""}`}
+                      onClick={() => {
+                        setNotificationsOpen(true);
+                        setSettingsOpen(false);
+                        setNotificationPulse(false);
+                      }}
+                      aria-haspopup="dialog"
+                      aria-label={unreadCount ? t("notificationsWithUnread") : t("notifications")}
+                    >
+                      <span className="flex items-center gap-2">
+                        <Bell className="h-4 w-4 text-accent-clay" aria-hidden="true" />
+                        {t("notifications")}
+                      </span>
+                      {unreadCount > 0 && (
+                        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-accent-red px-1.5 text-[10px] font-black text-white">
+                          {unreadCount}
+                        </span>
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setTwoFaModalOpen(true); setSettingsOpen(false); }}
+                      className="flex min-h-10 w-full items-center gap-2 rounded-sm px-2 text-xs font-bold text-ink-secondary hover:bg-bg-muted hover:text-ink-primary"
+                    >
+                      <Shield className="h-4 w-4 text-accent-clay" aria-hidden="true" />
+                      {t("accountSecurity")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setCmiModalOpen(true); setSettingsOpen(false); }}
+                      className="flex min-h-10 w-full items-center gap-2 rounded-sm px-2 text-xs font-bold text-ink-secondary hover:bg-bg-muted hover:text-ink-primary"
+                    >
+                      <CreditCard className="h-4 w-4 text-accent-clay" aria-hidden="true" />
+                      {t("cmiPaymentMobile")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setWhatsappModalOpen(true); setSettingsOpen(false); }}
+                      className="flex min-h-10 w-full items-center gap-2 rounded-sm px-2 text-xs font-bold text-ink-secondary hover:bg-bg-muted hover:text-ink-primary"
+                    >
+                      <MessageSquare className="h-4 w-4 text-accent-green" aria-hidden="true" />
+                      {t("whatsappNotify")}
+                    </button>
+                  </div>
+                </div>
+              )}
               {notificationsOpen && (
-                <div className="absolute left-0 mt-3 w-[min(20rem,calc(100vw-2rem))] rounded-md border border-border-subtle bg-bg-elevated p-4 text-end text-ink-primary shadow-lg" role="dialog" aria-label={t("notificationsPanelLabel")}>
+                <div className="absolute end-0 top-full z-50 mt-2 w-[min(20rem,calc(100vw-2rem))] rounded-md border border-border-subtle bg-bg-elevated p-4 text-end text-ink-primary shadow-lg" role="dialog" aria-label={t("notificationsPanelLabel")}>
                   <div className="flex items-center justify-between border-b border-border-subtle pb-3">
                     <h2 className="flex items-center gap-1.5 text-xs font-bold">
                       <Bell className="h-4 w-4 text-accent-clay" />
@@ -586,21 +527,6 @@ export default function Navbar() {
                 </div>
               )}
             </div>
-
-            {toggleTheme && (
-              <button
-                type="button"
-                className="b2-icon-button border border-border-subtle bg-bg-surface text-ink-secondary hover:bg-bg-muted hover:text-ink-primary"
-                onClick={() => {
-                  toggleTheme();
-                  toast.success(theme === "dark" ? t("themeToLightToast") : t("themeToDarkToast"));
-                }}
-                aria-label={t("toggleThemeLabel")}
-                title={t("toggleThemeLabel")}
-              >
-                {theme === "dark" ? <Sun className="h-4 w-4 text-accent-warm" /> : <Moon className="h-4 w-4 text-accent-clay" />}
-              </button>
-            )}
 
           </div>
 
