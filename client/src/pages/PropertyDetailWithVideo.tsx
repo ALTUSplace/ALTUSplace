@@ -706,7 +706,7 @@ export default function PropertyDetailWithVideo() {
                 </Button>
                 <p className="flex items-center justify-center gap-1.5 text-[11px] text-ink-secondary">
                   <Lock className="size-3 text-accent-green" aria-hidden="true" />
-                  {language === "fr" ? "Paiement sécurisé via CMI (simulation)" : "دفع آمن عبر CMI (محاكاة)"}
+                  {language === "fr" ? "Paiement sécurisé via CMI" : "دفع آمن عبر CMI"}
                 </p>
                 <p className="text-center text-[11px] leading-relaxed text-ink-secondary">
                   {language === "fr"
@@ -715,8 +715,8 @@ export default function PropertyDetailWithVideo() {
                 </p>
                 <p className="text-center text-[11px] text-ink-secondary">
                   {language === "fr"
-                    ? "Le prix final est calculé côté serveur lors de la réservation."
-                    : "يُحتسب السعر النهائي على الخادم أثناء الحجز."}
+                    ? "C'est votre prix final. Aucun frais supplémentaire."
+                    : "هذا هو سعرك النهائي. لا رسوم إضافية."}
                 </p>
               </div>
             </div>

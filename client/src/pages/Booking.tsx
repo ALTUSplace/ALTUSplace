@@ -118,7 +118,7 @@ export default function BookingPage() {
               <div className="p-3 bg-muted rounded-lg flex gap-2 items-center"><CalendarDays className="w-4 h-4" /> الاستلام: {startDate || 'غير محدد'}</div>
               <div className="p-3 bg-muted rounded-lg flex gap-2 items-center"><CalendarDays className="w-4 h-4" /> الإرجاع: {endDate || 'غير محدد'}</div>
             </div>
-            <p className="text-xs text-muted-foreground">سيُحسب السعر النهائي والعمولة والضريبة داخل الخادم بعد تسجيل الدخول. هذه الصفحة لا تستقبل مبلغاً موثوقاً من الرابط.</p>
+            <p className="text-xs text-muted-foreground">هذا هو سعرك النهائي. لا رسوم إضافية في الخطوة الأخيرة.</p>
             <div className="rounded-lg border border-border bg-muted/40 p-3 text-xs space-y-1" aria-label={t("rentalConditions")}>
               <p className="font-bold text-foreground">{t("rentalConditions")}</p>
               <p className="text-muted-foreground leading-relaxed">

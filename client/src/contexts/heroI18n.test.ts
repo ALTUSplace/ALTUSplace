@@ -35,7 +35,7 @@ const EXPECTED_AR: Record<(typeof HERO_KEYS)[number], string> = {
   heroHeadline: "أسهل طريقة لكراء السيارات والعقارات في المغرب",
   heroCatLuxuryCars: "سيارات فاخرة للكراء اليومي",
   heroCatFurnishedApts: "شقق مؤثثة للإيجار الشهري",
-  heroCatFamilyVillas: "فللات عائلية للعطلات",
+  heroCatFamilyVillas: "فيلات عائلية للعطلات",
 };
 
 describe("hero redesign i18n", () => {
