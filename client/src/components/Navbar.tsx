@@ -9,7 +9,6 @@ import {
   Building2,
   Car,
   Coins,
-  CreditCard,
   Globe,
   HelpCircle,
   Handshake,
@@ -35,7 +34,6 @@ import { useCurrency, Currency } from "@/contexts/CurrencyContext";
 import { NavbarCitySelect } from "@/components/NavbarCitySelect";
 import { NavbarMobileCitySelect } from "@/components/NavbarMobileCitySelect";
 import { RegionalHighlights } from "@/components/RegionalHighlights";
-const CMIPaymentModal = lazy(() => import("./CMIPaymentModal").then((module) => ({ default: module.CMIPaymentModal })));
 const WhatsAppNotificationModal = lazy(() => import("./WhatsAppNotificationModal").then((module) => ({ default: module.WhatsAppNotificationModal })));
 const TwoFactorAuthModal = lazy(() => import("./TwoFactorAuthModal").then((module) => ({ default: module.TwoFactorAuthModal })));
 import { toast } from "sonner";
@@ -80,7 +78,6 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [cmiModalOpen, setCmiModalOpen] = useState(false);
   const [whatsappModalOpen, setWhatsappModalOpen] = useState(false);
   const [twoFaModalOpen, setTwoFaModalOpen] = useState(false);
   const [notificationPulse, setNotificationPulse] = useState(false);
@@ -341,7 +338,7 @@ export default function Navbar() {
             <NavbarCitySelect className="hidden xl:block" />
 
             {/* Consolidated desktop menu: theme, notifications, language,
-                currency, 2FA, CMI and WhatsApp live behind one settings gear,
+                currency, 2FA and WhatsApp live behind one settings gear,
                 so the desktop header stays a calm "Logo | Cars · Properties |
                 CTA" row. Panels anchor `end-0` under this wrapper (RTL-safe);
                 the wrapper carries notificationRef, so the outside-click
@@ -448,14 +445,6 @@ export default function Navbar() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => { setCmiModalOpen(true); setSettingsOpen(false); }}
-                      className="flex min-h-10 w-full items-center gap-2 rounded-sm px-2 text-xs font-bold text-ink-secondary hover:bg-bg-muted hover:text-ink-primary"
-                    >
-                      <CreditCard className="h-4 w-4 text-accent-clay" aria-hidden="true" />
-                      {t("cmiPaymentMobile")}
-                    </button>
-                    <button
-                      type="button"
                       onClick={() => { setWhatsappModalOpen(true); setSettingsOpen(false); }}
                       className="flex min-h-10 w-full items-center gap-2 rounded-sm px-2 text-xs font-bold text-ink-secondary hover:bg-bg-muted hover:text-ink-primary"
                     >
@@ -551,12 +540,6 @@ export default function Navbar() {
       <RegionalHighlights />
 
       <Suspense fallback={null}>
-        <CMIPaymentModal
-          isOpen={cmiModalOpen}
-          onClose={() => setCmiModalOpen(false)}
-          onSuccess={() => setCmiModalOpen(false)}
-          amount={1500}
-        />
         <WhatsAppNotificationModal
           isOpen={whatsappModalOpen}
           onClose={() => setWhatsappModalOpen(false)}
@@ -606,7 +589,6 @@ export default function Navbar() {
 
               <div className="flex items-center gap-2">
                 <button type="button" onClick={() => { setTwoFaModalOpen(true); setMobileMenuOpen(false); }} className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-sm border border-border-subtle bg-bg-muted px-3 py-2 text-xs font-bold text-ink-primary hover:bg-bg-base"><Shield className="h-3.5 w-3.5 text-accent-clay" /> {t("accountSecurity")}</button>
-                <button type="button" onClick={() => { setCmiModalOpen(true); setMobileMenuOpen(false); }} className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-sm border border-border-subtle bg-bg-muted px-3 py-2 text-xs font-bold text-ink-primary hover:bg-bg-base"><CreditCard className="h-3.5 w-3.5 text-accent-clay" /> {t("cmiPaymentMobile")}</button>
               </div>
 
               {toggleTheme && (

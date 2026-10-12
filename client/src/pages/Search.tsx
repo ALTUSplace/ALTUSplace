@@ -11,7 +11,7 @@ import { MOROCCO_CENTER, cityToCoords, resolveListingCoords } from '@/lib/mapbox
 import { OptimizedImage } from '@/components/OptimizedImage';
 import { ListingCard, ListingCardSkeleton } from '@/components/ui/ListingCard';
 import { PartnerVerifiedBadge } from '@/components/ui/PartnerVerifiedBadge';
-import { EmptyState } from '@/components/ui/EmptyState';
+import { LeadCaptureCard } from '@/components/ui/LeadCaptureCard';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { isCarCategory, isPropertyCategory } from '@/lib/categories';
 import { CitySelect } from '@/components/CitySelect';
@@ -444,11 +444,7 @@ export default function Search() {
               />
             )}
             {!listingsQuery.isLoading && !listingsQuery.error && filteredListings.length === 0 && (
-              <EmptyState
-                icon="search"
-                title={t('noMatchingListings') || 'No listings found'}
-                description={t('noMatchingListingsDesc') || 'Try adjusting your filters or search in a different city.'}
-              />
+              <LeadCaptureCard variant={typeFilter === 'car' ? 'car' : 'property'} />
             )}
 
             {/* Grid View */}

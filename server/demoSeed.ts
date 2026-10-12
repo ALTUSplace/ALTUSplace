@@ -19,6 +19,11 @@ import { CATALOG_ITEMS } from "../client/src/data/catalog";
  * Runs once per boot when the `listings` table is empty and a DATABASE_URL is
  * configured. The client-side static fallback remains purely for the
  * offline / no-DB case.
+ *
+ * WARNING: these rows belong to the demo accounts and are real, publicly
+ * visible database rows — not fixtures hidden behind a test flag. Before
+ * go-live, purge them either via the 30-day `server/cron/demoCleanup.ts`
+ * schedule or by running `server/scripts/cleanup-demo-data.sql` manually.
  */
 
 const DEMO_OWNER_OPENID = "demo-owner-altusplace";

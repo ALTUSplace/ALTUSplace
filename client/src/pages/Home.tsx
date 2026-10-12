@@ -8,6 +8,7 @@ import { SmartRecommendations } from '@/components/SmartRecommendations';
 import { FAQSection } from '@/components/FAQSection';
 import { ListingCard } from '@/components/ui/ListingCard';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { LeadCaptureCard } from '@/components/ui/LeadCaptureCard';
 import { useFavorites } from '@/hooks/useFavorites';
 import { SearchBar } from '@/components/SearchBar';
 import { isCarCategory, isPropertyCategory } from '@/lib/categories';
@@ -424,9 +425,7 @@ export default function Home() {
             ))}
           </div>
         ) : (
-          <div className="mt-8 rounded-2xl border border-dashed border-border-default bg-bg-surface p-10 text-center text-sm text-ink-secondary">
-            {t('noCarsYet')}
-          </div>
+          <LeadCaptureCard variant="car" />
         )}
       </section>
 
@@ -466,9 +465,7 @@ export default function Home() {
             ))}
           </div>
         ) : (
-          <div className="mt-8 rounded-2xl border border-dashed border-border-default bg-bg-surface p-10 text-center text-sm text-ink-secondary">
-            {t('noPropertiesYet')}
-          </div>
+          <LeadCaptureCard variant="property" />
         )}
       </section>
 
