@@ -176,8 +176,8 @@ export function ListingCard(props: ListingCardProps) {
           <div className="flex flex-wrap gap-2 text-[11px] text-ink-tertiary">
             {specs.transmission && <span className="inline-flex items-center gap-1 rounded-full bg-bg-muted px-2 py-0.5"><Settings className="h-3 w-3" /> {specs.transmission}</span>}
             {specs.fuel && <span className="inline-flex items-center gap-1 rounded-full bg-bg-muted px-2 py-0.5"><Fuel className="h-3 w-3" /> {specs.fuel}</span>}
-            {specs.seats && <span className="inline-flex items-center gap-1 rounded-full bg-bg-muted px-2 py-0.5"><Users className="h-3 w-3" /> {specs.seats} seats</span>}
-            {specs.rooms && specs.rooms > 0 && <span className="inline-flex items-center gap-1 rounded-full bg-bg-muted px-2 py-0.5"><Home className="h-3 w-3" /> {specs.rooms} rooms</span>}
+            {specs.seats && <span className="inline-flex items-center gap-1 rounded-full bg-bg-muted px-2 py-0.5"><Users className="h-3 w-3" /> {specs.seats} {t("seatsShort")}</span>}
+            {specs.rooms && specs.rooms > 0 && <span className="inline-flex items-center gap-1 rounded-full bg-bg-muted px-2 py-0.5"><Home className="h-3 w-3" /> {specs.rooms} {t("roomsShort")}</span>}
             {specs.area && <span className="inline-flex items-center gap-1 rounded-full bg-bg-muted px-2 py-0.5"><Ruler className="h-3 w-3" /> {specs.area}</span>}
             {specs.year && <span className="inline-flex items-center gap-1 rounded-full bg-bg-muted px-2 py-0.5"><Calendar className="h-3 w-3" /> {specs.year}</span>}
           </div>
@@ -201,7 +201,6 @@ export function ListingCard(props: ListingCardProps) {
               <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-bg-muted px-2 py-0.5 text-[10px] font-semibold text-ink-tertiary">{t("reviewsNewEmpty")}</span>
             )}
           </div>
-          <button type="button" className="w-full rounded-lg bg-accent-clay py-2.5 text-sm font-semibold text-[var(--primary-ink)] transition-colors hover:bg-accent-clay-hover" onClick={(e) => { e.stopPropagation(); handleCardClick(); }} aria-label={t("viewDetails")}>{t("viewDetails")}</button>
         </div>
       </div>
     </article>

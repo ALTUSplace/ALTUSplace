@@ -19,16 +19,17 @@ import { useLanguage } from "@/contexts/LanguageContext";
  * pills and a clear Details & Booking CTA.
  */
 export function CatalogShowcase() {
+  const { t } = useLanguage();
+
   return (
     <section className="py-10 md:py-16 px-4 container mx-auto max-w-6xl">
       <div className="mb-8 md:mb-10 flex flex-col gap-2">
-        <span className="section-index">Catalog 2026 · كتالوج 2026</span>
+        <span className="section-index">{t("catalogBadge")}</span>
         <h2 className="text-2xl md:text-3xl font-bold text-ink-primary">
-          أحدث عروض كتالوج ALTUSplace
+          {t("catalogTitle")}
         </h2>
         <p className="text-ink-secondary text-sm leading-relaxed max-w-2xl">
-          شقة معتمدة للكراء اليومي وسيارات 2026 محدثة — مواقع دقيقة ومواصفات
-          دقيقة وصور حية.
+          {t("catalogSubtitle")}
         </p>
       </div>
 
@@ -78,8 +79,8 @@ function CatalogCard({ item }: { item: CatalogItem }) {
       ?.captionAr ?? item.title;
   const price =
     property && !!item.pricePerMonth
-      ? { amount: item.pricePerMonth, unit: "درهم / شهر" }
-      : { amount: item.pricePerDay, unit: "درهم / يوم" };
+      ? { amount: item.pricePerMonth, unit: t("madPerMonth") }
+      : { amount: item.pricePerDay, unit: t("madPerDay") };
 
   return (
     <article
@@ -120,7 +121,7 @@ function CatalogCard({ item }: { item: CatalogItem }) {
         </div>
 
         <span className="absolute start-3 top-3 inline-flex items-center rounded-full bg-bg-surface/95 px-3 py-1 text-[11px] font-extrabold text-ink-primary shadow-sm border border-border-subtle">
-          {car ? "سيارة" : "عقار"}
+          {car ? t("catalogTypeCar") : t("catalogTypeProperty")}
         </span>
         {item.badge && (
           <span className="absolute end-3 top-3 inline-flex items-center rounded-full bg-accent-clay px-3 py-1 text-[11px] font-extrabold text-white shadow-sm">
@@ -220,21 +221,21 @@ function CatalogCard({ item }: { item: CatalogItem }) {
         <div className="mt-auto space-y-2 pt-1">
           {car && (
             <p className="text-[11px] font-bold text-ink-tertiary">
-              {item.transmission} · {item.seats} مقاعد · {item.fuelType}
+              {item.transmission} · {item.seats} {t("seatsShort")} · {item.fuelType}
             </p>
           )}
           {property && (
             <p className="text-[11px] font-bold text-ink-tertiary">
-              {!!item.rooms && item.rooms > 0 ? `${item.rooms} غرف · ` : ""}
+              {!!item.rooms && item.rooms > 0 ? `${item.rooms} ${t("roomsShort")} · ` : ""}
               {!!item.area && item.area > 0 ? `${item.area} م² · ` : ""}
-              {!!item.floor && item.floor > 0 ? `الطابق ${item.floor}` : "شقة"}
+              {!!item.floor && item.floor > 0 ? `${t("floorShort")} ${item.floor}` : t("propTypeApartment")}
             </p>
           )}
           <Link
             href={property ? "/search?type=property" : "/search?type=car"}
             className="b2-press mt-1 inline-flex w-full items-center justify-center gap-2 rounded-full bg-accent-clay px-4 py-2.5 text-xs font-extrabold text-white shadow-[var(--shadow-clay)] transition-colors hover:bg-accent-clay-hover"
           >
-            {property ? "عرض التفاصيل والحجز" : "التفاصيل والحجز"}
+            {t("catalogViewDetails")}
             <ArrowLeft className="h-3.5 w-3.5" />
           </Link>
         </div>
