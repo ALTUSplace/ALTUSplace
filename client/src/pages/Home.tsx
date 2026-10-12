@@ -160,11 +160,13 @@ export default function Home() {
         {/* Backdrop photograph. alt is empty because it is decorative — the
             heading beside it carries the message.
 
-            The facelift moved the hero to a light surface: the photo is washed
-            with a 90% white overlay and every foreground element uses the
-            ink/`bg-surface` tokens, so the old dark-scrim contrast floor no
-            longer applies. If the overlay opacity changes, re-check the hero
-            copy and the field captions against the *brightest* crop. */}
+            Contrast floor: the photo is a decorative layer under a near-opaque,
+            theme-aware overlay (`--hero-bg-overlay`) — white-washed in light
+            mode, near-black in dark mode — so headline, chips and field text
+            always sit on a solid canvas that keeps every foreground element
+            above AA (text: `--hero-text-*`). If the overlay alpha drifts,
+            re-check the hero copy against both the *brightest* and *darkest*
+            photo crops. */}
         <div className="absolute inset-0 -z-10" aria-hidden="true">
           <OptimizedImage
             src={HERO_BACKDROP}
@@ -175,7 +177,7 @@ export default function Home() {
             priority
             className="h-full w-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-white/90 via-white/80 to-transparent" />
+          <div className="absolute inset-0 bg-[var(--hero-bg-overlay)]" />
         </div>
 
         <div className="container mx-auto max-w-4xl px-4 py-20 md:py-32">
@@ -183,20 +185,20 @@ export default function Home() {
 
             <h1
               id="hero-heading"
-              className="max-w-4xl font-display text-4xl md:text-5xl font-extrabold tracking-tight leading-tight text-ink-primary text-balance"
+              className="max-w-4xl font-display text-4xl md:text-5xl font-extrabold tracking-tight leading-tight text-[var(--hero-text-primary)] text-balance"
             >
               {t('heroHeadline')}
             </h1>
 
-            <p className="max-w-2xl text-base md:text-lg leading-relaxed text-ink-secondary">
+            <p className="max-w-2xl text-base md:text-lg leading-relaxed text-[var(--hero-text-secondary)]">
               {t('heroDescription')}
             </p>
 
-            {/* Glass search card over the photographic hero (gate-pinned: translucent + blurred + rounded-xl) */}
+            {/* Solid search card over the photographic hero (gate-pinned: solid fill + rounded-xl) */}
             <SearchBar variant="heroOverlay" />
 
             {/* Trust signals below search bar */}
-            <div className="mt-4 flex flex-wrap items-center justify-center gap-4 text-sm text-ink-secondary">
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-4 text-sm text-[var(--hero-text-secondary)]">
               <span>• {t('verified_partners')}</span>
               <span>• {t('secure_payment')}</span>
               <span>• {t('real_reviews')}</span>
@@ -213,7 +215,7 @@ export default function Home() {
               <Button
                 onClick={() => setLocation('/search')}
                 variant="outline"
-                className="b2-press rounded-lg border border-border-default bg-bg-surface/70 px-6 py-2.5 text-sm font-bold text-ink-primary backdrop-blur-md transition-colors hover:bg-bg-muted"
+                className="b2-press rounded-lg border border-[var(--hero-search-border)] bg-[var(--hero-search-bg)] px-6 py-2.5 text-sm font-bold text-[var(--hero-text-primary)] transition-colors hover:bg-bg-muted"
               >
                 <Award className="h-4 w-4" aria-hidden="true" />
                 <span>{t('heroReviewButton')}</span>
@@ -231,7 +233,7 @@ export default function Home() {
             <ol className="mt-8 flex flex-wrap items-center justify-center gap-x-2 gap-y-3 sm:gap-x-3">
               {HERO_STEPS.map((step, index) => (
                 <li key={step.n} className="flex items-center gap-2 sm:gap-3">
-                  <span className="inline-flex items-center gap-2 rounded-full border border-border-default bg-bg-surface/70 px-3 py-1.5 text-xs font-bold text-ink-primary backdrop-blur-md sm:text-sm">
+                  <span className="inline-flex items-center gap-2 rounded-full border border-[var(--hero-search-border)] bg-[var(--hero-search-bg)] px-3 py-1.5 text-xs font-bold text-[var(--hero-text-primary)] sm:text-sm">
                     <span
                       aria-hidden="true"
                       className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent-clay text-[11px] font-extrabold text-[var(--primary-ink)]"
@@ -263,10 +265,10 @@ export default function Home() {
                     <li key={slug}>
                       <Link
                         href={`/search?type=all&city=${slug}&availability=tomorrow&startDate=${dealStart}&endDate=${dealEnd}`}
-                        className={`b2-press inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-xs font-bold backdrop-blur-md transition-colors ${
+                        className={`b2-press inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-xs font-bold transition-colors ${
                           popular
                             ? 'border-transparent bg-accent-clay text-[var(--primary-ink)]'
-                            : 'border-border-default bg-bg-surface/70 text-ink-primary hover:bg-bg-muted'
+                            : 'border-[var(--hero-search-border)] bg-[var(--hero-search-bg)] text-[var(--hero-text-primary)] hover:bg-bg-muted'
                         }`}
                       >
                         <MapPin className={popular ? 'h-3.5 w-3.5' : 'h-3.5 w-3.5 text-ink-tertiary'} aria-hidden="true" />
