@@ -14,9 +14,8 @@ import {
 /**
  * Lead-capture fallback shown when a search/catalog slice has no results.
  *
- * Phase B replaced the dead "no results" panels with a real, manual lead
- * pipeline: the visitor describes what they want and the request is delivered
- * to trusted admins (in-app notification + email) and logged. There is no
+ * The visitor describes what they want and the request is delivered to
+ * trusted admins (in-app notification + email) and logged. There is no
  * self-service listing and deliberately no `wa.me` deep link — the operator
  * follows up. `variant` only changes copy/labels; both variants post to the
  * same `requestListing.create` mutation.
