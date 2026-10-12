@@ -11,6 +11,18 @@
 -- users), but WITHOUT the cron's 30-day retention cutoff: this is a full wipe
 -- of every demo row, intended to run once before go-live.
 --
+-- Scope is defined by OWNER ID LINKAGE ONLY. The former
+-- `OR title LIKE '%رينو كليو%'` catch-all has been removed deliberately: a
+-- title match is not ownership evidence, so it could delete real, non-demo
+-- listings that merely share a title (and cascade into their bookings,
+-- payments and invoices). Every row removed below is reachable from the two
+-- demo account IDs.
+--
+-- CONSEQUENCE OF THE NARROWER SCOPE: a demo listing whose owner is NOT one of
+-- the two demo accounts will no longer be purged. If such a listing exists, it
+-- must be reassigned to a demo owner or deleted explicitly, by ID, before
+-- go-live.
+--
 -- Scope IDs (must match demoCleanup.ts):
 --   DEMO_OWNER_OPENID  = 'demo-owner-altusplace'
 --   DEMO_AGENCY_OPENID = 'demo-owner-id'
@@ -20,7 +32,7 @@
 --     rows disappear with the listings/users deletes.
 --   * `transactions`, notifications and audit logs are intentionally NOT
 --     touched (matching the cron).
---   * Quote `"openId"` and `"createdAt"`: those columns are camelCase in the DB.
+--   * Quote `"openId"`: that column is camelCase in the DB.
 --
 -- HOW TO RUN
 --   1. Take a database backup / branch first.
@@ -45,8 +57,7 @@ SELECT 'listings' AS entity, count(*) AS rows
 FROM listings
 WHERE owner_id IN (
     SELECT id FROM users WHERE "openId" IN ('demo-owner-altusplace', 'demo-owner-id')
-  )
-  OR title LIKE '%رينو كليو%';
+  );
 
 SELECT 'bookings' AS entity, count(*) AS rows
 FROM bookings
@@ -55,14 +66,12 @@ WHERE listing_id IN (
     WHERE owner_id IN (
       SELECT id FROM users WHERE "openId" IN ('demo-owner-altusplace', 'demo-owner-id')
     )
-    OR title LIKE '%رينو كليو%'
   )
   OR secondary_listing_id IN (
     SELECT listing_id FROM listings
     WHERE owner_id IN (
       SELECT id FROM users WHERE "openId" IN ('demo-owner-altusplace', 'demo-owner-id')
     )
-    OR title LIKE '%رينو كليو%'
   );
 
 SELECT 'payments' AS entity, count(*) AS rows
@@ -72,7 +81,6 @@ WHERE booking_id IN (
     WHERE listing_id IN (
       SELECT listing_id FROM listings
       WHERE owner_id IN (SELECT id FROM users WHERE "openId" IN ('demo-owner-altusplace', 'demo-owner-id'))
-         OR title LIKE '%رينو كليو%'
     )
   );
 
@@ -83,7 +91,6 @@ WHERE booking_id IN (
     WHERE listing_id IN (
       SELECT listing_id FROM listings
       WHERE owner_id IN (SELECT id FROM users WHERE "openId" IN ('demo-owner-altusplace', 'demo-owner-id'))
-         OR title LIKE '%رينو كليو%'
     )
   );
 
@@ -94,7 +101,6 @@ WHERE booking_id IN (
     WHERE listing_id IN (
       SELECT listing_id FROM listings
       WHERE owner_id IN (SELECT id FROM users WHERE "openId" IN ('demo-owner-altusplace', 'demo-owner-id'))
-         OR title LIKE '%رينو كليو%'
     )
   );
 
@@ -105,7 +111,6 @@ WHERE booking_id IN (
     WHERE listing_id IN (
       SELECT listing_id FROM listings
       WHERE owner_id IN (SELECT id FROM users WHERE "openId" IN ('demo-owner-altusplace', 'demo-owner-id'))
-         OR title LIKE '%رينو كليو%'
     )
   );
 
@@ -116,7 +121,6 @@ WHERE booking_id IN (
     WHERE listing_id IN (
       SELECT listing_id FROM listings
       WHERE owner_id IN (SELECT id FROM users WHERE "openId" IN ('demo-owner-altusplace', 'demo-owner-id'))
-         OR title LIKE '%رينو كليو%'
     )
   );
 
@@ -127,7 +131,6 @@ WHERE booking_id IN (
     WHERE listing_id IN (
       SELECT listing_id FROM listings
       WHERE owner_id IN (SELECT id FROM users WHERE "openId" IN ('demo-owner-altusplace', 'demo-owner-id'))
-         OR title LIKE '%رينو كليو%'
     )
   );
 
@@ -138,13 +141,11 @@ WHERE booking_id IN (
     WHERE listing_id IN (
       SELECT listing_id FROM listings
       WHERE owner_id IN (SELECT id FROM users WHERE "openId" IN ('demo-owner-altusplace', 'demo-owner-id'))
-         OR title LIKE '%رينو كليو%'
     )
   )
   OR listing_id IN (
     SELECT listing_id FROM listings
     WHERE owner_id IN (SELECT id FROM users WHERE "openId" IN ('demo-owner-altusplace', 'demo-owner-id'))
-       OR title LIKE '%رينو كليو%'
   );
 
 SELECT 'invoices' AS entity, count(*) AS rows
@@ -154,7 +155,6 @@ WHERE booking_id IN (
     WHERE listing_id IN (
       SELECT listing_id FROM listings
       WHERE owner_id IN (SELECT id FROM users WHERE "openId" IN ('demo-owner-altusplace', 'demo-owner-id'))
-         OR title LIKE '%رينو كليو%'
     )
   );
 
@@ -163,7 +163,6 @@ FROM listing_comments
 WHERE listing_id IN (
     SELECT listing_id FROM listings
     WHERE owner_id IN (SELECT id FROM users WHERE "openId" IN ('demo-owner-altusplace', 'demo-owner-id'))
-       OR title LIKE '%رينو كليو%'
   );
 
 SELECT 'listing_analytics_events' AS entity, count(*) AS rows
@@ -171,7 +170,6 @@ FROM listing_analytics_events
 WHERE listing_id IN (
     SELECT listing_id FROM listings
     WHERE owner_id IN (SELECT id FROM users WHERE "openId" IN ('demo-owner-altusplace', 'demo-owner-id'))
-       OR title LIKE '%رينو كليو%'
   );
 
 
@@ -189,8 +187,7 @@ CREATE TEMP TABLE _demo_owner_ids ON COMMIT DROP AS
 
 CREATE TEMP TABLE _demo_listing_ids ON COMMIT DROP AS
   SELECT listing_id FROM listings
-  WHERE owner_id IN (SELECT id FROM _demo_owner_ids)
-     OR title LIKE '%رينو كليو%';
+  WHERE owner_id IN (SELECT id FROM _demo_owner_ids);
 
 CREATE TEMP TABLE _demo_booking_ids ON COMMIT DROP AS
   SELECT booking_id FROM bookings
