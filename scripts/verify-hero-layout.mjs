@@ -6,7 +6,8 @@
  * asserts the hero contract:
  *
  *   - the page never scrolls horizontally at 375px
- *   - the glass search card actually carries a translucent fill + backdrop blur
+ *   - the search card carries a SOLID fill (no translucent layers, no backdrop
+ *     blur) so hero text stays high-contrast in both themes
  *   - the Cars/Properties tabs switch in place (no navigation, no reload)
  *   - the 3 numbered steps render
  *   - the category rail is horizontally scrollable at 375px and its
@@ -36,7 +37,7 @@ const probe = () => {
   const cards = rail ? Array.from(rail.querySelectorAll("li")) : [];
   const heroImg = hero ? hero.querySelector("img") : null;
 
-  // The glass surface is the SearchBar card: the form's own rounded wrapper.
+  // The solid hero surface is the SearchBar card: the form's own rounded wrapper.
   const form = hero ? hero.querySelector("form") : null;
   const card = form ? form.parentElement : null;
   const cardStyle = card ? getComputedStyle(card) : null;
@@ -223,16 +224,16 @@ try {
     JSON.stringify(mState.tabTexts),
   );
   record(
-    "375px: glass card is translucent + blurred",
+    "375px: hero search card is solid (no translucent fill / backdrop blur)",
     !!mState.card &&
-      // Tailwind v4 emits colours in oklab(), so accept either colour function
-      // as long as the alpha channel is the 0.1 the design calls for.
-      /\/\s*0?\.1\s*\)/.test(mState.card.background) &&
-      /blur/.test(mState.card.backdrop ?? ""),
+      // Solid card (--hero-search-bg): the computed colour carries no alpha
+      // channel and no backdrop-filter survives on the wrapper.
+      !/\/\s*0?\.\d+\s*\)/.test(mState.card.background) &&
+      !/blur/.test(mState.card.backdrop ?? ""),
     `bg=${mState.card?.background} backdrop=${mState.card?.backdrop} radius=${mState.card?.radius}`,
   );
   record(
-    "375px: glass card is rounded (rounded-xl = 0.875rem)",
+    "375px: hero search card is rounded (rounded-xl = 0.875rem)",
     mState.card?.radius === "14px",
     `radius=${mState.card?.radius} (0px would mean the --radius-xl token collapsed)`,
   );

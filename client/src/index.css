@@ -95,6 +95,15 @@
     --text-secondary:  var(--ink-secondary);
     --text-tertiary:   var(--ink-tertiary);
 
+    /* Hero tokens — solid, theme-aware contrast floor for the photo hero.
+       Near-opaque on purpose: the photograph stays visible as context but can
+       never bleed through enough to drop headline/card text below AA. */
+    --hero-bg-overlay:     rgba(255, 255, 255, 0.95);  /* nearly opaque white wash */
+    --hero-text-primary:   #111827;
+    --hero-text-secondary: #6B7280;
+    --hero-search-bg:      #FFFFFF;  /* pure white card */
+    --hero-search-border:  #E5E7EB;  /* light gray border */
+
     /* Accent Tokens — a single deep trust blue */
     --accent-primary:   #1A56DB;
     --accent-primary-h: #1546B4;
@@ -255,6 +264,13 @@
     --border-subtle:  rgba(242, 243, 245, 0.08);
     --border-default: rgba(242, 243, 245, 0.14);
     --border-strong:  rgba(242, 243, 245, 0.24);
+
+    /* Hero tokens — dark counterpart (heavy scrim, light text, dark slate card) */
+    --hero-bg-overlay:     rgba(0, 0, 0, 0.85);
+    --hero-text-primary:   #F9FAFB;
+    --hero-text-secondary: #D1D5DB;
+    --hero-search-bg:      #1F2937;  /* dark slate card */
+    --hero-search-border:  #374151;  /* darker slate border */
 
     --skeleton-from:  rgba(242, 243, 245, 0.08);
     --skeleton-to:    rgba(242, 243, 245, 0.03);
