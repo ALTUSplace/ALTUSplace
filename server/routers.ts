@@ -3440,6 +3440,51 @@ export const appRouter = router({
       }),
   }),
 
+  requestListing: router({
+    /**
+     * Public lead-gen endpoint used by the LeadCaptureCard empty-state fallback.
+     * Option 2 (Phase B): there is no `leads` table and no migration — the
+     * request is delivered to trusted admins (in-app notification + email) and
+     * logged, and the mutation NEVER throws so a visitor always sees a clean
+     * "request received" state. Optional `dedupeKey` collapses accidental
+     * double-submits for the same phone within the notification window.
+     */
+    create: publicProcedure
+      .input(
+        z.object({
+          name: z.string().trim().min(2).max(80),
+          phone: z
+            .string()
+            .trim()
+            .max(20)
+            .refine(
+              (value) => normalizeWhatsAppNumber(value) !== null,
+              "رقم هاتف غير صالح - أدخل الرقم بالصيغة الدولية.",
+            ),
+          carModel: z.string().trim().min(1).max(120),
+          city: z.string().trim().min(1).max(80),
+        }),
+      )
+      .mutation(async ({ input }) => {
+        const normalizedPhone =
+          normalizeWhatsAppNumber(input.phone) ?? input.phone;
+        logger.info("[LeadCapture] requestListing.create", {
+          name: input.name,
+          phone: normalizedPhone,
+          carModel: input.carModel,
+          city: input.city,
+        });
+        await alertAdmins({
+          type: "system",
+          title: "طلب تأمين / Lead request",
+          message: `الاسم: ${input.name}\nالهاتف: ${normalizedPhone}\nالمطلوب: ${input.carModel}\nالمدينة: ${input.city}`,
+          entityType: "lead_request",
+          dedupeKey: `lead:${normalizedPhone}`,
+        });
+        return { success: true as const };
+      }),
+  }),
+
   reviews: router({
     listByListing: publicProcedure
       .input(z.object({ listingId: z.number() }))
