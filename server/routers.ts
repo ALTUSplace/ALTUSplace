@@ -3443,7 +3443,7 @@ export const appRouter = router({
   requestListing: router({
     /**
      * Public lead-gen endpoint used by the LeadCaptureCard empty-state fallback.
-     * Option 2 (Phase B): there is no `leads` table and no migration — the
+     * There is no `leads` table and no migration — the
      * request is delivered to trusted admins (in-app notification + email) and
      * logged, and the mutation NEVER throws so a visitor always sees a clean
      * "request received" state. Optional `dedupeKey` collapses accidental
