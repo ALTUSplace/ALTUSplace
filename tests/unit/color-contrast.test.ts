@@ -148,10 +148,24 @@ describe('contrast — always-dark brand panel (theme-independent)', () => {
   assertPairs({ name: 'panel', source: light, min: 4.5 }, PANEL);
 });
 
+describe('contrast — brand gold badge (theme-independent)', () => {
+  // The two gold badge tokens are declared once in `:root` and intentionally
+  // not overridden in `.dark`, so a single pairing check covers both themes.
+  it('gold badge ink on gold badge surface clears AA', () => {
+    const fg = tokenIn(light, '--accent-gold-dark');
+    const bg = tokenIn(light, '--accent-gold-light');
+    const ratio = contrast(fg, bg);
+    expect(
+      ratio,
+      `gold badge ${fg} on ${bg} is ${ratio.toFixed(2)}:1, below the 4.5:1 minimum`,
+    ).toBeGreaterThanOrEqual(4.5);
+  });
+});
+
 describe('primary button fill carries its own foreground', () => {
   it('--color-primary-foreground tracks the theme rather than hardcoding white', () => {
     // The bug this guards: `--color-primary-foreground` used to be a literal
-    // #FFFFFF. That is correct on the light accent (#1A56DB, 6.18:1) but fails
+    // #FFFFFF. That is correct on the light accent (#0F4C81, 8.86:1) but fails
     // on the brighter dark accent (#4F86F7, 3.45:1), so every dark-mode CTA
     // shipped below AA. Both aliases must resolve through --primary-ink.
     for (const alias of ['--color-primary-foreground', '--color-sidebar-primary-foreground']) {

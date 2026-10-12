@@ -303,11 +303,11 @@ export default function Navbar() {
   return (
     <>
       <header
-        className="sticky top-0 z-50 h-16 border-b border-border-default bg-bg-surface text-ink-primary shadow-sm supports-[backdrop-filter]:bg-bg-surface/95"
+        className="sticky top-0 z-50 h-16 bg-bg-surface text-ink-primary shadow-[0_1px_3px_rgba(0,0,0,0.05)]"
         dir={direction}
       >
         <div className="container mx-auto flex h-16 sm:h-20 items-center justify-between gap-2 sm:gap-4 px-3 sm:px-4">
-          <Link href="/" className="group flex shrink-0 items-center gap-3" aria-label={t("home")}>
+          <Link href="/" className="group flex shrink-0 items-center gap-3 pe-6" aria-label={t("home")}>
   <div className="brand-logo-container flex shrink-0 items-center">
     <img
       src="/assets/images/logo.png"

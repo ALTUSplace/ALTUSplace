@@ -17,7 +17,7 @@ export function PartnerVerifiedBadge({ className }: { className?: string }) {
       aria-label={label}
       title={label}
       className={cn(
-        "inline-flex items-center gap-1 rounded-full bg-[#D4AF37] px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide text-[#0B1B3A] shadow-md ring-1 ring-white/30",
+        "inline-flex items-center gap-1 rounded-full bg-brand-gold-light px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide text-brand-gold-dark shadow-md ring-1 ring-white/30",
         className,
       )}
     >

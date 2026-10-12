@@ -145,10 +145,10 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-bg-base text-ink-primary flex flex-col" dir={direction}>
 
-      {/* ── Hero: clean theme-aware gradient, solid search card, numbered flow ── */}
-      <section className="relative isolate overflow-hidden bg-gradient-to-b from-bg-muted to-bg-base" aria-labelledby="hero-heading">
+      {/* ── Hero: glassy theme-aware surface, solid search card, numbered flow ── */}
+      <section className="relative isolate overflow-hidden bg-bg-surface/95 backdrop-blur-md" aria-labelledby="hero-heading">
 
-        <div className="container mx-auto max-w-4xl px-4 py-20 md:py-32">
+        <div className="container mx-auto max-w-4xl px-5 py-16 md:py-24 lg:py-32">
           <div className="flex flex-col items-center text-center gap-6">
 
             <h1
@@ -175,7 +175,7 @@ export default function Home() {
             <div className="mt-7 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
               <Button
                 onClick={() => setLocation('/search')}
-                className="b2-press rounded-lg bg-accent-clay px-8 py-4 text-base font-bold text-[var(--primary-ink)] shadow-[var(--shadow-clay)] transition-colors hover:bg-accent-clay-hover"
+                className="b2-press rounded-xl bg-accent-clay px-8 py-4 text-base font-bold text-[var(--primary-ink)] shadow-[var(--shadow-clay)] transition-colors hover:bg-accent-clay-hover"
               >
                 <Search className="h-4 w-4" aria-hidden="true" />
                 <span>{t('heroSearchCta')}</span>
@@ -183,7 +183,7 @@ export default function Home() {
               <Button
                 onClick={() => setLocation('/search')}
                 variant="outline"
-                className="b2-press rounded-lg border border-border-default bg-bg-surface px-6 py-2.5 text-sm font-bold text-ink-primary transition-colors hover:bg-bg-muted"
+                className="b2-press rounded-xl border border-border-default bg-bg-surface px-6 py-2.5 text-sm font-bold text-ink-primary transition-colors hover:bg-bg-muted"
               >
                 <Award className="h-4 w-4" aria-hidden="true" />
                 <span>{t('heroReviewButton')}</span>

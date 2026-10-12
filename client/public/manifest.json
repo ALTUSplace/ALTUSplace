@@ -8,7 +8,7 @@
   "display": "standalone",
   "orientation": "portrait-primary",
   "background_color": "#FFFFFF",
-  "theme_color": "#1A56DB",
+  "theme_color": "#0F4C81",
   "lang": "ar",
   "dir": "rtl",
   "categories": ["travel", "business", "shopping", "lifestyle"],
