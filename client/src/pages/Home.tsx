@@ -108,11 +108,11 @@ export default function Home() {
   // Arabic rather than assuming a left-to-right progression.
   const FlowChevron = direction === 'rtl' ? ChevronLeft : ChevronRight;
 
-  // Database listings formatted as unified car items
-  const { data: dbListings = [] } = trpc.listings.list.useQuery();
-  const dbRows = filterMarketplaceListings(dbListings.map(toListingItem));
-  const activeListings = dbRows.filter((item) => isCarCategory(item.category));
-  const activeProperties = dbRows.filter((item) => isPropertyCategory(item.category));
+  // Normalise the shared catalogue once, then split it into the two bookable rails.
+  const { data: rawMarketInventory = [] } = trpc.listings.list.useQuery();
+  const marketInventory = filterMarketplaceListings(rawMarketInventory.map(toListingItem));
+  const availableVehicles = marketInventory.filter((item) => isCarCategory(item.category));
+  const availableProperties = marketInventory.filter((item) => isPropertyCategory(item.category));
 
   // ── V2: live deals · geo quick-search ──────────────────────────────────
   // "Available tomorrow": query tomorrow→day-after; the server already
@@ -396,9 +396,9 @@ export default function Home() {
         />
 
         {/* Listing Cards Grid */}
-        {activeListings.length > 0 ? (
+        {availableVehicles.length > 0 ? (
           <div className="mt-8 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {activeListings.slice(0, 6).map((item, index) => (
+            {availableVehicles.slice(0, 6).map((item, index) => (
               <ListingCard
                 key={item.id}
                 id={String(item.id)}
@@ -437,9 +437,9 @@ export default function Home() {
           action={{ label: t('featuredPropertiesAction'), href: '/search?type=property' }}
         />
 
-        {activeProperties.length > 0 ? (
+        {availableProperties.length > 0 ? (
           <div className="mt-8 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {activeProperties.slice(0, 6).map((item, index) => (
+            {availableProperties.slice(0, 6).map((item, index) => (
               <ListingCard
                 key={item.id}
                 id={String(item.id)}

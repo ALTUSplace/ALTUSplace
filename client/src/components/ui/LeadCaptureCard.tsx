@@ -46,36 +46,36 @@ export function LeadCaptureCard({
   className?: string;
 }) {
   const { t, direction } = useLanguage();
-  const [open, setOpen] = useState(false);
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [item, setItem] = useState("");
-  const [city, setCity] = useState("");
+  const [isDialogOpen, setDialogOpen] = useState(false);
+  const [contactName, setContactName] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
+  const [requestedAsset, setRequestedAsset] = useState("");
+  const [desiredCity, setDesiredCity] = useState("");
 
-  const isCar = variant === "car";
+  const isVehicleRequest = variant === "car";
 
-  const heading = isCar ? t("leadGenCarHeading") : t("leadGenPropertyHeading");
-  const subtext = isCar ? t("leadGenCarSubtext") : t("leadGenPropertySubtext");
-  const cta = isCar ? t("leadGenCarCta") : t("leadGenPropertyCta");
-  const modalTitle = isCar
+  const heading = isVehicleRequest ? t("leadGenCarHeading") : t("leadGenPropertyHeading");
+  const subtext = isVehicleRequest ? t("leadGenCarSubtext") : t("leadGenPropertySubtext");
+  const cta = isVehicleRequest ? t("leadGenCarCta") : t("leadGenPropertyCta");
+  const modalTitle = isVehicleRequest
     ? t("leadGenModalTitleCar")
     : t("leadGenModalTitleProperty");
-  const itemLabel = isCar ? t("leadGenFieldCarModel") : t("leadGenFieldProperty");
-  const itemPlaceholder = isCar
+  const itemLabel = isVehicleRequest ? t("leadGenFieldCarModel") : t("leadGenFieldProperty");
+  const itemPlaceholder = isVehicleRequest
     ? t("leadGenFieldCarModelPlaceholder")
     : t("leadGenFieldPropertyPlaceholder");
 
   const inputClassName =
     "mt-1 w-full rounded-xl border border-border-default bg-bg-muted px-4 py-3 text-sm text-ink-primary placeholder:text-ink-secondary focus:border-accent-clay focus:outline-none";
 
-  const createRequest = trpc.requestListing.create.useMutation({
+  const submitLeadRequest = trpc.requestListing.create.useMutation({
     onSuccess: () => {
       toast.success(t("leadGenSuccessToast"));
-      setName("");
-      setPhone("");
-      setItem("");
-      setCity("");
-      setOpen(false);
+      setContactName("");
+      setContactPhone("");
+      setRequestedAsset("");
+      setDesiredCity("");
+      setDialogOpen(false);
     },
     onError: () => {
       toast.error(t("leadGenErrorToast"));
@@ -84,15 +84,15 @@ export function LeadCaptureCard({
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
-    if (!isPhoneAcceptable(phone)) {
+    if (!isPhoneAcceptable(contactPhone)) {
       toast.error(t("leadGenErrorToast"));
       return;
     }
-    createRequest.mutate({
-      name: name.trim(),
-      phone: phone.trim(),
-      carModel: item.trim(),
-      city: city.trim(),
+    submitLeadRequest.mutate({
+      name: contactName.trim(),
+      phone: contactPhone.trim(),
+      carModel: requestedAsset.trim(),
+      city: desiredCity.trim(),
     });
   };
 
@@ -102,11 +102,11 @@ export function LeadCaptureCard({
     >
       <p className="text-lg font-bold text-ink-primary sm:text-xl">{heading}</p>
       <p className="mt-2 text-sm text-ink-secondary">{subtext}</p>
-      <Button type="button" className="mt-6" onClick={() => setOpen(true)}>
+      <Button type="button" className="mt-6" onClick={() => setDialogOpen(true)}>
         {cta}
       </Button>
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={isDialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent dir={direction} className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>{modalTitle}</DialogTitle>
@@ -120,8 +120,8 @@ export function LeadCaptureCard({
                 type="text"
                 required
                 maxLength={80}
-                value={name}
-                onChange={(event) => setName(event.target.value)}
+                value={contactName}
+                onChange={(event) => setContactName(event.target.value)}
                 placeholder={t("leadGenFieldNamePlaceholder")}
                 className={inputClassName}
               />
@@ -135,8 +135,8 @@ export function LeadCaptureCard({
                 dir="ltr"
                 inputMode="tel"
                 maxLength={20}
-                value={phone}
-                onChange={(event) => setPhone(event.target.value)}
+                value={contactPhone}
+                onChange={(event) => setContactPhone(event.target.value)}
                 placeholder={t("leadGenFieldPhonePlaceholder")}
                 className={`${inputClassName} text-start`}
               />
@@ -148,8 +148,8 @@ export function LeadCaptureCard({
                 type="text"
                 required
                 maxLength={120}
-                value={item}
-                onChange={(event) => setItem(event.target.value)}
+                value={requestedAsset}
+                onChange={(event) => setRequestedAsset(event.target.value)}
                 placeholder={itemPlaceholder}
                 className={inputClassName}
               />
@@ -161,8 +161,8 @@ export function LeadCaptureCard({
                 type="text"
                 required
                 maxLength={80}
-                value={city}
-                onChange={(event) => setCity(event.target.value)}
+                value={desiredCity}
+                onChange={(event) => setDesiredCity(event.target.value)}
                 placeholder={t("leadGenFieldCityPlaceholder")}
                 className={inputClassName}
               />
@@ -170,10 +170,10 @@ export function LeadCaptureCard({
 
             <Button
               type="submit"
-              disabled={createRequest.isPending}
+              disabled={submitLeadRequest.isPending}
               className="w-full"
             >
-              {createRequest.isPending ? t("leadGenSubmitting") : t("leadGenSubmit")}
+              {submitLeadRequest.isPending ? t("leadGenSubmitting") : t("leadGenSubmit")}
             </Button>
           </form>
         </DialogContent>

@@ -3466,20 +3466,21 @@ export const appRouter = router({
         }),
       )
       .mutation(async ({ input }) => {
-        const normalizedPhone =
+        // Store the E.164 canonical form so dedupe keys stay stable across submits.
+        const canonicalPhone =
           normalizeWhatsAppNumber(input.phone) ?? input.phone;
         logger.info("[LeadCapture] requestListing.create", {
           name: input.name,
-          phone: normalizedPhone,
+          phone: canonicalPhone,
           carModel: input.carModel,
           city: input.city,
         });
         await alertAdmins({
           type: "system",
           title: "طلب تأمين / Lead request",
-          message: `الاسم: ${input.name}\nالهاتف: ${normalizedPhone}\nالمطلوب: ${input.carModel}\nالمدينة: ${input.city}`,
+          message: `الاسم: ${input.name}\nالهاتف: ${canonicalPhone}\nالمطلوب: ${input.carModel}\nالمدينة: ${input.city}`,
           entityType: "lead_request",
-          dedupeKey: `lead:${normalizedPhone}`,
+          dedupeKey: `lead:${canonicalPhone}`,
         });
         return { success: true as const };
       }),
