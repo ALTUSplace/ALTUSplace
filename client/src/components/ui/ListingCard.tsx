@@ -48,7 +48,7 @@ const BADGE_CONFIG: Record<
   "top-host": { labelKey: "badgeTopHost", icon: Award, className: "bg-ink-primary/85 dark:bg-[#1C1C1E]/85 text-white" },
   premium: { labelKey: "badgePremium", icon: Star, className: "bg-accent-clay/90 text-white" },
   "instant-book": { labelKey: "badgeInstant", icon: Zap, className: "bg-accent-green/90 text-white" },
-  featured: { labelKey: "badgeFeatured", icon: CheckCircle2, className: "bg-accent-warm text-white" },
+  featured: { labelKey: "badgeFeatured", icon: CheckCircle2, className: "bg-brand-gold-light text-brand-gold-dark" },
   superhost: { labelKey: "badgeSuperhost", icon: Award, className: "bg-accent-clay/90 text-white" },
 };
 
@@ -103,7 +103,7 @@ export function ListingCard(props: ListingCardProps) {
   return (
     <article
       className={cn(
-        "group relative flex flex-col overflow-hidden rounded-xl border border-border-subtle bg-bg-surface",
+        "group relative flex flex-col overflow-hidden rounded-2xl border border-border-subtle bg-bg-surface",
         "shadow-sm hover:shadow-md transition-shadow duration-200 cursor-pointer",
         className,
       )}
@@ -115,7 +115,7 @@ export function ListingCard(props: ListingCardProps) {
       onKeyDown={(e) => { if (e.key === "Enter") handleCardClick(); }}
     >
       <div className="absolute inset-x-0 top-0 h-0.5 bg-accent-clay scale-x-0 origin-start transition-transform duration-300 ease-out group-hover:scale-x-100" aria-hidden="true" />
-      <div className="relative aspect-video w-full overflow-hidden bg-bg-muted">
+      <div className="relative aspect-[4/3] w-full overflow-hidden bg-bg-muted">
         <div className="flex h-full transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]" style={{ transform: `translateX(${activeSlide * -100}%)` }}>
           {displayImages.map((src, i) => (
             <div key={i} className="relative h-full w-full shrink-0">
@@ -169,7 +169,7 @@ export function ListingCard(props: ListingCardProps) {
           </div>
         </>)}
       </div>
-      <div className="flex flex-1 flex-col gap-2 p-4">
+      <div className="flex flex-1 flex-col gap-2 p-6 sm:p-8">
         <h3 className="line-clamp-2 text-[15px] font-bold leading-snug text-ink-primary transition-colors group-hover:text-accent-clay" title={displayTitle}>{displayTitle}</h3>
         <div className="flex items-center gap-1 text-xs text-ink-secondary"><MapPin className="h-3 w-3 text-ink-tertiary" /><span className="line-clamp-1">{city}</span></div>
         {specs && (specs.transmission || specs.fuel || specs.seats || specs.rooms) && (
@@ -187,7 +187,7 @@ export function ListingCard(props: ListingCardProps) {
         <div className="mt-auto flex flex-col gap-3 pt-2">
           <div className="flex items-end justify-between gap-2">
             <div className="flex items-baseline gap-1">
-              <span key={`${activeCurrency}-${showTotal ? "total" : "day"}`} className="price-figure text-xl font-bold text-ink-primary animate-fade-in">{priceOnRequestMode ? t("priceOnRequest") : formatAmount(safePrice, { total: showTotal })}</span>
+              <span key={`${activeCurrency}-${showTotal ? "total" : "day"}`} className="price-figure text-xl font-bold text-brand-primary animate-fade-in">{priceOnRequestMode ? t("priceOnRequest") : formatAmount(safePrice, { total: showTotal })}</span>
               {!priceOnRequestMode && <span className="rounded-md bg-accent-clay/12 px-1.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-accent-clay" aria-label={displayCurrency}>{displayCurrency}</span>}
               {!priceOnRequestMode && <span className="text-xs font-normal text-ink-tertiary">{unitText}</span>}
             </div>
@@ -212,8 +212,8 @@ export function ListingCard(props: ListingCardProps) {
 export function ListingCardSkeleton({ className }: { className?: string }) {
   return (
     <div className={cn("flex flex-col overflow-hidden rounded-2xl border border-border-subtle bg-bg-surface", className)}>
-      <div className="aspect-[5/4] animate-shimmer bg-skeleton-from" />
-      <div className="flex flex-col gap-3 p-4">
+      <div className="aspect-[4/3] animate-shimmer bg-skeleton-from" />
+      <div className="flex flex-col gap-3 p-6 sm:p-8">
         <div className="flex justify-between">
           <div className="h-4 w-2/3 animate-shimmer rounded bg-skeleton-from" />
           <div className="h-4 w-12 animate-shimmer rounded bg-skeleton-from" />

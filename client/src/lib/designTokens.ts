@@ -19,19 +19,24 @@ import { useTheme } from '@/contexts/ThemeContext';
 /** Token name → light-theme value, mirroring the `:root` block in index.css. */
 const FALLBACKS: Record<string, string> = {
   // brand accent
-  '--accent-primary': '#1A56DB',
-  '--accent-primary-h': '#1546B4',
-  '--accent-primary-s': 'rgba(26, 86, 219, 0.10)',
+  '--accent-primary': '#0F4C81',
+  '--accent-primary-h': '#0B3D6B',
+  '--accent-primary-s': 'rgba(15, 76, 129, 0.10)',
+  // brand ramps — theme-independent gold/on-dark supporting tokens
+  '--brand-primary-light': '#E6EEF5',
+  '--accent-gold-light': '#FBF4E8',
+  '--accent-gold-dark': '#8C6B1F',
+  '--text-on-dark': '#FFFDF5',
   // surfaces + ink
   '--bg-base': '#FFFFFF',
   '--bg-surface': '#FFFFFF',
-  '--bg-muted': '#F7F7F8',
+  '--bg-muted': '#F9FAFB',
   '--bg-elevated': '#FFFFFF',
-  '--ink-primary': '#1C1C1E',
-  '--ink-secondary': '#6E6E73',
-  '--ink-tertiary': '#8A8A90',
+  '--ink-primary': '#1F2937',
+  '--ink-secondary': '#71717A',
+  '--ink-tertiary': '#6E6E73',
   // borders
-  '--border-subtle': '#EBEBEB',
+  '--border-subtle': '#EAECF0',
   '--border-default': '#E0E0E4',
   '--border-strong': '#C7C7CC',
   // always-dark console panel
@@ -47,7 +52,7 @@ const FALLBACKS: Record<string, string> = {
   '--accent-green': '#059669',
   '--accent-red': '#DC2626',
   '--accent-amber': '#B45309',
-  '--accent-warm': '#B7791F',
+  '--accent-warm': '#D4AF37',
 };
 
 const cache = new Map<string, string>();

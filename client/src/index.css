@@ -82,12 +82,12 @@
     --bg-page:         #F9FAFB;  /* page sections */
     --bg-base:         #FFFFFF;
     --bg-surface:      #FFFFFF;  /* cards/content */
-    --bg-muted:        #F7F7F8;
+    --bg-muted:        #F9FAFB;
     --bg-elevated:     #FFFFFF;
 
     /* Ink Tokens — cool charcoal scale */
-    --ink-primary:     #111827;  /* near-black for headings (requested) */
-    --ink-secondary:   #6B7280;  /* medium gray for body/subtitles */
+    --ink-primary:     #1F2937;  /* near-black for headings */
+    --ink-secondary:   #71717A;  /* AA-safe medium grey for body/subtitles */
     --ink-tertiary:    #6E6E73;
 
     /* Semantic aliases (requested naming) */
@@ -104,22 +104,29 @@
     --hero-search-bg:      #FFFFFF;  /* pure white card */
     --hero-search-border:  #E5E7EB;  /* light gray border */
 
-    /* Accent Tokens — a single deep trust blue */
-    --accent-primary:   #1A56DB;
-    --accent-primary-h: #1546B4;
-    --accent-primary-s: rgba(26, 86, 219, 0.10);
+    /* Accent Tokens — Primary Blue (#0F4C81) */
+    --accent-primary:   #0F4C81;
+    --accent-primary-h: #0B3D6B;
+    --accent-primary-s: rgba(15, 76, 129, 0.10);
 
     /* Ink that sits ON the accent fill. White works on the light-theme accent
-       (6.18:1) but NOT on the brighter dark-theme accent (#4F86F7 = 3.45:1),
+       (8.86:1) but NOT on the brighter dark-theme accent (#4F86F7 = 3.45:1),
        so this flips to charcoal in .dark — dark-mode CTAs were failing AA with
        the previously hardcoded white. Pinned as a token so the pairing is
        asserted by the contrast test instead of drifting. */
     --primary-ink:     #FFFFFF;
 
-    /* Warm secondary tone (ratings, premium hints) */
-    --accent-warm:   #B7791F;
-    --accent-warm-h: #9A6518;
-    --accent-warm-s: rgba(183, 121, 31, 0.12);
+    /* Warm secondary tone — Accent Gold (#D4AF37) for ratings/premium hints */
+    --accent-warm:   #D4AF37;
+    --accent-warm-h: #B8962E;
+    --accent-warm-s: rgba(212, 175, 55, 0.12);
+
+    /* Luxury brand ramps — theme-independent, so the gold badge pairing and the
+       on-dark ink stay stable in light and dark alike. */
+    --brand-primary-light: #E6EEF5;
+    --accent-gold-light:   #FBF4E8;
+    --accent-gold-dark:    #8C6B1F;  /* AA on --accent-gold-light (4.53:1) */
+    --text-on-dark:        #FFFDF5;
 
     /* Semantic status colours */
     --accent-green:  #059669;
@@ -137,8 +144,8 @@
        #003580 (Mubawab blue), #102D2B (teal-navy) and the #0E1A2E→#111C33
        gradient pair that had drifted into four unrelated dark navies.
          #123A93 = 10.23:1 with white   #0B2E6F = 12.85:1 with white
-       Both are the existing blue ramp's 700/800 steps, so this introduces no
-       new hue — it only collapses four ad-hoc navies onto the one brand ramp. */
+       Kept deliberately independent of the brand ramp: the panel is a fixed
+       console surface, so retuning the brand blue must not drag it along. */
     --brand-panel:      #123A93;
     --brand-panel-2:    #0B2E6F;
     --brand-panel-ink:  #FFFFFF;
@@ -155,7 +162,7 @@
     --brand-panel-accent: #8AB4FF;
 
     /* Border Tokens — crisp hairlines */
-    --border-subtle:  #EBEBEB;
+    --border-subtle:  #EAECF0;
     --border-default: #E0E0E4;
     --border-strong:  #C7C7CC;
 
@@ -169,9 +176,9 @@
     --shadow-md:  0 2px 4px rgba(16, 24, 40, 0.06), 0 8px 20px rgba(16, 24, 40, 0.07);
     --shadow-lg:  0 2px 5px rgba(16, 24, 40, 0.07), 0 14px 34px rgba(16, 24, 40, 0.10);
     --shadow-xl:  0 4px 8px rgba(16, 24, 40, 0.08), 0 24px 52px rgba(16, 24, 40, 0.12);
-    --shadow-clay:    0 2px 4px rgba(26, 86, 219, 0.14), 0 10px 24px rgba(26, 86, 219, 0.18);
+    --shadow-clay:    0 2px 4px rgba(15, 76, 129, 0.14), 0 10px 24px rgba(15, 76, 129, 0.18);
     --shadow-card-hover: 0 2px 5px rgba(16, 24, 40, 0.08), 0 18px 44px rgba(16, 24, 40, 0.13);
-    --shadow-button: 0 2px 4px rgba(26, 86, 219, 0.2), 0 8px 18px rgba(26, 86, 219, 0.26);
+    --shadow-button: 0 2px 4px rgba(15, 76, 129, 0.2), 0 8px 18px rgba(15, 76, 129, 0.26);
 
     /* Radius Tokens — soft, modern */
     --radius-xs:   0.25rem;
@@ -390,6 +397,18 @@
   --color-sidebar-accent-foreground: hsl(from var(--ink-primary) h s l / alpha);
   --color-sidebar-border:          hsl(from var(--border-subtle) h s l / alpha);
   --color-sidebar-ring:            hsl(from var(--accent-primary) h s l / alpha);
+
+  /* luxury brand aliases — let markup say `bg-brand-primary` /
+     `text-brand-gold-dark` instead of stock grey/blue/amber utilities. Each
+     points at a DIFFERENTLY-NAMED token, so none of these are self-references. */
+  --color-brand-primary:       var(--accent-primary);
+  --color-brand-primary-hover: var(--accent-primary-h);
+  --color-brand-primary-light: var(--brand-primary-light);
+  --color-brand-gold:          var(--accent-warm);
+  --color-brand-gold-hover:    var(--accent-warm-h);
+  --color-brand-gold-light:    var(--accent-gold-light);
+  --color-brand-gold-dark:     var(--accent-gold-dark);
+  --color-on-dark:             var(--text-on-dark);
 }
 
 /* ── 3. Base Element Styles ─────────────────────────────────────────────────── */
@@ -813,8 +832,9 @@
 
 /* ── 7. Legacy Brand Token Aliases ────────────────────────────────────────────
    Keeps existing consumers (Footer, HostDashboard, AgencySettings, etc.)
-   working while markup migrates to the semantic tokens. --brand-amber is the
-   primary deep trust-blue action colour. */
+   working while markup migrates to the semantic tokens. The legacy names now
+   resolve to the luxury palette: --brand-blue / --brand-amber are the navy
+   action colour and --brand-gold is the accent gold. */
 @layer base {
   :root {
     --brand-navy:         #0B1220;
@@ -900,43 +920,43 @@
 @layer base {
   :root {
     /* neutral — cool grey scale */
-    --ramp-n-50:  #F8F8F9;
-    --ramp-n-100: #F1F1F3;
-    --ramp-n-200: #E8E8EB;
-    --ramp-n-300: #D6D6DB;
-    --ramp-n-400: #B0B0B8;
-    --ramp-n-500: #6E6E73;
-    --ramp-n-600: #6E6E73;
-    --ramp-n-700: #48484D;
-    --ramp-n-800: #2C2C2E;
-    --ramp-n-900: #1C1C1E;
-    --ramp-n-950: #111113;
+    --ramp-n-50:  #F9FAFB;
+    --ramp-n-100: #F2F4F7;
+    --ramp-n-200: #EAECF0;
+    --ramp-n-300: #D0D5DD;
+    --ramp-n-400: #98A2B3;
+    --ramp-n-500: #667085;
+    --ramp-n-600: #475467;
+    --ramp-n-700: #344054;
+    --ramp-n-800: #1D2939;
+    --ramp-n-900: #1F2937;
+    --ramp-n-950: #101828;
 
     /* blue — the single brand accent */
-    --ramp-c-50:  #EBF0FE;
-    --ramp-c-100: #DBE5FD;
-    --ramp-c-200: #BDCDFB;
-    --ramp-c-300: #93AEF8;
-    --ramp-c-400: #6A8CF4;
-    --ramp-c-500: #1A56DB;
-    --ramp-c-600: #1546B4;
-    --ramp-c-700: #123A93;
-    --ramp-c-800: #103175;
-    --ramp-c-900: #0D285E;
-    --ramp-c-950: #0A1F49;
+    --ramp-c-50:  #E6EEF5;
+    --ramp-c-100: #CFDFEC;
+    --ramp-c-200: #AFC8DE;
+    --ramp-c-300: #85A9C8;
+    --ramp-c-400: #4E7CA6;
+    --ramp-c-500: #0F4C81;
+    --ramp-c-600: #0B3D6B;
+    --ramp-c-700: #0A3257;
+    --ramp-c-800: #082844;
+    --ramp-c-900: #061F36;
+    --ramp-c-950: #04172A;
 
     /* gold — warm secondary (premium hints) */
     --ramp-g-50:  #FBF4E8;
-    --ramp-g-100: #F7E8CE;
-    --ramp-g-200: #EFD3A3;
-    --ramp-g-300: #E3B871;
-    --ramp-g-400: #D19E44;
-    --ramp-g-500: #B7791F;
-    --ramp-g-600: #9A6518;
-    --ramp-g-700: #7E5214;
-    --ramp-g-800: #654111;
-    --ramp-g-900: #4F330E;
-    --ramp-g-950: #3B260A;
+    --ramp-g-100: #F7E9CC;
+    --ramp-g-200: #EDD69B;
+    --ramp-g-300: #E2C46B;
+    --ramp-g-400: #D4AF37;
+    --ramp-g-500: #B8962E;
+    --ramp-g-600: #8C6B1F;
+    --ramp-g-700: #70551A;
+    --ramp-g-800: #5A4517;
+    --ramp-g-900: #453614;
+    --ramp-g-950: #2F2410;
 
     /* green — success */
     --ramp-s-50:  #ECFDF5;
