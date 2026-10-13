@@ -32,7 +32,7 @@ const EXPECTED_AR: Record<(typeof HERO_KEYS)[number], string> = {
   heroStepSearch: "ابحث الآن",
   heroShowcaseBadge: "تصفح حسب الفئة",
   heroShowcaseTitle: "ابدأ من الفئة التي تناسبك",
-  heroHeadline: "أسهل طريقة لكراء السيارات والعقارات في المغرب",
+  heroHeadline: "المنصة الرائدة لتأجير السيارات والعقارات في المغرب",
   heroCatLuxuryCars: "سيارات فاخرة للكراء اليومي",
   heroCatFurnishedApts: "شقق مؤثثة للإيجار الشهري",
   heroCatFamilyVillas: "فيلات عائلية للعطلات",
@@ -63,7 +63,7 @@ describe("hero redesign i18n", () => {
     // "شقق للكراء" head term is preserved on the /properties/for-rent hub
     // page instead, so it is intentionally not asserted here.
     const headline = getTranslation("ar", "heroHeadline");
-    expect(headline).toContain("كراء السيارات");
+    expect(headline).toContain("تأجير السيارات");
     expect(headline).toContain("والعقارات في المغرب");
     expect(headline).not.toContain("للكراء بأسعار");
   });

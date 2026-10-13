@@ -145,28 +145,44 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-bg-base text-ink-primary flex flex-col" dir={direction}>
 
-      {/* ── Hero: glassy theme-aware surface, solid search card, numbered flow ── */}
-      <section className="relative isolate overflow-hidden bg-bg-surface/95 backdrop-blur-md" aria-labelledby="hero-heading">
+      {/* ── Hero: cinematic dark surface — brand scrim over the city backdrop ── */}
+      <section className="relative isolate overflow-hidden bg-brand-panel" aria-labelledby="hero-heading">
 
-        <div className="container mx-auto max-w-4xl px-5 py-16 md:py-24 lg:py-32">
+        {/* Backdrop. Placeholder gradient until the photograph lands; swapping it
+            in is a one-line change:
+              <img src="/assets/hero-night-morocco.jpg" alt=""
+                   className="pointer-events-none absolute inset-0 -z-20 h-full w-full object-cover opacity-80"
+                   fetchPriority="high" /> */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 -z-20 bg-gradient-to-b from-brand-panel to-brand-panel-alt"
+        />
+        {/* Scrim: navy → near-black, theme-independent contrast floor for AA. */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-hero-scrim-top to-hero-scrim-bottom"
+        />
+
+        <div className="container mx-auto max-w-4xl px-5 py-20 md:py-28 lg:py-36">
           <div className="flex flex-col items-center text-center gap-6">
 
             <h1
               id="hero-heading"
-              className="max-w-4xl font-display text-4xl md:text-5xl font-extrabold tracking-tight leading-tight text-ink-primary text-balance"
+              className="max-w-4xl font-display text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight text-white text-balance [text-shadow:var(--hero-title-shadow)]"
             >
               {t('heroHeadline')}
             </h1>
 
-            <p className="max-w-2xl text-base md:text-lg leading-relaxed text-ink-secondary">
+            <h2 className="max-w-2xl text-base md:text-lg font-medium leading-relaxed text-brand-gold-light">
               {t('heroDescription')}
-            </p>
+            </h2>
 
-            {/* Solid search card (gate-pinned: solid fill + rounded-xl) */}
+            {/* Solid search card — kept solid to satisfy the blocking CI
+                hero-layout gate (scripts/verify-hero-layout.mjs). */}
             <SearchBar variant="heroOverlay" />
 
             {/* Trust signals below search bar */}
-            <div className="mt-4 flex flex-wrap items-center justify-center gap-4 text-sm text-ink-secondary">
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-4 text-sm text-white/85">
               <span>• {t('verified_partners')}</span>
               <span>• {t('secure_payment')}</span>
               <span>• {t('real_reviews')}</span>
@@ -227,7 +243,7 @@ export default function Home() {
                 as a forward-compatible signal (ignored for now). */}
             <nav className="mt-6 w-full" aria-label={t('popular_cities_label')}>
               <div className="flex flex-col items-center gap-2">
-                <span className="text-xs font-bold text-ink-primary">{t('popular_cities_label')}</span>
+                <span className="text-xs font-bold text-white/85">{t('popular_cities_label')}</span>
                 <ul className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
                   {HERO_CITY_RAIL.map(({ slug, popular }) => (
                     <li key={slug}>

@@ -104,6 +104,12 @@
     --hero-search-bg:      #FFFFFF;  /* pure white card */
     --hero-search-border:  #E5E7EB;  /* light gray border */
 
+    /* Cinematic hero scrim — theme-independent so the backdrop reads the same
+       navy→black in both themes and white/gold text clears AA everywhere. */
+    --hero-scrim-top:    rgba(15, 76, 129, 0.85);  /* brand primary @ 85% */
+    --hero-scrim-bottom: rgba(0, 0, 0, 0.95);      /* near-black fade */
+    --hero-title-shadow: 0 2px 24px rgba(0, 0, 0, 0.45);
+
     /* Accent Tokens — Primary Blue (#0F4C81) */
     --accent-primary:   #0F4C81;
     --accent-primary-h: #0B3D6B;
@@ -409,6 +415,8 @@
   --color-brand-gold-light:    var(--accent-gold-light);
   --color-brand-gold-dark:     var(--accent-gold-dark);
   --color-on-dark:             var(--text-on-dark);
+  --color-hero-scrim-top:    var(--hero-scrim-top);
+  --color-hero-scrim-bottom: var(--hero-scrim-bottom);
 }
 
 /* ── 3. Base Element Styles ─────────────────────────────────────────────────── */
