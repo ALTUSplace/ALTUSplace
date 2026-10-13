@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
+import { nanoid } from "nanoid";
 import { trpc } from "@/lib/trpc";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
@@ -52,6 +53,11 @@ export function LeadCaptureCard({
   const [requestedAsset, setRequestedAsset] = useState("");
   const [desiredCity, setDesiredCity] = useState("");
 
+  // One idempotency key per submit attempt. Created lazily on the first submit
+  // and kept until that submission SUCCEEDS, so a double-click or a retry after a
+  // network failure reuses the same id and the server collapses it into one lead.
+  const requestIdRef = useRef<string | null>(null);
+
   const isVehicleRequest = variant === "car";
 
   const heading = isVehicleRequest ? t("leadGenCarHeading") : t("leadGenPropertyHeading");
@@ -70,6 +76,9 @@ export function LeadCaptureCard({
 
   const submitLeadRequest = trpc.requestListing.create.useMutation({
     onSuccess: () => {
+      // The attempt is finished: the next submit is a new intent, so it gets a
+      // fresh id rather than being deduplicated against this one.
+      requestIdRef.current = null;
       toast.success(t("leadGenSuccessToast"));
       setContactName("");
       setContactPhone("");
@@ -84,15 +93,23 @@ export function LeadCaptureCard({
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
+    // Belt-and-braces against the same-tick double-click that the disabled
+    // button cannot catch (state updates are async).
+    if (submitLeadRequest.isPending) return;
     if (!isPhoneAcceptable(contactPhone)) {
       toast.error(t("leadGenErrorToast"));
       return;
     }
+    // Reuse the in-flight id on a repeat submit; only a completed submission
+    // clears it (see `onSuccess`).
+    const requestId = requestIdRef.current ?? nanoid();
+    requestIdRef.current = requestId;
     submitLeadRequest.mutate({
       name: contactName.trim(),
       phone: contactPhone.trim(),
       carModel: requestedAsset.trim(),
       city: desiredCity.trim(),
+      requestId,
     });
   };
 
