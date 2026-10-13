@@ -1,33 +1,48 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { AUTH_ME_QUERY_OPTIONS } from "@/lib/authMeQueryOptions";
 import { trpc } from "@/lib/trpc";
-import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { classifyApiError } from "@/types/errors";
+import {
+  createFavoriteMutations,
+  favoriteListingIds,
+  isUnconfirmedFavorite,
+} from "@/lib/favoritesCache";
 
-/** Shape of one favorite row returned by trpc.favorites.list. */
-export type FavoriteWithListing = {
-  favoriteId: string;
-  listingId: number;
-  createdAt: Date;
-  listing: Record<string, unknown>;
-};
+export type { FavoriteWithListing } from "@/lib/favoritesCache";
+
+/**
+ * Wording for a failed toggle. The failure taxonomy decides the branch: an
+ * expired session needs an actionable message, anything else falls back to the
+ * generic "could not update favorites" line.
+ */
+function favoriteErrorMessage(
+  error: unknown,
+  t: (key: string) => string,
+): string {
+  const { strategy } = classifyApiError(error);
+  return strategy === "login" ? t("loginRequiredDesc") : t("favoriteError");
+}
 
 /**
  * Server-backed favorites (wishlist) hook. The source of truth is the
- * `favorites.list` query; toggling is optimistic — the button flips instantly
- * via a local pending-set and rolls back on failure, then the query cache is
- * invalidated so the /favorites page always reflects server truth.
+ * `favorites.list` query cache; toggling writes that cache optimistically
+ * through `@/lib/optimistic`, so the heart flips instantly, a failed write
+ * rolls back to its snapshot, and no toggle ever refetches the whole list.
  */
 export function useFavorites() {
   const { t } = useLanguage();
-  const utils = trpc.useUtils();
+  const queryClient = useQueryClient();
+
   // favorites.list is a protected procedure — fetch it only when signed in.
   // Firing it for anonymous visitors made the main.tsx UNAUTHORIZED handler
   // auto-redirect public homepage views to the owner login gate.
   const { data: me } = trpc.auth.me.useQuery(undefined, AUTH_ME_QUERY_OPTIONS);
   const isAuthed = Boolean(me);
   const {
-    data: favorites,
+    data,
     isLoading,
     refetch,
   } = trpc.favorites.list.useQuery(undefined, {
@@ -35,89 +50,48 @@ export function useFavorites() {
     enabled: isAuthed,
   });
 
-  /** Optimistic delta applied before the server round-trip settles. */
-  const [pendingAdds, setPendingAdds] = useState<Set<number>>(new Set());
-  const [pendingRemoves, setPendingRemoves] = useState<Set<number>>(new Set());
+  const { add, remove } = createFavoriteMutations({
+    queryClient,
+    onServerError: (error) =>
+      toast.error(favoriteErrorMessage(error, t)),
+  });
 
-  const serverIds = useMemo(
-    () => new Set((favorites ?? []).map((f) => f.listingId)),
-    [favorites]
+  const addFavorite = trpc.favorites.add.useMutation(add);
+  const removeFavorite = trpc.favorites.remove.useMutation(remove);
+
+  /** Ids in the cache, including not-yet-confirmed optimistic rows. */
+  const favoriteIds = useMemo(() => favoriteListingIds(data), [data]);
+
+  /**
+   * Rows that are safe to render: optimistic adds carry a listing stub with no
+   * title/price, so they are held back until a refetch replaces them with the
+   * real server payload.
+   */
+  const favorites = useMemo(
+    () => (data ?? []).filter((row) => !isUnconfirmedFavorite(row)),
+    [data],
   );
 
-  const add = trpc.favorites.add.useMutation({
-    onMutate: ({ listingId }) => {
-      setPendingAdds((prev) => new Set(prev).add(listingId));
-      setPendingRemoves((prev) => {
-        if (!prev.has(listingId)) return prev;
-        const next = new Set(prev);
-        next.delete(listingId);
-        return next;
-      });
-    },
-    onError: (_error, { listingId }) => {
-      setPendingAdds((prev) => {
-        if (!prev.has(listingId)) return prev;
-        const next = new Set(prev);
-        next.delete(listingId);
-        return next;
-      });
-      toast.error(t("favorite.error"));
-    },
-    onSettled: () => {
-      setPendingAdds(new Set());
-      setPendingRemoves(new Set());
-      utils.favorites.list.invalidate();
-    },
-  });
-
-  const remove = trpc.favorites.remove.useMutation({
-    onMutate: ({ listingId }) => {
-      if (listingId !== undefined) {
-        setPendingRemoves((prev) => new Set(prev).add(listingId));
-        setPendingAdds((prev) => {
-          if (!prev.has(listingId)) return prev;
-          const next = new Set(prev);
-          next.delete(listingId);
-          return next;
-        });
-      }
-    },
-    onError: (_error, { listingId }) => {
-      if (listingId !== undefined) {
-        setPendingRemoves((prev) => {
-          if (!prev.has(listingId)) return prev;
-          const next = new Set(prev);
-          next.delete(listingId);
-          return next;
-        });
-      }
-      toast.error(t("favorite.error"));
-    },
-    onSettled: () => {
-      setPendingAdds(new Set());
-      setPendingRemoves(new Set());
-      utils.favorites.list.invalidate();
-    },
-  });
+  /** True while the wishlist holds rows the server has not confirmed yet. */
+  const hasUnconfirmedFavorites = useMemo(
+    () => (data ?? []).some(isUnconfirmedFavorite),
+    [data],
+  );
 
   const isFavorite = useCallback(
-    (listingId: number) => {
-      if (pendingAdds.has(listingId)) return true;
-      if (pendingRemoves.has(listingId)) return false;
-      return serverIds.has(listingId);
-    },
-    [pendingAdds, pendingRemoves, serverIds]
+    (listingId: number) => favoriteIds.has(listingId),
+    [favoriteIds],
   );
 
   const toggleFavorite = useCallback(
     (listingId: number) => {
-      if (isFavorite(listingId)) {
-        remove.mutate({ listingId });
+      if (favoriteIds.has(listingId)) {
+        removeFavorite.mutate({ listingId });
       } else {
-        add.mutate({ listingId });
+        addFavorite.mutate({ listingId });
       }
     },
-    [isFavorite, add, remove]
+    [favoriteIds, addFavorite, removeFavorite],
   );
 
   return {
@@ -126,9 +100,6 @@ export function useFavorites() {
     refetch,
     isFavorite,
     toggleFavorite,
-    addPending: add.isPending,
-    removePending: remove.isPending,
-    pendingAdds,
-    pendingRemoves,
+    hasUnconfirmedFavorites,
   };
 }

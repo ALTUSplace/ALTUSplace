@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'wouter';
 import { Heart, ListX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -33,8 +33,22 @@ export default function Favorites() {
   useNoIndex();
   const { direction, t } = useLanguage();
   const { isAuthenticated, loading: authLoading, user } = useAuth({ redirectOnUnauthenticated: false });
-  const { favorites, isLoading, isFavorite, toggleFavorite } = useFavorites();
+  const {
+    favorites,
+    isLoading,
+    isFavorite,
+    toggleFavorite,
+    hasUnconfirmedFavorites,
+    refetch,
+  } = useFavorites();
   const [filterType, setFilterType] = useState<FilterType>('all');
+
+  // Toggling writes the cache in place and never refetches, so an item favorited
+  // elsewhere in the app can still be an unconfirmed stub here. Reconcile once so
+  // the grid shows real listing data instead of an empty wishlist.
+  useEffect(() => {
+    if (hasUnconfirmedFavorites) void refetch();
+  }, [hasUnconfirmedFavorites, refetch]);
 
   const rows = (favorites ?? []).filter((row) => {
     const listing = row.listing as unknown as FavoriteListing | undefined;

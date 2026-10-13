@@ -41,7 +41,7 @@ export function FavoriteButton({
         e.preventDefault();
         e.stopPropagation();
         toggleFavorite(listingId);
-        toast.success(active ? t("favorite.removed") : t("favorite.added"));
+        toast.success(active ? t("favoriteRemoved") : t("favoriteAdded"));
       }}
       className={`relative flex items-center justify-center gap-1.5 transition-all border backdrop-blur-md ${
         active
@@ -54,7 +54,7 @@ export function FavoriteButton({
       />
       {showLabel && (
         <span className="text-xs font-bold">
-          {active ? t("favorite.in") : t("favorite.add")}
+          {active ? t("favoriteIn") : t("favoriteAdd")}
         </span>
       )}
     </button>
