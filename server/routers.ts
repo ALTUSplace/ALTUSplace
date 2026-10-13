@@ -12,6 +12,7 @@ import { getDb, withTransaction } from "./db";
 import { PLATFORM_SETTINGS_PUBLIC_COLUMNS, defaultPlatformSettings, sanitizePlatformSettingsSnapshot } from "./platformSettingsPolicy";
 import { evaluateBecomeAgencyAccess, isElevatedRole } from "./becomeAgencyPolicy";
 import { logger } from "./_core/logger";
+import { claimOnce } from "./_core/idempotency";
 import { listings, listingAnalyticsEvents, listingComments, bookings, reviews, users, favorites, commercialLeaseContracts, notifications, platformSettings, commissionTiers, escrowEntries, payoutRequests, disputes, disputeAttachments, supportTickets, payments, invoices, kycSubmissions, bookingVouchers, bookingMessages, auditLogs, refundRequests, transactions, partnerApplications, translations } from "../drizzle/schema";
 import { eq, and, lte, gte, lt, gt, asc, desc, count, isNull, inArray, ne, or, not, ilike, sql, getTableColumns, type SQL } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
@@ -3446,8 +3447,16 @@ export const appRouter = router({
      * There is no `leads` table and no migration — the
      * request is delivered to trusted admins (in-app notification + email) and
      * logged, and the mutation NEVER throws so a visitor always sees a clean
-     * "request received" state. Optional `dedupeKey` collapses accidental
-     * double-submits for the same phone within the notification window.
+     * "request received" state.
+     *
+     * Duplicate protection is two-layered:
+     * 1. `requestId` — a client-generated idempotency key, one per submit
+     *    attempt, claimed BEFORE the admin alert. A retry/double-click that
+     *    reuses the id is answered with `{ success: true, duplicate: true }` and
+     *    never reaches the admins. The key is scoped by canonical phone so a
+     *    reused id cannot swallow a *different* lead.
+     * 2. `dedupeKey` — the existing notification-layer key that collapses repeat
+     *    in-app notifications for the same phone.
      */
     create: publicProcedure
       .input(
@@ -3463,12 +3472,37 @@ export const appRouter = router({
             ),
           carModel: z.string().trim().min(1).max(120),
           city: z.string().trim().min(1).max(80),
+          // Client-generated idempotency key: one per submit attempt. Optional so
+          // clients deployed before this change keep working; without it a
+          // double-submit cannot be suppressed and that is logged explicitly.
+          requestId: z.string().trim().min(1).max(64).optional(),
         }),
       )
       .mutation(async ({ input }) => {
         // Store the E.164 canonical form so dedupe keys stay stable across submits.
         const canonicalPhone =
           normalizeWhatsAppNumber(input.phone) ?? input.phone;
+
+        if (!input.requestId) {
+          logger.warn(
+            "[requestListing] requestId missing — duplicate submissions from this client cannot be suppressed",
+            { phone: canonicalPhone },
+          );
+        } else {
+          // Claim before alertAdmins: the admin email + notifications are exactly
+          // the side effect being deduplicated.
+          const claim = await claimOnce(
+            `lead:${input.requestId}:${canonicalPhone}`,
+          );
+          if (claim === "duplicate") {
+            logger.info("[requestListing] Duplicate suppressed", {
+              requestId: input.requestId,
+              phone: canonicalPhone,
+            });
+            return { success: true as const, duplicate: true as const };
+          }
+        }
+
         logger.info("[LeadCapture] requestListing.create", {
           name: input.name,
           phone: canonicalPhone,
@@ -3482,7 +3516,7 @@ export const appRouter = router({
           entityType: "lead_request",
           dedupeKey: `lead:${canonicalPhone}`,
         });
-        return { success: true as const };
+        return { success: true as const, duplicate: false as const };
       }),
   }),
 
