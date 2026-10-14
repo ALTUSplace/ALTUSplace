@@ -3,7 +3,7 @@ import { trpc } from '@/lib/trpc';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { OptimizedImage } from '@/components/OptimizedImage';
-import { Search, Car, ShieldCheck, ArrowRight, CheckCircle2, Award, Clock, ChevronLeft, ChevronRight, Lock, MapPin, Phone, Star } from 'lucide-react';
+import { Search, Car, ShieldCheck, ArrowRight, CheckCircle2, Award, Clock, Lock, MapPin, Phone, Star } from 'lucide-react';
 import { SmartRecommendations } from '@/components/SmartRecommendations';
 import { FAQSection } from '@/components/FAQSection';
 import { ListingCard } from '@/components/ui/ListingCard';
@@ -28,13 +28,6 @@ import { hasValidPrice } from '@/lib/pricing';
  * solid `heroOverlay` card, so contrast is guaranteed by tokens rather than by
  * a photo + overlay pair.
  */
-
-/** The competitor's 3-step search flow: type → location → search. */
-const HERO_STEPS = [
-  { n: 1, labelKey: 'heroStepType' },
-  { n: 2, labelKey: 'heroStepLocation' },
-  { n: 3, labelKey: 'heroStepSearch' },
-] as const;
 
 /** Photographic category rail. Each card deep-links into the search results. */
 const HERO_CATEGORIES = [
@@ -103,10 +96,6 @@ export default function Home() {
           type: 'website',
         },
   );
-
-  // The flow's connector points along the reading direction, so it mirrors in
-  // Arabic rather than assuming a left-to-right progression.
-  const FlowChevron = direction === 'rtl' ? ChevronLeft : ChevronRight;
 
   // Normalise the shared catalogue once, then split it into the two bookable rails.
   const { data: rawMarketInventory = [] } = trpc.listings.list.useQuery();
@@ -209,32 +198,6 @@ export default function Home() {
                 {t('trustTitle1')}
               </span>
             </div>
-
-            {/* Numbered flow — the <ol> carries the ordering for assistive tech,
-                so each numeral is decorative and hidden from it. The connector
-                chevron flips with `direction` because the reading order of the
-                flow is not fixed between Arabic and French. */}
-            <ol className="mt-8 flex flex-wrap items-center justify-center gap-x-2 gap-y-3 sm:gap-x-3">
-              {HERO_STEPS.map((step, index) => (
-                <li key={step.n} className="flex items-center gap-2 sm:gap-3">
-                  <span className="inline-flex items-center gap-2 rounded-full border border-border-default bg-bg-surface px-3 py-1.5 text-xs font-bold text-ink-primary sm:text-sm">
-                    <span
-                      aria-hidden="true"
-                      className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent-clay text-[11px] font-extrabold text-[var(--primary-ink)]"
-                    >
-                      {step.n}
-                    </span>
-                    {t(step.labelKey)}
-                  </span>
-                  {index < HERO_STEPS.length - 1 && (
-                    <FlowChevron
-                      className="hidden h-4 w-4 shrink-0 text-ink-tertiary sm:block"
-                      aria-hidden="true"
-                    />
-                  )}
-                </li>
-              ))}
-            </ol>
 
             {/* Geo-targeted quick search — one-tap city searches deep-link
                 into /search. `type=all` and `city` are honored today, and the
@@ -363,7 +326,10 @@ export default function Home() {
         </ul>
       </section>
 
-      {/* ── Bento Grid Section (Separating Cars and Properties cleanly) ── */}
+      {/* ── Bento Grid Section (Separating Cars and Properties cleanly) ──
+          Rendered only when the catalogue actually has cars. With an empty
+          catalogue this full-width panel is a dark box with nothing to sell. */}
+      {availableVehicles.length > 0 && (
       <section className="py-10 md:py-16 px-4 container mx-auto max-w-6xl">
         <div className="mb-8 md:mb-12 max-w-xl">
           <span className="section-index">{t('bentoBadge')}</span>
@@ -402,6 +368,7 @@ export default function Home() {
           </Link>
         </div>
       </section>
+      )}
 
       {/* Featured Listing Cards Section */}
       <section className="py-10 md:py-16 px-4 container mx-auto max-w-6xl border-t border-border-subtle">

@@ -9,7 +9,6 @@
  *   - the search card carries a SOLID fill (no translucent layers, no backdrop
  *     blur) so hero text stays high-contrast in both themes
  *   - the Cars/Properties tabs switch in place (no navigation, no reload)
- *   - the 3 numbered steps render
  *   - the category rail is horizontally scrollable at 375px and its
  *     photographs actually decode
  *
@@ -30,7 +29,6 @@ const probe = () => {
   const q = (s) => document.querySelector(s);
   const hero = q('section[aria-labelledby="hero-heading"]');
   const h1 = q("#hero-heading");
-  const steps = hero ? hero.querySelector("ol") : null;
   const tablist = q('[role="tablist"]');
   const showcase = q('section[aria-labelledby="hero-showcase-title"]');
   const rail = showcase ? showcase.querySelector("ul") : null;
@@ -61,11 +59,6 @@ const probe = () => {
         }
       : null,
     heroHeight: hero ? Math.round(hero.getBoundingClientRect().height) : null,
-    stepLabels: steps
-      ? Array.from(steps.querySelectorAll("li")).map((li) =>
-          li.innerText.replace(/\s+/g, " ").trim(),
-        )
-      : [],
     tabTexts: tablist
       ? Array.from(tablist.querySelectorAll('[role="tab"]')).map((b) => ({
           text: b.innerText.trim(),
@@ -212,11 +205,6 @@ try {
     "375px: H1 renders at mobile scale",
     !!mState.h1?.visible && mState.h1.fontSize >= 24,
     `fontSize=${mState.h1?.fontSize}px text="${mState.h1?.text}"`,
-  );
-  record(
-    "375px: all 3 numbered steps render",
-    mState.stepLabels.length === 3,
-    JSON.stringify(mState.stepLabels),
   );
   record(
     "375px: both search tabs render",
