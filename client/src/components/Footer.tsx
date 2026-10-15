@@ -2,6 +2,8 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Link } from "wouter";
 import { MapPin, ShieldCheck } from "lucide-react";
 import { cityLabelFr } from "@/data/moroccoCities";
+import { BrandMark } from "@/components/BrandMark";
+import { BRAND_NAME } from "@/config/brand";
 
 export default function Footer() {
   const { t, language } = useLanguage();
@@ -14,18 +16,11 @@ export default function Footer() {
             <div className="flex items-center gap-3">
               <img
                 src="/assets/images/logo.png"
-                alt="ALTUSplace"
+                alt={BRAND_NAME}
                 className="brand-logo h-11 w-auto object-contain"
                 loading="lazy"
               />
-              <div className="flex flex-col">
-                <span className="font-display font-bold text-lg leading-none text-ink-primary">
-                  ALTUS<span className="font-medium text-accent-clay">place</span>
-                </span>
-                <span className="text-[9px] tracking-[0.18em] text-ink-tertiary uppercase -mt-1 font-semibold">
-                  Rent. Drive. Live.
-                </span>
-              </div>
+              <BrandMark withTagline />
             </div>
             <p className="mt-5 max-w-xs text-xs leading-relaxed text-ink-secondary">
               {t("heroDescription")}

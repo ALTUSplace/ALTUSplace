@@ -4,6 +4,7 @@ import { AlertCircle, Home } from "lucide-react";
 import { useLocation } from "wouter";
 
 import { useSEO } from "@/lib/seo";
+import { BRAND_NAME } from "@/config/brand";
 
 export default function NotFound() {
   useSEO({ title: "الصفحة غير موجودة | ALTUSplace", description: "الصفحة التي تبحث عنها غير موجودة.", path: "/", robots: "noindex, follow" });
@@ -20,7 +21,7 @@ export default function NotFound() {
           <div className="flex justify-center mb-6">
             <img
               src="/assets/images/logo.png"
-              alt="ALTUSplace"
+              alt={BRAND_NAME}
               loading="lazy"
               className="brand-logo h-12 w-auto object-contain"
             />

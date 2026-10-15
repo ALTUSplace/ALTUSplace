@@ -2,7 +2,7 @@ import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
-import { readBrandPreference, writeBrandPreference } from "@/config/brand";
+import { BRAND_NAME, readBrandPreference, writeBrandPreference } from "@/config/brand";
 import {
   Bell,
   BookOpen,
@@ -34,6 +34,7 @@ import { useCurrency, Currency } from "@/contexts/CurrencyContext";
 import { NavbarCitySelect } from "@/components/NavbarCitySelect";
 import { NavbarMobileCitySelect } from "@/components/NavbarMobileCitySelect";
 import { RegionalHighlights } from "@/components/RegionalHighlights";
+import { BrandMark } from "@/components/BrandMark";
 const WhatsAppNotificationModal = lazy(() => import("./WhatsAppNotificationModal").then((module) => ({ default: module.WhatsAppNotificationModal })));
 const TwoFactorAuthModal = lazy(() => import("./TwoFactorAuthModal").then((module) => ({ default: module.TwoFactorAuthModal })));
 import { toast } from "sonner";
@@ -316,14 +317,7 @@ export default function Navbar() {
       style={{ height: '44px', maxWidth: '100%', objectFit: 'contain' }}
     />
   </div>
-  <div className="flex flex-col">
-    <span className="font-display font-bold text-lg sm:text-xl leading-none text-ink-primary">
-      ALTUS<span className="font-medium text-accent-clay">place</span>
-    </span>
-    <span className="text-[9px] sm:text-[10px] tracking-[0.18em] text-ink-tertiary uppercase -mt-1 font-semibold">
-      Rent. Drive. Live.
-    </span>
-  </div>
+  <BrandMark withTagline />
 </Link>
 
           <nav className="hidden min-w-0 flex-1 items-center justify-center gap-1 xl:flex" aria-label={t("mainNavLabel")}>
@@ -556,8 +550,8 @@ export default function Navbar() {
           <button type="button" className="absolute inset-0 bg-ink-primary/40 dark:bg-[#1C1C1E]/40 backdrop-blur-[2px]" aria-label={t("close")} onClick={() => setMobileMenuOpen(false)} />
           <aside ref={mobileMenuRef} id="mobile-navigation" className={`absolute top-0 flex h-full w-[min(88vw,22rem)] flex-col overflow-y-auto bg-bg-surface p-4 shadow-xl ${direction === "rtl" ? "right-0" : "left-0"}`} dir={direction} aria-label={t("search")} aria-modal="true" role="dialog" tabIndex={-1}>
           <div className="flex items-center justify-between border-b border-border-subtle pb-4">
-            <Link href="/" onClick={() => setMobileMenuOpen(false)} className="flex h-10 w-32 items-center justify-start" aria-label="ALTUSplace">
-              <img src="/assets/images/logo.png" alt="ALTUSplace" className="brand-logo max-h-full w-auto object-contain" style={{ height: '44px', maxWidth: '100%', objectFit: 'contain' }} />
+            <Link href="/" onClick={() => setMobileMenuOpen(false)} className="flex h-10 w-32 items-center justify-start" aria-label={BRAND_NAME}>
+              <img src="/assets/images/logo.png" alt={BRAND_NAME} className="brand-logo max-h-full w-auto object-contain" style={{ height: '44px', maxWidth: '100%', objectFit: 'contain' }} />
             </Link>
             <button type="button" onClick={() => setMobileMenuOpen(false)} className="b2-icon-button border border-border-subtle bg-bg-muted" aria-label={t("close")}><X className="h-5 w-5" /></button>
           </div>
