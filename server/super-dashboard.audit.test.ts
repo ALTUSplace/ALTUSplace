@@ -11,8 +11,12 @@ const count = (source: string, pattern: RegExp) => (source.match(pattern) ?? [])
 describe("super admin dashboard audit contracts", () => {
   it("computes overview KPIs split by category with live active-status counters and a pending queue", () => {
     const routers = read("server/routers.ts");
+    const statuses = read("server/constants/listingStatuses.ts");
     expect(routers).toContain("overviewKpis: superAdminProcedure.query");
-    expect(routers).toContain("activeStatuses = ['Published', 'Approved', 'Available']");
+    expect(routers).toContain("inArray(listings.status, PUBLIC_LISTING_STATUSES)");
+    expect(statuses).toContain('"Published"');
+    expect(statuses).toContain('"Approved"');
+    expect(statuses).toContain('"Available"');
     expect(count(routers, /eq\(listings\.category, '"?(car|real_estate)'?\)/g)).toBeGreaterThanOrEqual(2);
     expect(routers).toContain("pendingQueue");
   });

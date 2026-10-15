@@ -11,6 +11,7 @@ import { adminProcedure, ownerProcedure, publicProcedure, protectedProcedure, ro
 import { getDb, withTransaction } from "./db";
 import { PLATFORM_SETTINGS_PUBLIC_COLUMNS, defaultPlatformSettings, sanitizePlatformSettingsSnapshot } from "./platformSettingsPolicy";
 import { evaluateBecomeAgencyAccess, isElevatedRole } from "./becomeAgencyPolicy";
+import { PUBLIC_LISTING_STATUSES } from "./constants/listingStatuses";
 import { logger } from "./_core/logger";
 import { claimOnce } from "./_core/idempotency";
 import { listings, listingAnalyticsEvents, listingComments, bookings, reviews, users, favorites, commercialLeaseContracts, notifications, platformSettings, commissionTiers, escrowEntries, payoutRequests, disputes, disputeAttachments, supportTickets, payments, invoices, kycSubmissions, bookingVouchers, bookingMessages, auditLogs, refundRequests, transactions, partnerApplications, translations } from "../drizzle/schema";
@@ -1528,12 +1529,10 @@ export const appRouter = router({
       overviewKpis: superAdminProcedure.query(async () => {
         const db = await getDb();
         if (!db) return { totalUsers: 0, activeCars: 0, activeRealEstate: 0, pendingQueue: 0 };
-        const activeStatuses = ['Published', 'Approved', 'Available'] as const satisfies readonly string[];
-        const activeStatusList = [...activeStatuses];
         const [userRows, carRows, realEstateRows, pendingRows] = await Promise.all([
           db.select({ value: count() }).from(users),
-          db.select({ value: count() }).from(listings).where(and(eq(listings.category, 'car'), inArray(listings.status, activeStatusList))),
-          db.select({ value: count() }).from(listings).where(and(eq(listings.category, 'real_estate'), inArray(listings.status, activeStatusList))),
+          db.select({ value: count() }).from(listings).where(and(eq(listings.category, 'car'), inArray(listings.status, PUBLIC_LISTING_STATUSES))),
+          db.select({ value: count() }).from(listings).where(and(eq(listings.category, 'real_estate'), inArray(listings.status, PUBLIC_LISTING_STATUSES))),
           db.select({ value: count() }).from(listings).where(eq(listings.status, 'Pending')),
         ]);
         return {
@@ -1805,7 +1804,7 @@ export const appRouter = router({
       .query(async ({ input }) => {
         const db = await getDb();
         if (!db) return [];
-        const allListings = await db.select({ listing: listings, ownerName: users.name, ownerRole: users.role }).from(listings).leftJoin(users, eq(listings.ownerId, users.id)).where(inArray(listings.status, ['Published', 'Available', 'Approved'])).orderBy(desc(listings.createdAt));
+        const allListings = await db.select({ listing: listings, ownerName: users.name, ownerRole: users.role }).from(listings).leftJoin(users, eq(listings.ownerId, users.id)).where(inArray(listings.status, PUBLIC_LISTING_STATUSES)).orderBy(desc(listings.createdAt));
         const requestedRange = input?.startDate && input?.endDate ? parseDateRange(input.startDate, input.endDate) : null;
         const confirmedRanges = requestedRange
           ? await db.select({ listingId: bookings.listingId, start: bookings.startDate, end: bookings.endDate }).from(bookings).where(eq(bookings.status, "Confirmed"))
@@ -1888,7 +1887,7 @@ export const appRouter = router({
         const pageSize = input?.pageSize ?? 50;
         if (!db) return { items: [], total: 0, page, pageSize, hasMore: false };
 
-        const conds: (SQL | undefined)[] = [inArray(listings.status, ['Published', 'Available', 'Approved'])];
+        const conds: (SQL | undefined)[] = [inArray(listings.status, PUBLIC_LISTING_STATUSES)];
 
         if (input?.city && input.city !== "all") conds.push(eq(listings.city, input.city));
 
@@ -1994,7 +1993,7 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         const db = await getDb();
         if (!db) return { recorded: false as const };
-        const listing = await db.select({ id: listings.id }).from(listings).where(and(eq(listings.id, input.listingId), inArray(listings.status, ["Published", "Available", "Approved"]))).limit(1);
+        const listing = await db.select({ id: listings.id }).from(listings).where(and(eq(listings.id, input.listingId), inArray(listings.status, PUBLIC_LISTING_STATUSES))).limit(1);
         if (!listing[0]) return { recorded: false as const };
         if (input.eventType === "view" && input.visitorKey) {
           const previous = await db.select({ id: listingAnalyticsEvents.id }).from(listingAnalyticsEvents).where(and(eq(listingAnalyticsEvents.listingId, input.listingId), eq(listingAnalyticsEvents.eventType, "view"), eq(listingAnalyticsEvents.visitorKey, input.visitorKey))).limit(1);
@@ -2024,10 +2023,10 @@ export const appRouter = router({
           })
           .from(listings)
           .leftJoin(users, eq(listings.ownerId, users.id))
-          .where(and(eq(listings.id, input.id), inArray(listings.status, ['Published', 'Available', 'Approved'])))
+          .where(and(eq(listings.id, input.id), inArray(listings.status, PUBLIC_LISTING_STATUSES)))
           .limit(1);
         if (!result[0]) {
-          console.error(`Listing not found or not accessible. ID: ${input.id}, Status check: ['Published', 'Available', 'Approved']`);
+          console.error(`Listing not found or not accessible. ID: ${input.id}, Status check: ${PUBLIC_LISTING_STATUSES.join(', ')}`);
           const fullListing = await db.select({ id: listings.id, status: listings.status }).from(listings).where(eq(listings.id, input.id)).limit(1);
           console.error(`Full listing debug - ID: ${input.id}, Actual status: ${fullListing[0]?.status || 'Not found'}`);
           return null;
@@ -2486,7 +2485,7 @@ export const appRouter = router({
         if (listing[0].status === "Maintenance") {
           throw new TRPCError({ code: "CONFLICT", message: "السيارة في وضع الصيانة — الفترة محجوبة تلقائياً ولا يمكن حجزها." });
         }
-        if (!["Published", "Available", "Approved"].includes(listing[0].status)) {
+        if (!PUBLIC_LISTING_STATUSES.includes(listing[0].status)) {
           throw new TRPCError({ code: "CONFLICT", message: "الإعلان غير متاح للحجز حالياً." });
         }
         const bookingCategory = normalizeBookingCategory(listing[0].category ?? null);
@@ -2732,7 +2731,7 @@ export const appRouter = router({
             if (currentListing[0]?.status === "Maintenance") {
               throw new Error("لا يمكن قبول الحجز لأن السيارة في وضع الصيانة — الفترة محجوبة تلقائياً.");
             }
-            if (!currentListing[0] || !["Published", "Available", "Approved"].includes(currentListing[0].status)) {
+            if (!currentListing[0] || !PUBLIC_LISTING_STATUSES.includes(currentListing[0].status)) {
               throw new Error("لا يمكن قبول الحجز لأن الإعلان لم يعد متاحاً.");
             }
             const blockedRanges = [...parseBlockedRanges(currentListing[0].availability), ...parseBlockedRanges(currentListing[0].icalImportedRanges)];
