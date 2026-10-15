@@ -18,6 +18,7 @@ import { isCarCategory } from "../../client/src/lib/categories";
 import { cityFromSlug, cityLabelFr } from "../../client/src/data/moroccoCities";
 import { classifySpaPath } from "../../shared/routes/spaPaths";
 import { SEO_SITE_URL } from "./sitemap";
+import { SEO_LISTING_STATUSES } from "../constants/listingStatuses";
 
 export function escapeHtml(value: unknown): string {
   return String(value ?? "").replace(
@@ -144,7 +145,7 @@ async function listingMetadata(id: number, origin: string): Promise<RouteMetadat
         area: listings.area,
       })
       .from(listings)
-      .where(and(eq(listings.id, id), inArray(listings.status, ["Published", "Available"])))
+      .where(and(eq(listings.id, id), inArray(listings.status, SEO_LISTING_STATUSES)))
       .limit(1);
     if (!listing) return null;
 

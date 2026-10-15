@@ -11,13 +11,13 @@ import type { Express, Response } from "express";
 import { desc, inArray } from "drizzle-orm";
 import { getDb } from "../db";
 import { listings } from "../../drizzle/schema";
+import { SEO_LISTING_STATUSES } from "../constants/listingStatuses";
 import { isCarCategory } from "../../client/src/lib/categories";
 import { buildUrlset, normalizeSiteUrl } from "../../shared/sitemap";
 
 export const SEO_SITE_URL = normalizeSiteUrl(process.env.VITE_SITE_URL || "https://altusplace.vercel.app");
 
 const MAX_LISTING_URLS = 5000;
-const PUBLISHED_STATUSES = ["Published", "Available"] as const;
 
 export type SitemapListingRow = {
   id: number;
@@ -43,7 +43,7 @@ export async function buildListingsSitemap(fetcher?: () => Promise<SitemapListin
         rows = await db
           .select({ id: listings.id, category: listings.category, createdAt: listings.createdAt })
           .from(listings)
-          .where(inArray(listings.status, [...PUBLISHED_STATUSES]))
+          .where(inArray(listings.status, SEO_LISTING_STATUSES))
           .orderBy(desc(listings.id))
           .limit(MAX_LISTING_URLS);
       }
