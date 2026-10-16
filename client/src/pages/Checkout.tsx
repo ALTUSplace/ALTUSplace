@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { trpc } from '@/lib/trpc';
 import { LoadingAnimation } from '@/components/LoadingAnimation';
 import { useAuth } from '@/_core/hooks/useAuth';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { isKycSatisfiedFor, KYC_STATUS_CONFIG, type KycStatus } from '@/lib/kyc';
 import {
   ADDON_CATALOG,
@@ -66,6 +67,16 @@ function buildWhatsAppBookingMessage(details: WhatsAppBookingDetails): string {
   lines.push('');
   lines.push('شكراً لكم، بانتظار تأكيدكم. مع تحياتي.');
   return lines.join('\n');
+}
+
+// Guest (unauthenticated) visitors get an inquiry-only handoff: a short,
+// localized message with no server-side booking record. Interpolation is done
+// manually because t() has no placeholder engine.
+function buildGuestInquiryMessage(template: string, title: string, startDate: string, endDate: string): string {
+  return template
+    .replace('{title}', title)
+    .replace('{start}', startDate)
+    .replace('{end}', endDate);
 }
 
 type ResidencyStatus = 'resident' | 'foreigner';
@@ -155,6 +166,7 @@ import { useSEO } from "@/lib/seo";
 
 export default function CheckoutPage() {
   useSEO({ title: "إتمام الحجز والدفع | ALTUSplace", description: "خطوة الدفع الآمنة عبر CMI لإكمال حجزك على ALTUSplace.", path: "/checkout", robots: "noindex, follow" });
+  const { t, language } = useLanguage();
   const [, setLocation] = useLocation();
   const searchString = useSearch();
   const searchParams = new URLSearchParams(searchString);
@@ -245,9 +257,15 @@ export default function CheckoutPage() {
   });
   const whatsappUrl = buildContactWhatsAppUrl(agencyPhone, whatsappMessage);
 
+  // Guests send a lightweight inquiry (no documents, no booking record) in the
+  // active locale, so the WhatsApp handoff still converts anonymous visitors.
+  const guestInquiryMessage = buildGuestInquiryMessage(t('checkoutGuestInquiryMessage'), resTitle, bookingStart, bookingEnd);
+  const guestWhatsappUrl = buildContactWhatsAppUrl(agencyPhone, guestInquiryMessage);
+
   // KYC gate — mirrors the server-side enforcement in bookings.create:
   // unverified/pending/rejected profiles cannot open the booking flow.
   const { isAuthenticated, loading: authLoading } = useAuth();
+  const isGuest = !isAuthenticated;
   const kycStatusQuery = trpc.kyc.status.useQuery(undefined, { enabled: isAuthenticated });
   const kycVerified = !isAuthenticated
     || (kycStatusQuery.data
@@ -258,17 +276,21 @@ export default function CheckoutPage() {
     ? KYC_STATUS_CONFIG[kycStatusQuery.data.status as KycStatus]?.label.ar
     : '';
 
-  // Auth gate — a booking always belongs to a signed-in user. Once both the
-  // auth session and the listing query have settled, anonymous visitors are
-  // sent to the native renter login, carrying the exact checkout URL (path +
-  // query) so they return to this same page after signing in.
+  // Guests never need documents for the inquiry-only handoff; signed-in users
+  // still must satisfy the full document requirement.
+  const canSubmit = isGuest || isFormValid;
+
+  // Auth gate — persisted bookings belong to a signed-in user. Guests with a
+  // WhatsApp handoff available complete the flow as an inquiry (lead) instead
+  // of bouncing to /login; only guests with no handoff destination are sent to
+  // the native renter login with the exact checkout URL (path + query).
   useEffect(() => {
     if (authLoading || isLoading || !resolvedListing) return;
-    if (!isAuthenticated) {
+    if (!isAuthenticated && !guestWhatsappUrl) {
       const currentUrl = `${window.location.pathname}${window.location.search}`;
       setLocation(`/login?next=${encodeURIComponent(currentUrl)}`);
     }
-  }, [authLoading, isLoading, isAuthenticated, resolvedListing, setLocation]);
+  }, [authLoading, isLoading, isAuthenticated, resolvedListing, guestWhatsappUrl, setLocation]);
 
   const toggleAddOn = (id: AddOnId) => {
     setSelectedAddOns((prev) => {
@@ -281,22 +303,25 @@ export default function CheckoutPage() {
     e.preventDefault();
     const bookingDays = calcDays(startDateParam, endDateParam);
     if (!startDateParam || !endDateParam || bookingDays <= 0) {
-      toast.error('يرجى تحديد تواريخ استلام وإرجاع صحيحة قبل تأكيد الحجز.');
+      toast.error(t('checkoutDatesInvalid'));
       return;
     }
-    if (!isFormValid) {
-      alert(isPropertyBooking
-        ? `المرجو رفع ${identityLabel} أولاً لتمكين الحجز عبر الواتساب.`
-        : `المرجو رفع رخصة السياقة (البيرمي) و${identityLabel} أولاً لتمكين الحجز عبر الواتساب.`);
+    // Guests submit an inquiry-only handoff, so documents are not required.
+    if (!isGuest && !isFormValid) {
+      alert(t('checkoutDocumentsRequired').replace(
+        '{documents}',
+        isPropertyBooking ? identityLabel : `رخصة السياقة (البيرمي) و${identityLabel}`,
+      ));
       return;
     }
     if (isAuthenticated && !kycVerified) {
-      toast.error('التحقق من الهوية مطلوب قبل الحجز. يرجى رفع وثيقتك أولاً.');
+      toast.error(t('checkoutKycRequired'));
       setLocation('/kyc');
       return;
     }
-    if (!whatsappUrl) {
-      toast.error('لا يوجد رقم واتساب متاح لهذه الوكالة حالياً. يرجى المحاولة لاحقاً.');
+    const handoffUrl = isGuest ? guestWhatsappUrl : whatsappUrl;
+    if (!handoffUrl) {
+      toast.error(t('checkoutWhatsappUnavailable'));
       return;
     }
 
@@ -304,10 +329,10 @@ export default function CheckoutPage() {
       trackEvent("whatsapp_handoff", {
         listing_id: Number.isFinite(parsedListingId) ? parsedListingId : undefined,
         listing_type: isPropertyBooking ? "property" : "car",
-        context: "checkout",
+        context: isGuest ? "checkout_guest" : "checkout",
       });
-      window.open(whatsappUrl, '_blank');
-      toast.success('تم تجهيز رسالة الحجز مع تفاصيله. أرسلها عبر الواتساب لتأكيد الحجز.');
+      window.open(handoffUrl, '_blank');
+      toast.success(t('bookingRequestSentWhatsapp'));
     };
 
     // Static demo listings and guests have no server-side booking record yet —
@@ -324,7 +349,7 @@ export default function CheckoutPage() {
     const idFile = identityFile;
     if (!idFile || (!isPropertyBooking && !licenseFile)) return;
     if (!isDocumentMimeType(idFile.type) || (!isPropertyBooking && !isDocumentMimeType(licenseFile!.type))) {
-      toast.error('صيغة الملف غير مدعومة. المرجو رفع ملفات بصيغة JPG أو PNG أو PDF.');
+      toast.error(t('checkoutUnsupportedFile'));
       return;
     }
 
@@ -355,10 +380,10 @@ const result = await createBooking.mutateAsync({
           flightNumber: isAirportPickupMohammedV ? (flightNumber.trim() || undefined) : undefined,
           arrivalTime: isAirportPickupMohammedV ? (arrivalTime || undefined) : undefined,
         });
-      toast.success(`تم تسجيل طلب الحجز ورفع وثائقك. رقم الطلب: #${result.bookingId}`);
+      toast.success(t('bookingConfirmationPending').replace('{bookingId}', String(result.bookingId)));
       setLocation(`/success?bookingId=${result.bookingId}`);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'تعذر تسجيل الحجز. يرجى المحاولة مجدداً.';
+      const message = err instanceof Error ? err.message : t('checkoutBookingFailed');
       toast.error(message);
     } finally {
       setIsSubmitting(false);
@@ -476,6 +501,7 @@ const result = await createBooking.mutateAsync({
               </CardContent>
             </Card>
 
+            {!isGuest && (
             <Card>
               <CardHeader>
                 <CardTitle className="text-xl flex items-center gap-2">
@@ -553,6 +579,7 @@ const result = await createBooking.mutateAsync({
                 )}
               </CardContent>
             </Card>
+            )}
 
             <Card>
               <CardHeader>
@@ -568,20 +595,26 @@ const result = await createBooking.mutateAsync({
                 </p>
                 <div
                   className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm leading-relaxed text-slate-700 whitespace-pre-line"
-                  dir="rtl"
+                  dir={isGuest && language !== 'ar' ? 'ltr' : 'rtl'}
                 >
-                  {whatsappMessage}
+                  {isGuest ? guestInquiryMessage : whatsappMessage}
                 </div>
+                {isGuest && (
+                  <div className="flex items-start gap-2.5 rounded-xl border border-sky-200 bg-sky-50 p-3 text-[11px] text-sky-800 leading-relaxed" role="note">
+                    <MessageCircle className="h-4 w-4 shrink-0 text-sky-600 mt-0.5" />
+                    <p>{t('checkoutGuestNote')}</p>
+                  </div>
+                )}
                 <Button
                   type="submit"
                   size="lg"
-                  disabled={!isFormValid || isSubmitting}
+                  disabled={!canSubmit || isSubmitting}
                   className="w-full bg-emerald-700 dark:bg-[#047857] text-white hover:bg-emerald-800 dark:hover:bg-[#065F46] disabled:pointer-events-auto disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 disabled:opacity-100 disabled:hover:bg-slate-300"
                 >
                   {isSubmitting ? <Loader2 className="me-2 h-5 w-5 animate-spin" /> : <MessageCircle className="me-2 h-5 w-5" />}
-                  {isSubmitting ? 'جارٍ تسجيل الحجز ورفع الوثائق...' : 'تأكيد الحجز عبر الواتساب'}
+                  {isSubmitting ? t('checkoutSubmitting') : t('checkoutConfirmViaWhatsapp')}
                 </Button>
-                {!isFormValid ? (
+                {!isGuest && (!isFormValid ? (
                   <div className="rounded-lg border border-amber-300/40 bg-amber-50 p-2.5 text-[11px] text-amber-700 leading-relaxed" role="alert">
                     <p className="font-bold flex items-center gap-1">
                       <ShieldAlert className="h-3.5 w-3.5" />
@@ -595,7 +628,7 @@ const result = await createBooking.mutateAsync({
                   <p className="rounded-lg bg-emerald-50 border border-emerald-200 p-2.5 text-[11px] text-emerald-700 leading-relaxed">
                     وثائقك مكتملة — وستؤكد رسالة الحجز إرفاقها للفحص المسبق من {agencyName} لضمان سرعة التأكيد.
                   </p>
-                )}
+                ))}
                 {!agencyPhone && (
                   <p className="text-[11px] text-ink-secondary">
                     لم تشارك الوكالة رقم واتساب بعد؛ ستُوجَّه رسالتك إلى خط دعم ALTUSplace الذي ينسّق معها.
@@ -650,7 +683,7 @@ const result = await createBooking.mutateAsync({
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {!isFormValid ? (
+                    {!isGuest && (!isFormValid ? (
                       <div className="rounded-lg border border-amber-300/40 bg-amber-50 p-2.5 text-[11px] text-amber-700 leading-relaxed" role="alert">
                         <p className="font-bold flex items-center gap-1">
                           <ShieldAlert className="h-3.5 w-3.5" />
@@ -664,10 +697,10 @@ const result = await createBooking.mutateAsync({
                       <p className="rounded-lg bg-emerald-50 border border-emerald-200 p-2.5 text-[11px] text-emerald-700 leading-relaxed">
                         الوثائق مكتملة — تُضمَّن في رسالة الحجز للفحص المسبق من الوكالة.
                       </p>
-                    )}
-                    <Button type="submit" size="lg" disabled={!isFormValid || isSubmitting} className="w-full bg-emerald-700 dark:bg-[#047857] text-white hover:bg-emerald-800 dark:hover:bg-[#065F46] disabled:pointer-events-auto disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 disabled:opacity-100 disabled:hover:bg-slate-300">
+                    ))}
+                    <Button type="submit" size="lg" disabled={!canSubmit || isSubmitting} className="w-full bg-emerald-700 dark:bg-[#047857] text-white hover:bg-emerald-800 dark:hover:bg-[#065F46] disabled:pointer-events-auto disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 disabled:opacity-100 disabled:hover:bg-slate-300">
                       {isSubmitting ? <Loader2 className="me-2 h-5 w-5 animate-spin" /> : <MessageCircle className="me-2 h-5 w-5" />}
-                      {isSubmitting ? 'جارٍ تسجيل الحجز ورفع الوثائق...' : `تأكيد الحجز عبر الواتساب (${showTotalDisplay})`}
+                      {isSubmitting ? t('checkoutSubmitting') : t('checkoutConfirmViaWhatsappWithTotal').replace('{total}', showTotalDisplay)}
                     </Button>
                   </div>
                 )}
