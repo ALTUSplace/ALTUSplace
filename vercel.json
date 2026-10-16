@@ -84,6 +84,21 @@
   ],
   "redirects": [
     {
+      "source": "/locations/marrakech-car-rental",
+      "destination": "/city/marrakech-car-rental",
+      "permanent": true
+    },
+    {
+      "source": "/locations/mohammed-v-airport-car-rental",
+      "destination": "/city/mohammed-v-airport-car-rental",
+      "permanent": true
+    },
+    {
+      "source": "/locations/:slug",
+      "destination": "/city/:slug",
+      "permanent": true
+    },
+    {
       "source": "/(.*)",
       "has": [
         {
