@@ -31,8 +31,8 @@ export const STATIC_PAGES: ReadonlyArray<{ path: string; changefreq: string; pri
 
 /** Hand-maintained landing pages with their own copy. */
 export const BESPOKE_LOCATION_PAGES: readonly string[] = [
-  "/locations/marrakech-car-rental",
-  "/locations/mohammed-v-airport-car-rental",
+  "/city/marrakech-car-rental",
+  "/city/mohammed-v-airport-car-rental",
 ];
 
 export function escapeXml(value: unknown): string {
