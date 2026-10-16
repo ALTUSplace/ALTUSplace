@@ -16,7 +16,8 @@
  */
 import { chromium } from "playwright";
 
-const BASE_URL = process.env.BASE_URL ?? process.argv[2] ?? "https://altusplace.vercel.app";
+const DEFAULT_SITE_URL = "https://altusplace.ma";
+const BASE_URL = (process.env.BASE_URL ?? process.argv[2] ?? DEFAULT_SITE_URL).replace(/\/+$/, "");
 const failures = [];
 let checks = 0;
 
