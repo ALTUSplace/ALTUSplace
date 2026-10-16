@@ -80,7 +80,7 @@ export function buildStaticSitemap(siteUrl: string, lastmod?: string): string {
 
 export function buildCitiesSitemap(siteUrl: string, citySlugs: string[], lastmod?: string): string {
   const base = normalizeSiteUrl(siteUrl);
-  const paths = [...BESPOKE_LOCATION_PAGES, ...citySlugs.map((slug) => `/locations/${slug}`)];
+  const paths = [...BESPOKE_LOCATION_PAGES, ...citySlugs.map((slug) => `/city/${slug}`)];
   return buildUrlset(
     paths.map((path) => ({
       loc: `${base}${path}`,
