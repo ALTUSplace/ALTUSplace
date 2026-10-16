@@ -71,7 +71,7 @@ function BespokeLocationPage({ location }: { location: LocationKey }) {
           <Link href={`/search?city=${encodeURIComponent(content.city)}`} className="mt-7 inline-flex items-center gap-2 rounded-xl bg-amber-500 px-5 py-3 font-bold text-slate-950 hover:bg-amber-400"><Car className="h-5 w-5" />{isArabic ? "شاهد السيارات المتاحة" : language === "fr" ? "Voir les voitures disponibles" : "View available cars"}<ArrowRight className="h-4 w-4" /></Link>
         </section>
         <FeatureCards isArabic={isArabic} language={language} />
-        <nav className="flex flex-wrap gap-3 text-sm"><Link href="/locations/marrakech-car-rental" className="text-[#1C1C1E] underline">Marrakech</Link><Link href="/locations/mohammed-v-airport-car-rental" className="text-[#1C1C1E] underline">Mohammed V Airport</Link><Link href="/locations" className="text-[#1C1C1E] underline">{isArabic ? "كل مدن المغرب" : "Toutes les villes du Maroc"}</Link><Link href="/search" className="text-[#1C1C1E] underline">{isArabic ? "كل العروض" : language === "fr" ? "Toutes les offres" : "All listings"}</Link></nav>
+        <nav className="flex flex-wrap gap-3 text-sm"><Link href="/city/marrakech" className="text-[#1C1C1E] underline">Marrakech</Link><Link href="/city/casablanca" className="text-[#1C1C1E] underline">Casablanca</Link><Link href="/city/rabat" className="text-[#1C1C1E] underline">Rabat</Link><Link href="/search" className="text-[#1C1C1E] underline">{isArabic ? "كل العروض" : language === "fr" ? "Toutes les offres" : "All listings"}</Link></nav>
       </div>
     </div>
   );
@@ -85,7 +85,7 @@ function CityLocationPage({ city, canonicalPath: canonicalPathProp }: { city: st
   const cityNameFr = cityLabelFr(city);
   // The /city/:slug marketing routes canonicalize to themselves; the legacy
   // /locations/:slug pages keep pointing at their own canonical path.
-  const cityPath = canonicalPathProp ?? `/locations/${slug}`;
+  const cityPath = canonicalPathProp ?? `/city/${slug}`;
 
   const { data: listings = [], isLoading, isError } = trpc.listings.list.useQuery();
 
@@ -203,7 +203,7 @@ function CityLocationPage({ city, canonicalPath: canonicalPathProp }: { city: st
           )}
         </section>
 
-        <nav className="flex flex-wrap gap-3 text-sm"><Link href="/locations" className="text-[#1C1C1E] underline">{isArabic ? "كل مدن المغرب" : "Toutes les villes du Maroc"}</Link><Link href="/locations/marrakech-car-rental" className="text-[#1C1C1E] underline">Marrakech</Link><Link href="/locations/mohammed-v-airport-car-rental" className="text-[#1C1C1E] underline">Mohammed V Airport</Link><Link href="/search" className="text-[#1C1C1E] underline">{isArabic ? "كل العروض" : language === "fr" ? "Toutes les offres" : "All listings"}</Link></nav>
+        <nav className="flex flex-wrap gap-3 text-sm"><Link href="/city/marrakech" className="text-[#1C1C1E] underline">Marrakech</Link><Link href="/city/casablanca" className="text-[#1C1C1E] underline">Casablanca</Link><Link href="/city/rabat" className="text-[#1C1C1E] underline">Rabat</Link><Link href="/search" className="text-[#1C1C1E] underline">{isArabic ? "كل العروض" : language === "fr" ? "Toutes les offres" : "All listings"}</Link></nav>
       </div>
     </div>
   );
@@ -262,7 +262,7 @@ function LocationsHub({ knownSlugSeen }: { knownSlugSeen?: boolean }) {
           ))}
         </section>
 
-        <nav className="flex flex-wrap gap-3 text-sm"><Link href="/locations/marrakech-car-rental" className="text-[#1C1C1E] underline">Marrakech</Link><Link href="/locations/mohammed-v-airport-car-rental" className="text-[#1C1C1E] underline">Mohammed V Airport</Link><Link href="/search" className="text-[#1C1C1E] underline">{isArabic ? "كل العروض" : language === "fr" ? "Toutes les offres" : "All listings"}</Link></nav>
+        <nav className="flex flex-wrap gap-3 text-sm"><Link href="/city/marrakech" className="text-[#1C1C1E] underline">Marrakech</Link><Link href="/city/casablanca" className="text-[#1C1C1E] underline">Casablanca</Link><Link href="/city/rabat" className="text-[#1C1C1E] underline">Rabat</Link><Link href="/search" className="text-[#1C1C1E] underline">{isArabic ? "كل العروض" : language === "fr" ? "Toutes les offres" : "All listings"}</Link></nav>
       </div>
     </div>
   );

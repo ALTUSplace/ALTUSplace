@@ -170,7 +170,7 @@ function Router() {
       <Route path="/locations/marrakech-car-rental">{() => <Suspense fallback={<PageLoader />}><LocationLandingPage location="marrakech" /></Suspense>}</Route>
       <Route path="/locations/mohammed-v-airport-car-rental">{() => <Suspense fallback={<PageLoader />}><LocationLandingPage location="casablancaAirport" /></Suspense>}</Route>
       <Route path="/locations">{() => <Suspense fallback={<PageLoader />}><LocationLandingPage /></Suspense>}</Route>
-      <Route path="/locations/:slug">{() => <Suspense fallback={<PageLoader />}><LocationLandingPage /></Suspense>}</Route>
+      <Route path="/locations/:slug">{({ slug }) => <Redirect to={`/city/${slug}`} replace />}</Route>
       <Route path="/city/:slug">{({ slug }) => <Suspense fallback={<PageLoader />}><LocationLandingPage slug={slug} canonicalPath={`/city/${slug}`} /></Suspense>}</Route>
       <Route path="/car/:id">
         {params => (
