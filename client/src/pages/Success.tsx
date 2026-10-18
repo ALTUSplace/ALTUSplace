@@ -571,6 +571,7 @@ export default function Success() {
           <div className="bg-slate-900 dark:bg-[#1C1C1E] border border-amber-500/40 p-8 rounded-3xl max-w-md w-full text-center space-y-6 shadow-2xl relative">
             <button
               onClick={() => setShowDownloadModal(false)}
+              aria-label="Close"
               className="absolute top-4 left-4 p-2 rounded-full bg-slate-800 dark:bg-[#2C2C2E] text-ink-secondary dark:text-[#B0B0B8] hover:text-white"
             >
               <X className="w-4 h-4" />

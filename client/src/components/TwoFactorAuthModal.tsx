@@ -97,7 +97,7 @@ export function TwoFactorAuthModal({ isOpen, onClose, onSuccess }: TwoFactorAuth
               <p className="text-[10px] text-ink-secondary dark:text-[#B0B0B8]">حماية متقدمة ورموز استرداد للطوارئ</p>
             </div>
           </div>
-          <button onClick={onClose} className="text-ink-secondary dark:text-[#B0B0B8] hover:text-white text-sm font-bold">✕</button>
+          <button onClick={onClose} aria-label="Close" className="text-ink-secondary dark:text-[#B0B0B8] hover:text-white text-sm font-bold">✕</button>
         </div>
 
         {step === 'success' ? (

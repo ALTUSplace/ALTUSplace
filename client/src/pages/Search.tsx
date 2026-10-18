@@ -276,14 +276,14 @@ export default function Search() {
               {compareList.map(c => (
                 <span key={c.id} className="bg-bg-muted border border-border-default text-xs px-3 py-1 rounded-xl text-ink-secondary flex items-center gap-2">
                   {c.title}
-                  <button onClick={() => toggleCompare(c)} className="text-accent-red hover:opacity-80"><X className="w-3.5 h-3.5" /></button>
+                  <button onClick={() => toggleCompare(c)} aria-label={t('ariaRemoveFromComparison')} className="text-accent-red hover:opacity-80"><X className="w-3.5 h-3.5" /></button>
                 </span>
               ))}
             </div>
             {compareList.length === 2 && (
               <Button
                 onClick={() => setShowCompareModal(true)}
-                className="bg-accent-clay hover:bg-accent-clay-hover text-white font-bold text-xs px-4 py-2 rounded-xl shadow-lg"
+                className="bg-accent-clay hover:bg-accent-clay-hover text-[var(--primary-ink)] font-bold text-xs px-4 py-2 rounded-xl shadow-lg"
               >
                 قارن الآن
               </Button>
@@ -310,7 +310,7 @@ export default function Search() {
               onClick={() => applyCategoryPill(pill)}
               className={`shrink-0 min-h-[44px] flex items-center justify-center rounded-full border px-4 py-2 text-xs font-bold transition-colors ${
                 activeCategoryKey === pill.key
-                  ? 'border-accent-clay bg-accent-clay text-white shadow-[var(--shadow-clay)]'
+                  ? 'border-accent-clay bg-accent-clay text-[var(--primary-ink)] shadow-[var(--shadow-clay)]'
                   : 'border-border-default bg-bg-surface text-ink-secondary hover:border-accent-clay hover:text-accent-clay'
               }`}
             >
@@ -406,7 +406,7 @@ export default function Search() {
                       onClick={() => setTypeFilter(value)}
                       aria-pressed={typeFilter === value}
                       className={`min-h-[44px] px-2 py-2 rounded-lg text-xs font-bold transition-colors focus-visible:ring-2 focus-visible:ring-accent-clay ${
-                        typeFilter === value ? 'bg-accent-clay text-white shadow-lg' : 'text-ink-secondary hover:text-ink-primary'
+                        typeFilter === value ? 'bg-accent-clay text-[var(--primary-ink)] shadow-lg' : 'text-ink-secondary hover:text-ink-primary'
                       }`}
                     >
                       {label}
@@ -445,7 +445,7 @@ export default function Search() {
                     onClick={() => setViewMode('grid')}
                     className={`flex items-center gap-1.5 min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                       viewMode === 'grid'
-                        ? 'bg-accent-clay text-white shadow-lg'
+                        ? 'bg-accent-clay text-[var(--primary-ink)] shadow-lg'
                         : 'text-ink-secondary hover:text-ink-primary'
                     }`}
                   >
@@ -456,7 +456,7 @@ export default function Search() {
                     onClick={() => setViewMode('map')}
                     className={`flex items-center gap-1.5 min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                       viewMode === 'map'
-                        ? 'bg-accent-clay text-white shadow-lg'
+                        ? 'bg-accent-clay text-[var(--primary-ink)] shadow-lg'
                         : 'text-ink-secondary hover:text-ink-primary'
                     }`}
                   >
@@ -641,7 +641,7 @@ export default function Search() {
                             </div>
                             <button
                               onClick={() => setLocation(listingRoute(li))}
-                              className="self-center bg-accent-clay hover:bg-accent-clay-hover text-white text-[11px] font-bold px-3 py-1.5 rounded-full shrink-0"
+                              className="self-center bg-accent-clay hover:bg-accent-clay-hover text-[var(--primary-ink)] text-[11px] font-bold px-3 py-1.5 rounded-full shrink-0"
                             >
                               {t('mapViewListing')}
                             </button>
@@ -664,6 +664,7 @@ export default function Search() {
           <div className="bg-bg-surface border border-border-subtle rounded-3xl max-w-2xl w-full p-8 space-y-6 shadow-2xl relative animate-in zoom-in-95">
             <button
               onClick={() => setQuickViewItem(null)}
+              aria-label={t('close')}
               className="absolute top-6 left-6 text-ink-tertiary hover:text-ink-primary bg-bg-muted p-2 rounded-full"
             >
               <X className="w-5 h-5" />
@@ -681,7 +682,7 @@ export default function Search() {
                 height={512}
                 className="w-full h-full object-cover"
               />
-              <div className="absolute top-4 right-4 bg-accent-clay text-white px-3 py-1 rounded-full text-xs font-bold">
+              <div className="absolute top-4 right-4 bg-accent-clay text-[var(--primary-ink)] px-3 py-1 rounded-full text-xs font-bold">
                 {quickViewItem.city}
               </div>
             </div>
@@ -739,7 +740,7 @@ export default function Search() {
                 </Button>
                 <Button
                   onClick={() => setLocation(listingRoute(quickViewItem))}
-                  className="bg-accent-clay hover:bg-accent-clay-hover text-white font-bold px-6 py-2.5 rounded-full text-xs shadow-lg"
+                  className="bg-accent-clay hover:bg-accent-clay-hover text-[var(--primary-ink)] font-bold px-6 py-2.5 rounded-full text-xs shadow-lg"
                 >
                   الانتقال لصفحة الحجز الكاملة
                 </Button>
@@ -755,6 +756,7 @@ export default function Search() {
           <div className="bg-bg-surface border border-border-subtle p-8 rounded-3xl max-w-4xl w-full space-y-6 shadow-2xl relative animate-in zoom-in-95">
             <button
               onClick={() => setShowCompareModal(false)}
+              aria-label={t('close')}
               className="absolute top-6 left-6 text-ink-tertiary hover:text-ink-primary bg-bg-muted p-2 rounded-full"
             >
               <X className="w-5 h-5" />
@@ -800,7 +802,7 @@ export default function Search() {
             <div className="flex justify-center">
               <Button
                 onClick={() => setShowCompareModal(false)}
-                className="bg-accent-clay hover:bg-accent-clay-hover text-white font-bold px-8 py-2.5 rounded-full text-xs"
+                className="bg-accent-clay hover:bg-accent-clay-hover text-[var(--primary-ink)] font-bold px-8 py-2.5 rounded-full text-xs"
               >
                 إنهاء المقارنة
               </Button>
