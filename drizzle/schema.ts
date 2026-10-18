@@ -494,8 +494,9 @@ export const platformSettings = pgTable("platform_settings", {
   // first-run /api/auth/owner-setup flow and stored as a scrypt hash.
   ownerPasswordHash: text("owner_password_hash"),
   ownerPasswordSalt: text("owner_password_salt"),
-  // DB-backed HMAC secret used to sign session cookies when no JWT_SECRET /
-  // DIRECT_LOGIN_PASSWORD env var is configured (see server/_core/sessionSecret.ts).
+  // DB-backed HMAC secret used to sign session cookies when the JWT_SECRET env
+  // var is not configured (see server/_core/sessionSecret.ts; the
+  // DIRECT_LOGIN_PASSWORD fallback was removed — M-2).
   sessionSecret: text("session_secret"),
   updatedBy: integer("updated_by"),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

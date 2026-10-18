@@ -2,10 +2,13 @@ import { logger } from "./logger";
 
 export const ENV = {
   appId: process.env.VITE_APP_ID ?? "",
-  // Session-signing secret. Falls back to DIRECT_LOGIN_PASSWORD so a single
-  // secret is enough to bring the app up when the OAuth portal is unavailable.
-  // Set JWT_SECRET separately in production when possible.
-  cookieSecret: process.env.JWT_SECRET ?? process.env.DIRECT_LOGIN_PASSWORD ?? "",
+  // Session-signing secret. STRICTLY JWT_SECRET (M-2): the old
+  // `?? DIRECT_LOGIN_PASSWORD` fallback let the static break-glass password
+  // double as the HMAC key for every session cookie, so rotating the backdoor
+  // silently invalidated all sessions and leaking it forged them. With no
+  // JWT_SECRET, resolveSessionSecret() falls back to a random secret persisted
+  // in platform_settings (sessionSecret.ts) instead of a human-chosen one.
+  cookieSecret: process.env.JWT_SECRET ?? "",
   // Password for the fallback direct owner login (/api/auth/direct-login).
   // Empty = the endpoint is disabled (404). See server/_core/directAuth.ts.
   directLoginPassword: process.env.DIRECT_LOGIN_PASSWORD ?? "",
@@ -54,6 +57,20 @@ export const ENV = {
   deeplApiKey: process.env.DEEPL_API_KEY ?? "",
   translationEnabled: process.env.TRANSLATION_ENABLED !== "false",
 };
+
+// M-2: cookieSecret is no longer derived from DIRECT_LOGIN_PASSWORD. A
+// deployment that still only sets the direct-login password gets NO session
+// secret from it — warn loudly (error level) instead of silently booting with
+// a human-chosen key. In production the JWT_SECRET boot guard below is fatal.
+if (process.env.DIRECT_LOGIN_PASSWORD && !process.env.JWT_SECRET) {
+  logger.error(
+    "SECURITY: DIRECT_LOGIN_PASSWORD is set but JWT_SECRET is not. The " +
+      "direct-login password is NOT a session secret and must never be used " +
+      "to sign session cookies in production. Set a dedicated JWT_SECRET " +
+      "(>= 32 chars); until then sessions use the persisted random fallback.",
+    { hint: "decouple_session_secret" },
+  );
+}
 
 /**
  * Production guard: a deployment with no owner credential is claimable through

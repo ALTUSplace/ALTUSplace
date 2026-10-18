@@ -2405,8 +2405,8 @@ export const appRouter = router({
       if (!db) return [];
       try {
         // Join the listing owner so the renter page can offer a post-submission
-        // agency WhatsApp CTA. Direct contact is released only once the booking
-        // is confirmed, mirroring getById's ownerWhatsApp gate.
+        // agency WhatsApp CTA. Only the PUBLIC agency number is joined, and it
+        // is released only once the booking is confirmed (M-7).
         const base = db.select({
           ...getTableColumns(bookings),
           agencyWhatsApp: users.whatsappNumber,
@@ -2446,7 +2446,6 @@ export const appRouter = router({
           listingCity: listings.city,
           listingCategory: listings.category,
           ownerName: users.name,
-          ownerWhatsApp: users.whatsappPhone,
           agencyWhatsApp: users.whatsappNumber,
         }).from(bookings)
           .innerJoin(listings, eq(bookings.listingId, listings.id))
@@ -2456,11 +2455,11 @@ export const appRouter = router({
         if (!booking || (ctx.user!.role !== "admin" && booking.renterId !== ctx.user!.id)) {
           throw new TRPCError({ code: "NOT_FOUND", message: "الحجز غير موجود أو لا يخص حسابك." });
         }
-        // Both the owner line and the agency line stay hidden until the booking
-        // is confirmed, so a pending request never hands out a contact number.
+        // The PUBLIC agency number stays hidden until the booking is confirmed,
+        // so a pending request never hands out a contact number. The private
+        // booking-alert number (whatsappPhone) is never returned to renters (M-7).
         return {
           ...booking,
-          ownerWhatsApp: booking.status === "Confirmed" ? booking.ownerWhatsApp : null,
           agencyWhatsApp: booking.status === "Confirmed" ? booking.agencyWhatsApp : null,
         };
       }),
@@ -3093,7 +3092,6 @@ export const appRouter = router({
             ownerId: listings.ownerId,
             ownerName: users.name,
             ownerEmail: users.email,
-            ownerWhatsApp: users.whatsappPhone,
             renterName: users.name,
           }).from(listings)
             .leftJoin(users, eq(listings.ownerId, users.id))
@@ -3153,7 +3151,7 @@ export const appRouter = router({
           ownerId: listings.ownerId,
           ownerName: users.name,
           ownerEmail: users.email,
-          ownerWhatsApp: users.whatsappPhone,
+          agencyWhatsApp: users.whatsappNumber,
         }).from(bookingVouchers)
           .innerJoin(bookings, eq(bookingVouchers.bookingId, bookings.id))
           .innerJoin(listings, eq(bookings.listingId, listings.id))
@@ -3165,7 +3163,10 @@ export const appRouter = router({
         }
         const qrCodeDataUrl = await QRCode.toDataURL(result.voucher.qrPayload, { width: 320, margin: 2 });
         const mapsUrl = createMapsSearchUrl(result.listingTitle, result.listingCity);
-        return { ...result, ownerWhatsApp: result.bookingStatus === "Confirmed" ? result.ownerWhatsApp : null, qrCodeDataUrl, mapsUrl };
+        // Access is already restricted to confirmed bookings above, so the
+        // PUBLIC agency number needs no extra gate here. The private
+        // booking-alert number is never exposed (M-7).
+        return { ...result, agencyWhatsApp: result.agencyWhatsApp ?? null, qrCodeDataUrl, mapsUrl };
       }),
   }),
 

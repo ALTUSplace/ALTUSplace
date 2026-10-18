@@ -89,7 +89,11 @@ describe("agency WhatsApp CTA gating (post-submission only)", () => {
     // bookings.list and bookings.getById must both gate the number on status.
     expect(routers).toMatch(/agencyWhatsApp: row\.status === "Confirmed" \? row\.agencyWhatsApp : null/);
     expect(routers).toMatch(/agencyWhatsApp: booking\.status === "Confirmed" \? booking\.agencyWhatsApp : null/);
-    expect(count(routers, /agencyWhatsApp: users\.whatsappNumber/g)).toBe(2);
+    // The PUBLIC line is selected in bookings.list, bookings.getById and
+    // vouchers.getByCode ...
+    expect(count(routers, /agencyWhatsApp: users\.whatsappNumber/g)).toBe(3);
+    // ... and the PRIVATE booking-alert number is never selected for renters.
+    expect(routers).not.toMatch(/ownerWhatsApp\s*:/);
   });
 });
 

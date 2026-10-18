@@ -16,21 +16,27 @@ describe("final readiness security audit", () => {
     expect(listingsBlock).toContain("imageVerificationProof: z.string().optional()");
   });
 
-  it("never returns owner WhatsApp from booking or voucher paths before confirmation", () => {
+  it("never returns a private owner WhatsApp from booking or voucher paths", () => {
     const routers = read("server/routers.ts");
-    expect(routers).toContain('ownerWhatsApp: booking.status === "Confirmed" ? booking.ownerWhatsApp : null');
+    // Renter-facing payloads carry ONLY the public agency line
+    // (`whatsappNumber`), gated on confirmation where the status is available.
+    expect(routers).toContain('agencyWhatsApp: booking.status === "Confirmed" ? booking.agencyWhatsApp : null');
+    expect(routers).toContain("agencyWhatsApp: users.whatsappNumber");
+    // Voucher access requires a confirmed booking before any number is returned.
     expect(routers).toContain('result.bookingStatus !== "Confirmed"');
-    expect(routers).toContain('ownerWhatsApp: result.bookingStatus === "Confirmed" ? result.ownerWhatsApp : null');
+    // The private booking-alert number is never selected into a renter payload.
+    expect(routers).not.toMatch(/ownerWhatsApp\s*:/);
   });
 
   it("does not use a client-only phone or WhatsApp gate", () => {
     const success = read("client/src/pages/Success.tsx");
-    expect(success).toContain("booking?.ownerWhatsApp");
-    expect(success).toContain("bookingStatus === 'Confirmed'");
+    expect(success).toContain("booking?.agencyWhatsApp");
+    expect(success).toContain("bookingStatus !== 'Confirmed'");
+    expect(success).not.toMatch(/booking\??\.ownerWhatsApp/);
     expect(success).not.toMatch(/searchParams\.get\(["'](?:phone|whatsapp|ownerPhone)["']\)/);
   });
 
-  it("enforces tiered rate limits (strict 5/min, session 300/min, public 500/min, health exempt)", () => {
+  it("enforces tiered rate limits (strict 5/min, session 300/min, public 500/min, media 240/min, health exempt)", () => {
     const security = read("server/_core/security.ts");
     expect(security).toMatch(/authStrictLimiter[\s\S]*?max:\s*5/);
     expect(security).toMatch(/bookingStrictLimiter[\s\S]*?max:\s*5/);
@@ -52,6 +58,16 @@ describe("final readiness security audit", () => {
     expect(security).toContain('app.use("/api/", apiRateLimit)');
     expect(security).not.toContain('app.use("/api/", sensitiveApiLimiter)');
     expect(security).not.toContain('app.use("/api/", strictRateLimitDispatcher)');
+    // M-4: distributed limiting runs on @upstash/ratelimit when Upstash Redis
+    // is configured; the in-memory Map is only the local-dev fallback.
+    expect(security).toContain('from "@upstash/ratelimit"');
+    expect(security).toContain("Ratelimit.slidingWindow");
+    expect(security).toContain("new Redis({ url: ENV.redisUrl, token: ENV.redisToken })");
+    expect(security).toContain("warnMemoryFallback");
+    // M-5: the /storage/* media proxy gets its own throttled tier (every
+    // request mints a Supabase signed URL; it sits outside the /api/ mount).
+    expect(security).toMatch(/storageProxyLimiter[\s\S]*?max:\s*240/);
+    expect(entry).toContain('app.use("/storage/", storageProxyLimiter)');
   });
 
   it("ships hardened secure headers (helmet-grade: CSP, DENY framing, HSTS preload)", () => {

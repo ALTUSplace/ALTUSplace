@@ -45,6 +45,8 @@ if (await isOwnerConfigured()) → 403
 ### M-2 — `DIRECT_LOGIN_PASSWORD` كيبقى بابًا خلفيًا + بديل لمفتاح الجلسة
 `env.ts:8` : `cookieSecret = JWT_SECRET ?? DIRECT_LOGIN_PASSWORD ?? ""`، و`DIRECT_LOGIN_PASSWORD` كيشغّل `/api/auth/direct-login` إلى الأبد. الإقلاع كيتحقق من طول `JWT_SECRET` فقط، ماشي من عدم استخدام كلمة سر ثابتة كمفتاح جلسة.
 
+> ✅ **تم الإصلاح** (Fix 5) — شوف قسم «حالة الإصلاحات» أسفله.
+
 ### M-3 — `listings.search` و `listings.list` بلا `.limit()`
 `routers.ts:1938` (search) و`:1807` (list) كيجيبو **كل صفوف الجدول** للذاكرة ثم التصفيح/الفلترة فـ JS. العام/غير مُصادَق → استهلاك ذاكرة/CPU وDoS مع نمو الكتالوج. `pageSize` (max 200) ما كيأثرش على الاستعلام.
 
@@ -53,8 +55,12 @@ if (await isOwnerConfigured()) → 403
 ### M-4 — Rate limiter في الذاكرة (in-memory `Map`)
 `security.ts:7` — `buckets = new Map()`. على serverless/عدة instances، كل نسخة عندها budget خاص، وcold start كيرجّع العداد. معنى الحماية من الـ brute force على `strict-auth` (5/min) و`strict-payment` هي "best effort" فقط. يُنصح بـ Redis/Upstash أو rate limiting على الـ edge.
 
+> ✅ **تم الإصلاح** (Fix 6) — شوف قسم «حالة الإصلاحات» أسفله.
+
 ### M-5 — `/storage/*` خارج `/api/` → بلا rate limiting
 `app.ts` + `storageProxy.ts:66` — القاعدة `app.use("/api/", apiRateLimit)` ما كتشملش `/storage/*`. كل طلب كيولّد `createSignedUrl` عند Supabase → cost/DoS خفيف.
+
+> ✅ **تم الإصلاح** (Fix 7) — شوف قسم «حالة الإصلاحات» أسفله.
 
 ### M-6 — أسطح spam عامة كتصيفط notifications/emails (bucket `standard` = 300/min فقط)
 - `requestListing.create` (`:3460`, public) — فيه idempotency على `requestId`+`phone` و`dedupeKey: lead:${phone}`، لكن تدوير الأرقام كيولّي spam للـ admins.
@@ -114,8 +120,13 @@ if (await isOwnerConfigured()) → 403
 | **M-3** | ✅ مُصلَّح | `server/routers.ts` (`MAX_LISTING_ROWS = 500` + `.limit(...)` على `listings.list` و `listings.search`) |
 | **M-1** | ✅ مُصلَّح | `server/_core/trpc.ts` (tier جديد `partnerProcedure` + `ownerProcedure` بلا `partner`)، `server/routers.ts` (21 route → `partnerProcedure`؛ `bookings.ownerList`/`ownerUpdateStatus`/`admin.ownerFinancials`/`payouts.request`/`rentalContracts.createForBooking` بقاو owner/admin فقط) |
 | **M-7** | ✅ مُصلَّح | `server/routers.ts` (`toPublicListing` كيحذف `whatsappPhone`؛ `getById` ما بقاش كيجيب الرقم الخاص إلا للمالك/Admin عبر استعلام مقيّد)، `client/src/pages/Checkout.tsx` (CTA كيستعمل `whatsappNumber`/`agencyPhone` العموميين فقط) |
+| **M-2** | ✅ مُصلَّح | `server/_core/env.ts` (`cookieSecret` من `JWT_SECRET` فقط + تحذير خطير إذا `DIRECT_LOGIN_PASSWORD` مُعدّ بلا `JWT_SECRET`)، `server/_core/sessionSecret.ts`، `drizzle/schema.ts` |
+| **M-4** | ✅ مُصلَّح | `server/_core/security.ts` (`@upstash/ratelimit` + `@upstash/redis`: sliding window ذرّي مشترك لكل الـ tiers؛ fallback للذاكرة محليًا مع تحذير مرة واحدة)، `package.json` |
+| **M-5** | ✅ مُصلَّح | `server/_core/security.ts` (`storageProxyLimiter` = 240/min/IP)، `server/_core/app.ts` (`app.use("/storage/", storageProxyLimiter)` قبل `registerStorageProxy`) |
+| **M-7 (UI)** | ✅ مُصلَّح | `server/routers.ts` (`bookings.getById`/`vouchers.getByCode` كيرجّعو `agencyWhatsApp` العمومي بدل الرقم الخاص)، `client/src/pages/Success.tsx`، `client/src/pages/Voucher.tsx` |
+| **M-1 (UI)** | ✅ مُصلَّح | `client/src/pages/HostDashboard.tsx` + `client/src/pages/AgencyDashboard.tsx` (إخفاء الأقسام المالية/الحجوزات/التحليلات عن tier الشريك — بلا أي ترقية تلقائية) |
 | H-1, H-2 | ⏳ مفتوح | `supabase/rls.sql`, `server/db.ts` |
-| M-2, M-4 → M-6 | ⏳ مفتوح | — |
+| M-6 | ⏳ مفتوح | — |
 | L-1 → L-10 | ⏳ مفتوح | — |
 
 ### تفاصيل الإصلاحات المنجزة
@@ -131,10 +142,33 @@ if (await isOwnerConfigured()) → 403
 - `toPublicListing` كيحذف الآن `whatsappPhone` من أي payload عام (دفاع في العمق)، و`listings.getById` ما بقاش كيselecteha فـ join العمومي — الرقم الخاص كيتجاب غير للمالك أو Admin، باستعلام منفصل ومقيّد (`ctx.user.id === listing.ownerId` أو role إداري).
 - `listings.list`/`listings.search` كانو أصلًا نقيين (غير `ownerName` + `ownerRole`) والاختبارات كتفرض ذلك — زدنا تأكيد.
 - `Checkout.tsx` كيخدم الآن بـ `whatsappNumber` (العمومي) ثم `agencyPhone`، بلا أي fallback للرقم الخاص.
-- ملاحظة متبقية (خارج نطاق الطلب): `Success.tsx` و`Voucher.tsx` مازال كيستعملو `ownerWhatsApp` (نفس الرقم الخاص) فـ CTA ما بعد تأكيد الحجز — مرشحة لنفس الإصلاح إذا بغيت الرقم العمومي فقط.
+- ~~ملاحظة متبقية (خارج نطاق الطلب): `Success.tsx` و`Voucher.tsx` مازال كيستعملو `ownerWhatsApp`~~ → ✅ عُلِّجت فـ «UI Fix A» أسفله (الـ CTA ولّى كيستعمل `agencyWhatsApp` العمومي فقط).
 
 **Fix 4 — M-1 (تصعيد صلاحيات الشريك):**
 - tier جديد `partnerProcedure` (`owner`/`admin`/`partner`/`SUPER_ADMIN`) = «إعلاناتك + إعدادات وكالتك فقط»، و`ownerProcedure` ولّى `owner/admin/SUPER_ADMIN` فقط.
 - 21 route تحوّلو لـ `partnerProcedure`: `agency.*` (8، كلها مقيّدة بـ `ctx.user!.id`) + `storage.uploadAgencyLogo`/`uploadImage` + `listings.*` (11).
 - بقاو على `ownerProcedure`: `bookings.ownerList` (بيانات الرينترز)، `bookings.ownerUpdateStatus`، `admin.ownerFinancials`، `payouts.request`، `rentalContracts.createForBooking` — أي شريك ذاتي التسجيل ما بقاش يوصل ليهم.
 - اختبار سلوكي جديد فـ `multi-agency.isolation.test.ts`: شريك كيتلقى `FORBIDDEN` على الخمسة دواوز.
+
+**Fix 5 — M-2 (فصل مفتاح الجلسة عن `DIRECT_LOGIN_PASSWORD`):**
+- `env.ts`: `cookieSecret` ولّى `JWT_SECRET` فقط — `DIRECT_LOGIN_PASSWORD` ما بقاش أبدًا مفتاح توقيع الجلسات. بلا `JWT_SECRET`، `resolveSessionSecret` كيبقى عندو الـ fallback ديال سر عشوائي مُخزَّن فـ `platform_settings` (بلا أي secret ثابت فـ الـ repo).
+- عند الإقلاع بلا `JWT_SECRET` ومع `DIRECT_LOGIN_PASSWORD` مُعدّ، كيتطبع تحذير بخطورة عالية (`logger.error`) كيوضّح أن كلمة سر الباب الخلفي ما خاصهاش تكون session secret فـ الإنتاج.
+- بوابة الإنتاج (`assertProductionOwnerConfigured`) مازالة كترفض `JWT_SECRET` ناقص/قصير.
+
+**Fix 6 — M-4 (rate limiter موزّع):**
+- `security.ts` كيستعمل الآن `@upstash/ratelimit` + `@upstash/redis` ملي تكون `UPSTASH_REDIS_REST_URL`/`UPSTASH_REDIS_REST_TOKEN` مُعدّة: sliding window ذرّي على مخزن مشترك = **budget واحد** لكل الـ instances والـ regions (كل tier عندو `Ratelimit` خاص به + `prefix` خاص).
+- `timeout: 1000ms` (fail-fast) + headers `RateLimit-Limit`/`RateLimit-Remaining`/`RateLimit-Reset` فـ كل الحالات.
+- إذا Redis غير مُعدّ (dev/CI) ولا رجع خطأ/تجاوز الوقت: fallback تلقائي للـ Map المحلية + تحذير مرة واحدة (`warnMemoryFallback`) — الحماية ما كتطيحش أبدًا لصفر، والمسار المحلي بقى متزامن (الاختبارات المثبتة ما تبدلوش).
+
+**Fix 7 — M-5 (تغطية `/storage/*` بـ rate limiting):**
+- `storageProxyLimiter` جديد بـ **240/min/IP** (≈4 req/s) فـ `security.ts`، و`app.ts` كيطبّقه (`app.use("/storage/", ...)`) قبل `registerStorageProxy`.
+- لماذا 240 ماشي 5؟ صفحة بحث وحدة كتستعمل حتى 50 صورة والتصفّح العادي كيتجاوز 5/min بزاف — الهدف هو تحديد كلفة/DoS ديال الـ scraper (كل طلب كيولّد Supabase `createSignedUrl`) بلا ما يتقطع عرض الجاليري.
+
+**UI Fix A — إكمال M-7 (الرقم العمومي فـ Success/Voucher):**
+- السيرفر: `bookings.getById` و`vouchers.getByCode` كيرجّعو الآن `agencyWhatsApp` (`users.whatsappNumber` — العمومي) بدل `ownerWhatsApp`، والرقم الخاص ما بقاش كيتselecta فهاد المسارات؛ select ميّت فـ `payments.create` تنقّى.
+- الكليان: `Success.tsx` و`Voucher.tsx` كيستعملو `agencyWhatsApp` فقط؛ ملي ما يكونش الرقم العمومي متوفر، `Success.tsx` كيبان رسالة عربية واضحة بدل رابط فارغ.
+- اختبارات مُثبَّتة: `not.toMatch(/ownerWhatsApp\s*:/)` على `routers.ts` و`not.toMatch(/booking\??\.ownerWhatsApp/)` على `Success.tsx`.
+
+**UI Fix B — إكمال M-1 (إخفاء أقسام المالك عن الشريك):**
+- `HostDashboard.tsx`: قسم «الأرباح والتسويات» (مع طلب السحب) وقسم «طلبات الحجز» كيتعرضو غير لـ `owner`/`admin`/`SUPER_ADMIN` (`isOwnerTier`) — بلا أي ترقية تلقائية لـ `partner`.
+- `AgencyDashboard.tsx`: تابات «الحجوزات والتحقق من الوثائق» و«التحليلات والتقارير» مخفيين على الشريك، والـ tab الافتراضي كيولّي «الأسطول والأسعار». (KPI cards من `agency.overview` — `partnerProcedure` مقيّد بـ `ctx.user.id` — بقاو ظاهرين بشكل مقصود.)

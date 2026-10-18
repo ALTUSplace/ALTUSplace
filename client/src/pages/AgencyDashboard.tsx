@@ -1014,15 +1014,15 @@ export default function AgencyDashboard() {
         </div>
       </header>
 
-      <Tabs defaultValue="bookings" dir="rtl">
+      <Tabs defaultValue={isOwnerTier ? "bookings" : "fleet"} dir="rtl">
         <TabsList className="w-full justify-start rounded-2xl border bg-card p-1 sm:w-auto">
-          <TabsTrigger value="bookings">الحجوزات والتحقق من الوثائق</TabsTrigger>
+          {isOwnerTier && <TabsTrigger value="bookings">الحجوزات والتحقق من الوثائق</TabsTrigger>}
           <TabsTrigger value="fleet">الأسطول والأسعار</TabsTrigger>
           <TabsTrigger value="properties">العقارات</TabsTrigger>
-          <TabsTrigger value="insights">التحليلات والتقارير</TabsTrigger>
+          {isOwnerTier && <TabsTrigger value="insights">التحليلات والتقارير</TabsTrigger>}
         </TabsList>
 
-        <TabsContent value="bookings" className="space-y-6">
+        {isOwnerTier && <TabsContent value="bookings" className="space-y-6">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {[
               { label: "حجوزات قيد الانتظار", value: String(pendingCount), icon: CalendarDays, tone: "text-amber-600" },
@@ -1157,7 +1157,7 @@ export default function AgencyDashboard() {
               </div>
             )}
           </section>
-        </TabsContent>
+        </TabsContent>}
 
         <TabsContent value="fleet" className="space-y-6">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -1414,11 +1414,11 @@ export default function AgencyDashboard() {
           </section>
         </TabsContent>
 
-        <TabsContent value="insights" className="space-y-6">
+        {isOwnerTier && <TabsContent value="insights" className="space-y-6">
           <FinancialAnalytics bookings={rows} />
           <ScheduleCalendar bookings={rows} cars={cars} />
           <ActivityLog items={activity.data ?? []} />
-        </TabsContent>
+        </TabsContent>}
       </Tabs>
 
       <Dialog open={!!docBooking} onOpenChange={(open) => !open && setDocBooking(null)}>

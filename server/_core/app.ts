@@ -5,7 +5,12 @@ import { registerDirectAuthRoutes } from "./directAuth";
 import { registerPartnerAuthRoutes } from "./partnerAuth";
 import { registerRenterAuthRoutes } from "./renterAuth";
 import { registerPartnerApplicationRoutes } from "./partnerApplication";
-import { createPaymentsWebhookHandler, paymentStrictLimiter, registerSecurity } from "./security";
+import {
+  createPaymentsWebhookHandler,
+  paymentStrictLimiter,
+  registerSecurity,
+  storageProxyLimiter,
+} from "./security";
 import { createVerificationWebhookHandler } from "../verification/webhook";
 import { configureProviderSecrets } from "../verification/provider";
 import { createEscrowWebhookHandler } from "../escrow";
@@ -141,6 +146,9 @@ export function createApp() {
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
+  // Media proxy tier (M-5): /storage/* sits outside the /api/ mount, so it
+  // must be throttled explicitly — every request mints a Supabase signed URL.
+  app.use("/storage/", storageProxyLimiter);
   registerStorageProxy(app);
   registerOAuthRoutes(app);
   registerDirectAuthRoutes(app);
