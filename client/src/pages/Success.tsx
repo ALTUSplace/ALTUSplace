@@ -544,7 +544,7 @@ export default function Success() {
               onClick={handleEmailContact}
               type="button"
               disabled={isPending}
-              className="w-full bg-accent-clay hover:bg-accent-clay-hover text-white font-bold py-3.5 rounded-xl text-xs flex items-center justify-center gap-2 shadow-[var(--shadow-clay)] cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full bg-accent-clay hover:bg-accent-clay-hover text-[var(--primary-ink)] font-bold py-3.5 rounded-xl text-xs flex items-center justify-center gap-2 shadow-[var(--shadow-clay)] cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5v10a2 2 0 002-2 2 0 00-2 2z" />
@@ -571,6 +571,7 @@ export default function Success() {
           <div className="bg-slate-900 dark:bg-[#1C1C1E] border border-amber-500/40 p-8 rounded-3xl max-w-md w-full text-center space-y-6 shadow-2xl relative">
             <button
               onClick={() => setShowDownloadModal(false)}
+              aria-label="Close"
               className="absolute top-4 left-4 p-2 rounded-full bg-slate-800 dark:bg-[#2C2C2E] text-ink-secondary dark:text-[#B0B0B8] hover:text-white"
             >
               <X className="w-4 h-4" />

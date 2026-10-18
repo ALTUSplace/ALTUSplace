@@ -61,7 +61,7 @@ export function KycDocumentUpload({
   compact = false,
   showTypeSelector = true,
 }: KycDocumentUploadProps) {
-  const { language } = useLanguage();
+  const { t, language } = useLanguage();
   const fileRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -320,7 +320,7 @@ export function KycDocumentUpload({
               <p className="truncate text-sm font-semibold">{file.name}</p>
               <p className="text-xs text-muted-foreground">{(file.size / (1024 * 1024)).toFixed(2)} MB</p>
             </div>
-            <button type="button" onClick={handleRemove} disabled={isUploading}
+            <button type="button" onClick={handleRemove} disabled={isUploading} aria-label={t('ariaRemoveFile')}
               className="rounded-lg p-1.5 text-muted-foreground hover:bg-red-100 hover:text-red-600 disabled:cursor-not-allowed">
               <X className="h-4 w-4" />
             </button>

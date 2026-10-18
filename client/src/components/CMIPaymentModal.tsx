@@ -51,7 +51,7 @@ export function CMIPaymentModal({ isOpen, onClose, onSuccess, amount }: CMIPayme
               <p className="text-[10px] text-ink-secondary dark:text-[#B0B0B8]">بوابة الدفع الإلكتروني الآمنة بالدرهم المغربي (MAD)</p>
             </div>
           </div>
-          <button onClick={onClose} className="text-ink-secondary dark:text-[#B0B0B8] hover:text-white text-sm font-bold">✕</button>
+          <button onClick={onClose} aria-label="Close" className="text-ink-secondary dark:text-[#B0B0B8] hover:text-white text-sm font-bold">✕</button>
         </div>
 
         <div className="bg-amber-500/10 border border-amber-500/30 p-4 rounded-2xl flex items-center justify-between">

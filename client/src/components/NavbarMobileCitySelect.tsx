@@ -139,7 +139,7 @@ export function NavbarMobileCitySelect({ onSelected }: NavbarMobileCitySelectPro
                         aria-current={isCurrent ? "true" : undefined}
                         className={`flex min-h-11 w-full items-center justify-between gap-2 px-3 text-start text-xs font-bold transition-colors ${
                           isCurrent
-                            ? "bg-accent-clay-soft text-accent-clay"
+                            ? "bg-accent-clay-soft text-accent-clay dark:text-accent-clay-hover"
                             : "text-ink-primary hover:bg-bg-muted"
                         }`}
                       >

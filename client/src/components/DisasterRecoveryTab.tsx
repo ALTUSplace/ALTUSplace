@@ -130,7 +130,7 @@ export const DisasterRecoveryTab: React.FC = () => {
               <p className="text-xs text-ink-secondary dark:text-[#B0B0B8]">مساحة التخزين السحابي</p>
               <h3 className="text-lg font-bold text-accent-clay mt-1">4.2 GB / 50 GB</h3>
             </div>
-            <div className="p-3 bg-accent-clay-soft rounded-xl text-accent-clay">
+            <div className="p-3 bg-accent-clay-soft rounded-xl text-accent-clay dark:text-accent-clay-hover">
               <HardDrive className="w-6 h-6" />
             </div>
           </CardContent>
@@ -163,7 +163,7 @@ export const DisasterRecoveryTab: React.FC = () => {
                   <tr key={bk.id} className="hover:bg-slate-800/40 dark:hover:bg-[#2C2C2E]/40 transition-colors">
                     <td className="py-3 px-4 font-mono text-xs text-amber-300">{bk.name}</td>
                     <td className="py-3 px-4">
-                      <span className={`text-xs px-2.5 py-1 rounded-full ${bk.type.includes('تلقائي') ? 'bg-accent-clay-soft text-accent-clay border border-accent-clay/30' : 'bg-purple-500/10 text-purple-400 border border-purple-500/20'}`}>
+                      <span className={`text-xs px-2.5 py-1 rounded-full ${bk.type.includes('تلقائي') ? 'bg-accent-clay-soft text-accent-clay dark:text-accent-clay-hover border border-accent-clay/30' : 'bg-purple-500/10 text-purple-400 border border-purple-500/20'}`}>
                         {bk.type}
                       </span>
                     </td>

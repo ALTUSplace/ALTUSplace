@@ -169,7 +169,7 @@ function buildListingPreview(listing: MapboxMapListing, onOpen: () => void): HTM
   const open = document.createElement('button');
   open.type = 'button';
   open.className =
-    'mt-2 w-full rounded-md bg-[var(--accent-clay)] px-2 py-1.5 text-[11px] font-bold text-white';
+    'mt-2 w-full rounded-md bg-accent-clay px-2 py-1.5 text-[11px] font-bold text-[var(--primary-ink)]';
   open.textContent = 'عرض';
   open.addEventListener('click', onOpen);
   card.appendChild(open);

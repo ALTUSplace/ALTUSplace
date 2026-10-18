@@ -277,7 +277,7 @@ export default function DirectLogin() {
           ) : null}
 
           {mode !== "loading" && mode !== "unavailable" ? (
-            <Button type="submit" disabled={!canSubmit || loading} className="mt-5 w-full gap-2 bg-[#1C1C1E] text-white hover:bg-accent-clay-hover">
+            <Button type="submit" disabled={!canSubmit || loading} className="mt-5 w-full gap-2 bg-[#1C1C1E] text-white hover:bg-accent-clay-hover hover:text-[var(--primary-ink)]">
               <KeyRound className="h-4 w-4" />
               {loading ? (isSetup ? str("settingUp") : str("signingIn")) : isSetup ? str("setupButton") : str("signInButton")}
             </Button>

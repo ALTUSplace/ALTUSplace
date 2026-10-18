@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { Bot, X, Send, Sparkles, MessageCircle, ArrowRight, Car, Building2, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function AIChatWidget() {
+  const { t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
     { sender: 'ai', text: 'سلام! مرحباً بك في ALTUSplace 🇲🇦. واش كتقلّب على كراء سيارة أوّلا عقار؟' }
@@ -131,7 +133,7 @@ export default function AIChatWidget() {
               <Button size="sm" variant="outline" className="text-xs gap-1 border-amber-500 text-amber-700 hover:bg-amber-50" onClick={() => handleSend('كراء سيارة')}>
                 <Car className="w-3.5 h-3.5" /> كراء سيارة
               </Button>
-              <Button size="sm" variant="outline" className="text-xs gap-1 border-accent-clay/30 text-accent-clay hover:bg-accent-clay-soft" onClick={() => handleSend('كراء عقار')}>
+              <Button size="sm" variant="outline" className="text-xs gap-1 border-accent-clay/30 text-accent-clay dark:text-accent-clay-hover hover:bg-accent-clay-soft" onClick={() => handleSend('كراء عقار')}>
                 <Building2 className="w-3.5 h-3.5" /> كراء عقار
               </Button>
             </div>
@@ -146,7 +148,7 @@ export default function AIChatWidget() {
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}
               className="text-xs sm:text-sm"
             />
-            <Button size="icon" onClick={() => handleSend()} className="bg-[#1C1C1E] hover:bg-[#1C1C1E]/90 text-white shrink-0">
+            <Button size="icon" onClick={() => handleSend()} aria-label={t('ariaSendMessage')} className="bg-[#1C1C1E] hover:bg-[#1C1C1E]/90 text-white shrink-0">
               <Send className="w-4 h-4" />
             </Button>
           </div>
