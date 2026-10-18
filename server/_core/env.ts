@@ -9,6 +9,10 @@ export const ENV = {
   // Password for the fallback direct owner login (/api/auth/direct-login).
   // Empty = the endpoint is disabled (404). See server/_core/directAuth.ts.
   directLoginPassword: process.env.DIRECT_LOGIN_PASSWORD ?? "",
+  // Shared secret that gates the one-shot first-run owner bootstrap
+  // (POST /api/auth/owner-setup). Empty = setup is disabled, so an unclaimed
+  // deployment cannot be hijacked by an anonymous caller. See directAuth.ts.
+  ownerSetupToken: process.env.OWNER_SETUP_TOKEN ?? "",
   databaseUrl: process.env.DATABASE_URL ?? process.env.SUPABASE_DB_URL ?? "",
   oAuthServerUrl: process.env.OAUTH_SERVER_URL ?? "",
   ownerOpenId: process.env.OWNER_OPEN_ID ?? "",
@@ -51,6 +55,34 @@ export const ENV = {
   translationEnabled: process.env.TRANSLATION_ENABLED !== "false",
 };
 
+/**
+ * Production guard: a deployment with no owner credential is claimable through
+ * the first-run bootstrap. With OWNER_SETUP_TOKEN required by that route an
+ * anonymous caller can no longer claim it, but an unconfigured production site
+ * still deserves a loud, explicit warning at boot.
+ *
+ * Non-fatal by design: it runs from module scope in every server process, and a
+ * transient database blip must not take the whole site down.
+ */
+export async function assertProductionOwnerConfigured(): Promise<void> {
+  if (!ENV.isProduction) return;
+  try {
+    // Dynamic import avoids a module cycle (ownerAuth imports this file).
+    const { isOwnerConfigured } = await import("./ownerAuth");
+    if (await isOwnerConfigured()) return;
+    logger.error(
+      "SECURITY: no platform-owner credential is configured in production. " +
+        "Set DIRECT_LOGIN_PASSWORD, or set OWNER_SETUP_TOKEN and complete " +
+        "POST /api/auth/owner-setup before exposing this deployment.",
+      { hint: "unconfigured_owner" },
+    );
+  } catch (error) {
+    logger.error("SECURITY: owner-configured boot check failed", {
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+}
+
 // ── Production security boot guards ─────────────────────────────────────────
 // Runs on first import so every server process (API functions, cron handlers,
 // local `pnpm start`) refuses to boot with an insecure production
@@ -68,4 +100,6 @@ if (process.env.NODE_ENV === "production") {
         "Refusing to boot in production. Set a strong JWT_SECRET (>= 32 chars) and redeploy.",
     );
   }
+  // Fire-and-forget: surface an unconfigured owner without blocking boot.
+  void assertProductionOwnerConfigured();
 }

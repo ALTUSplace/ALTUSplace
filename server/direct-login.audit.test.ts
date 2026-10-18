@@ -35,6 +35,26 @@ describe("direct owner login (OAuth fallback) audit", () => {
     expect(direct).toContain("already_configured");
   });
 
+  it("gates the first-run owner setup behind OWNER_SETUP_TOKEN (fail-closed)", () => {
+    const direct = read("server/_core/directAuth.ts");
+    const env = read("server/_core/env.ts");
+    // The token is read from a dedicated env var and there is no default value.
+    expect(env).toContain("OWNER_SETUP_TOKEN");
+    expect(env).toContain("ownerSetupToken");
+    // Closed when unset, and a wrong/missing token is rejected with 403.
+    expect(direct).toContain("setup_disabled");
+    expect(direct).toContain("invalid_setup_token");
+    expect(direct).toContain("x-owner-setup-token");
+    // Compared in constant time (no early-exit string compare).
+    expect(direct).toContain("safeEqual(providedToken, expectedToken)");
+  });
+
+  it("warns loudly when production boots without an owner credential", () => {
+    const env = read("server/_core/env.ts");
+    expect(env).toContain("assertProductionOwnerConfigured");
+    expect(env).toContain("unconfigured_owner");
+  });
+
   it("fails closed when DIRECT_LOGIN_PASSWORD is not configured", () => {
     const direct = read("server/_core/directAuth.ts");
     expect(direct).toContain("if (!configured)");

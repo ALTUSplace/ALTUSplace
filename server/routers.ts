@@ -69,6 +69,14 @@ function toPublicListing<T extends object>(row: T): T {
   return safe as T;
 }
 
+/**
+ * Hard server-side cap on how many listing rows a public catalogue query may
+ * materialize. Both `listings.list` and `listings.search` paginate in memory, so
+ * without a DB-level limit an unauthenticated caller could force the process to
+ * load the entire table. 500 sits comfortably above the 200-row client page cap.
+ */
+const MAX_LISTING_ROWS = 500;
+
 async function writeAuditLog(input: {
   actorId: number;
   action: string;
@@ -1804,7 +1812,7 @@ export const appRouter = router({
       .query(async ({ input }) => {
         const db = await getDb();
         if (!db) return [];
-        const allListings = await db.select({ listing: listings, ownerName: users.name, ownerRole: users.role }).from(listings).leftJoin(users, eq(listings.ownerId, users.id)).where(inArray(listings.status, PUBLIC_LISTING_STATUSES)).orderBy(desc(listings.createdAt));
+        const allListings = await db.select({ listing: listings, ownerName: users.name, ownerRole: users.role }).from(listings).leftJoin(users, eq(listings.ownerId, users.id)).where(inArray(listings.status, PUBLIC_LISTING_STATUSES)).orderBy(desc(listings.createdAt)).limit(MAX_LISTING_ROWS);
         const requestedRange = input?.startDate && input?.endDate ? parseDateRange(input.startDate, input.endDate) : null;
         const confirmedRanges = requestedRange
           ? await db.select({ listingId: bookings.listingId, start: bookings.startDate, end: bookings.endDate }).from(bookings).where(eq(bookings.status, "Confirmed"))
@@ -1940,7 +1948,8 @@ export const appRouter = router({
           .from(listings)
           .leftJoin(users, eq(listings.ownerId, users.id))
           .where(baseFilter)
-          .orderBy(desc(listings.createdAt));
+          .orderBy(desc(listings.createdAt))
+          .limit(MAX_LISTING_ROWS);
 
         const requestedRange = input?.startDate && input?.endDate ? parseDateRange(input.startDate, input.endDate) : null;
         const confirmedRanges = requestedRange
