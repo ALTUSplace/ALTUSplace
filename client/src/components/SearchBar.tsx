@@ -241,7 +241,7 @@ export function SearchBar({
         {error && (
           <p
             role="alert"
-            className="mt-2 inline-flex items-center gap-2 rounded-lg bg-accent-red/10 px-3 py-2 text-xs font-bold text-accent-red"
+            className="mt-2 inline-flex items-center gap-2 rounded-lg bg-accent-red/10 px-3 py-2 text-xs font-bold text-red-700"
           >
             <AlertCircle className="h-4 w-4 shrink-0" />
             {error}

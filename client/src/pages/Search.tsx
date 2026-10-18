@@ -368,7 +368,7 @@ export default function Search() {
                   type="button"
                   onClick={resetFilters}
                   title={t('resetFilters')}
-                  className="inline-flex min-h-11 w-full shrink-0 items-center justify-center gap-1.5 rounded-xl border border-border-default px-3 text-xs font-bold text-accent-clay transition-colors hover:border-accent-clay hover:bg-accent-clay/10 xl:w-11 xl:gap-0 xl:px-0"
+                  className="inline-flex min-h-11 w-full shrink-0 items-center justify-center gap-1.5 rounded-xl border border-border-default px-3 text-xs font-bold text-accent-clay dark:text-accent-clay-hover transition-colors hover:border-accent-clay hover:bg-accent-clay/10 xl:w-11 xl:gap-0 xl:px-0"
                 >
                   <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
                   <span className="xl:sr-only">{t('resetFilters')}</span>
@@ -716,7 +716,7 @@ export default function Search() {
                     onClick={() => {
                       window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`شاهد هذا العرض الرائع: ${quickViewItem.title} - ${quickViewItem.pricePerUnit} ${quickViewItem.unitLabel} في ${quickViewItem.city} عبر منصة ALTUSplace: ${window.location.href}`)}`, '_blank');
                     }}
-                    className="bg-accent-green-soft hover:bg-[var(--accent-green-s)] text-accent-green p-2 rounded-full text-xs flex items-center gap-1 transition-colors"
+                    className="bg-accent-green-soft hover:bg-[var(--accent-green-s)] text-emerald-700 p-2 rounded-full text-xs flex items-center gap-1 transition-colors"
                     title="مشاركة عبر واتساب"
                   >
                     واتساب

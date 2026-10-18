@@ -86,7 +86,7 @@ export default function BlogPage() {
         <div className="bg-[#1C1C1E] text-white rounded-3xl p-8 md:p-12 shadow-2xl relative overflow-hidden">
           <div className="absolute left-0 bottom-0 w-96 h-96 bg-accent-clay-soft rounded-full blur-3xl pointer-events-none"></div>
           <div className="relative z-10 max-w-2xl space-y-4">
-            <span className="bg-accent-clay text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-widest inline-block">
+            <span className="bg-accent-clay text-[var(--primary-ink)] text-xs font-bold px-3 py-1 rounded-full uppercase tracking-widest inline-block">
               مدونة ALTUSplace الرسمية
             </span>
             <h1 className="text-3xl md:text-5xl font-black tracking-tight">
@@ -126,7 +126,7 @@ export default function BlogPage() {
                   alt={article.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
-                <span className="absolute top-4 right-4 bg-accent-clay text-white text-xs font-bold px-3 py-1 rounded-full shadow">
+                <span className="absolute top-4 right-4 bg-accent-clay text-[var(--primary-ink)] text-xs font-bold px-3 py-1 rounded-full shadow">
                   {article.category}
                 </span>
               </div>

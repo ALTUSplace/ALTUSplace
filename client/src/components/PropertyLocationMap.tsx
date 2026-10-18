@@ -169,7 +169,7 @@ export function PropertyLocationMap({
           className,
         )}
       >
-        <span className="flex size-12 items-center justify-center rounded-2xl bg-accent-clay-soft text-accent-clay">
+        <span className="flex size-12 items-center justify-center rounded-2xl bg-accent-clay-soft text-accent-clay dark:text-accent-clay-hover">
           <MapPin className="h-6 w-6" aria-hidden="true" />
         </span>
         <p className="text-sm text-ink-secondary">{missingTokenNotice}</p>
@@ -177,7 +177,7 @@ export function PropertyLocationMap({
           href={buildPropertyDirectionsUrl(coords)}
           target="_blank"
           rel="noreferrer"
-          className="inline-flex min-h-[44px] items-center gap-2 rounded-xl bg-accent-clay px-4 text-sm font-bold text-white transition-colors hover:bg-accent-clay-hover"
+          className="inline-flex min-h-[44px] items-center gap-2 rounded-xl bg-accent-clay px-4 text-sm font-bold text-[var(--primary-ink)] transition-colors hover:bg-accent-clay-hover"
         >
           {openInMapsLabel}
           <ExternalLink className="h-4 w-4" aria-hidden="true" />

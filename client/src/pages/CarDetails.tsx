@@ -298,7 +298,7 @@ export default function CarDetails() {
             <button onClick={() => handleShare('whatsapp')} className="bg-emerald-700 text-white hover:bg-emerald-800 px-3 py-1 rounded-xl text-xs font-bold transition-all border border-emerald-500/30">
               واتساب
             </button>
-            <button onClick={() => handleShare('facebook')} className="bg-accent-clay-soft text-accent-clay hover:bg-accent-clay hover:text-white px-3 py-1 rounded-xl text-xs font-bold transition-all border border-accent-clay/30">
+            <button onClick={() => handleShare('facebook')} className="bg-accent-clay-soft text-accent-clay dark:text-accent-clay-hover hover:bg-accent-clay hover:text-[var(--primary-ink)] px-3 py-1 rounded-xl text-xs font-bold transition-all border border-accent-clay/30">
               فيسبوك
             </button>
             <button onClick={() => handleShare('copy')} className="bg-slate-800 dark:bg-[#2C2C2E] text-slate-300 dark:text-[#D6D6DB] hover:bg-slate-700 dark:hover:bg-[#48484D] px-3 py-1 rounded-xl text-xs font-bold transition-all border border-slate-700 dark:border-[#48484D] flex items-center gap-1">

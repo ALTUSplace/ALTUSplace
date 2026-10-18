@@ -46,10 +46,10 @@ const BADGE_CONFIG: Record<
   { labelKey: string; icon: typeof Award; className: string }
 > = {
   "top-host": { labelKey: "badgeTopHost", icon: Award, className: "bg-ink-primary/85 dark:bg-[#1C1C1E]/85 text-white" },
-  premium: { labelKey: "badgePremium", icon: Star, className: "bg-accent-clay/90 text-white" },
-  "instant-book": { labelKey: "badgeInstant", icon: Zap, className: "bg-accent-green/90 text-white" },
+  premium: { labelKey: "badgePremium", icon: Star, className: "bg-accent-clay/90 text-[var(--primary-ink)]" },
+  "instant-book": { labelKey: "badgeInstant", icon: Zap, className: "bg-accent-green/90 text-[var(--brand-navy)]" },
   featured: { labelKey: "badgeFeatured", icon: CheckCircle2, className: "bg-brand-gold-light text-brand-gold-dark" },
-  superhost: { labelKey: "badgeSuperhost", icon: Award, className: "bg-accent-clay/90 text-white" },
+  superhost: { labelKey: "badgeSuperhost", icon: Award, className: "bg-accent-clay/90 text-[var(--primary-ink)]" },
 };
 
 export function ListingCard(props: ListingCardProps) {
@@ -192,7 +192,7 @@ export function ListingCard(props: ListingCardProps) {
           <div className="flex items-end justify-between gap-2">
             <div className="flex items-baseline gap-1">
               <span key={`${activeCurrency}-${showTotal ? "total" : "day"}`} className="price-figure text-xl font-extrabold text-brand-primary animate-fade-in">{priceOnRequestMode ? t("priceOnRequest") : formatAmount(safePrice, { total: showTotal })}</span>
-              {!priceOnRequestMode && <span className="rounded-md bg-accent-clay/12 px-1.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-accent-clay" aria-label={displayCurrency}>{displayCurrency}</span>}
+              {!priceOnRequestMode && <span className="rounded-md bg-accent-clay/12 px-1.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-accent-clay dark:text-accent-clay-hover" aria-label={displayCurrency}>{displayCurrency}</span>}
               {!priceOnRequestMode && <span className="text-xs font-normal text-ink-tertiary">{unitText}</span>}
             </div>
             {rating && rating > 0 ? (

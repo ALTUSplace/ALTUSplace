@@ -375,7 +375,7 @@ export function PaymentCheckoutModal({
   const getCardBrandIcon = () => {
     switch (cardType) {
       case 'visa':
-        return <div className="px-2 py-1 bg-accent-clay rounded text-white text-xs font-bold">VISA</div>;
+        return <div className="px-2 py-1 bg-accent-clay rounded text-[var(--primary-ink)] text-xs font-bold">VISA</div>;
       case 'mastercard':
         return (
           <div className="flex items-center">
@@ -386,7 +386,7 @@ export function PaymentCheckoutModal({
           </div>
         );
       case 'amex':
-        return <div className="px-2 py-1 bg-accent-clay rounded text-white text-xs font-bold">AMEX</div>;
+        return <div className="px-2 py-1 bg-accent-clay rounded text-[var(--primary-ink)] text-xs font-bold">AMEX</div>;
       default:
         return <CreditCard className="w-5 h-5 text-ink-secondary dark:text-[#B0B0B8]" />;
     }
