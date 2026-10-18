@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useState, useCallback, useEffect } from "react";
 import { useLocation } from "wouter";
-import { Car, Home, MapPin, Star, Heart, Fuel, Settings, Users, Award, Zap, CheckCircle2, Calendar, Ruler } from "lucide-react";
+import { Car, Home, MapPin, Star, Heart, Fuel, Settings, Users, Award, Zap, CheckCircle2, Calendar, Ruler, ArrowRight } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { OptimizedImage } from "@/components/OptimizedImage";
@@ -104,7 +104,11 @@ export function ListingCard(props: ListingCardProps) {
     <article
       className={cn(
         "group relative flex flex-col overflow-hidden rounded-2xl border border-border-subtle bg-bg-surface",
-        "shadow-sm hover:shadow-md transition-shadow duration-200 cursor-pointer",
+        // Same hover idiom as the Home hot-deal card: lift, deepen the shadow
+        // and warm the border. `-translate-y-1` compiles to the standalone
+        // `translate` property, so it still applies on cards that carry
+        // `animate-fade-up` (whose `both` fill pins `transform`).
+        "shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-border-default hover:shadow-lg cursor-pointer",
         className,
       )}
       style={style}
@@ -187,7 +191,7 @@ export function ListingCard(props: ListingCardProps) {
         <div className="mt-auto flex flex-col gap-3 pt-2">
           <div className="flex items-end justify-between gap-2">
             <div className="flex items-baseline gap-1">
-              <span key={`${activeCurrency}-${showTotal ? "total" : "day"}`} className="price-figure text-xl font-bold text-brand-primary animate-fade-in">{priceOnRequestMode ? t("priceOnRequest") : formatAmount(safePrice, { total: showTotal })}</span>
+              <span key={`${activeCurrency}-${showTotal ? "total" : "day"}`} className="price-figure text-xl font-extrabold text-brand-primary animate-fade-in">{priceOnRequestMode ? t("priceOnRequest") : formatAmount(safePrice, { total: showTotal })}</span>
               {!priceOnRequestMode && <span className="rounded-md bg-accent-clay/12 px-1.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-accent-clay" aria-label={displayCurrency}>{displayCurrency}</span>}
               {!priceOnRequestMode && <span className="text-xs font-normal text-ink-tertiary">{unitText}</span>}
             </div>
@@ -201,6 +205,18 @@ export function ListingCard(props: ListingCardProps) {
               <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-bg-muted px-2 py-0.5 text-[10px] font-semibold text-ink-tertiary">{t("reviewsNewEmpty")}</span>
             )}
           </div>
+          {/* Explicit CTA. The whole card is already clickable, but a labelled
+              control makes the destination unambiguous and gives touch users one
+              obvious 44px target instead of the photo or a 15px title. The
+              arrow mirrors with the direction, like every other forward glyph. */}
+          <button
+            type="button"
+            onClick={(event) => { event.stopPropagation(); handleCardClick(); }}
+            className="b2-press inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-xl bg-accent-clay px-4 text-xs font-extrabold text-[var(--primary-ink)] shadow-[var(--shadow-clay)] transition-colors hover:bg-accent-clay-hover"
+          >
+            {t("viewDetails")}
+            <ArrowRight className="h-3.5 w-3.5 rtl:-scale-x-100" aria-hidden="true" />
+          </button>
         </div>
       </div>
     </article>

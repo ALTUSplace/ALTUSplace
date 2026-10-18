@@ -801,7 +801,10 @@
   }
   .b2-segmented-control > button {
     flex: 1;
-    min-height: 2.25rem;
+    /* 36px was under the 44px thumb floor; these are the language/currency
+       pickers in the mobile drawer, i.e. the most thumb-reached controls in
+       the app, so they use the shared tap-target token. */
+    min-height: var(--tap-target);
     border-radius: var(--radius-xs);
     font-size: var(--text-body-sm);
     font-weight: 700;
