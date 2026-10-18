@@ -329,7 +329,7 @@ export default function CarDetails() {
                   <div className="absolute bottom-3 inset-x-3 flex justify-center gap-2">
                     {galleryImages.map((src, i) => (
                       <button key={`${src}-${i}`} onClick={() => setActiveImage(i)} aria-label={`صورة ${i + 1}`} className="cursor-pointer">
-                        <OptimizedImage src={src} alt={`${car.name} — صورة ${i + 1}`} width={96} height={64} className={"h-12 w-16 rounded-lg object-cover border-2 " + (i === safeActive ? "border-amber-400" : "border-white/30 opacity-70 hover:opacity-100")} />
+                        <OptimizedImage src={src} alt={`${car.name} — صورة ${i + 1}`} width={96} height={64} widthHint={96} sizes="64px" className={"h-12 w-16 rounded-lg object-cover border-2 " + (i === safeActive ? "border-amber-400" : "border-white/30 opacity-70 hover:opacity-100")} />
                       </button>
                     ))}
                   </div>

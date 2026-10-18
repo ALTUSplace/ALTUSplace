@@ -4,6 +4,7 @@ import { BookOpen, Calendar, User, ArrowRight, Sparkles, Tag, Search } from 'luc
 import { Button } from '@/components/ui/button';
 import { useLanguage } from "@/contexts/LanguageContext";
 import { renderJsonLd, useSEO, SITE_URL } from '@/lib/seo';
+import { OptimizedImage } from '@/components/OptimizedImage';
 
 const SEO_BLOG = {
   ar: {
@@ -120,9 +121,9 @@ export default function BlogPage() {
           {articles.map((article) => (
             <div key={article.id} className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 flex flex-col group">
               <div className="relative h-52 overflow-hidden">
-                <img 
-                  src={article.image} 
-                  alt={article.title} 
+                <OptimizedImage
+                  src={article.image}
+                  alt={article.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
                 <span className="absolute top-4 right-4 bg-accent-clay text-white text-xs font-bold px-3 py-1 rounded-full shadow">
