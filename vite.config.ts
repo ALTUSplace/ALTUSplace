@@ -202,7 +202,12 @@ export default defineConfig({
           if (packageName === "framer-motion") return "motion-vendor";
           if (packageName === "streamdown") return "content-vendor";
           if (packageName === "lucide-react") return "icons-vendor";
-          if (["date-fns", "zod", "superjson", "clsx", "tailwind-merge", "class-variance-authority"].includes(packageName)) return "utils-vendor";
+          // `zod` is intentionally NOT listed here. It is reachable only from
+          // lazily-loaded chunks (lib/whatsapp.ts, PartnerApply), but grouping it
+          // with the eagerly-needed `cn()` helpers forced the whole 83 kB
+          // validator into the initial load. Left out, it falls through to its
+          // own `pkg-zod` chunk and loads on first use.
+          if (["date-fns", "superjson", "clsx", "tailwind-merge", "class-variance-authority"].includes(packageName)) return "utils-vendor";
           if (["@hookform/resolvers", "react-hook-form"].includes(packageName)) return "forms-vendor";
           if (["cmdk", "embla-carousel-react", "input-otp", "react-resizable-panels", "vaul"].includes(packageName)) return "interactive-vendor";
           if (["wouter", "sonner"].includes(packageName)) return "navigation-vendor";
