@@ -355,13 +355,23 @@ export default function Search() {
                   <Filter className="w-5 h-5 text-accent-clay" />
                   <span>{t('advancedFilters')}</span>
                 </h2>
+                {/* Reset. The heading row gets only 174px of content width at
+                    1024px and 238px from 1280px up, while the heading itself
+                    needs up to 168px ("Advanced filters") and the labelled
+                    button up to 168px ("Réinitialiser les filtres") — so the two
+                    cannot share a line in every locale. Narrow: the button takes
+                    its own full-width row under the heading (text still on one
+                    line, and the panel's biggest tap target). Wide (`xl`): a 44px
+                    icon button sitting beside the heading, with the label kept as
+                    the accessible name and mirrored in the tooltip. */}
                 <button
                   type="button"
                   onClick={resetFilters}
-                  className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-border-default px-3 text-xs font-bold text-accent-clay transition-colors hover:border-accent-clay hover:bg-accent-clay/10"
+                  title={t('resetFilters')}
+                  className="inline-flex min-h-11 w-full shrink-0 items-center justify-center gap-1.5 rounded-xl border border-border-default px-3 text-xs font-bold text-accent-clay transition-colors hover:border-accent-clay hover:bg-accent-clay/10 xl:w-11 xl:gap-0 xl:px-0"
                 >
                   <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
-                  {t('resetFilters')}
+                  <span className="xl:sr-only">{t('resetFilters')}</span>
                 </button>
               </div>
 
