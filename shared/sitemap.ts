@@ -21,12 +21,19 @@ export const COMPANIES_SITEMAP_PATH = "/api/sitemap-companies.xml";
 export const STATIC_PAGES: ReadonlyArray<{ path: string; changefreq: string; priority: string }> = [
   { path: "/", changefreq: "daily", priority: "1.0" },
   { path: "/search", changefreq: "daily", priority: "0.9" },
+  { path: "/properties/for-rent", changefreq: "weekly", priority: "0.8" },
   { path: "/locations", changefreq: "weekly", priority: "0.8" },
   { path: "/blog", changefreq: "weekly", priority: "0.6" },
+  { path: "/become-partner", changefreq: "monthly", priority: "0.6" },
+  { path: "/become-partner/car-rental", changefreq: "monthly", priority: "0.6" },
+  { path: "/become-partner/real-estate", changefreq: "monthly", priority: "0.6" },
+  { path: "/become-agency", changefreq: "monthly", priority: "0.6" },
   { path: "/about", changefreq: "monthly", priority: "0.5" },
-  { path: "/support-tickets", changefreq: "monthly", priority: "0.4" },
   { path: "/dispute-resolution", changefreq: "monthly", priority: "0.4" },
   { path: "/privacy", changefreq: "yearly", priority: "0.3" },
+  { path: "/conditions-utilisation", changefreq: "yearly", priority: "0.3" },
+  { path: "/politique-confidentialite", changefreq: "yearly", priority: "0.3" },
+  { path: "/mentions-legales", changefreq: "yearly", priority: "0.3" },
 ];
 
 /** Hand-maintained landing pages with their own copy. */

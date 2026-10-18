@@ -1,17 +1,15 @@
 /**
  * Deterministic build-time sitemap generator.
  *
- * Replaces `scripts/generate-sitemap.ts` (sitemap index + static/cities
- * sub-sitemaps) with a single `client/public/sitemap.xml` urlset covering the
- * marketing routes (home, city pages, terms, privacy, blog) plus the top
- * published listings (cap 500) — copied to `dist/public` by Vite.
+ * Writes a sitemap index (`sitemap.xml`) plus two static sub-sitemaps
+ * (`sitemap-static.xml`, `sitemap-cities.xml`) into `client/public`, copied to
+ * `dist/public` by Vite. Dynamic listings/companies sub-sitemaps are served at
+ * runtime by `server/_core/sitemap.ts` (`/api/sitemap-*.xml`).
  *
- * Deterministic: a fixed route list in a fixed order and listings ordered by
- * descending `listing_id`; no wall-clock timestamps are emitted (listing
- * `lastmod` comes from the row's own `createdAt`). Listings are read from
- * Postgres when a connection string is available; otherwise the static routes
- * are still written and the listings section is skipped with a warning, so the
- * build can never fail on an unreachable database.
+ * Deterministic: a fixed route list in a fixed order, and no `lastmod` is
+ * emitted (no wall-clock timestamps), so the output is byte-stable across
+ * runs. No database connection is required — the static and cities
+ * sub-sitemaps are pure, so the build can never fail on an unreachable DB.
  *
  * Runs from `pnpm build` before `vite build`.
  */
@@ -28,16 +26,6 @@ const ROOT = resolve(import.meta.dirname, "..");
 const PUBLIC_DIR = resolve(ROOT, "client", "public");
 
 const CITY_SLUGS = ["casablanca", "marrakech", "agadir", "rabat", "tangier", "fes"];
-const STATIC_PAGES = [
-  { path: "/", changefreq: "daily", priority: "1.0" },
-  { path: "/search", changefreq: "daily", priority: "0.9" },
-  { path: "/properties/for-rent", changefreq: "weekly", priority: "0.8" },
-  { path: "/privacy", changefreq: "yearly", priority: "0.3" },
-  { path: "/conditions-utilisation", changefreq: "yearly", priority: "0.3" },
-  { path: "/politique-confidentialite", changefreq: "yearly", priority: "0.3" },
-  { path: "/mentions-legales", changefreq: "yearly", priority: "0.3" },
-  { path: "/blog", changefreq: "weekly", priority: "0.6" },
-];
 
 function readEnvFile(name) {
   try {

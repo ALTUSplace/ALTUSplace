@@ -1,7 +1,8 @@
 User-agent: *
 Allow: /
+Allow: /api/sitemap
 Disallow: /api/
-Disallow: /admin/
+Disallow: /admin
 Disallow: /super
 Disallow: /dashboard
 Disallow: /favorites
