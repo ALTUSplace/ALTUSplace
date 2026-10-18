@@ -606,7 +606,10 @@ function ActivityLog({ items }: { items: ActivityItem[] }) {
 export default function AgencyDashboard() {
   useDocumentTitle("لوحة الوكالة | ALTUSplace");
   const { user } = useAuth();
-  const bookings = trpc.bookings.ownerList.useQuery(undefined, { enabled: !!user });
+  // Renter bookings are owner-tier only (M-1): a self-registered `partner`
+  // must not fire a query the server now rejects.
+  const isOwnerTier = !!user && (user.role === "owner" || user.role === "admin" || user.role === "SUPER_ADMIN");
+  const bookings = trpc.bookings.ownerList.useQuery(undefined, { enabled: isOwnerTier });
   const overview = trpc.agency.overview.useQuery(undefined, { enabled: !!user });
   const fleet = trpc.listings.mine.useQuery(undefined, { enabled: !!user });
   const activity = trpc.agency.recentActivity.useQuery(undefined, { enabled: !!user });

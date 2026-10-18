@@ -18,17 +18,26 @@ describe("multi-agency isolation audit", () => {
   it("scopes every owner listing-write procedure to the caller's own ownerId", () => {
     const routers = read("server/routers.ts");
     const scope = "eq(listings.ownerId, ctx.user!.id)";
+    // Listing + agency-settings routes ride the partner tier (M-1): a
+    // self-registered partner may manage their OWN listings/settings only.
     for (const proc of [
-      "toggleAvailability: ownerProcedure",
-      "setFleetStatus: ownerProcedure",
-      "setAvailability: ownerProcedure",
-      "saveIcalSettings: ownerProcedure",
-      "syncIcalNow: ownerProcedure",
+      "toggleAvailability: partnerProcedure",
+      "setFleetStatus: partnerProcedure",
+      "setAvailability: partnerProcedure",
+      "saveIcalSettings: partnerProcedure",
+      "syncIcalNow: partnerProcedure",
       "update",
-      "remove: ownerProcedure",
-      "mine: ownerProcedure",
+      "remove: partnerProcedure",
+      "mine: partnerProcedure",
+    ]) {
+      expect(routers).toContain(proc);
+    }
+    // Booking management, renter data and money stay on the owner tier.
+    for (const proc of [
       "ownerUpdateStatus: ownerProcedure",
       "createForBooking: ownerProcedure",
+      "ownerList: ownerProcedure",
+      "ownerFinancials: ownerProcedure",
     ]) {
       expect(routers).toContain(proc);
     }
@@ -43,6 +52,39 @@ describe("multi-agency isolation audit", () => {
     expect(ownerList).toContain(".where(eq(listings.ownerId, ctx.user!.id))");
     expect(ownerList).toContain("الحجز غير موجود ضمن إعلاناتك.");
   });
+
+  it("keeps a self-registered partner out of renter-data and money procedures", async () => {
+    const trpcSource = read("server/_core/trpc.ts");
+    // M-1: the owner tier must no longer list `partner` — it used to hand
+    // bookings.ownerList (renter PII) to anyone who signed up as a partner.
+    const ownerTier = trpcSource.match(/export const ownerProcedure = protectedProcedure\.use\([\s\S]*?\n\);/)?.[0] ?? "";
+    expect(ownerTier).toContain("!['owner', 'admin', 'SUPER_ADMIN'].includes(ctx.user!.role)");
+    expect(ownerTier).not.toContain("'partner'");
+    // The partner tier mirrors the old owner list and is limited to own data.
+    const partnerTier = trpcSource.match(/export const partnerProcedure = protectedProcedure\.use\([\s\S]*?\n\);/)?.[0] ?? "";
+    expect(partnerTier).toContain("!['owner', 'admin', 'partner', 'SUPER_ADMIN'].includes(ctx.user!.role)");
+
+    const partnerCaller = appRouter.createCaller({
+      user: {
+        id: 902,
+        openId: "self-registered-partner",
+        email: "partner@example.com",
+        name: "Partenaire",
+        loginMethod: "manus",
+        role: "partner",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        lastSignedIn: new Date(),
+      },
+      req: { protocol: "https", headers: {} } as never,
+      res: {} as never,
+    });
+    await expect(partnerCaller.bookings.ownerList()).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(partnerCaller.bookings.ownerUpdateStatus({ bookingId: 1, status: "Confirmed" })).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(partnerCaller.admin.ownerFinancials()).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(partnerCaller.payouts.request({ amount: 100, method: "bank_transfer" })).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(partnerCaller.rentalContracts.createForBooking({ bookingId: 1, language: "ar" })).rejects.toMatchObject({ code: "FORBIDDEN" });
+  }, 30_000);
 
   it("lets a first-time agency register its own workspace via auth.becomeAgency", () => {
     const routers = read("server/routers.ts");

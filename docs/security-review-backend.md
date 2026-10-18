@@ -40,6 +40,8 @@ if (await isOwnerConfigured()) → 403
 ### M-1 — role `partner` ذاتي التسجيل كيحمل صلاحيات `ownerProcedure`
 `partnerAuth.ts` كتسجّل role = `partner` بلا مصادقة إدارية، و`ownerProcedure` (`trpc.ts`) كتقبل `['owner','admin','partner','SUPER_ADMIN']`. النتيجة: أي شخص كيسجّل شريك كيقدر `listings.create` + رفع صور + `bookings.ownerList` (بيانات الرينترز) + `agency.settings` + `translation.*`. النشر النهائي كيمر من moderation (Pending → admin)، لكن السطح اتوسّع بلا vetting.
 
+> ✅ **تم الإصلاح** (Fix 4) — شوف قسم «حالة الإصلاحات» أسفله.
+
 ### M-2 — `DIRECT_LOGIN_PASSWORD` كيبقى بابًا خلفيًا + بديل لمفتاح الجلسة
 `env.ts:8` : `cookieSecret = JWT_SECRET ?? DIRECT_LOGIN_PASSWORD ?? ""`، و`DIRECT_LOGIN_PASSWORD` كيشغّل `/api/auth/direct-login` إلى الأبد. الإقلاع كيتحقق من طول `JWT_SECRET` فقط، ماشي من عدم استخدام كلمة سر ثابتة كمفتاح جلسة.
 
@@ -62,6 +64,8 @@ if (await isOwnerConfigured()) → 403
 
 ### M-7 — رقم الواتساب الخاص (إشعارات الحجز) مكشوف عمومًا
 `listings.getById` (`:2014-2026`) و`search`/`list` كيرجّعو `whatsappPhone` + `whatsappNumber` + `agencyPhone` بلا مصادقة، و`Checkout.tsx:209` كتفضّل `whatsappPhone` (رقم الإشعارات الخاص) على `whatsappNumber` (العمومي). هذا كيناقض سياسة "الرقم ما كيتكشفش حتى التأكيد" المتبعة فـ `bookings.getById`.
+
+> ✅ **تم الإصلاح** (Fix 3) — شوف قسم «حالة الإصلاحات» أسفله. ملاحظة: `list`/`search` أصلًا ما كانوش كيرجّعو أي هاتف (غير `ownerName`/`ownerRole`) — الكشف كان فـ `getById` فقط.
 
 ---
 
@@ -97,7 +101,7 @@ if (await isOwnerConfigured()) → 403
 1. **H-1/H-2** → قرار صريح: إما `FORCE RLS` + role غير superuser، أو توثيق قبول المخاطرة + إضافة اختبار يفرض `eq(ownerId, ...)`.
 2. **H-3** → بوابة bootstrap للمالك (token/env) ورفض الإقلاع الإنتاجي إذا لم يُعدّ.
 3. **M-3/M-4/M-5** → `limit` على search/list، وlimiter موزّع، وتغطية `/storage/*`.
-4. **M-1/M-2** → vetting الشريك قبل `ownerProcedure`، وفصل مفتاح الجلسة عن `DIRECT_LOGIN_PASSWORD`.
+4. **M-2** → فصل مفتاح الجلسة عن `DIRECT_LOGIN_PASSWORD`، وvetting إداري للشريك (ترقية لـ `owner` بعد المراجعة).
 5. الباقي (Low) كتحسينات تدريجية.
 
 ---
@@ -108,8 +112,10 @@ if (await isOwnerConfigured()) → 403
 | --- | --- | --- |
 | **H-3** | ✅ مُصلَّح | `server/_core/directAuth.ts` (بوابة `OWNER_SETUP_TOKEN` + مقارنة constant-time)، `server/_core/env.ts` (`ownerSetupToken` + `assertProductionOwnerConfigured`)، `.env.production.example` |
 | **M-3** | ✅ مُصلَّح | `server/routers.ts` (`MAX_LISTING_ROWS = 500` + `.limit(...)` على `listings.list` و `listings.search`) |
+| **M-1** | ✅ مُصلَّح | `server/_core/trpc.ts` (tier جديد `partnerProcedure` + `ownerProcedure` بلا `partner`)، `server/routers.ts` (21 route → `partnerProcedure`؛ `bookings.ownerList`/`ownerUpdateStatus`/`admin.ownerFinancials`/`payouts.request`/`rentalContracts.createForBooking` بقاو owner/admin فقط) |
+| **M-7** | ✅ مُصلَّح | `server/routers.ts` (`toPublicListing` كيحذف `whatsappPhone`؛ `getById` ما بقاش كيجيب الرقم الخاص إلا للمالك/Admin عبر استعلام مقيّد)، `client/src/pages/Checkout.tsx` (CTA كيستعمل `whatsappNumber`/`agencyPhone` العموميين فقط) |
 | H-1, H-2 | ⏳ مفتوح | `supabase/rls.sql`, `server/db.ts` |
-| M-1, M-2, M-4 → M-7 | ⏳ مفتوح | — |
+| M-2, M-4 → M-6 | ⏳ مفتوح | — |
 | L-1 → L-10 | ⏳ مفتوح | — |
 
 ### تفاصيل الإصلاحات المنجزة
@@ -120,3 +126,15 @@ if (await isOwnerConfigured()) → 403
 
 **Fix 2 — M-3 (حدود قاعدة البيانات):**
 - `listings.list` و`listings.search` كيستعملو `.limit(MAX_LISTING_ROWS)` (500 صف) قبل التصفيح داخل الذاكرة، حتى استعلام عام غير مُصادَق ما يجيبش الجدول كامل.
+
+**Fix 3 — M-7 (رقم الواتساب الخاص):**
+- `toPublicListing` كيحذف الآن `whatsappPhone` من أي payload عام (دفاع في العمق)، و`listings.getById` ما بقاش كيselecteha فـ join العمومي — الرقم الخاص كيتجاب غير للمالك أو Admin، باستعلام منفصل ومقيّد (`ctx.user.id === listing.ownerId` أو role إداري).
+- `listings.list`/`listings.search` كانو أصلًا نقيين (غير `ownerName` + `ownerRole`) والاختبارات كتفرض ذلك — زدنا تأكيد.
+- `Checkout.tsx` كيخدم الآن بـ `whatsappNumber` (العمومي) ثم `agencyPhone`، بلا أي fallback للرقم الخاص.
+- ملاحظة متبقية (خارج نطاق الطلب): `Success.tsx` و`Voucher.tsx` مازال كيستعملو `ownerWhatsApp` (نفس الرقم الخاص) فـ CTA ما بعد تأكيد الحجز — مرشحة لنفس الإصلاح إذا بغيت الرقم العمومي فقط.
+
+**Fix 4 — M-1 (تصعيد صلاحيات الشريك):**
+- tier جديد `partnerProcedure` (`owner`/`admin`/`partner`/`SUPER_ADMIN`) = «إعلاناتك + إعدادات وكالتك فقط»، و`ownerProcedure` ولّى `owner/admin/SUPER_ADMIN` فقط.
+- 21 route تحوّلو لـ `partnerProcedure`: `agency.*` (8، كلها مقيّدة بـ `ctx.user!.id`) + `storage.uploadAgencyLogo`/`uploadImage` + `listings.*` (11).
+- بقاو على `ownerProcedure`: `bookings.ownerList` (بيانات الرينترز)، `bookings.ownerUpdateStatus`، `admin.ownerFinancials`، `payouts.request`، `rentalContracts.createForBooking` — أي شريك ذاتي التسجيل ما بقاش يوصل ليهم.
+- اختبار سلوكي جديد فـ `multi-agency.isolation.test.ts`: شريك كيتلقى `FORBIDDEN` على الخمسة دواوز.

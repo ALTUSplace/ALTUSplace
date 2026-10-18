@@ -23,6 +23,9 @@ export default function HostDashboard() {
   useDocumentTitle("أضف إعلانك | ALTUSplace");
   useNoIndex();
   const { user, loading, refresh } = useAuth();
+  // Renter bookings and money are owner-tier surfaces (M-1): a self-registered
+  // `partner` must not fire queries the server now rejects (403).
+  const isOwnerTier = !!user && (user.role === "owner" || user.role === "admin" || user.role === "SUPER_ADMIN");
   // Recharts writes stroke to an SVG attribute, which cannot evaluate var().
   const viewsInk = useToken("--ink-primary");
   const clicksAccent = useToken("--accent-primary");
@@ -31,7 +34,7 @@ export default function HostDashboard() {
   const overview = trpc.agency.overview.useQuery(undefined, { enabled: !!user });
   const analyticsTimeline = trpc.agency.analyticsTimeline.useQuery(undefined, { enabled: !!user });
   const analyticsCsv = trpc.agency.exportAnalyticsCsv.useQuery(undefined, { enabled: false });
-  const bookings = trpc.bookings.ownerList.useQuery(undefined, { enabled: !!user });
+  const bookings = trpc.bookings.ownerList.useQuery(undefined, { enabled: isOwnerTier });
   const createListing = trpc.listings.create.useMutation({ onSuccess: async () => { await Promise.all([listings.refetch(), overview.refetch()]); toast.success("تم نشر العرض مباشرة بعد اجتياز الفحص."); setShowForm(false); } });
   const updateStatus = trpc.bookings.ownerUpdateStatus.useMutation({ onSuccess: () => { bookings.refetch(); toast.success("تم تحديث حالة الحجز"); } });
   const removeListing = trpc.listings.remove.useMutation({ onSuccess: async () => { await Promise.all([listings.refetch(), overview.refetch()]); toast.success("تم حذف الإعلان"); } });
@@ -41,7 +44,7 @@ export default function HostDashboard() {
   const setAvailability = trpc.listings.setAvailability.useMutation({ onSuccess: () => { listings.refetch(); toast.success("تم تحديث تقويم التوفر"); } });
   const saveIcal = trpc.listings.saveIcalSettings.useMutation({ onSuccess: async () => { await listings.refetch(); toast.success("تم حفظ إعدادات iCal"); } });
   const syncIcal = trpc.listings.syncIcalNow.useMutation({ onSuccess: async (result) => { await listings.refetch(); toast.success(result.synced ? `تم استيراد ${result.count ?? 0} فترة من التقويم` : "لا يوجد رابط iCal مضبوط"); } });
-  const financials = trpc.admin.ownerFinancials.useQuery(undefined, { enabled: !!user && (user.role === "owner" || user.role === "admin" || user.role === "partner") });
+  const financials = trpc.admin.ownerFinancials.useQuery(undefined, { enabled: isOwnerTier });
   const requestPayout = trpc.payouts.request.useMutation({ onSuccess: async () => { toast.success("تم إرسال طلب السحب للمراجعة"); await financials.refetch(); setPayoutAmount(""); } });
 
   const [form, setForm] = useState({ title: "", city: "الدار البيضاء", officeType: "office", rentalPeriod: "monthly", price: "", description: "", amenities: [] as string[], imageUrl: "", imageVerificationProof: "" });

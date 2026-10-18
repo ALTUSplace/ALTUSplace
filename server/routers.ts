@@ -7,7 +7,7 @@ import { TRPCError } from "@trpc/server";
 import { parse as parseCookie } from "cookie";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
-import { adminProcedure, ownerProcedure, publicProcedure, protectedProcedure, router, superAdminProcedure } from "./_core/trpc";
+import { adminProcedure, ownerProcedure, partnerProcedure, protectedProcedure, publicProcedure, router, superAdminProcedure } from "./_core/trpc";
 import { getDb, withTransaction } from "./db";
 import { PLATFORM_SETTINGS_PUBLIC_COLUMNS, defaultPlatformSettings, sanitizePlatformSettingsSnapshot } from "./platformSettingsPolicy";
 import { evaluateBecomeAgencyAccess, isElevatedRole } from "./becomeAgencyPolicy";
@@ -57,15 +57,20 @@ function haversineKm(aLat: number, aLng: number, bLat: number, bLng: number): nu
 }
 
 /**
- * Strips private calendar fields (icalImportUrl / icalExportToken) from listing
- * rows before they are exposed through public procedures. The owner-only
- * listing queries keep the full row.
+ * Strips private fields from listing rows before they are exposed through
+ * public procedures:
+ *   - icalImportUrl / icalExportToken — private calendar sync secrets;
+ *   - whatsappPhone (M-7) — the owner's PRIVATE booking-alert number. It is
+ *     never part of a public listing payload; listings.getById re-attaches it
+ *     only for the listing's own owner or an admin.
+ * The owner-only listing queries keep the full row.
  */
 function toPublicListing<T extends object>(row: T): T {
   if (!row) return row;
   const safe = { ...row } as Record<string, unknown>;
   delete safe.icalImportUrl;
   delete safe.icalExportToken;
+  delete safe.whatsappPhone;
   return safe as T;
 }
 
@@ -218,7 +223,7 @@ export const appRouter = router({
   }),
 
   agency: router({
-    settings: ownerProcedure.query(async ({ ctx }) => {
+    settings: partnerProcedure.query(async ({ ctx }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "قاعدة البيانات غير متاحة." });
       const rows = await db.select({
@@ -237,7 +242,7 @@ export const appRouter = router({
       }).from(users).where(eq(users.id, ctx.user!.id)).limit(1);
       return rows[0] ?? null;
     }),
-    statusSummary: ownerProcedure.query(async ({ ctx }) => {
+    statusSummary: partnerProcedure.query(async ({ ctx }) => {
       const db = await getDb();
       const empty = { counts: { pending: 0, published: 0, rejected: 0 }, total: 0, listings: [] as Array<{ id: number; title: string; city: string; category: string; status: string; normalizedStatus: "pending" | "published" | "rejected"; createdAt: Date | null }> };
       if (!db) return empty;
@@ -257,7 +262,7 @@ export const appRouter = router({
         listings: result,
       };
     }),
-    updateSettings: ownerProcedure
+    updateSettings: partnerProcedure
       .input(z.object({
         agencyName: z.string().trim().max(180).optional().nullable(),
         agencyPhone: z.string().trim().max(32).optional().nullable(),
@@ -291,7 +296,7 @@ export const appRouter = router({
         await writeAuditLog({ actorId: ctx.user!.id, action: "agency.settings.updated", entityType: "user", entityId: ctx.user!.id, afterData: { agencyName: normalize(input.agencyName), agencyPhone: normalize(input.agencyPhone), agencyEmail: normalize(input.agencyEmail), whatsappPhone: normalizeWhatsAppNumber(input.whatsappPhone ?? "") ?? null, whatsappNumber: normalizeWaNumber(input.whatsappNumber ?? "") ?? null } });
         return { success: true as const };
       }),
-    listings: ownerProcedure.query(async ({ ctx }) => {
+    listings: partnerProcedure.query(async ({ ctx }) => {
       const db = await getDb();
       if (!db) return [];
       const owned = await db.select().from(listings).where(eq(listings.ownerId, ctx.user!.id)).orderBy(desc(listings.createdAt));
@@ -310,7 +315,7 @@ export const appRouter = router({
       }
       return owned.map((listing) => ({ ...listing, analytics: counts.get(listing.id) ?? { views: 0, whatsappClicks: 0, contactClicks: 0 } }));
     }),
-    overview: ownerProcedure.query(async ({ ctx }) => {
+    overview: partnerProcedure.query(async ({ ctx }) => {
       const db = await getDb();
       if (!db) return { totalListings: 0, availableListings: 0, unavailableListings: 0, activeBookings: 0, views: 0, whatsappClicks: 0, contactClicks: 0, grossRevenue: 0, netRevenue: 0 };
       const owned = await db.select({ id: listings.id, status: listings.status }).from(listings).where(eq(listings.ownerId, ctx.user!.id));
@@ -336,7 +341,7 @@ export const appRouter = router({
         netRevenue: bookingRows.filter((booking) => booking.status === "Confirmed").reduce((sum, booking) => sum + Number(booking.netProfit), 0),
       };
     }),
-    analyticsTimeline: ownerProcedure.query(async ({ ctx }) => {
+    analyticsTimeline: partnerProcedure.query(async ({ ctx }) => {
       const db = await getDb();
       if (!db) return [];
       const owned = await db.select({ id: listings.id }).from(listings).where(eq(listings.ownerId, ctx.user!.id));
@@ -355,7 +360,7 @@ export const appRouter = router({
         .orderBy(sql`DATE(${listingAnalyticsEvents.createdAt})`);
       return rows.map((row) => ({ day: String(row.day), eventType: row.eventType, total: Number(row.total) }));
     }),
-    exportAnalyticsCsv: ownerProcedure.query(async ({ ctx }) => {
+    exportAnalyticsCsv: partnerProcedure.query(async ({ ctx }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "قاعدة البيانات غير متاحة." });
       const owned = await db.select({
@@ -388,7 +393,7 @@ export const appRouter = router({
       const date = new Date().toISOString().slice(0, 10);
       return { filename: `altusplace-agency-analytics-${date}.csv`, csv: `\uFEFF${header.map(csvField).join(",")}\n${rows.join("\n")}` };
     }),
-    recentActivity: ownerProcedure.query(async ({ ctx }) => {
+    recentActivity: partnerProcedure.query(async ({ ctx }) => {
       const db = await getDb();
       if (!db) return [];
       const listingIds = (await db.select({ id: listings.id }).from(listings).where(eq(listings.ownerId, ctx.user!.id))).map((row) => row.id);
@@ -537,7 +542,7 @@ export const appRouter = router({
   }),
 
   storage: router({
-    uploadAgencyLogo: ownerProcedure
+    uploadAgencyLogo: partnerProcedure
       .input(z.object({
         fileName: z.string().trim().min(1).max(160),
         mimeType: z.enum(["image/jpeg", "image/png", "image/webp"]),
@@ -555,7 +560,7 @@ export const appRouter = router({
         });
         return { ...uploaded, fileName: normalizedName, mimeType: input.mimeType };
       }),
-    uploadImage: ownerProcedure
+    uploadImage: partnerProcedure
       .input(z.object({
         fileName: z.string().trim().min(1).max(160),
         mimeType: z.enum(["image/jpeg", "image/png", "image/webp"]),
@@ -2014,12 +2019,16 @@ export const appRouter = router({
 
     getById: publicProcedure
       .input(z.object({ id: z.number(), language: z.enum(["ar", "fr", "en"]).optional() }))
-      .query(async ({ input }) => {
+      .query(async ({ ctx, input }) => {
         const db = await getDb();
         if (!db) {
           console.error('Database unavailable in getById query for listing ID:', input.id);
           return null;
         }
+        // M-7: the owner's private booking-alert number (`users.whatsappPhone`)
+        // is NOT selected here — a public listing payload may only carry the
+        // public agency line (`agencyPhone` / `whatsappNumber`). An owner or
+        // admin viewer gets it back from the separate, gated query below.
         const result = await db
           .select({
             listing: listings,
@@ -2027,7 +2036,6 @@ export const appRouter = router({
             ownerRole: users.role,
             agencyName: users.agencyName,
             agencyPhone: users.agencyPhone,
-            whatsappPhone: users.whatsappPhone,
             whatsappNumber: users.whatsappNumber,
           })
           .from(listings)
@@ -2041,9 +2049,18 @@ export const appRouter = router({
           return null;
         }
 
-        const { listing, ownerName, ownerRole, agencyName, agencyPhone, whatsappPhone, whatsappNumber } = result[0];
+        const { listing, ownerName, ownerRole, agencyName, agencyPhone, whatsappNumber } = result[0];
         const sourceLanguage = "ar" as const;
         const targetLanguage = input.language ?? sourceLanguage;
+
+        // The private booking-alert number is readable ONLY by the listing's own
+        // owner or an admin. It comes from a separate query so the public join
+        // above can never carry it by accident (`toPublicListing` strips it as
+        // well); owners can always re-read it from agency.settings.
+        const privateContact = ctx.user && (ctx.user.id === listing.ownerId || ctx.user.role === "admin" || ctx.user.role === "SUPER_ADMIN")
+          ? await db.select({ whatsappPhone: users.whatsappPhone }).from(users).where(eq(users.id, listing.ownerId)).limit(1)
+          : [];
+        const privateContactFields = privateContact.length > 0 ? { whatsappPhone: privateContact[0].whatsappPhone } : {};
 
         // Computed review aggregates (avg rounded to 1 decimal + exact count) —
         // pair with the groupBy aggregates already shipped by list/search.
@@ -2060,29 +2077,34 @@ export const appRouter = router({
             targetLanguage,
             sourceLanguage
           );
-          return toPublicListing({
-            ...listing,
-            title: translated.title ?? listing.title,
-            description: translated.description ?? listing.description,
-            _translationMeta: {
-              titleFromCache: translated.titleFromCache,
-              descriptionFromCache: translated.descriptionFromCache,
-              titleProvider: translated.titleProvider,
-              descriptionProvider: translated.descriptionProvider,
-            },
-            ownerName,
-            ownerRole,
-            agencyName,
-            agencyPhone,
-            whatsappPhone,
-            whatsappNumber,
-            averageRating: reviewSummary.average,
-            reviewCount: reviewSummary.count,
-            ratingBreakdown,
-          });
+          return {
+            ...toPublicListing({
+              ...listing,
+              title: translated.title ?? listing.title,
+              description: translated.description ?? listing.description,
+              _translationMeta: {
+                titleFromCache: translated.titleFromCache,
+                descriptionFromCache: translated.descriptionFromCache,
+                titleProvider: translated.titleProvider,
+                descriptionProvider: translated.descriptionProvider,
+              },
+              ownerName,
+              ownerRole,
+              agencyName,
+              agencyPhone,
+              whatsappNumber,
+              averageRating: reviewSummary.average,
+              reviewCount: reviewSummary.count,
+              ratingBreakdown,
+            }),
+            ...privateContactFields,
+          };
         }
 
-        return toPublicListing({ ...listing, _translationMeta: null, ownerName, ownerRole, agencyName, agencyPhone, whatsappPhone, whatsappNumber, averageRating: reviewSummary.average, reviewCount: reviewSummary.count, ratingBreakdown });
+        return {
+          ...toPublicListing({ ...listing, _translationMeta: null, ownerName, ownerRole, agencyName, agencyPhone, whatsappNumber, averageRating: reviewSummary.average, reviewCount: reviewSummary.count, ratingBreakdown }),
+          ...privateContactFields,
+        };
       }),
 
     getBookedDates: publicProcedure
@@ -2103,7 +2125,7 @@ export const appRouter = router({
         ];
       }),
 
-    toggleAvailability: ownerProcedure
+    toggleAvailability: partnerProcedure
       .input(z.object({ listingId: z.number().int().positive(), available: z.boolean() }))
       .mutation(async ({ ctx, input }) => {
         const db = await getDb();
@@ -2116,7 +2138,7 @@ export const appRouter = router({
         return { success: true as const, status };
       }),
 
-    setFleetStatus: ownerProcedure
+    setFleetStatus: partnerProcedure
       .input(z.object({ listingId: z.number().int().positive(), status: z.enum(['Available', 'Rented', 'Maintenance']) }))
       .mutation(async ({ ctx, input }) => {
         const db = await getDb();
@@ -2128,7 +2150,7 @@ export const appRouter = router({
         return { success: true as const, status: input.status };
       }),
 
-    setAvailability: ownerProcedure
+    setAvailability: partnerProcedure
       .input(z.object({ listingId: z.number().int().positive(), blockedRanges: z.array(z.object({ start: z.string(), end: z.string() })).max(100) }))
       .mutation(async ({ ctx, input }) => {
         const db = await getDb();
@@ -2145,7 +2167,7 @@ export const appRouter = router({
         return { success: true, blockedRanges: normalized };
       }),
 
-    getIcalSettings: ownerProcedure
+    getIcalSettings: partnerProcedure
       .input(z.object({ listingId: z.number().int().positive() }))
       .query(async ({ ctx, input }) => {
         const db = await getDb();
@@ -2155,7 +2177,7 @@ export const appRouter = router({
         return { ...rows[0], exportPath: rows[0].icalExportToken ? `/api/ical/export/${rows[0].icalExportToken}` : null };
       }),
 
-    saveIcalSettings: ownerProcedure
+    saveIcalSettings: partnerProcedure
       .input(z.object({ listingId: z.number().int().positive(), importUrl: z.string().trim().url().max(2000).nullable().optional() }))
       .mutation(async ({ ctx, input }) => {
         const db = await getDb();
@@ -2168,7 +2190,7 @@ export const appRouter = router({
         return { success: true, exportPath: `/api/ical/export/${token}`, importConfigured: Boolean(importUrl) };
       }),
 
-    syncIcalNow: ownerProcedure
+    syncIcalNow: partnerProcedure
       .input(z.object({ listingId: z.number().int().positive() }))
       .mutation(async ({ ctx, input }) => {
         const db = await getDb();
@@ -2178,7 +2200,7 @@ export const appRouter = router({
         return syncListingIcal(input.listingId);
       }),
 
-    create: ownerProcedure
+    create: partnerProcedure
       .input(
         z.object({
           title: z.string(),
@@ -2265,7 +2287,7 @@ export const appRouter = router({
         return { success: true, listingId };
       }),
 
-    update: ownerProcedure
+    update: partnerProcedure
       .input(z.object({
         id: z.number().int().positive(),
         title: z.string().min(2).optional(),
@@ -2315,7 +2337,7 @@ export const appRouter = router({
         return { success: true, status: nextStatus };
       }),
 
-    resubmitRejected: ownerProcedure
+    resubmitRejected: partnerProcedure
       .input(z.object({
         id: z.number().int().positive(),
         title: z.string().min(2),
@@ -2355,7 +2377,7 @@ export const appRouter = router({
         return { success: true as const, status: "Pending" as const };
       }),
 
-    remove: ownerProcedure
+    remove: partnerProcedure
       .input(z.object({ id: z.number().int().positive() }))
       .mutation(async ({ ctx, input }) => {
         const db = await getDb();
@@ -2367,7 +2389,7 @@ export const appRouter = router({
         return { success: true };
       }),
 
-    mine: ownerProcedure.query(async ({ ctx }) => {
+    mine: partnerProcedure.query(async ({ ctx }) => {
       const db = await getDb();
       if (!db) return [];
       if (!['owner', 'admin', 'partner'].includes(ctx.user!.role)) throw new Error('هذه الصفحة مخصصة للملاك.');
@@ -2663,6 +2685,10 @@ export const appRouter = router({
         return { success: true };
       }),
 
+    // M-1: this endpoint returns renter PII (name / email / phone) for the
+    // caller's own listings, so it stays on the owner tier — a self-registered
+    // `partner` never reaches it. Partners keep `partnerProcedure` routes (own
+    // listings + own agency settings/analytics) instead.
     ownerList: ownerProcedure.query(async ({ ctx }) => {
       const db = await getDb();
       if (!db) return [];

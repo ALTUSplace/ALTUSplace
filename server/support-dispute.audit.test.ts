@@ -52,7 +52,7 @@ describe("support and dispute audit contracts", () => {
   });
 
   it("uses protected storage upload for listing media instead of persisting local preview URLs", () => {
-    expect(routerSource).toMatch(/storage:\s*router\([\s\S]*?uploadImage:\s*ownerProcedure/);
+    expect(routerSource).toMatch(/storage:\s*router\([\s\S]*?uploadImage:\s*partnerProcedure/);
     expect(routerSource).toMatch(/uploadImage:[\s\S]*?contentBase64:\s*z\.string\(\)\.min\(1\)\.max\(/);
     expect(routerSource).toMatch(/uploadImage:[\s\S]*?storagePut\(`users\/\$\{ctx\.user!\.id\}\/listings/);
     expect(mediaUpload).toMatch(/trpc\.storage\.uploadImage\.useMutation/);

@@ -51,11 +51,33 @@ const requireUser = t.middleware(async opts => {
 
 export const protectedProcedure = t.procedure.use(sanitizeInputMiddleware).use(requireUser);
 
+// Owner tier: FULL rental-operator capabilities. `partner` accounts are
+// self-registered and never admin-vetted (POSTing the partner signup form is
+// enough — see _core/partnerAuth.ts), so they are deliberately EXCLUDED here.
+// Anything that surfaces another person's data (bookings.ownerList → renter
+// PII), money (ownerFinancials, payouts.request) or generated contracts
+// (rentalContracts.createForBooking) stays on this tier and is therefore
+// owner/admin/SUPER_ADMIN only.
 export const ownerProcedure = protectedProcedure.use(
   t.middleware(async opts => {
     const { ctx, next } = opts;
-    if (!['owner', 'admin', 'partner', 'SUPER_ADMIN'].includes(ctx.user!.role)) {
+    if (!['owner', 'admin', 'SUPER_ADMIN'].includes(ctx.user!.role)) {
       throw new TRPCError({ code: 'FORBIDDEN', message: 'هذه العملية مخصصة للملاك.' });
+    }
+    return next({ ctx: { ...ctx, user: ctx.user } });
+  }),
+);
+
+// Partner tier (M-1): the widest tier a self-registered `partner` may reach.
+// Every procedure behind it MUST scope its SQL to `ctx.user!.id` — own
+// listings, own agency profile/settings, own media uploads — and must never
+// return or mutate another account's rows. Cross-account procedures stay on
+// `ownerProcedure` above.
+export const partnerProcedure = protectedProcedure.use(
+  t.middleware(async opts => {
+    const { ctx, next } = opts;
+    if (!['owner', 'admin', 'partner', 'SUPER_ADMIN'].includes(ctx.user!.role)) {
+      throw new TRPCError({ code: 'FORBIDDEN', message: 'هذه العملية مخصصة للملاك والشركاء.' });
     }
     return next({ ctx: { ...ctx, user: ctx.user } });
   }),
