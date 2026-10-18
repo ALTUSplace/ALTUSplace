@@ -94,6 +94,13 @@
     <link rel="preload" as="font" type="font/woff2" href="/fonts/tajawal-arabic-700.woff2" crossorigin>
     <link rel="preload" as="font" type="font/woff2" href="/fonts/tajawal-arabic-400.woff2" crossorigin>
     <link rel="preload" as="font" type="font/woff2" href="/fonts/plus-jakarta-sans-latin-var.woff2" crossorigin>
+
+    <!-- Image CDN: blog and demo/seed photos are served through Unsplash's
+         resizing endpoint (see client/src/lib/imageUrl.ts). The first image
+         request only starts after the SPA bundle has parsed and run, so
+         preconnecting here takes DNS + TLS off that critical path. -->
+    <link rel="preconnect" href="https://images.unsplash.com">
+
     <style>
       body { font-family: 'Plus Jakarta Sans', 'Tajawal', system-ui, sans-serif; background-color: #FFFFFF; color: #1C1C1E; }
       .dark body { background-color: #0F1115; color: #F2F3F5; }
