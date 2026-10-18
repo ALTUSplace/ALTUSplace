@@ -32,6 +32,9 @@ export const DEFAULT_TITLE = "كراء السيارات والعقارات في 
 /** Brand suffix appended to every document title. */
 export const TITLE_SUFFIX = " | ALTUSplace";
 
+/** Default Open Graph/Twitter card, used when a route has no image of its own. */
+export const DEFAULT_OG_IMAGE = "/images/og-default.png";
+
 const OPEN_GRAPH_LOCALES: Record<SeoLanguage, string> = {
   ar: "ar_MA",
   fr: "fr_MA",
@@ -49,6 +52,15 @@ export function canonicalUrl(path = "/"): string {
 function toAbsoluteUrl(value: string): string {
   if (/^https?:\/\//i.test(value)) return value;
   return `${SITE_URL}${value.startsWith("/") ? value : `/${value}`}`;
+}
+
+/**
+ * Resolves the social-card image for a route: the page's own image when it has
+ * one, otherwise the site default. Always absolute, so client-side navigation
+ * can never leave a stale (or absent) `og:image` behind.
+ */
+export function resolveSocialImage(image?: string): string {
+  return toAbsoluteUrl(image || DEFAULT_OG_IMAGE);
 }
 
 function upsertMeta(attr: "name" | "property", key: string, content: string): void {
@@ -160,14 +172,12 @@ export function useSEO({
   upsertMeta("name", "twitter:title", fullTitle);
   upsertMeta("name", "twitter:description", description);
 
-  if (image) {
-    const absoluteImage = toAbsoluteUrl(image);
-    upsertMeta("property", "og:image", absoluteImage);
-    upsertMeta("name", "twitter:image", absoluteImage);
-    upsertMeta("name", "twitter:card", "summary_large_image");
-  } else {
-    upsertMeta("name", "twitter:card", "summary");
-  }
+  // Always emit a social image so client-side navigation can never leave a
+  // previous page's listing photo (or a downgraded twitter card) behind.
+  const absoluteImage = resolveSocialImage(image);
+  upsertMeta("property", "og:image", absoluteImage);
+  upsertMeta("name", "twitter:image", absoluteImage);
+  upsertMeta("name", "twitter:card", "summary_large_image");
 
   upsertMeta("name", "robots", robots);
   applyLocales(language, resolvedPath);
