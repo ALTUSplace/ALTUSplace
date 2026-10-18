@@ -24,7 +24,7 @@ canonical plus a single `x-default` alternate** — never `hreflang` pointing at
 - React 19 SPA (Vite) + Express/tRPC API, deployed on Vercel as static
   `dist/public` + one serverless function (`api/index.js` → `dist/api-handler.mjs`).
 - Client-side SEO manager in `client/src/lib/seo.ts`; JSON-LD rendered per page.
-- City landing pages at `/locations/:slug` (61 cities, 12 regions).
+- City landing pages at `/city/:slug` (61 cities, 12 regions).
 - Sitemap was a single hand-maintained XML file; `robots.txt` pointed at the
   `vercel.app` host.
 - HTML head shipped `hreflang` for `/en`, `/ar`, `/fr` (404s) and canonical on
@@ -39,7 +39,7 @@ canonical plus a single `x-default` alternate** — never `hreflang` pointing at
 | Home | `/` | `x-default` target |
 | Search hub | `/search` | only the unfiltered, non-empty state is indexable |
 | Locations hub | `/locations` | links to all city pages |
-| City page | `/locations/casablanca` | noindex while it has zero active listings |
+| City page | `/city/casablanca` | noindex while it has zero active listings |
 | Bespoke landing | `/locations/marrakech-car-rental` | |
 | Bespoke landing | `/locations/mohammed-v-airport-car-rental` | |
 | Car detail | `/car/:id` | `Product` + `Offer`, `noindex` until the listing resolves |
@@ -57,7 +57,7 @@ canonical plus a single `x-default` alternate** — never `hreflang` pointing at
 
 ### Phase 1 (locale subpaths)
 
-`/{locale}` prefix for every indexable template, e.g. `/ar/locations/casablanca`,
+`/{locale}` prefix for every indexable template, e.g. `/ar/city/casablanca`,
 `/fr/location-voiture-marrakech`. `ar` pages are the `x-default`; each locale
 page cross-links the full `hreflang` set. `/help` (redirect) and other 30x
 routes are excluded.

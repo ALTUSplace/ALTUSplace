@@ -3,7 +3,7 @@ import { Link } from 'wouter';
 import { BookOpen, Calendar, User, ArrowRight, Sparkles, Tag, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from "@/contexts/LanguageContext";
-import { renderJsonLd, useSEO } from '@/lib/seo';
+import { renderJsonLd, useSEO, SITE_URL } from '@/lib/seo';
 
 const SEO_BLOG = {
   ar: {
@@ -61,10 +61,12 @@ export default function BlogPage() {
     renderJsonLd('blog-jsonld', {
       "@context": "https://schema.org",
       "@type": "Blog",
-      "@id": "https://altusplace.vercel.app/blog",
+      "@id": `${SITE_URL}/blog`,
       "name": "ALTUSplace Blog",
       "description": SEO_BLOG[lang].description,
       "inLanguage": lang === "ar" ? "ar-MA" : lang === "fr" ? "fr" : "en",
+      "mainEntityOfPage": { "@type": "WebPage", "@id": `${SITE_URL}/blog` },
+      "url": `${SITE_URL}/blog`,
       "blogPost": articles.map((article) => ({
         "@type": "BlogPosting",
         "headline": article.title,

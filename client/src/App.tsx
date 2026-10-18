@@ -167,10 +167,12 @@ function Router() {
       </Route>
       <Route path="/property/:id" component={PropertyDetailPage} />
       <Route path="/properties/for-rent">{() => <Suspense fallback={<PageLoader />}><PropertiesForRentPage /></Suspense>}</Route>
-      <Route path="/locations/marrakech-car-rental">{() => <Suspense fallback={<PageLoader />}><LocationLandingPage location="marrakech" /></Suspense>}</Route>
-      <Route path="/locations/mohammed-v-airport-car-rental">{() => <Suspense fallback={<PageLoader />}><LocationLandingPage location="casablancaAirport" /></Suspense>}</Route>
+      <Route path="/city/marrakech-car-rental">{() => <Suspense fallback={<PageLoader />}><LocationLandingPage location="marrakech" /></Suspense>}</Route>
+      <Route path="/city/mohammed-v-airport-car-rental">{() => <Suspense fallback={<PageLoader />}><LocationLandingPage location="casablancaAirport" /></Suspense>}</Route>
+      <Route path="/locations/marrakech-car-rental">{() => <Redirect to={`/city/marrakech-car-rental`} replace />}</Route>
+      <Route path="/locations/mohammed-v-airport-car-rental">{() => <Redirect to={`/city/mohammed-v-airport-car-rental`} replace />}</Route>
       <Route path="/locations">{() => <Suspense fallback={<PageLoader />}><LocationLandingPage /></Suspense>}</Route>
-      <Route path="/locations/:slug">{() => <Suspense fallback={<PageLoader />}><LocationLandingPage /></Suspense>}</Route>
+      <Route path="/locations/:slug">{({ slug }) => <Redirect to={`/city/${slug}`} replace />}</Route>
       <Route path="/city/:slug">{({ slug }) => <Suspense fallback={<PageLoader />}><LocationLandingPage slug={slug} canonicalPath={`/city/${slug}`} /></Suspense>}</Route>
       <Route path="/car/:id">
         {params => (

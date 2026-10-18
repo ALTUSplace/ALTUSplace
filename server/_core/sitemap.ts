@@ -15,7 +15,7 @@ import { SEO_LISTING_STATUSES } from "../constants/listingStatuses";
 import { isCarCategory } from "../../client/src/lib/categories";
 import { buildUrlset, normalizeSiteUrl } from "../../shared/sitemap";
 
-export const SEO_SITE_URL = normalizeSiteUrl(process.env.VITE_SITE_URL || "https://altusplace.vercel.app");
+export const SEO_SITE_URL = normalizeSiteUrl(process.env.VITE_SITE_URL || "https://altusplace.ma");
 
 const MAX_LISTING_URLS = 5000;
 

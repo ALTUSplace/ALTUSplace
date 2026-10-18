@@ -35,6 +35,10 @@ import { readFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import postgres from "postgres";
+
+if (process.env.NODE_ENV === "production" && !process.env.ALLOW_PROD_SEED) {
+  throw new Error("Refusing to seed production. Set ALLOW_PROD_SEED=1 to override.");
+}
 import { drizzle } from "drizzle-orm/postgres-js";
 import { listings, users } from "../../drizzle/schema";
 import type { getDb } from "../db";
@@ -55,7 +59,7 @@ const AGENCY_USER = {
   agencyPhone: "+212522000000",
   agencyEmail: "demo@altusplace.ma",
   whatsappNumber: "212754382654",
-  agencyWebsite: "https://altusplace.vercel.app",
+  agencyWebsite: "https://altusplace.ma",
   agencyHours: "08:00 - 20:00 (7j/7)",
   agencyLatitude: "33.5897",
   agencyLongitude: "-7.6039",

@@ -37,8 +37,8 @@ function resolveSiteUrl() {
   if (process.env.VITE_SITE_URL) return process.env.VITE_SITE_URL.replace(/\/+$/, "");
   const combined = [".env", ".env.local", ".env.production.local"].map(readEnvFile).join("\n");
   const match = combined.match(/^VITE_SITE_URL=(.*)$/m);
-  const raw = match ? match[1].trim().replace(/^["']|["']$/g, "") : "https://altusplace.vercel.app";
-  return raw.replace(/\/+$/, "") || "https://altusplace.vercel.app";
+  const raw = match ? match[1].trim().replace(/^["']|["']$/g, "") : "https://altusplace.ma";
+  return raw.replace(/\/+$/, "") || "https://altusplace.ma";
 }
 
 const SITE_URL = resolveSiteUrl();
@@ -104,9 +104,11 @@ function cityJsonLd(city) {
     name: `ALTUSplace — ${city.ar}`,
     url: `${SITE_URL}/city/${city.slug}`,
     image: LOGO_URL,
-    description: `كراء السيارات والعقارات في ${city.ar} مع ALTUSplace: وكالات محلية، أسعار واضحة، وحجز سهل عبر الإنترنت.`,
-    address: { "@type": "PostalAddress", addressLocality: city.ar, addressCountry: "MA" },
-    areaServed: { "@type": "City", name: city.ar },
+    description:
+      city.description ??
+      `كراء السيارات والعقارات في ${city.ar} مع ALTUSplace: وكالات محلية، أسعار واضحة، وحجز سهل عبر الإنترنت.`,
+    address: { "@type": "PostalAddress", addressLocality: city.locality ?? city.ar, addressCountry: "MA" },
+    areaServed: { "@type": "City", name: city.locality ?? city.ar },
     priceRange: "MAD",
   };
 }
@@ -191,8 +193,44 @@ const STATIC_ROUTES = [
   },
 ];
 
+/**
+ * Two hand-written car-rental landing pages that used to be published under
+ * `/locations/`. They now live under `/city/` so the client router and the
+ * sitemap's `BESPOKE_LOCATION_PAGES` (shared/sitemap.ts) agree, and so each
+ * gets a fully static, crawlable <head> instead of the generic `/city/:slug`
+ * shell (which renders the unknown-city hub with a noindex).
+ */
+const BESPOKE_CITY_ROUTES = [
+  {
+    path: "/city/marrakech-car-rental",
+    file: "city/marrakech-car-rental/index.html",
+    title: "كراء السيارات في مراكش: أسعار واضحة وحجز آمن | ALTUSplace",
+    description:
+      "اكتشف سيارات موثوقة للكراء في مراكش، قرب المدينة القديمة، كليز والمطار، مع وكالات محلية وأسعار واضحة عبر ALTUSplace.",
+    jsonLd: cityJsonLd({
+      slug: "marrakech-car-rental",
+      ar: "مراكش",
+      description: "كراء السيارات في مراكش مع ALTUSplace: وكالات محلية، أسعار واضحة، وحجز سهل عبر الإنترنت.",
+    }),
+  },
+  {
+    path: "/city/mohammed-v-airport-car-rental",
+    file: "city/mohammed-v-airport-car-rental/index.html",
+    title: "كراء السيارات في مطار محمد الخامس: استلام سهل | ALTUSplace",
+    description:
+      "احجز سيارة عند الوصول إلى مطار محمد الخامس واستلمها بسهولة من شركاء ALTUSplace، مع أسعار واضحة وحجز آمن.",
+    jsonLd: cityJsonLd({
+      slug: "mohammed-v-airport-car-rental",
+      ar: "مطار محمد الخامس",
+      locality: "الدار البيضاء",
+      description: "كراء السيارات عند الوصول إلى مطار محمد الخامس في الدار البيضاء مع شركاء ALTUSplace.",
+    }),
+  },
+];
+
 const ROUTES = [
   ...STATIC_ROUTES,
+  ...BESPOKE_CITY_ROUTES,
   ...CITIES.map((city) => ({
     path: `/city/${city.slug}`,
     file: `city/${city.slug}/index.html`,
