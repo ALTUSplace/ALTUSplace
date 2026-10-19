@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#FFFFFF" />
+    <meta name="theme-color" content="#FAFAFA" />
     <meta name="description" content="ALTUSplace: كراء السيارات والعقارات في المغرب — الدار البيضاء، مراكش، أكادير. أسعار واضحة، وكالات موثوقة، ودفع آمن. Location de voitures et de biens immobiliers au Maroc avec paiement sécurisé." />
     <link rel="icon" href="/favicon.ico" sizes="48x48" />
     <link rel="icon" type="image/png" sizes="192x192" href="/images/icon-192.png" />
@@ -77,15 +77,17 @@
     </script>
 
     <!-- Fonts, self-hosted (Arabic-first). Tajawal is the only Arabic face;
-         Plus Jakarta Sans covers Latin + numerals. Cairo and Fraunces were
-         dropped earlier (see index.css) — neither ever painted.
+         Plus Jakarta Sans covers Latin + numerals; Playfair Display is the
+         editorial serif for h1–h3 and is bundled from @fontsource by Vite.
 
          Self-hosting removes both fonts.googleapis/gstatic preconnects and the
          render-blocking cross-origin Google Fonts stylesheet (~840 ms on a 4G
-         profile). @font-face lives in client/src/index.css; the woff2 files in
+         profile). @font-face lives in client/src/index.css and the fontsource
+         CSS imports; the Tajawal and Plus Jakarta woff2 files live in
          client/public/fonts. Only the weights in use ship: Tajawal 400/500/700/
-         800 (Arabic subset) and Plus Jakarta Sans 400..800 (one variable file,
-         Latin subset). font-display: swap so text paints immediately.
+         800 (Arabic subset), Plus Jakarta Sans 400..800 (one variable file,
+         Latin subset) and Playfair Display 500/600/700 (Latin subset).
+         font-display: swap so text paints immediately.
 
          Preload the three faces the first viewport needs (Arabic H1/body +
          Latin brand/numerals) so their fetch starts with the HTML, not only
@@ -102,8 +104,8 @@
     <link rel="preconnect" href="https://images.unsplash.com">
 
     <style>
-      body { font-family: 'Plus Jakarta Sans', 'Tajawal', system-ui, sans-serif; background-color: #FFFFFF; color: #1C1C1E; }
-      .dark body { background-color: #0F1115; color: #F2F3F5; }
+      body { font-family: 'Plus Jakarta Sans', 'Tajawal', system-ui, sans-serif; background-color: #FAFAFA; color: #1A1A1A; }
+      .dark body { background-color: #0A0F18; color: #F2EFE9; }
     </style>
     <script>
       // Anti-FOUC: apply the persisted (or OS-preferred) theme before first
@@ -123,7 +125,7 @@
             root.style.colorScheme = "light";
           }
           var meta = document.querySelector('meta[name="theme-color"]');
-          if (meta) meta.setAttribute("content", theme === "dark" ? "#0F1115" : "#FFFFFF");
+          if (meta) meta.setAttribute("content", theme === "dark" ? "#0A0F18" : "#FAFAFA");
         } catch (e) {
           /* ignore — storage unavailable */
         }

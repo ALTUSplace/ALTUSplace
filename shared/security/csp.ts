@@ -20,7 +20,7 @@
 // - worker-src 'self' blob: is required by Mapbox GL.
 export const CSP_HEADER_VALUE =
   "default-src 'self'; " +
-  "script-src 'self' 'sha256-UAiGoXcQlBIBF2VT99rnbYKsA2InG5XUnn/x25+7ijQ='; " +
+  "script-src 'self' 'sha256-xYOUwcupjZMs56nCJt01V1G/vc1s/M/uyM9UOrKQxKE='; " +
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
   "img-src 'self' data: blob: https:; " +
   "connect-src 'self' https://images.unsplash.com https://api.mapbox.com https://events.mapbox.com https://*.mapbox.com https://*.supabase.co https://graph.facebook.com https://fonts.googleapis.com https://fonts.gstatic.com; " +

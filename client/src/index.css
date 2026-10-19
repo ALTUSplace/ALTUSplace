@@ -1,14 +1,23 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* Playfair Display — editorial serif for h1–h3. Bundled from the self-hosted
+   @fontsource package so no third-party font request is made. Only the Latin
+   weights the headings use ship; Arabic glyphs fall through to Tajawal. */
+@import "@fontsource/playfair-display/latin-500.css";
+@import "@fontsource/playfair-display/latin-600.css";
+@import "@fontsource/playfair-display/latin-700.css";
+
 /* ── Self-hosted webfonts ──────────────────────────────────────────────────
-   Served from /fonts (client/public/fonts). Same two families the Google
-   Fonts stylesheet used to fetch, now same-origin: no preconnect, no
-   render-blocking third-party request. font-display: swap on every face, so
-   text paints in the system fallback and swaps when the face arrives.
+   Served from /fonts (client/public/fonts). Same families the Google Fonts
+   stylesheet used to fetch, now same-origin: no preconnect, no render-blocking
+   third-party request. font-display: swap on every face, so text paints in the
+   system fallback and swaps when the face arrives.
 
    Shipped: Tajawal Arabic 400/500/700/800 (the weights in use) and Plus
-   Jakarta Sans 400..800 as one variable Latin file. Skipped on purpose —
+   Jakarta Sans 400..800 as one variable Latin file (the @fontsource package is
+   installed for weight-level imports, but the single variable file stays the
+   production path — one request instead of five). Skipped on purpose —
    latin-ext / cyrillic-ext / vietnamese and Tajawal's Latin subset: Plus
    Jakarta Sans renders every Latin glyph, so those files never load. */
 @font-face {
@@ -53,20 +62,19 @@
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   ALTUSplace — "Tanger Clay 2.0 · Deep Trust Blue" Design System (Tailwind v4)
+   ALTUSplace — "Midnight & Champagne" Luxury Design System (Tailwind v4)
    ─────────────────────────────────────────────────────────────────────────────
-   A clean, modern marketplace identity: pure white surfaces, a cool neutral
-   grey scale, a single deep trust-blue action colour and confident ink
-   typography built on Plus Jakarta Sans (Latin display/numerals), Tajawal
-   (Arabic UI) and Fraunces (editorial serif accents). The earlier "Tanger
-   Clay" warmth survives only as a muted amber for ratings and premium hints —
-   never as the primary action colour.
+   A bespoke, high-end Moroccan rental identity: soft warm-white surfaces,
+   Deep Midnight Blue (#0A192F) as the single action colour, Muted Champagne
+   Gold (#C5A880) for premium accents, charcoal ink, and an editorial pairing
+   of Playfair Display (h1–h3) with Plus Jakarta Sans (UI/body) and Tajawal
+   (Arabic UI). Dark mode inverts the CTA to champagne with navy ink.
 
    Principles
-   · One action colour, used deliberately — deep trust blue. Everything else is
-     a cool neutral or a muted semantic status colour.
-   · Generous rounding on cards, buttons and inputs; no sheared corners.
-   · Soft, neutral, layered shadows instead of heavy drops.
+   · One action colour, used deliberately — deep midnight blue. Champagne is a
+     quiet premium signal, never a competing action colour.
+   · Generous rounding on cards; buttons use a restrained rounded-md.
+   · Soft, warm, layered shadows with a subtle champagne glow on hover.
    · Motion is restrained, tactile and interruptible; never bouncy clutter.
    · Arabic-first: zero negative letter-spacing on Arabic type.
    ───────────────────────────────────────────────────────────────────────────── */
@@ -78,17 +86,26 @@
   :root {
     color-scheme: light;
 
-    /* Surface Tokens — clean white canvas */
-    --bg-page:         #F9FAFB;  /* page sections */
-    --bg-base:         #FFFFFF;
+    /* Premium palette — requested source-of-truth names. The derived tokens
+       below stay literal (not aliases) so the contrast guardrail can parse
+       them directly. */
+    --primary:            #0A192F;  /* deep midnight blue */
+    --primary-foreground: #F8F9FA;  /* off-white ink on primary */
+    --accent:             #C5A880;  /* muted champagne gold */
+    --background:         #FAFAFA;  /* soft warm white */
+    --text-main:          #1A1A1A;  /* charcoal */
+
+    /* Surface Tokens — soft warm-white canvas */
+    --bg-page:         #FAFAFA;  /* page sections */
+    --bg-base:         #FAFAFA;
     --bg-surface:      #FFFFFF;  /* cards/content */
-    --bg-muted:        #F9FAFB;
+    --bg-muted:        #F4F1EA;  /* warm parchment tint */
     --bg-elevated:     #FFFFFF;
 
-    /* Ink Tokens — cool charcoal scale */
-    --ink-primary:     #1F2937;  /* near-black for headings */
-    --ink-secondary:   #71717A;  /* AA-safe medium grey for body/subtitles */
-    --ink-tertiary:    #6E6E73;
+    /* Ink Tokens — warm charcoal scale */
+    --ink-primary:     #1A1A1A;  /* charcoal headings + body */
+    --ink-secondary:   #5C5A55;  /* AA-safe warm grey for body/subtitles */
+    --ink-tertiary:    #77736B;
 
     /* Semantic aliases (requested naming) */
     --text-primary:    var(--ink-primary);
@@ -98,41 +115,40 @@
     /* Hero tokens — solid, theme-aware contrast floor for the photo hero.
        Near-opaque on purpose: the photograph stays visible as context but can
        never bleed through enough to drop headline/card text below AA. */
-    --hero-bg-overlay:     rgba(255, 255, 255, 0.95);  /* nearly opaque white wash */
-    --hero-text-primary:   #111827;
-    --hero-text-secondary: #6B7280;
+    --hero-bg-overlay:     rgba(250, 250, 250, 0.95);  /* nearly opaque warm wash */
+    --hero-text-primary:   #0A192F;
+    --hero-text-secondary: #5C5A55;
     --hero-search-bg:      #FFFFFF;  /* pure white card */
-    --hero-search-border:  #E5E7EB;  /* light gray border */
+    --hero-search-border:  #E7E1D6;  /* warm hairline */
 
     /* Cinematic hero scrim — theme-independent so the backdrop reads the same
-       navy→black in both themes and white/gold text clears AA everywhere. */
-    --hero-scrim-top:    rgba(15, 76, 129, 0.85);  /* brand primary @ 85% */
-    --hero-scrim-bottom: rgba(0, 0, 0, 0.95);      /* near-black fade */
+       midnight→black in both themes and white/gold text clears AA everywhere. */
+    --hero-scrim-top:    rgba(10, 25, 47, 0.86);   /* brand primary @ 86% */
+    --hero-scrim-bottom: rgba(4, 8, 16, 0.96);     /* near-black fade */
     --hero-title-shadow: 0 2px 24px rgba(0, 0, 0, 0.45);
 
-    /* Accent Tokens — Primary Blue (#0F4C81) */
-    --accent-primary:   #0F4C81;
-    --accent-primary-h: #0B3D6B;
-    --accent-primary-s: rgba(15, 76, 129, 0.10);
+    /* Accent Tokens — Deep Midnight Blue (#0A192F) */
+    --accent-primary:   #0A192F;
+    --accent-primary-h: #132A4A;
+    --accent-primary-s: rgba(10, 25, 47, 0.08);
 
-    /* Ink that sits ON the accent fill. White works on the light-theme accent
-       (8.86:1) but NOT on the brighter dark-theme accent (#4F86F7 = 3.45:1),
-       so this flips to charcoal in .dark — dark-mode CTAs were failing AA with
-       the previously hardcoded white. Pinned as a token so the pairing is
-       asserted by the contrast test instead of drifting. */
-    --primary-ink:     #FFFFFF;
+    /* Ink that sits ON the accent fill. Off-white clears 16.70:1 on the
+       light-theme midnight accent. Dark mode flips the accent to champagne, so
+       this switches to navy ink there (7.78:1) — pinned as a token so the
+       pairing is asserted by the contrast test instead of drifting. */
+    --primary-ink:     #F8F9FA;
 
-    /* Warm secondary tone — Accent Gold (#D4AF37) for ratings/premium hints */
-    --accent-warm:   #D4AF37;
-    --accent-warm-h: #B8962E;
-    --accent-warm-s: rgba(212, 175, 55, 0.12);
+    /* Warm secondary tone — Muted Champagne Gold (#C5A880) for premium hints */
+    --accent-warm:   #C5A880;
+    --accent-warm-h: #B08F62;
+    --accent-warm-s: rgba(197, 168, 128, 0.16);
 
     /* Luxury brand ramps — theme-independent, so the gold badge pairing and the
        on-dark ink stay stable in light and dark alike. */
-    --brand-primary-light: #E6EEF5;
-    --accent-gold-light:   #FBF4E8;
-    --accent-gold-dark:    #8C6B1F;  /* AA on --accent-gold-light (4.53:1) */
-    --text-on-dark:        #FFFDF5;
+    --brand-primary-light: #EDF1F6;
+    --accent-gold-light:   #F6EFE3;
+    --accent-gold-dark:    #7E6234;  /* AA on --accent-gold-light (4.99:1) */
+    --text-on-dark:        #FBF8F1;
 
     /* Semantic status colours */
     --accent-green:  #059669;
@@ -149,42 +165,46 @@
        hold in light and dark alike. Replaces the per-component literals
        #003580 (Mubawab blue), #102D2B (teal-navy) and the #0E1A2E→#111C33
        gradient pair that had drifted into four unrelated dark navies.
-         #123A93 = 10.23:1 with white   #0B2E6F = 12.85:1 with white
+         #0A192F = 16.70:1 with #F8F9FA   #10233F = 14.94:1 with #F8F9FA
        Kept deliberately independent of the brand ramp: the panel is a fixed
        console surface, so retuning the brand blue must not drag it along. */
-    --brand-panel:      #123A93;
-    --brand-panel-2:    #0B2E6F;
-    --brand-panel-ink:  #FFFFFF;
-    /* Muted ink + hairline for chrome that floats ON the panel (chart tooltips,
-       legends). Both stay legible on the panel in either theme:
-         ink-2 5.51:1   line 1.6:1 (decorative only, never carries text) */
-    --brand-panel-ink-2: rgba(255, 255, 255, 0.72);
-    --brand-panel-line:  rgba(255, 255, 255, 0.16);
-    /* Brand-blue accent for ACTIVE chrome on the always-dark panel (nav pills,
+    --brand-panel:      #0A192F;
+    --brand-panel-2:    #10233F;
+    --brand-panel-ink:  #F8F9FA;
+    /* Muted ink + champagne hairline for chrome that floats ON the panel
+       (chart tooltips, legends). Kept legible on either panel surface. */
+    --brand-panel-ink-2: rgba(248, 249, 250, 0.72);
+    --brand-panel-line:  rgba(197, 168, 128, 0.28);
+    /* Champagne accent for ACTIVE chrome on the always-dark panel (nav pills,
        selected options). Theme-independent like the rest of the panel family.
-       #8AB4FF clears AA normal text on both panel surfaces:
-         8.96:1 on #0B1220 (--brand-navy, the header)
-         4.90:1 on #123A93 (--brand-panel, console/hero headers) */
-    --brand-panel-accent: #8AB4FF;
+       #D8BE93 clears AA normal text on both panel surfaces:
+         9.81:1 on #0A192F (--brand-panel, console/hero headers)
+         8.77:1 on #10233F (--brand-panel-2) */
+    --brand-panel-accent: #D8BE93;
 
-    /* Border Tokens — crisp hairlines */
-    --border-subtle:  #EAECF0;
-    --border-default: #E0E0E4;
-    --border-strong:  #C7C7CC;
+    /* Border Tokens — warm crisp hairlines */
+    --border-subtle:  #ECE7DE;
+    --border-default: #E0D9CC;
+    --border-strong:  #C9C0AF;
 
     /* Skeleton Tokens */
-    --skeleton-from:  #F2F2F3;
-    --skeleton-to:    #E9E9EB;
+    --skeleton-from:  #F1EDE6;
+    --skeleton-to:    #E7E1D6;
 
-    /* Shadow Tokens — soft, neutral, layered */
-    --shadow-xs:  0 1px 2px rgba(16, 24, 40, 0.05);
-    --shadow-sm:  0 1px 2px rgba(16, 24, 40, 0.06), 0 2px 6px rgba(16, 24, 40, 0.05);
-    --shadow-md:  0 2px 4px rgba(16, 24, 40, 0.06), 0 8px 20px rgba(16, 24, 40, 0.07);
-    --shadow-lg:  0 2px 5px rgba(16, 24, 40, 0.07), 0 14px 34px rgba(16, 24, 40, 0.10);
-    --shadow-xl:  0 4px 8px rgba(16, 24, 40, 0.08), 0 24px 52px rgba(16, 24, 40, 0.12);
-    --shadow-clay:    0 2px 4px rgba(15, 76, 129, 0.14), 0 10px 24px rgba(15, 76, 129, 0.18);
-    --shadow-card-hover: 0 2px 5px rgba(16, 24, 40, 0.08), 0 18px 44px rgba(16, 24, 40, 0.13);
-    --shadow-button: 0 2px 4px rgba(15, 76, 129, 0.2), 0 8px 18px rgba(15, 76, 129, 0.26);
+    /* Shadow Tokens — soft, warm, navy-tinted and layered */
+    --shadow-xs:  0 1px 2px rgba(10, 25, 47, 0.05);
+    --shadow-sm:  0 1px 2px rgba(10, 25, 47, 0.06), 0 2px 6px rgba(10, 25, 47, 0.05);
+    --shadow-md:  0 2px 4px rgba(10, 25, 47, 0.06), 0 8px 20px rgba(10, 25, 47, 0.08);
+    --shadow-lg:  0 2px 5px rgba(10, 25, 47, 0.08), 0 14px 34px rgba(10, 25, 47, 0.12);
+    --shadow-xl:  0 4px 8px rgba(10, 25, 47, 0.10), 0 24px 52px rgba(10, 25, 47, 0.15);
+    --shadow-clay:    0 2px 4px rgba(10, 25, 47, 0.16), 0 10px 24px rgba(10, 25, 47, 0.20);
+    --shadow-card-hover: 0 2px 5px rgba(10, 25, 47, 0.10), 0 18px 44px rgba(10, 25, 47, 0.16);
+    /* Primary buttons: grounded navy shadow + a whisper of champagne edge.
+       The hover token adds the soft glow without turning into a neon ring. */
+    --shadow-button: 0 2px 4px rgba(10, 25, 47, 0.24), 0 8px 18px rgba(10, 25, 47, 0.28),
+                     0 0 0 1px rgba(197, 168, 128, 0.14);
+    --shadow-gold-glow: 0 2px 4px rgba(10, 25, 47, 0.22), 0 10px 26px rgba(197, 168, 128, 0.38),
+                        0 0 0 1px rgba(197, 168, 128, 0.28);
 
     /* Radius Tokens — soft, modern */
     --radius-xs:   0.25rem;
@@ -219,13 +239,13 @@
                               border-color var(--dur-fast) var(--ease-smooth),
                               color var(--dur-fast) var(--ease-smooth);
 
-    /* Typography Tokens — Plus Jakarta Sans (Latin/numerals), Tajawal (Arabic),
-       with Cairo as a warm fallback. Arabic glyphs are absent from Plus Jakarta
-       Sans, so the stack naturally renders Arabic in Tajawal and Latin in
-       Plus Jakarta Sans without per-script class switching. */
+    /* Typography Tokens — Playfair Display (editorial h1–h3), Plus Jakarta Sans
+       (Latin/numerals), Tajawal (Arabic). Arabic glyphs are absent from both
+       Latin faces, so each stack naturally renders Arabic in Tajawal without
+       per-script class switching. */
     --font-display: 'Plus Jakarta Sans', 'Tajawal', 'El Messiri', system-ui, -apple-system, sans-serif;
     --font-body:    'Plus Jakarta Sans', 'Tajawal', 'Cairo', system-ui, -apple-system, 'Segoe UI', sans-serif;
-    --font-serif:   'Fraunces', 'Tajawal', Georgia, 'Times New Roman', serif;
+    --font-serif:   'Playfair Display', 'Tajawal', Georgia, 'Times New Roman', serif;
 
     --text-display: clamp(2.5rem, 5.5vw, 4.5rem);
     --text-h1:      clamp(2rem, 3.75vw, 3.25rem);
@@ -241,30 +261,31 @@
     --space-section: clamp(3rem, 8vw, 6rem);
   }
 
-  /* ── Dark Theme — cool graphite night ────────────────────────────────────── */
+  /* ── Dark Theme — midnight navy night ────────────────────────────────────── */
   .dark {
     color-scheme: dark;
 
-    --bg-base:        #0F1115;
-    --bg-page:        #0F1115;
-    --bg-surface:     #16181D;
-    --bg-muted:       #1E2127;
-    --bg-elevated:    #22252C;
+    --bg-base:        #0A0F18;
+    --bg-page:        #0A0F18;
+    --bg-surface:     #101724;
+    --bg-muted:       #161E2D;
+    --bg-elevated:    #1A2334;
 
-    --ink-primary:    #F2F3F5;
-    --ink-secondary:  #A8ABB2;
-    --ink-tertiary:   #8A8F98;
+    --ink-primary:    #F2EFE9;
+    --ink-secondary:  #B3AEA4;
+    --ink-tertiary:   #8E897F;
 
-    --accent-primary:   #4F86F7;
-    --accent-primary-h: #6EA0F8;
-    --accent-primary-s: rgba(79, 134, 247, 0.18);
+    /* On dark, a navy CTA would disappear into the canvas. The accent flips to
+       champagne — 8.49:1 on the page, 7.78:1 against its navy ink. */
+    --accent-primary:   #C5A880;
+    --accent-primary-h: #D4BC97;
+    --accent-primary-s: rgba(197, 168, 128, 0.16);
 
-    /* 5.42:1 on #4F86F7 — the dark-theme counterpart to the light :root value. */
-    --primary-ink:     #0B1220;
+    --primary-ink:     #0A192F;
 
-    --accent-warm:   #D9A441;
-    --accent-warm-h: #E3B65E;
-    --accent-warm-s: rgba(217, 164, 65, 0.18);
+    --accent-warm:   #D8BE93;
+    --accent-warm-h: #E6CFA8;
+    --accent-warm-s: rgba(216, 190, 147, 0.18);
 
     --accent-green:  #34D399;
     --accent-green-s: rgba(52, 211, 153, 0.16);
@@ -274,28 +295,31 @@
     --accent-amber-h: #FCD34D;
     --accent-amber-s: rgba(251, 191, 36, 0.16);
 
-    --border-subtle:  rgba(242, 243, 245, 0.08);
-    --border-default: rgba(242, 243, 245, 0.14);
-    --border-strong:  rgba(242, 243, 245, 0.24);
+    --border-subtle:  rgba(242, 239, 233, 0.10);
+    --border-default: rgba(242, 239, 233, 0.16);
+    --border-strong:  rgba(242, 239, 233, 0.26);
 
-    /* Hero tokens — dark counterpart (heavy scrim, light text, dark slate card) */
-    --hero-bg-overlay:     rgba(0, 0, 0, 0.85);
-    --hero-text-primary:   #F9FAFB;
-    --hero-text-secondary: #D1D5DB;
-    --hero-search-bg:      #1F2937;  /* dark slate card */
-    --hero-search-border:  #374151;  /* darker slate border */
+    /* Hero tokens — dark counterpart (heavy scrim, warm light text, navy card) */
+    --hero-bg-overlay:     rgba(5, 9, 16, 0.88);
+    --hero-text-primary:   #F2EFE9;
+    --hero-text-secondary: #B3AEA4;
+    --hero-search-bg:      #16202F;  /* deep navy card */
+    --hero-search-border:  #2A3546;  /* muted navy hairline */
 
-    --skeleton-from:  rgba(242, 243, 245, 0.08);
-    --skeleton-to:    rgba(242, 243, 245, 0.03);
+    --skeleton-from:  rgba(242, 239, 233, 0.09);
+    --skeleton-to:    rgba(242, 239, 233, 0.04);
 
     --shadow-xs:  0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.35);
     --shadow-sm:  0 1px 2px rgba(0, 0, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.4);
     --shadow-md:  0 2px 4px rgba(0, 0, 0, 0.5), 0 8px 20px rgba(0, 0, 0, 0.45);
     --shadow-lg:  0 2px 5px rgba(0, 0, 0, 0.55), 0 14px 34px rgba(0, 0, 0, 0.5);
     --shadow-xl:  0 4px 8px rgba(0, 0, 0, 0.6), 0 24px 52px rgba(0, 0, 0, 0.55);
-    --shadow-clay:    0 2px 6px rgba(0, 0, 0, 0.45), 0 12px 28px rgba(79, 134, 247, 0.18);
+    --shadow-clay:    0 2px 6px rgba(0, 0, 0, 0.5), 0 12px 28px rgba(197, 168, 128, 0.16);
     --shadow-card-hover: 0 2px 5px rgba(0, 0, 0, 0.5), 0 18px 44px rgba(0, 0, 0, 0.55);
-    --shadow-button: 0 2px 4px rgba(0, 0, 0, 0.45), 0 10px 22px rgba(79, 134, 247, 0.26);
+    --shadow-button: 0 2px 4px rgba(0, 0, 0, 0.5), 0 10px 22px rgba(197, 168, 128, 0.30),
+                     0 0 0 1px rgba(197, 168, 128, 0.22);
+    --shadow-gold-glow: 0 2px 4px rgba(0, 0, 0, 0.5), 0 12px 30px rgba(197, 168, 128, 0.42),
+                        0 0 0 1px rgba(197, 168, 128, 0.35);
   }
 }
 
@@ -389,8 +413,10 @@
   --shadow-blue:        var(--shadow-clay);
   --shadow-gold:        var(--shadow-clay);
 
-  /* fonts */
+  /* fonts — literal so `font-serif` never self-references (the guardrail in
+     tests/unit/design-token-self-reference.test.ts rejects that). */
   --font-sans:    var(--font-body);
+  --font-serif:   'Playfair Display', 'Tajawal', Georgia, 'Times New Roman', serif;
   --font-inter:   'Plus Jakarta Sans','Inter','Tajawal','Cairo',system-ui,-apple-system,'Segoe UI',sans-serif;
   --font-mono:    'Fraunces', ui-monospace, SFMono-Regular, Menlo, monospace;
 
@@ -448,6 +474,13 @@
     color: var(--ink-primary);
     transition: color var(--dur-fast) var(--ease-smooth);
     text-wrap: balance;
+  }
+
+  /* Editorial serif display for the top three levels. Arabic glyphs fall
+     through Playfair Display to Tajawal, so RTL headings stay intact. */
+  h1, h2, h3 {
+    font-family: var(--font-serif);
+    font-weight: 600;
   }
 
   h1 { font-size: var(--text-h1); }
@@ -848,8 +881,8 @@
    action colour and --brand-gold is the accent gold. */
 @layer base {
   :root {
-    --brand-navy:         #0B1220;
-    --brand-navy-deep:    #060A12;
+    --brand-navy:         #0A192F;
+    --brand-navy-deep:    #050D1A;
     --brand-blue:         var(--accent-primary);
     --brand-blue-dark:    var(--accent-primary-h);
     --brand-blue-soft:    var(--accent-primary-s);
@@ -886,8 +919,8 @@
     --ease-out:           var(--ease-smooth);
   }
   .dark {
-    --brand-navy:         #0B1220;
-    --brand-navy-deep:    #060A12;
+    --brand-navy:         #0A192F;
+    --brand-navy-deep:    #050D1A;
     --brand-blue:         var(--accent-primary);
     --brand-blue-dark:    var(--accent-primary-h);
     --brand-blue-soft:    var(--accent-primary-s);
@@ -930,44 +963,44 @@
      green (success), red (destructive). */
 @layer base {
   :root {
-    /* neutral — cool grey scale */
-    --ramp-n-50:  #F9FAFB;
-    --ramp-n-100: #F2F4F7;
-    --ramp-n-200: #EAECF0;
-    --ramp-n-300: #D0D5DD;
-    --ramp-n-400: #98A2B3;
-    --ramp-n-500: #667085;
-    --ramp-n-600: #475467;
-    --ramp-n-700: #344054;
-    --ramp-n-800: #1D2939;
-    --ramp-n-900: #1F2937;
-    --ramp-n-950: #101828;
+    /* neutral — warm stone scale */
+    --ramp-n-50:  #FAFAFA;
+    --ramp-n-100: #F4F1EA;
+    --ramp-n-200: #E9E4D9;
+    --ramp-n-300: #D6CFC0;
+    --ramp-n-400: #A79F91;
+    --ramp-n-500: #7A7263;
+    --ramp-n-600: #5C554A;
+    --ramp-n-700: #433E36;
+    --ramp-n-800: #2C2924;
+    --ramp-n-900: #1A1A1A;
+    --ramp-n-950: #101010;
 
-    /* blue — the single brand accent */
-    --ramp-c-50:  #E6EEF5;
-    --ramp-c-100: #CFDFEC;
-    --ramp-c-200: #AFC8DE;
-    --ramp-c-300: #85A9C8;
-    --ramp-c-400: #4E7CA6;
-    --ramp-c-500: #0F4C81;
-    --ramp-c-600: #0B3D6B;
-    --ramp-c-700: #0A3257;
-    --ramp-c-800: #082844;
-    --ramp-c-900: #061F36;
-    --ramp-c-950: #04172A;
+    /* midnight — the single brand accent */
+    --ramp-c-50:  #EEF2F7;
+    --ramp-c-100: #DCE4EE;
+    --ramp-c-200: #B9C9DC;
+    --ramp-c-300: #8FA6C0;
+    --ramp-c-400: #4A6785;
+    --ramp-c-500: #0A192F;
+    --ramp-c-600: #081426;
+    --ramp-c-700: #060F1D;
+    --ramp-c-800: #050B15;
+    --ramp-c-900: #03070E;
+    --ramp-c-950: #020408;
 
-    /* gold — warm secondary (premium hints) */
-    --ramp-g-50:  #FBF4E8;
-    --ramp-g-100: #F7E9CC;
-    --ramp-g-200: #EDD69B;
-    --ramp-g-300: #E2C46B;
-    --ramp-g-400: #D4AF37;
-    --ramp-g-500: #B8962E;
-    --ramp-g-600: #8C6B1F;
-    --ramp-g-700: #70551A;
-    --ramp-g-800: #5A4517;
-    --ramp-g-900: #453614;
-    --ramp-g-950: #2F2410;
+    /* champagne — warm secondary (premium hints) */
+    --ramp-g-50:  #FBF7F0;
+    --ramp-g-100: #F6EDDD;
+    --ramp-g-200: #EDDCBB;
+    --ramp-g-300: #E2C79A;
+    --ramp-g-400: #D0B58C;
+    --ramp-g-500: #C5A880;
+    --ramp-g-600: #A98A5D;
+    --ramp-g-700: #836840;
+    --ramp-g-800: #5F4B2E;
+    --ramp-g-900: #453620;
+    --ramp-g-950: #2C2214;
 
     /* green — success */
     --ramp-s-50:  #ECFDF5;
@@ -997,41 +1030,41 @@
   }
 
   .dark {
-    --ramp-n-50:  #23262D;
-    --ramp-n-100: #1E2127;
-    --ramp-n-200: #2A2E36;
-    --ramp-n-300: #343941;
-    --ramp-n-400: #454B54;
-    --ramp-n-500: #8A8F98;
-    --ramp-n-600: #9CA0A8;
-    --ramp-n-700: #A8ABB2;
-    --ramp-n-800: #C7CAD0;
-    --ramp-n-900: #F2F3F5;
-    --ramp-n-950: #F8F9FA;
+    --ramp-n-50:  #20242D;
+    --ramp-n-100: #181D26;
+    --ramp-n-200: #232935;
+    --ramp-n-300: #2E3542;
+    --ramp-n-400: #3F4653;
+    --ramp-n-500: #8E897F;
+    --ramp-n-600: #A29C90;
+    --ramp-n-700: #B3AEA4;
+    --ramp-n-800: #CFC9BE;
+    --ramp-n-900: #F2EFE9;
+    --ramp-n-950: #F8F6F1;
 
-    --ramp-c-50:  #101B33;
-    --ramp-c-100: #14223F;
-    --ramp-c-200: #1B2D52;
-    --ramp-c-300: #223A69;
-    --ramp-c-400: #2F52A0;
-    --ramp-c-500: #4F86F7;
-    --ramp-c-600: #6EA0F8;
-    --ramp-c-700: #8FB5FA;
-    --ramp-c-800: #B0CAFB;
-    --ramp-c-900: #CFDEFD;
-    --ramp-c-950: #E4EDFE;
+    --ramp-c-50:  #0E1626;
+    --ramp-c-100: #132039;
+    --ramp-c-200: #1A2B4C;
+    --ramp-c-300: #22375F;
+    --ramp-c-400: #2E4B7E;
+    --ramp-c-500: #6E93BC;
+    --ramp-c-600: #8FB0D4;
+    --ramp-c-700: #AEC9E6;
+    --ramp-c-800: #C9DCF2;
+    --ramp-c-900: #E0EBF8;
+    --ramp-c-950: #EFF5FC;
 
-    --ramp-g-50:  #2A2110;
-    --ramp-g-100: #352A14;
-    --ramp-g-200: #44361A;
-    --ramp-g-300: #5A4620;
-    --ramp-g-400: #8C6B2A;
-    --ramp-g-500: #D9A441;
-    --ramp-g-600: #E3B65E;
-    --ramp-g-700: #EAC77F;
-    --ramp-g-800: #F0D6A2;
-    --ramp-g-900: #F5E3C2;
-    --ramp-g-950: #FAEFDC;
+    --ramp-g-50:  #2A2014;
+    --ramp-g-100: #382B19;
+    --ramp-g-200: #4A3A20;
+    --ramp-g-300: #5F4B29;
+    --ramp-g-400: #8A6B3D;
+    --ramp-g-500: #C5A880;
+    --ramp-g-600: #D4BC97;
+    --ramp-g-700: #E2CDAE;
+    --ramp-g-800: #EDDCC5;
+    --ramp-g-900: #F5EADA;
+    --ramp-g-950: #FAF3E8;
 
     --ramp-s-50:  #0C2A20;
     --ramp-s-100: #103528;
