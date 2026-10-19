@@ -132,6 +132,7 @@ if (await isOwnerConfigured()) → 403
 | **M-7 (UI)** | ✅ مُصلَّح | `server/routers.ts` (`bookings.getById`/`vouchers.getByCode` كيرجّعو `agencyWhatsApp` العمومي بدل الرقم الخاص)، `client/src/pages/Success.tsx`، `client/src/pages/Voucher.tsx` |
 | **M-1 (UI)** | ✅ مُصلَّح | `client/src/pages/HostDashboard.tsx` + `client/src/pages/AgencyDashboard.tsx` (إخفاء الأقسام المالية/الحجوزات/التحليلات عن tier الشريك — بلا أي ترقية تلقائية) |
 | **H-1** | ✅ مُصلَّح | `supabase/rls.sql` (تعاود كتابته بالكامل — RLS + `FORCE` على جميع الـ 27 جدول (بدل 8)، grants/policies صارمة، الجداول الداخلية deny-all) |
+| **H-1 (تنظيف)** | ✅ مُصلَّح | `supabase/drop-legacy-tables.sql` (حذف الجداول الموروثة `cars`/`products`/`profiles` — ما بقا حتى جدول خارج RLS) |
 | **H-2** | 🟡 مؤجَّل — تحسين app-side | `server/db.ts` (role تطبيقي غير `BYPASSRLS` + `SET LOCAL request.jwt.claims` لكل طلب؛ القيد الحالي: `postgres.<ref>` كيحمل `BYPASSRLS`) |
 | **M-6** | ✅ مُصلَّح | `server/_core/security.ts` (`SPAM_GUARD_LIMITS` + `checkRateLimit`)، `server/_core/trpc.ts` (`spamGuard`)، `server/routers.ts` (guards على `requestListing.create`/`supportTickets.create`/`comments.create`/`listings.trackEvent`) |
 | **L-1, L-2, L-4, L-6, L-10** | ✅ مُصلَّح | `server/routers.ts` (`updateStatus`→`adminProcedure`؛ `kyc.getByUserId` مقيّد بالمالك/Admin)، `server/_core/trpc.ts` + `server/_core/security.ts` (حياد `sanitizeTrpcInput`)، `server/leaseReminder.ts` (بلا stack)، `vercel.json` + `server/_core/security.ts` (`X-XSS-Protection: 0`) |
@@ -211,3 +212,8 @@ if (await isOwnerConfigured()) → 403
 - `supabase/rls.sql` تعاود كتابته بالكامل: `enable` + `FORCE ROW LEVEL SECURITY` على جميع الـ 27 جدول (بدل 8)، مع `REVOKE ALL` من `anon`/`authenticated` ثم grants دقيقة لكل دور؛ الجداول الداخلية (`platform_settings`, `commission_tiers`, `audit_logs`, `translations`, `listing_analytics_events`) ولّاو deny-all من جهة الكليان.
 - Policies صارمة على أساس claim `app_user_id` + `app_is_admin()`: قراءة عمومية محدودة (`listings` غير بالحالات المنشورة `Published`/`Available`/`Approved` — نفس `PUBLIC_LISTING_STATUSES`، و`users` غير `id`/`name`/`agency_logo_url` لمالكي إعلانات منشورة)، وكل مستخدم مُصادَق كيقرا/كيعدّل صفوفو هو فقط.
 - الكتابة المباشرة من الكليان محدودة بالمسارات الضرورية فقط: طلبات الشراكة (دائمًا `pending`)، تعديل البروفايل، CRUD ديال الإعلانات للمالك، و`read_at` ديال الإشعارات؛ كتابات `bookings`/`payments`/`kyc_submissions` تحيّدو (كلهم عبر السيرفر). السكريبت idempotent وكيتشغّل يدويًا فـ Supabase SQL editor مورا الـ drizzle migrations.
+
+**Fix 12 — تنظيف الجداول الموروثة (مكمّل H-1):**
+- الجداول `cars` / `products` / `profiles` كانو بقايا ديال القالب خارج `drizzle/schema.ts`، غير مستعملين فـ التطبيق، وخارج نطاق الـ RLS الجديدة؛ `products`/`profiles` كانو مازال فيهم policies قديمة permissive.
+- تحيّدو من قاعدة البيانات بـ `DROP TABLE IF EXISTS ... CASCADE` — السكريبت محفوظ فـ `supabase/drop-legacy-tables.sql`. Pre-flight قبل الحذف: لا FKs لا views dependents؛ `cars` كان فيه 4 صفوف و`products`/`profiles` خاويين.
+- النتيجة النهائية فـ الإنتاج: **27 جدول** — كلهم `RLS enable` + `FORCE`، و**31 policy**، بلا أي جدول خارج الحماية.
