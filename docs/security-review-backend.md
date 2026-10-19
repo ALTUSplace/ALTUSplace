@@ -81,13 +81,13 @@ if (await isOwnerConfigured()) → 403
 
 - **L-1** `bookings.updateStatus` (`:2621`) هو `protectedProcedure` مع فحص inline `['admin','SUPER_ADMIN']` بدل `adminProcedure` — صحيح اليوم، لكن inconsistent وقابل للكسر مستقبلًا. → ✅ **تم الإصلاح** (Fix 9).
 - **L-2** `kyc.getByUserId` (`:693`) — أي مستخدم مُصادَق يقدر يقرا حالة KYC ديال أي `userId` (status+verifiedAt فقط، بلا مستندات) → enumeration. → ✅ **تم الإصلاح** (Fix 9).
-- **L-3** `translation.translateText` / `translation.clearCache` (`:3751+`) `protectedProcedure` — أي مستخدم مُصادَق يقدر يحرق quota ديال AWS Translate، و`clearCache(listingId)` كيخلي cache-thrash لأي إعلان.
+- **L-3** `translation.translateText` / `translation.clearCache` (`:3751+`) `protectedProcedure` — أي مستخدم مُصادَق يقدر يحرق quota ديال AWS Translate، و`clearCache(listingId)` كيخلي cache-thrash لأي إعلان. → ✅ **تم الإصلاح** (Fix 10) — الجوج تحوّلو لـ `adminProcedure`.
 - **L-4** `sanitizeTrpcInput` (middleware عام) كيعمل HTML-escape لكل النصوص المدخلة → تفسد البيانات المخزّنة (double-encoding، URLs فيها `&`) وتعطي إحساسًا زائفًا بأمان XSS. → ✅ **تم الإصلاح** (Fix 9) — حيّدنا الـ middleware نهائيًا ومنعتمد على React + output-boundary escaping.
-- **L-5** `/api/scheduled/lease-end-reminder` و`/api/scheduled/ical-sync` بلا `verifyCron` على الـ route (`app.ts`)، كيعتمدو على فحص داخلي `sdk.authenticateRequest` + `isCron && taskUid` (`leaseReminder.ts:13`). صحيح، لكن inconsistent مع `/api/cron/*`؛ زيادة middleware للدفاع في العمق.
+- **L-5** `/api/scheduled/lease-end-reminder` و`/api/scheduled/ical-sync` بلا `verifyCron` على الـ route (`app.ts`)، كيعتمدو على فحص داخلي `sdk.authenticateRequest` + `isCron && taskUid` (`leaseReminder.ts:13`). صحيح، لكن inconsistent مع `/api/cron/*`؛ زيادة middleware للدفاع في العمق. → ✅ **تم الإصلاح** (Fix 10) — `verifyScheduledTask` على الـ route: كيقبل `x-vercel-cron`/`CRON_SECRET` أو جلسة cron موقّعة ديال المنصة، والفحص الداخلي باقي (طبقتين حماية).
 - **L-6** `leaseReminder.ts:76` كيرجّع `error.stack` فـ JSON ديال الخطأ → تسريب stack trace. → ✅ **تم الإصلاح** (Fix 9) — الـ stack بقى فـ السيرفر log فقط.
-- **L-7** PayTabs webhook: `const paid = !code || /^(success...)/` — غياب حقل الحالة كيتفسّر **مدفوع**. آمن افتراضيًا لأن التوقيع مطلوب (`payments/webhooks.ts`)، لكن المنطق خاصه يفسّر الغياب كفشل.
-- **L-8** SSRF عبر redirect: `urlGuard` كيتحقق من الـ URL الأولي فقط، و`fetch` كيتبع 302 بلا إعادة تحقق من الهدف (يحتاج مالك مُصادَق + host خبيث). الباقي قوي: كيحجب 127/8, 10/8, 172.16/12, 192.168/16, 169.254/16, ::1 وكيفحص كل عناوين DNS (مُختبَر ضد `169.254.169.254`).
-- **L-9** `.env.production.example` كيوثّق `VITE_SUPABASE_ANON_KEY` و`VITE_FRONTEND_FORGE_API_KEY` — حاليًا **غير مستعملين** في `client/src` (grep نظيف)، لكن إذا تفعّلو كيتشحنو للبندل. و`anon key` خطر غير بعد تفعيل RLS (H-1/H-2).
+- **L-7** PayTabs webhook: `const paid = !code || /^(success...)/` — غياب حقل الحالة كيتفسّر **مدفوع**. آمن افتراضيًا لأن التوقيع مطلوب (`payments/webhooks.ts`)، لكن المنطق خاصه يفسّر الغياب كفشل. → ✅ **تم الإصلاح** (Fix 10) — `isPaytabsPaidStatus`: غياب/فراغ الحالة = `failed` (fail-closed).
+- **L-8** SSRF عبر redirect: `urlGuard` كيتحقق من الـ URL الأولي فقط، و`fetch` كيتبع 302 بلا إعادة تحقق من الهدف (يحتاج مالك مُصادَق + host خبيث). الباقي قوي: كيحجب 127/8, 10/8, 172.16/12, 192.168/16, 169.254/16, ::1 وكيفحص كل عناوين DNS (مُختبَر ضد `169.254.169.254`). → ✅ **تم الإصلاح** (Fix 10) — `fetchGuarded`: متابعة redirects يدويًا وإعادة فحص كل hop بـ `validateExternalUrl` (حد 5 hops).
+- **L-9** `.env.production.example` كيوثّق `VITE_SUPABASE_ANON_KEY` و`VITE_FRONTEND_FORGE_API_KEY` — حاليًا **غير مستعملين** في `client/src` (grep نظيف)، لكن إذا تفعّلو كيتشحنو للبندل. و`anon key` خطر غير بعد تفعيل RLS (H-1/H-2). → ✅ **تم الإصلاح** (Fix 10) — تحيّدو من القالب مع تعليق يمنع الرجوع ليهم، والتحديث شمل `docs/deployment-env-checklist.md`.
 - **L-10** `X-XSS-Protection: 1; mode=block` header مهجور وقادر يدخّل ثغرات في متصفحات قديمة → يُنصح بـ `0`. → ✅ **تم الإصلاح** (Fix 9) — `0` فـ Express و`vercel.json` (parity مُختبَر).
 
 ---
@@ -130,7 +130,7 @@ if (await isOwnerConfigured()) → 403
 | H-1, H-2 | ⏳ مفتوح | `supabase/rls.sql`, `server/db.ts` |
 | **M-6** | ✅ مُصلَّح | `server/_core/security.ts` (`SPAM_GUARD_LIMITS` + `checkRateLimit`)، `server/_core/trpc.ts` (`spamGuard`)، `server/routers.ts` (guards على `requestListing.create`/`supportTickets.create`/`comments.create`/`listings.trackEvent`) |
 | **L-1, L-2, L-4, L-6, L-10** | ✅ مُصلَّح | `server/routers.ts` (`updateStatus`→`adminProcedure`؛ `kyc.getByUserId` مقيّد بالمالك/Admin)، `server/_core/trpc.ts` + `server/_core/security.ts` (حياد `sanitizeTrpcInput`)، `server/leaseReminder.ts` (بلا stack)، `vercel.json` + `server/_core/security.ts` (`X-XSS-Protection: 0`) |
-| L-3, L-5, L-7, L-8, L-9 | ⏳ مفتوح | تحسينات تدريجية (شوف اللائحة فوق) |
+| **L-3, L-5, L-7, L-8, L-9** | ✅ مُصلَّح | `server/routers.ts` (translation → `adminProcedure`)، `server/middleware/cronAuth.ts` + `server/_core/app.ts` (`verifyScheduledTask` على `/api/scheduled/*`)، `server/payments/webhooks.ts` (fail-closed)، `server/security/urlGuard.ts` (إعادة فحص redirect hops)، `.env.production.example` |
 
 ### تفاصيل الإصلاحات المنجزة
 
@@ -193,3 +193,11 @@ if (await isOwnerConfigured()) → 403
 - **L-6** `leaseReminder.ts` ما بقاش كيرجّع `error.stack` فـ JSON — الـ stack باقي غير فـ `console.error` ديال السيرفر؛ الردّ فيه غير message + context غير حساس.
 - **L-10** `X-XSS-Protection: 0` فـ `security.ts` و`vercel.json` (بدل `1; mode=block`)، و`server/cspParity.test.ts` كيثبّت التطابق فـ الجوج.
 - اختبارات: `tests/integration/xss-sanitization.test.ts` (عاود كتبناها: helpers الميدانية + غياب المهرّب العام)، pins جديدة فـ `server/readiness.security.test.ts`.
+
+**Fix 10 — L-3, L-5, L-7, L-8, L-9:**
+- **L-3** `translation.translateText` و`translation.clearCache` ولّاو `adminProcedure` — المستخدم العادي ما بقاش قادر يحرق quota ديال AWS Translate ولا يعمل cache-thrash لأي إعلان.
+- **L-5** الـ routes ديال `/api/scheduled/lease-end-reminder` و`/api/scheduled/ical-sync` ولّى عليهم guard قبل الـ handler: `verifyScheduledTask` (`server/middleware/cronAuth.ts`) كيقبل إما `x-vercel-cron`/`CRON_SECRET` (نفس `/api/cron/*`) وإما **جلسة cron موقّعة** (`isCron && taskUid` عبر `sdk.authenticateRequest`). لماذا ماشي `verifyCron` بوحدو؟ حيت هاد المسارات كيتصلو بيهم **منصة Manus heartbeat** بجلسة cron (مهمة `ALTUSplace-ical-sync-hourly` فعلية)، و`verifyCron` الصرف كان غادي يرد 401 على كل نداء إنتاجي. الـ handlers باقي فيهم الفحص الداخلي — defense in depth بطبقتين.
+- **L-7** `isPaytabsPaidStatus` (مُصدَّرة للاختبارات): غياب/فراغ `tran_status`/`status` كيتفسّر **failed** (fail-closed) بدل مدفوع؛ النجاح غير بالقيم الصريحة (`success/paid/settled/authorised/approved/1`). التوقيع (`verifyPaytabsCallback`) مازال إجباري قبل أي تسوية.
+- **L-8** `urlGuard`: زدنا `fetchGuarded` — طلبات `redirect: "manual"` مع متابعة يدوية، وكل hop كيتفحص بـ `validateExternalUrl` قبل الاتصال (HTTPS-only + قائمة السماح + رفض العناوين الخاصة/الداخلية، حد `MAX_REDIRECTS = 5`). مطبّق على `fetchExternalText` (iCal) و`fetchExternalBytes` (voice).
+- **L-9** `VITE_SUPABASE_ANON_KEY` و`VITE_FRONTEND_FORGE_API_KEY` تحيّدو من `.env.production.example` (بتعليق واضح يمنع إضافتهم مستقبلًا)، و`docs/deployment-env-checklist.md` تحدّث باش ما يبقاش يشجّع عليهم.
+- اختبارات: `server/payments/webhooks.paytabs.test.ts` (جديد — fail-closed)، تمديد `server/security/urlGuard.test.ts` (302 → شبكة خاصة مرفوض، سلسلة redirect عمومية، حد الحلقات)، تمديد `server/cron/cronAuth.test.ts` (`verifyScheduledTask`)، وpins جديدة فـ `server/readiness.security.test.ts`.

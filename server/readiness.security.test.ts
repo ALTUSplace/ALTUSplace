@@ -129,6 +129,32 @@ describe("final readiness security audit", () => {
     expect(security).toContain('"X-XSS-Protection", "0"');
   });
 
+  it("closes the final low-priority findings (L-3, L-5, L-7, L-8, L-9)", () => {
+    const routers = read("server/routers.ts");
+    // L-3: the AWS Translate quota endpoints are admin-only.
+    expect(routers).toMatch(/translateText:\s*adminProcedure/);
+    expect(routers).toMatch(/clearCache:\s*adminProcedure/);
+    // L-5: scheduled-task routes get a route-level guard; handlers keep their
+    // own isCron/taskUid verification (defense in depth).
+    const entry = read("server/_core/app.ts");
+    expect(entry).toContain('app.post("/api/scheduled/lease-end-reminder", verifyScheduledTask, leaseEndReminderHandler)');
+    expect(entry).toContain('app.post("/api/scheduled/ical-sync", verifyScheduledTask, scheduledIcalSyncHandler)');
+    const cronAuth = read("server/middleware/cronAuth.ts");
+    expect(cronAuth).toContain("export async function verifyScheduledTask");
+    // L-7: PayTabs is fail-closed when the status field is missing.
+    const webhooks = read("server/payments/webhooks.ts");
+    expect(webhooks).toContain("isPaytabsPaidStatus(code)");
+    expect(webhooks).not.toContain("!code ||");
+    // L-8: external fetches follow redirects manually and re-validate each hop.
+    const guard = read("server/security/urlGuard.ts");
+    expect(guard).toContain('redirect: "manual"');
+    expect(guard).toContain("MAX_REDIRECTS");
+    // L-9: client bundle secrets removed from the production env template.
+    const envExample = read(".env.production.example");
+    expect(envExample).not.toMatch(/^VITE_SUPABASE_ANON_KEY=/m);
+    expect(envExample).not.toMatch(/^VITE_FRONTEND_FORGE_API_KEY=/m);
+  });
+
   it("uses only parameterized ORM queries (no raw string-concat SQL)", () => {
     const routers = read("server/routers.ts");
     // Only sanctioned low-level usage is the typed sql`` join helper for aggregations.

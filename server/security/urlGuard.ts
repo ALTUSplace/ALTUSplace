@@ -4,7 +4,8 @@
 // rejects private/reserved networks (DNS-rebinding safe: ANY resolved address
 // being private rejects the whole URL), and can be locked to an allowlist via
 // the ICAL_ALLOWED_HOSTS env var. fetchExternalText() wraps the actual fetch
-// with a hard 5s timeout and a 1 MB response-size cap.
+// with a hard 5s timeout and a 1 MB response-size cap, and redirects are
+// followed manually so every hop is re-validated (L-8).
 
 import { BlockList, isIPv4, isIPv6 } from "node:net";
 import { lookup } from "node:dns/promises";
@@ -90,11 +91,48 @@ export async function validateExternalUrl(value: string, options: ExternalUrlOpt
   return url;
 }
 
+/** Redirect hops followed before an external fetch is rejected (L-8). */
+export const MAX_REDIRECTS = 5;
+
+const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
+
+/**
+ * Fetch that follows redirects manually and re-validates every hop with
+ * validateExternalUrl before connecting (L-8). Node's automatic redirect
+ * handling would silently connect to a Location the SSRF guard never saw, so
+ * each redirect target is checked again (HTTPS-only, allowlist, DNS → no
+ * private/reserved addresses). `start` must already be validated by the
+ * caller; every redirect target is validated here.
+ */
+async function fetchGuarded(
+  start: URL | string,
+  init: { signal: AbortSignal; headers?: Record<string, string> },
+  options: ExternalUrlOptions = {},
+): Promise<Response> {
+  let current = new URL(start.toString());
+  for (let hop = 0; ; hop += 1) {
+    const response = await fetch(current, { ...init, redirect: "manual" });
+    if (!REDIRECT_STATUSES.has(response.status)) return response;
+    const location = response.headers.get("location");
+    if (response.body) await response.body.cancel().catch(() => undefined);
+    if (!location) throw new Error("External fetch redirect is missing a Location header");
+    if (hop >= MAX_REDIRECTS) throw new Error("External fetch exceeded the redirect limit");
+    let target: URL;
+    try {
+      target = new URL(location, current);
+    } catch {
+      throw new Error("External fetch redirect target is not a valid URL");
+    }
+    current = await validateExternalUrl(target.toString(), options);
+  }
+}
+
 export async function fetchExternalText(url: URL | string, headers?: Record<string, string>): Promise<string> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), ICAL_FETCH_TIMEOUT_MS);
   try {
-    const response = await fetch(url, {
+    // Redirect targets are re-validated inside fetchGuarded (L-8).
+    const response = await fetchGuarded(url, {
       signal: controller.signal,
       headers: headers ?? { Accept: "text/calendar,text/plain;q=0.9" },
     });
@@ -128,7 +166,9 @@ export async function fetchExternalBytes(
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), options.timeoutMs ?? ICAL_FETCH_TIMEOUT_MS);
   try {
-    const response = await fetch(value, { signal: controller.signal });
+    // Redirect targets are re-validated inside fetchGuarded (L-8); the iCal
+    // allowlist stays scoped to iCal feeds only.
+    const response = await fetchGuarded(value, { signal: controller.signal }, { allowedHosts: "" });
     if (!response.ok) throw new Error(`External fetch HTTP ${response.status}`);
     const declaredLength = Number(response.headers.get("content-length") ?? 0);
     if (declaredLength > options.maxBytes) throw new Error("External resource exceeds size limit");

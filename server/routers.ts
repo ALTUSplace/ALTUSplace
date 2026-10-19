@@ -3795,7 +3795,7 @@ export const appRouter = router({
   }),
 
   translation: router({
-    translateText: protectedProcedure
+    translateText: adminProcedure
       .input(z.object({
         text: z.string().trim().min(1).max(2000),
         targetLanguage: z.enum(["ar", "fr", "en"]),
@@ -3805,7 +3805,7 @@ export const appRouter = router({
         const result = await translateWithAws(input.text, input.sourceLanguage ?? "ar", input.targetLanguage);
         return { translatedText: result.translatedText ?? input.text, fromCache: result.fromCache, provider: result.provider };
       }),
-    clearCache: protectedProcedure
+    clearCache: adminProcedure
       .input(z.object({ listingId: z.number().int().positive() }))
       .mutation(async ({ input }) => ({ cleared: await invalidateTranslationCache(input.listingId) })),
     stats: protectedProcedure.query(async () => getTranslationStats()),
