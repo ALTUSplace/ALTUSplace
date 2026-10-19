@@ -48,6 +48,7 @@ vi.mock("./notificationService", async (importOriginal) => {
 import { alertAdmins } from "./notificationService";
 import { appRouter } from "./routers";
 import { resetIdempotencyStore } from "./_core/idempotency";
+import { __resetRateLimitBucketsForTests } from "./_core/security";
 import type { TrpcContext } from "./_core/context";
 
 /** Spacing between submissions in the "spread across the window" probes. */
@@ -83,6 +84,12 @@ const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve,
 
 beforeEach(() => {
   resetIdempotencyStore();
+  // M-6: these fixtures carry no IP, so all of a test's calls share the
+  // "unknown" spam bucket; reset it per test so the idempotency contract is
+  // exercised on a full budget. The busiest scenario (10 concurrent submits
+  // with one requestId) sits exactly at the 10/min leadRequest cap; the guard
+  // itself is pinned in server/spam-guard.test.ts.
+  __resetRateLimitBucketsForTests();
   vi.mocked(alertAdmins).mockClear();
 });
 

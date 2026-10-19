@@ -6,15 +6,16 @@ import { CSP_HEADER_VALUE } from "../../shared/security/csp";
 import { ENV } from "./env";
 import { logger } from "./logger";
 
-type RateLimitOptions = { windowMs: number; max: number; message?: string };
+export type RateLimitOptions = { windowMs: number; max: number; message?: string };
 type Bucket = { count: number; resetAt: number };
 const buckets = new Map<string, Bucket>();
 
-function clientIp(req: Request): string {
+export function clientIp(req: Request): string {
   // Use Express's trust-proxy resolved address (app.set("trust proxy", 1))
   // instead of the client-supplied X-Forwarded-For header, whose left-most
   // entry can be spoofed to rotate the rate-limit bucket and bypass every
-  // limit (auth/payment brute-force included).
+  // limit (auth/payment brute-force included). Exported so the in-router spam
+  // guards (M-6) bucket on the exact same identifier as the HTTP tiers.
   return req.ip || req.socket?.remoteAddress || "unknown";
 }
 
@@ -110,24 +111,57 @@ function warnMemoryFallback(reason: string): void {
   );
 }
 
+/** Result of one counter check against a single (namespace, identifier) bucket. */
+export type RateLimitCheck = {
+  success: boolean;
+  limit: number;
+  remaining: number;
+  reset: number;
+  count: number;
+};
+
+/**
+ * Consume one token from the per-instance Map bucket. Pure counter — no
+ * headers, no response — shared by the Express fallback middleware below and
+ * the in-router tRPC spam guards (M-6, `checkRateLimit`), so every surface
+ * enforces the same budget through one implementation.
+ */
+export function consumeLocalRateLimit(
+  namespace: string,
+  windowMs: number,
+  max: number,
+  identifier: string,
+): RateLimitCheck {
+  const now = Date.now();
+  pruneBuckets(now);
+  const key = `${namespace}:${identifier}`;
+  const current = buckets.get(key);
+  if (!current || current.resetAt <= now) {
+    buckets.set(key, { count: 1, resetAt: now + windowMs });
+    return { success: true, limit: max, remaining: max - 1, reset: now + windowMs, count: 1 };
+  }
+  current.count += 1;
+  return {
+    success: current.count <= max,
+    limit: max,
+    remaining: Math.max(0, max - current.count),
+    reset: current.resetAt,
+    count: current.count,
+  };
+}
+
 /** Per-instance sliding window — the fallback when the shared store is absent. */
 function localRateLimit(namespace: string, windowMs: number, max: number, message: string) {
   return (req: Request, res: Response, next: NextFunction) => {
-    const now = Date.now();
-    pruneBuckets(now);
-    const key = `${namespace}:${clientIp(req)}`;
-    const current = buckets.get(key);
-    if (!current || current.resetAt <= now) {
-      buckets.set(key, { count: 1, resetAt: now + windowMs });
-      res.setHeader("RateLimit-Limit", String(max));
-      res.setHeader("RateLimit-Remaining", String(max - 1));
-      return next();
+    const result = consumeLocalRateLimit(namespace, windowMs, max, clientIp(req));
+    res.setHeader("RateLimit-Limit", String(result.limit));
+    res.setHeader("RateLimit-Remaining", String(result.remaining));
+    // A freshly opened bucket previously carried only limit + remaining; keep
+    // that exact header shape (pinned by tests/integration/rate-limiter.test.ts).
+    if (result.count > 1) {
+      res.setHeader("RateLimit-Reset", String(Math.max(0, Math.ceil((result.reset - Date.now()) / 1000))));
     }
-    current.count += 1;
-    res.setHeader("RateLimit-Limit", String(max));
-    res.setHeader("RateLimit-Remaining", String(Math.max(0, max - current.count)));
-    res.setHeader("RateLimit-Reset", String(Math.ceil((current.resetAt - now) / 1000)));
-    if (current.count > max) {
+    if (!result.success) {
       res.status(429).json({ error: message });
       return;
     }
@@ -184,6 +218,42 @@ export function createRateLimiter(options: RateLimitOptions & { namespace?: stri
 }
 
 /**
+ * Identifier-only counter check (M-6): same store and fallback policy as
+ * `createRateLimiter`, but callable outside Express — the tRPC spam guards
+ * run inside the router, where there is no `req`/`res` pair to mutate.
+ */
+export async function checkRateLimit(
+  identifier: string,
+  options: RateLimitOptions & { namespace: string },
+): Promise<RateLimitCheck> {
+  const { namespace, windowMs, max } = options;
+  const distributed = getDistributedLimiter(namespace, windowMs, max);
+  if (distributed) {
+    try {
+      const result = await distributed.limit(identifier);
+      if (result.reason !== "timeout") {
+        return {
+          success: result.success,
+          limit: result.limit,
+          remaining: Math.max(0, result.remaining),
+          reset: result.reset,
+          count: Math.max(1, result.limit - result.remaining),
+        };
+      }
+      warnMemoryFallback("The shared Redis limiter timed out.");
+    } catch (error) {
+      warnMemoryFallback("The shared Redis limiter is unreachable.");
+      logger.error("[RateLimit] Upstash Redis limit check failed", {
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  } else {
+    warnMemoryFallback("Upstash Redis is not configured.");
+  }
+  return consumeLocalRateLimit(namespace, windowMs, max, identifier);
+}
+
+/**
  * ---------------------------------------------------------------------------
  * TIERED API RATE LIMITING (audit findings C5 / C6 / C7)
  * ---------------------------------------------------------------------------
@@ -218,6 +288,7 @@ export function createRateLimiter(options: RateLimitOptions & { namespace?: stri
  *   session-read  auth.me, notifications.* (GET only)  — 300/min
  *   standard      everything else                      — 300/min
  *   strict-*      auth / booking / payment surfaces    — 5/min (own buckets)
+ *   spam-guard    public side-effect mutations         — 5-60/min (M-6, in-router)
  *
  * Batches: tRPC GET batches arrive as `/api/trpc/a,b,c`, so a single HTTP
  * request can carry several procedures. One response cannot be half-throttled,
@@ -294,6 +365,52 @@ export const storageProxyLimiter = createRateLimiter({
   namespace: "rl:tier:storage:240:60000",
   message: "Too many media requests. Try again in a minute.",
 });
+
+/**
+ * In-router spam guards (audit finding M-6). These mutations are public or
+ * user-facing and their HTTP tier can only ever be `standard` (300/min): the
+ * path classifier sees `/api/trpc/...` and cannot know that one call floods
+ * every admin mailbox or writes analytics rows. Each surface therefore gets
+ * its own per-IP bucket, enforced inside the tRPC router (`spamGuard` in
+ * `_core/trpc.ts`) against the same store as the HTTP tiers — Redis when
+ * configured, in-memory fallback otherwise.
+ *
+ *   leadRequest    requestListing.create   — 10/min/IP: public lead form;
+ *                  rotating phone numbers floods every admin mailbox.
+ *   supportTicket  supportTickets.create   — 5/min/IP: notifies EVERY admin.
+ *   comment        comments.create         — 10/min/IP: authored content.
+ *   listingEvent   listings.trackEvent     — 60/min/IP: every listing view /
+ *                  WhatsApp click writes a row. A browsing visitor must never
+ *                  be blocked; a script cannot exceed one write per second.
+ */
+export type SpamGuardSurface = "leadRequest" | "supportTicket" | "comment" | "listingEvent";
+
+export const SPAM_GUARD_LIMITS: Record<SpamGuardSurface, RateLimitOptions & { namespace: string }> = {
+  leadRequest: {
+    windowMs: 60 * 1000,
+    max: 10,
+    namespace: "rl:spam:lead-request:10:60000",
+    message: "Too many requests. Try again in a minute.",
+  },
+  supportTicket: {
+    windowMs: 60 * 1000,
+    max: 5,
+    namespace: "rl:spam:support-ticket:5:60000",
+    message: "Too many support tickets. Try again in a minute.",
+  },
+  comment: {
+    windowMs: 60 * 1000,
+    max: 10,
+    namespace: "rl:spam:comment:10:60000",
+    message: "Too many comments. Try again in a minute.",
+  },
+  listingEvent: {
+    windowMs: 60 * 1000,
+    max: 60,
+    namespace: "rl:spam:listing-event:60:60000",
+    message: "Too many requests. Try again in a minute.",
+  },
+};
 
 /**
  * Least -> most restrictive. A batch takes the max over its members, and
@@ -417,7 +534,10 @@ export function apiRateLimit(req: Request, res: Response, next: NextFunction) {
 export function securityHeaders(_req: Request, res: Response, next: NextFunction) {
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("X-Frame-Options", "DENY");
-  res.setHeader("X-XSS-Protection", "1; mode=block");
+  // L-10: the "XSS auditor" was removed from every current browser and could
+  // itself introduce vulnerabilities where it still exists. Explicitly
+  // disabled — byte-identical value in vercel.json (cspParity.test.ts).
+  res.setHeader("X-XSS-Protection", "0");
   res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
   res.setHeader("X-DNS-Prefetch-Control", "off");
   res.setHeader("X-Permitted-Cross-Domain-Policies", "none");
@@ -487,7 +607,14 @@ export function escapeHtml(value: string): string {
     .replace(/'/g, "&#x27;");
 }
 
-/** Sanitize + escape in one step for user-generated rich text fields. */
+/**
+ * Sanitize + escape in one step for fields explicitly bound to HTML output
+ * (profile text stored for notification e-mails / admin views). Deliberately
+ * NOT applied to whole tRPC inputs anymore (audit L-4): global input escaping
+ * corrupted real data — URLs, e-mails, even passwords — while React, the
+ * JSON-LD serializer, the prerenderer and the notification templates all
+ * escape at their own render boundary.
+ */
 export function sanitizeUserContent(value: string, maxLength = 5000): string {
   return escapeHtml(sanitizeText(value, maxLength));
 }
@@ -512,24 +639,6 @@ export function registerSecurity(app: Express) {
 /** Test helper: reset in-memory buckets between unit tests. */
 export function __resetRateLimitBucketsForTests() {
   buckets.clear();
-}
-
-/**
- * tRPC input sanitizer: recursively sanitize every string in a parsed input
- * object (defense-in-depth XSS layer on top of zod length limits).
- * Numbers/booleans/dates pass through untouched; keys are preserved.
- */
-export function sanitizeTrpcInput<T>(input: T, maxLength = 5000): T {
-  if (typeof input === "string") return sanitizeUserContent(input, maxLength) as unknown as T;
-  if (Array.isArray(input)) return input.map(v => sanitizeTrpcInput(v, maxLength)) as unknown as T;
-  if (input && typeof input === "object" && (input as object).constructor === Object) {
-    const out: Record<string, unknown> = {};
-    for (const key of Object.keys(input as Record<string, unknown>)) {
-      out[key] = sanitizeTrpcInput((input as Record<string, unknown>)[key], maxLength);
-    }
-    return out as unknown as T;
-  }
-  return input;
 }
 
 // ---------------------------------------------------------------------------

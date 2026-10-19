@@ -7,7 +7,7 @@ import { TRPCError } from "@trpc/server";
 import { parse as parseCookie } from "cookie";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
-import { adminProcedure, ownerProcedure, partnerProcedure, protectedProcedure, publicProcedure, router, superAdminProcedure } from "./_core/trpc";
+import { adminProcedure, ownerProcedure, partnerProcedure, protectedProcedure, publicProcedure, router, spamGuard, superAdminProcedure } from "./_core/trpc";
 import { getDb, withTransaction } from "./db";
 import { PLATFORM_SETTINGS_PUBLIC_COLUMNS, defaultPlatformSettings, sanitizePlatformSettingsSnapshot } from "./platformSettingsPolicy";
 import { evaluateBecomeAgencyAccess, isElevatedRole } from "./becomeAgencyPolicy";
@@ -705,7 +705,13 @@ export const appRouter = router({
       }),
     getByUserId: protectedProcedure
       .input(z.object({ userId: z.number().int().positive() }))
-      .query(async ({ input }) => {
+      .query(async ({ ctx, input }) => {
+        // L-2: KYC status is personal data — a user may only read their OWN
+        // row. Admins keep the cross-user read used by the review queue, so
+        // the procedure is safe wherever it is mounted.
+        if (ctx.user!.id !== input.userId && !["admin", "SUPER_ADMIN"].includes(ctx.user!.role)) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "لا يمكنك الاطلاع على حالة التحقق الخاصة بمستخدم آخر." });
+        }
         const db = await getDb();
         if (!db) return null;
         const [userRow] = await db.select({ kycVerificationStatus: users.kycVerificationStatus, kycVerifiedAt: users.kycVerifiedAt }).from(users).where(eq(users.id, input.userId)).limit(1);
@@ -1725,6 +1731,7 @@ export const appRouter = router({
         .from(supportTickets).where(eq(supportTickets.userId, ctx.user!.id)).orderBy(desc(supportTickets.createdAt)).limit(100);
     }),
     create: protectedProcedure
+      .use(spamGuard("supportTicket"))
       .input(z.object({ subject: z.string().trim().min(3).max(255), category: z.string().trim().min(2).max(120), description: z.string().trim().min(5).max(5000) }))
       .mutation(async ({ ctx, input }) => {
         const db = await getDb();
@@ -2003,6 +2010,7 @@ export const appRouter = router({
       }),
 
     trackEvent: publicProcedure
+      .use(spamGuard("listingEvent"))
       .input(z.object({ listingId: z.number().int().positive(), eventType: z.enum(["view", "whatsapp_click", "contact_click"]), visitorKey: z.string().trim().min(16).max(128).optional() }))
       .mutation(async ({ input }) => {
         const db = await getDb();
@@ -2648,19 +2656,19 @@ export const appRouter = router({
         return { success: true, bookingId, subtotal, addOnsTotal, durationDays, commissionFee, netProfit };
       }),
 
-    updateStatus: protectedProcedure
+    // L-1: platform-only status override. The admin tier is expressed by the
+    // procedure type (`adminProcedure`) instead of an inline role check, so a
+    // refactor cannot silently drop the gate.
+    updateStatus: adminProcedure
       .input(
         z.object({
           bookingId: z.number(),
           status: z.enum(["Pending", "Confirmed", "Cancelled"]),
         })
       )
-      .mutation(async ({ ctx, input }) => {
+      .mutation(async ({ input }) => {
         const db = await getDb();
         if (!db) throw new Error("Database unavailable");
-        if (!['admin', 'SUPER_ADMIN'].includes(ctx.user!.role)) {
-          throw new Error("عذراً، هذه العملية مخصصة لمدير المنصة والمشرفين فقط.");
-        }
         const bookingRow = (await db.select({ listingId: bookings.listingId }).from(bookings).where(eq(bookings.id, input.bookingId)).limit(1))[0];
         if (!bookingRow) throw new Error("الحجز غير موجود.");
         await db
@@ -3494,6 +3502,7 @@ export const appRouter = router({
      *    in-app notifications for the same phone.
      */
     create: publicProcedure
+      .use(spamGuard("leadRequest"))
       .input(
         z.object({
           name: z.string().trim().min(2).max(80),
@@ -3739,6 +3748,7 @@ export const appRouter = router({
       }),
 
     create: protectedProcedure
+      .use(spamGuard("comment"))
       .input(z.object({
         listingId: z.number().int().positive(),
         body: z.string().trim().min(1).max(2000),

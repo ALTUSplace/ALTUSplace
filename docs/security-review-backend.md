@@ -68,6 +68,8 @@ if (await isOwnerConfigured()) → 403
 - `comments.create` / `reviews.create` — `reviews.create` مقيّد بحجز مكتمل، `comments.create` لا.
 - `listings.trackEvent` (`:1991`) — public mutation كيكتب صفوف analytics.
 
+> ✅ **تم الإصلاح** (Fix 8) — شوف قسم «حالة الإصلاحات» أسفله.
+
 ### M-7 — رقم الواتساب الخاص (إشعارات الحجز) مكشوف عمومًا
 `listings.getById` (`:2014-2026`) و`search`/`list` كيرجّعو `whatsappPhone` + `whatsappNumber` + `agencyPhone` بلا مصادقة، و`Checkout.tsx:209` كتفضّل `whatsappPhone` (رقم الإشعارات الخاص) على `whatsappNumber` (العمومي). هذا كيناقض سياسة "الرقم ما كيتكشفش حتى التأكيد" المتبعة فـ `bookings.getById`.
 
@@ -77,16 +79,16 @@ if (await isOwnerConfigured()) → 403
 
 ## 🟡 Low
 
-- **L-1** `bookings.updateStatus` (`:2621`) هو `protectedProcedure` مع فحص inline `['admin','SUPER_ADMIN']` بدل `adminProcedure` — صحيح اليوم، لكن inconsistent وقابل للكسر مستقبلًا.
-- **L-2** `kyc.getByUserId` (`:693`) — أي مستخدم مُصادَق يقدر يقرا حالة KYC ديال أي `userId` (status+verifiedAt فقط، بلا مستندات) → enumeration.
+- **L-1** `bookings.updateStatus` (`:2621`) هو `protectedProcedure` مع فحص inline `['admin','SUPER_ADMIN']` بدل `adminProcedure` — صحيح اليوم، لكن inconsistent وقابل للكسر مستقبلًا. → ✅ **تم الإصلاح** (Fix 9).
+- **L-2** `kyc.getByUserId` (`:693`) — أي مستخدم مُصادَق يقدر يقرا حالة KYC ديال أي `userId` (status+verifiedAt فقط، بلا مستندات) → enumeration. → ✅ **تم الإصلاح** (Fix 9).
 - **L-3** `translation.translateText` / `translation.clearCache` (`:3751+`) `protectedProcedure` — أي مستخدم مُصادَق يقدر يحرق quota ديال AWS Translate، و`clearCache(listingId)` كيخلي cache-thrash لأي إعلان.
-- **L-4** `sanitizeTrpcInput` (middleware عام) كيعمل HTML-escape لكل النصوص المدخلة → تفسد البيانات المخزّنة (double-encoding، URLs فيها `&`) وتعطي إحساسًا زائفًا بأمان XSS.
+- **L-4** `sanitizeTrpcInput` (middleware عام) كيعمل HTML-escape لكل النصوص المدخلة → تفسد البيانات المخزّنة (double-encoding، URLs فيها `&`) وتعطي إحساسًا زائفًا بأمان XSS. → ✅ **تم الإصلاح** (Fix 9) — حيّدنا الـ middleware نهائيًا ومنعتمد على React + output-boundary escaping.
 - **L-5** `/api/scheduled/lease-end-reminder` و`/api/scheduled/ical-sync` بلا `verifyCron` على الـ route (`app.ts`)، كيعتمدو على فحص داخلي `sdk.authenticateRequest` + `isCron && taskUid` (`leaseReminder.ts:13`). صحيح، لكن inconsistent مع `/api/cron/*`؛ زيادة middleware للدفاع في العمق.
-- **L-6** `leaseReminder.ts:76` كيرجّع `error.stack` فـ JSON ديال الخطأ → تسريب stack trace.
+- **L-6** `leaseReminder.ts:76` كيرجّع `error.stack` فـ JSON ديال الخطأ → تسريب stack trace. → ✅ **تم الإصلاح** (Fix 9) — الـ stack بقى فـ السيرفر log فقط.
 - **L-7** PayTabs webhook: `const paid = !code || /^(success...)/` — غياب حقل الحالة كيتفسّر **مدفوع**. آمن افتراضيًا لأن التوقيع مطلوب (`payments/webhooks.ts`)، لكن المنطق خاصه يفسّر الغياب كفشل.
 - **L-8** SSRF عبر redirect: `urlGuard` كيتحقق من الـ URL الأولي فقط، و`fetch` كيتبع 302 بلا إعادة تحقق من الهدف (يحتاج مالك مُصادَق + host خبيث). الباقي قوي: كيحجب 127/8, 10/8, 172.16/12, 192.168/16, 169.254/16, ::1 وكيفحص كل عناوين DNS (مُختبَر ضد `169.254.169.254`).
 - **L-9** `.env.production.example` كيوثّق `VITE_SUPABASE_ANON_KEY` و`VITE_FRONTEND_FORGE_API_KEY` — حاليًا **غير مستعملين** في `client/src` (grep نظيف)، لكن إذا تفعّلو كيتشحنو للبندل. و`anon key` خطر غير بعد تفعيل RLS (H-1/H-2).
-- **L-10** `X-XSS-Protection: 1; mode=block` header مهجور وقادر يدخّل ثغرات في متصفحات قديمة → يُنصح بـ `0`.
+- **L-10** `X-XSS-Protection: 1; mode=block` header مهجور وقادر يدخّل ثغرات في متصفحات قديمة → يُنصح بـ `0`. → ✅ **تم الإصلاح** (Fix 9) — `0` فـ Express و`vercel.json` (parity مُختبَر).
 
 ---
 
@@ -126,8 +128,9 @@ if (await isOwnerConfigured()) → 403
 | **M-7 (UI)** | ✅ مُصلَّح | `server/routers.ts` (`bookings.getById`/`vouchers.getByCode` كيرجّعو `agencyWhatsApp` العمومي بدل الرقم الخاص)، `client/src/pages/Success.tsx`، `client/src/pages/Voucher.tsx` |
 | **M-1 (UI)** | ✅ مُصلَّح | `client/src/pages/HostDashboard.tsx` + `client/src/pages/AgencyDashboard.tsx` (إخفاء الأقسام المالية/الحجوزات/التحليلات عن tier الشريك — بلا أي ترقية تلقائية) |
 | H-1, H-2 | ⏳ مفتوح | `supabase/rls.sql`, `server/db.ts` |
-| M-6 | ⏳ مفتوح | — |
-| L-1 → L-10 | ⏳ مفتوح | — |
+| **M-6** | ✅ مُصلَّح | `server/_core/security.ts` (`SPAM_GUARD_LIMITS` + `checkRateLimit`)، `server/_core/trpc.ts` (`spamGuard`)، `server/routers.ts` (guards على `requestListing.create`/`supportTickets.create`/`comments.create`/`listings.trackEvent`) |
+| **L-1, L-2, L-4, L-6, L-10** | ✅ مُصلَّح | `server/routers.ts` (`updateStatus`→`adminProcedure`؛ `kyc.getByUserId` مقيّد بالمالك/Admin)، `server/_core/trpc.ts` + `server/_core/security.ts` (حياد `sanitizeTrpcInput`)، `server/leaseReminder.ts` (بلا stack)، `vercel.json` + `server/_core/security.ts` (`X-XSS-Protection: 0`) |
+| L-3, L-5, L-7, L-8, L-9 | ⏳ مفتوح | تحسينات تدريجية (شوف اللائحة فوق) |
 
 ### تفاصيل الإصلاحات المنجزة
 
@@ -172,3 +175,21 @@ if (await isOwnerConfigured()) → 403
 **UI Fix B — إكمال M-1 (إخفاء أقسام المالك عن الشريك):**
 - `HostDashboard.tsx`: قسم «الأرباح والتسويات» (مع طلب السحب) وقسم «طلبات الحجز» كيتعرضو غير لـ `owner`/`admin`/`SUPER_ADMIN` (`isOwnerTier`) — بلا أي ترقية تلقائية لـ `partner`.
 - `AgencyDashboard.tsx`: تابات «الحجوزات والتحقق من الوثائق» و«التحليلات والتقارير» مخفيين على الشريك، والـ tab الافتراضي كيولّي «الأسطول والأسعار». (KPI cards من `agency.overview` — `partnerProcedure` مقيّد بـ `ctx.user.id` — بقاو ظاهرين بشكل مقصود.)
+
+**Fix 8 — M-6 (spam guards داخل الـ tRPC router):**
+- `security.ts`: `checkRateLimit(identifier, { namespace, windowMs, max })` جديد كيعيد `{ success, limit, remaining, reset, count }`، و`consumeLocalRateLimit` مشترك بين الـ Express middleware والـ guards — **نفس المخزن** (Redis إذا مُعدّ، وإلا Map محلية + `warnMemoryFallback` مرة وحدة). الـ identifier ديما `clientIp(req)` (trust-proxy) كيف الـ tiers الأخرى.
+- `trpc.ts`: `spamGuard(surface)` كيرمي `TRPCError` بـ `TOO_MANY_REQUESTS` قبل ما يوصل الطلب للـ handler. الـ guards تحطّو **بعد** `requireUser` (المحاولات غير المُصادَق عليها ما كتاكلش من quota ديال الـ IP).
+- الحدود (`SPAM_GUARD_LIMITS`) لكل surface بوحدو:
+  - `requestListing.create` → **10/min/IP** (فورم عام؛ تدوير الأرقام كيصبّ فـ inbox ديال الأدمنز، و10 كافي جدًا لزائر حقيقي).
+  - `supportTickets.create` → **5/min/IP** (كيوصّل لكل الأدمنز).
+  - `comments.create` → **10/min/IP** (محتوى مكتوب؛ `reviews.create` أصلًا مقيّد بحجز مكتمل).
+  - `listings.trackEvent` → **60/min/IP** (=1 كتابة/ثانية؛ كل view/click كيكتب صف analytics، والزائر العادي ما خاصو يتقطع أبدًا).
+- اختبارات: `server/spam-guard.test.ts` (سلوكي: الرفض بعد الحد، استقلال الـ IPs، ترتيب الـ guard مع المصادقة) + pins فـ `server/readiness.security.test.ts` + `tests/integration/rate-limiter.test.ts` (وحدة `checkRateLimit`).
+
+**Fix 9 — L-1, L-2, L-4, L-6, L-10:**
+- **L-1** `bookings.updateStatus` ولّى `adminProcedure` — الـ admin tier كيتعبّر عليه بنوع الـ procedure، بلا فحص inline (`['admin','SUPER_ADMIN']`) اللي كان قابل للكسر فـ refactor.
+- **L-2** `kyc.getByUserId` ولّى مسموح غير لصاحب الريكورد (`ctx.user.id === input.userId`) أو Admin/SUPER_ADMIN — أي محاولة قراءة status ديال مستخدم آخر كترجع `FORBIDDEN`.
+- **L-4** حيّدنا `sanitizeTrpcInput` + الـ middleware العام نهائيًا: الإدخال كيتخزّن **verbatim** (بلا double-encoding لـ URLs/emails/passwords). الـ XSS بقى مُعالج فـ output boundaries: React كيهرب فـ render، JSON-LD serializer كيهرب `<` (`client/src/lib/seo.ts`)، prerender + notification emails كيهربو فـ بلدانهم. الـ helpers الميدانية (`sanitizeUserContent`/`escapeHtml`) بقاو للنصوص اللي غادية مباشرة لـ HTML. ⚠️ ملاحظة ترحيل: أي حساب قديم فيه `&`/`<`/`'` فـ كلمة السر خاصو reset (الهاش ديالو تحسب على نسخة مهرّبة قديمًا).
+- **L-6** `leaseReminder.ts` ما بقاش كيرجّع `error.stack` فـ JSON — الـ stack باقي غير فـ `console.error` ديال السيرفر؛ الردّ فيه غير message + context غير حساس.
+- **L-10** `X-XSS-Protection: 0` فـ `security.ts` و`vercel.json` (بدل `1; mode=block`)، و`server/cspParity.test.ts` كيثبّت التطابق فـ الجوج.
+- اختبارات: `tests/integration/xss-sanitization.test.ts` (عاود كتبناها: helpers الميدانية + غياب المهرّب العام)، pins جديدة فـ `server/readiness.security.test.ts`.

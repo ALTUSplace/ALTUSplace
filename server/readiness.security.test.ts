@@ -83,13 +83,50 @@ describe("final readiness security audit", () => {
     expect(security).toContain("preload");
   });
 
-  it("sanitizes + HTML-escapes all tRPC inputs (XSS shield) via middleware", () => {
+  it("stores tRPC inputs verbatim (L-4) and relies on output-boundary escaping", () => {
     const trpc = read("server/_core/trpc.ts");
-    expect(trpc).toContain("sanitizeInputMiddleware");
-    expect(trpc).toContain("sanitizeTrpcInput");
+    // The old global middleware HTML-escaped every string BEFORE zod ran,
+    // double-encoding real data (URLs, e-mails). The sanitizer is gone.
+    expect(trpc).not.toContain("sanitizeTrpcInput");
+    expect(trpc).not.toContain("sanitizeInputMiddleware");
     const security = read("server/_core/security.ts");
+    // Field-level helpers remain for explicitly HTML-bound content.
     expect(security).toContain("sanitizeUserContent");
     expect(security).toContain("escapeHtml");
+    // The inline <script type="application/ld+json"> serializer escapes `<`
+    // so a listing title can never break out of the script context.
+    const seo = read("client/src/lib/seo.ts");
+    expect(seo).toContain('replace(/</g, "\\\\u003c")');
+  });
+
+  it("guards public spam surfaces inside the tRPC router (M-6)", () => {
+    const security = read("server/_core/security.ts");
+    expect(security).toContain("SPAM_GUARD_LIMITS");
+    expect(security).toMatch(/leadRequest[\s\S]{0,120}?max:\s*10/);
+    expect(security).toMatch(/supportTicket[\s\S]{0,120}?max:\s*5/);
+    expect(security).toMatch(/listingEvent[\s\S]{0,160}?max:\s*60/);
+    const trpc = read("server/_core/trpc.ts");
+    expect(trpc).toContain("export function spamGuard");
+    expect(trpc).toContain('code: "TOO_MANY_REQUESTS"');
+    const routers = read("server/routers.ts");
+    expect(routers).toContain('spamGuard("leadRequest")');
+    expect(routers).toContain('spamGuard("supportTicket")');
+    expect(routers).toContain('spamGuard("comment")');
+    expect(routers).toContain('spamGuard("listingEvent")');
+  });
+
+  it("closes the remaining low-priority findings (L-1, L-2, L-6, L-10)", () => {
+    const routers = read("server/routers.ts");
+    // L-1: admin tier expressed by the procedure type, not an inline check.
+    expect(routers).toMatch(/updateStatus:\s*adminProcedure/);
+    // L-2: KYC status is readable by its owner (or an admin) only.
+    expect(routers).toContain("لا يمكنك الاطلاع على حالة التحقق الخاصة بمستخدم آخر.");
+    const reminder = read("server/leaseReminder.ts");
+    expect(reminder).not.toContain("error.stack");
+    // L-10: deprecated XSS auditor explicitly disabled, edge parity enforced
+    // by server/cspParity.test.ts.
+    const security = read("server/_core/security.ts");
+    expect(security).toContain('"X-XSS-Protection", "0"');
   });
 
   it("uses only parameterized ORM queries (no raw string-concat SQL)", () => {
