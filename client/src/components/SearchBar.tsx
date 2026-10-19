@@ -15,9 +15,9 @@ export type SearchBarValues = {
 type SearchBarProps = {
   /**
    * hero = large pill fields on the homepage.
-   * heroOverlay = the same fields re-skinned as a solid, theme-aware card
-   *   for the photographic hero. The card reads from --hero-search-* /
-   *   --hero-text-* tokens so it stays AA in both light and dark mode.
+   * heroOverlay = the same fields re-skinned as a frosted-glass card for the
+   *   editorial hero. The card reads from --hero-glass-* plus --hero-text-*
+   *   tokens so the blur stays AA in both light and dark mode.
    * compact = results-page bar.
    */
   variant?: "hero" | "heroOverlay" | "compact";
@@ -81,26 +81,28 @@ export function SearchBar({
     setLocation(`/search?${params.toString()}`);
   };
 
-  // The hero card is a SOLID, theme-aware surface (--hero-search-bg /
-  // --hero-search-border / --hero-text-*) instead of theme-independent glass:
-  // in light mode the card is white with near-black text, in dark mode it is
-  // dark slate with off-white text. Accent-filled controls keep --primary-ink
-  // (the token pinned to the theme so a filled CTA never drops below AA).
+  // The hero card is FROSTED GLASS: a translucent --hero-glass-bg pane over a
+  // backdrop-blur, framed by a --hero-glass-border hairline. The fill is opaque
+  // enough (~72%) that --hero-text-primary/secondary still clear AA whether the
+  // pane is over the champagne canvas or the photograph behind it. Accent-filled
+  // controls keep --primary-ink (the token pinned to the theme so a filled CTA
+  // never drops below AA).
   const fieldBase = isOverlay
-    ? "group relative flex min-w-0 flex-1 items-center gap-3 rounded-xl border border-transparent bg-transparent px-4 py-2.5 text-start transition-colors duration-200 cursor-pointer hover:bg-bg-muted focus-within:border-[var(--hero-search-border)] sm:px-5 sm:py-3"
+    ? "group relative flex min-w-0 flex-1 items-center gap-3 rounded-xl border border-transparent bg-transparent px-4 py-2.5 text-start transition-colors duration-200 cursor-pointer hover:bg-white/45 focus-within:border-[var(--hero-glass-border)] focus-within:bg-white/45 dark:hover:bg-white/10 dark:focus-within:bg-white/10 sm:px-5 sm:py-3"
     : isCompact
       ? "group relative flex flex-1 items-center gap-2.5 rounded-xl bg-bg-muted/55 px-3.5 py-2.5 text-start transition-colors duration-200 cursor-pointer hover:bg-bg-muted focus-within:bg-bg-muted"
       : "group relative flex min-w-0 flex-1 items-center gap-3 rounded-full bg-bg-muted/55 px-5 py-3 text-start transition-colors duration-200 cursor-pointer hover:bg-bg-muted focus-within:bg-bg-muted";
   const fieldIconClass = isOverlay
     ? "shrink-0 h-5 w-5 text-[var(--hero-text-secondary)] transition-colors duration-200 group-hover:text-[var(--hero-text-primary)] group-focus-within:text-[var(--hero-text-primary)]"
     : "shrink-0 h-5 w-5 text-ink-tertiary transition-colors duration-200 group-hover:text-ink-secondary group-focus-within:text-accent-clay";
-  // 11px captions need 4.5:1 and sit on the solid --hero-search-bg, so they
-  // use --hero-text-secondary (AA on white in light mode, on slate in dark).
+  // 11px captions need 4.5:1 and sit on the glass pane, so they use
+  // --hero-text-secondary (AA over the warm canvas in light mode, over navy in
+  // dark mode).
   const fieldCaptionClass = isOverlay
     ? "text-[10px] sm:text-[11px] font-bold tracking-wide text-[var(--hero-text-secondary)] transition-colors duration-200 group-focus-within:text-[var(--hero-text-primary)]"
     : "text-[10px] sm:text-[11px] font-bold tracking-wide text-ink-tertiary transition-colors duration-200 group-focus-within:text-ink-secondary";
   // color-scheme follows the theme on the overlay so the native date-picker
-  // glyph stays legible against the solid card in both modes.
+  // glyph stays legible against the glass in both modes.
   const fieldControlClass = isOverlay
     ? "w-full min-w-0 border-0 bg-transparent outline-none text-sm font-bold text-[var(--hero-text-primary)] placeholder:text-[var(--hero-text-secondary)] cursor-pointer [color-scheme:light] dark:[color-scheme:dark] [&::-webkit-calendar-picker-indicator]:cursor-pointer"
     : "w-full min-w-0 bg-transparent outline-none text-sm font-bold text-ink-primary placeholder:text-ink-tertiary cursor-pointer [&::-webkit-calendar-picker-indicator]:cursor-pointer";
@@ -110,7 +112,7 @@ export function SearchBar({
       return `inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold transition-colors duration-200 sm:px-5 ${
         active
           ? "bg-accent-clay text-[var(--primary-ink)] shadow-[var(--shadow-clay)]"
-          : "text-[var(--hero-text-secondary)] hover:bg-bg-muted hover:text-[var(--hero-text-primary)]"
+          : "text-[var(--hero-text-secondary)] hover:bg-white/45 hover:text-[var(--hero-text-primary)] dark:hover:bg-white/10"
       }`;
     }
     return `inline-flex items-center gap-2 rounded-full px-5 py-2 text-sm font-bold transition-colors duration-200 ${
@@ -129,7 +131,7 @@ export function SearchBar({
           aria-label={t("browseCategories")}
           className={
             isOverlay
-              ? "inline-flex items-center gap-1 rounded-xl border border-[var(--hero-search-border)] bg-[var(--hero-search-bg)] p-1"
+              ? "inline-flex items-center gap-1 rounded-2xl border border-[var(--hero-glass-border)] bg-[var(--hero-glass-bg)] p-1 shadow-[var(--hero-glass-shadow)] backdrop-blur-xl backdrop-saturate-150"
               : "inline-flex items-center gap-1 rounded-full border border-border-subtle bg-bg-surface/85 p-1 shadow-md backdrop-blur-md"
           }
         >
@@ -160,7 +162,7 @@ export function SearchBar({
       <div
         className={
           isOverlay
-            ? "rounded-xl border border-[var(--hero-search-border)] bg-[var(--hero-search-bg)] p-2"
+            ? "rounded-[1.75rem] border border-[var(--hero-glass-border)] bg-[var(--hero-glass-bg)] p-2 shadow-[var(--hero-glass-shadow)] backdrop-blur-2xl backdrop-saturate-150"
             : isCompact
               ? "rounded-2xl border border-border-subtle bg-bg-surface p-2 shadow-md ring-1 ring-ink-primary/[0.03]"
               : "rounded-[2rem] border border-border-subtle bg-bg-surface p-2 shadow-2xl ring-1 ring-ink-primary/[0.03]"
@@ -227,7 +229,7 @@ export function SearchBar({
             aria-label={t("searchSubmitAdvanced")}
             className={
               isOverlay
-                ? "b2-press flex shrink-0 items-center justify-center gap-2 self-stretch rounded-lg bg-accent-clay px-6 py-3 text-sm font-extrabold text-[var(--primary-ink)] shadow-[var(--shadow-clay)] transition-colors hover:bg-accent-clay-hover lg:ms-1"
+                ? "b2-press flex shrink-0 items-center justify-center gap-2 self-stretch rounded-xl bg-accent-clay px-6 py-3 text-sm font-extrabold text-[var(--primary-ink)] shadow-[var(--shadow-clay)] transition-colors hover:bg-accent-clay-hover lg:ms-1"
                 : isCompact
                   ? "b2-press flex shrink-0 items-center justify-center gap-2 self-stretch rounded-xl bg-accent-clay px-6 py-3 text-sm font-extrabold text-[var(--primary-ink)] shadow-[var(--shadow-clay)] transition-colors hover:bg-accent-clay-hover lg:ms-1"
                   : "b2-press flex shrink-0 items-center justify-center gap-2 self-stretch rounded-full bg-accent-clay px-8 py-3.5 text-sm font-extrabold text-[var(--primary-ink)] shadow-[var(--shadow-clay)] transition-colors hover:bg-accent-clay-hover lg:ms-1"

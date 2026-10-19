@@ -1,13 +1,15 @@
 /**
- * Layout gate for the photographic hero.
+ * Layout gate for the editorial hero.
  *
  * Runs the BUILT client (see scripts/serve-dist.mjs for why the dev server
  * cannot be measured) at the 375px mobile breakpoint first, then desktop, and
  * asserts the hero contract:
  *
  *   - the page never scrolls horizontally at 375px
- *   - the search card carries a SOLID fill (no translucent layers, no backdrop
- *     blur) so hero text stays high-contrast in both themes
+ *   - the search card is frosted glass: a translucent fill (~72%) over a real
+ *     backdrop blur, with the ink tokens keeping text at AA in both themes
+ *   - the hero photograph is the priority LCP candidate, carries the
+ *     asymmetric corner curve, and has a slow hover zoom
  *   - the Cars/Properties tabs switch in place (no navigation, no reload)
  *   - the category rail is horizontally scrollable at 375px and its
  *     photographs actually decode
@@ -35,10 +37,38 @@ const probe = () => {
   const cards = rail ? Array.from(rail.querySelectorAll("li")) : [];
   const heroImg = hero ? hero.querySelector("img") : null;
 
-  // The solid hero surface is the SearchBar card: the form's own rounded wrapper.
+  // The frosted hero surface is the SearchBar card: the form's own wrapper.
   const form = hero ? hero.querySelector("form") : null;
   const card = form ? form.parentElement : null;
   const cardStyle = card ? getComputedStyle(card) : null;
+
+  // Computed colours come back as `rgb(r, g, b)` or `rgba(r, g, b, a)`;
+  // normalise both to an alpha number so the glass fill can be asserted.
+  const alphaOf = (color) => {
+    const match = /rgba?\(([^)]+)\)/.exec(color || "");
+    if (!match) return 1;
+    const parts = match[1].split(/[\s,/]+/).filter(Boolean);
+    return parts.length >= 4 ? Number(parts[3]) : 1;
+  };
+
+  // The editorial hero overlaps the photograph's lower edge with the glass
+  // card on desktop; this is rect intersection, not just "both exist".
+  const heroOverlap = (() => {
+    if (!heroImg || !card) return { dx: 0, dy: 0 };
+    const a = heroImg.getBoundingClientRect();
+    const b = card.getBoundingClientRect();
+    return {
+      dx: Math.round(Math.min(a.right, b.right) - Math.max(a.left, b.left)),
+      dy: Math.round(Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top)),
+    };
+  })();
+
+  const heroImageStyle = heroImg ? getComputedStyle(heroImg) : null;
+  // `rounded-ss-[6rem]` is an inline-start radius, so in the default RTL
+  // layout the exaggerated corner is top-right. Record both corners and let
+  // the assertion require exactly one of them to be oversized.
+  const heroImageShell = heroImg?.parentElement?.parentElement ?? null;
+  const shellStyle = heroImageShell ? getComputedStyle(heroImageShell) : null;
 
   const firstCardImg = cards[0] ? cards[0].querySelector("img") : null;
   const firstCardMedia = firstCardImg ? firstCardImg.parentElement : null;
@@ -54,6 +84,7 @@ const probe = () => {
       ? {
           text: h1.innerText.replace(/\s+/g, " ").trim(),
           fontSize: parseFloat(getComputedStyle(h1).fontSize),
+          fontFamily: getComputedStyle(h1).fontFamily,
           color: getComputedStyle(h1).color,
           visible: h1.getBoundingClientRect().height > 0,
         }
@@ -68,11 +99,34 @@ const probe = () => {
     card: cardStyle
       ? {
           background: cardStyle.backgroundColor,
+          alpha: alphaOf(cardStyle.backgroundColor),
           border: cardStyle.borderTopWidth + " " + cardStyle.borderTopColor,
           backdrop: cardStyle.backdropFilter || cardStyle.webkitBackdropFilter,
           radius: cardStyle.borderTopLeftRadius,
         }
       : null,
+    heroImage: heroImg
+      ? {
+          decoded: heroImg.complete && heroImg.naturalWidth > 0,
+          fetchPriority: heroImg.getAttribute("fetchpriority"),
+          transition: heroImageStyle ? heroImageStyle.transitionDuration : null,
+          cornerMax: shellStyle
+            ? Math.max(
+                parseFloat(shellStyle.borderTopLeftRadius),
+                parseFloat(shellStyle.borderTopRightRadius),
+              )
+            : 0,
+          cornerMin: shellStyle
+            ? Math.min(
+                parseFloat(shellStyle.borderTopLeftRadius),
+                parseFloat(shellStyle.borderTopRightRadius),
+              )
+            : 0,
+        }
+      : null,
+    overlap: heroOverlap.dy > 8 && heroOverlap.dx > 8,
+    overlapDy: heroOverlap.dy,
+    overlapDx: heroOverlap.dx,
     rail: rail
       ? {
           scrollW: rail.scrollWidth,
@@ -97,6 +151,23 @@ const probe = () => {
     cardLinkRadius: cardLink ? getComputedStyle(cardLink).borderTopLeftRadius : null,
   };
 };
+
+/**
+ * Waits for finite entrance animations to finish before any geometry is read.
+ * `getBoundingClientRect` includes in-flight transforms, so measuring while
+ * `hero-image-in` is still translating the photograph made the overlap check
+ * pass locally and fail in CI purely on timing. Only `running` animations are
+ * awaited, so an infinite ambient animation can never hang the gate.
+ */
+const settleAnimations = (page) =>
+  page.evaluate(async () => {
+    const pending = document.getAnimations().filter((a) => {
+      if (a.playState !== "running") return false;
+      const timing = a.effect?.getComputedTiming?.();
+      return timing && Number.isFinite(timing.endTime);
+    });
+    await Promise.all(pending.map((a) => a.finished.catch(() => {})));
+  });
 
 /**
  * Finds elements that visibly overflow the viewport WITHOUT being clipped away
@@ -168,6 +239,7 @@ try {
   // so react-query keeps retrying /api/trpc and the network stays busy.
   await m.goto(BASE, { waitUntil: "load" });
   await m.waitForSelector("#hero-heading", { timeout: 30000 });
+  await settleAnimations(m);
 
   // The category rail sits below the fold at 375px, so its photographs are
   // lazily loaded and have not decoded when the probe first runs. Forcing them
@@ -212,18 +284,40 @@ try {
     JSON.stringify(mState.tabTexts),
   );
   record(
-    "375px: hero search card is solid (no translucent fill / backdrop blur)",
-    !!mState.card &&
-      // Solid card (--hero-search-bg): the computed colour carries no alpha
-      // channel and no backdrop-filter survives on the wrapper.
-      !/\/\s*0?\.\d+\s*\)/.test(mState.card.background) &&
-      !/blur/.test(mState.card.backdrop ?? ""),
-    `bg=${mState.card?.background} backdrop=${mState.card?.backdrop} radius=${mState.card?.radius}`,
+    "375px: H1 uses the Playfair display face",
+    /Playfair/.test(mState.h1?.fontFamily ?? ""),
+    `fontFamily=${mState.h1?.fontFamily}`,
   );
   record(
-    "375px: hero search card is rounded (rounded-xl = 0.875rem)",
-    mState.card?.radius === "14px",
-    `radius=${mState.card?.radius} (0px would mean the --radius-xl token collapsed)`,
+    "375px: hero search card is frosted glass (translucent fill + backdrop blur)",
+    !!mState.card &&
+      // --hero-glass-bg is ~72% opaque; anything near-solid means the pane
+      // silently reverted to a card, and a missing backdrop-filter means the
+      // "glass" is just a translucent rectangle.
+      mState.card.alpha > 0.5 &&
+      mState.card.alpha < 1 &&
+      /blur/.test(mState.card.backdrop ?? ""),
+    `bg=${mState.card?.background} alpha=${mState.card?.alpha} backdrop=${mState.card?.backdrop}`,
+  );
+  record(
+    "375px: hero search card is rounded (rounded-[1.75rem] = 28px)",
+    mState.card?.radius === "28px",
+    `radius=${mState.card?.radius} (0px would mean the radius token collapsed)`,
+  );
+  record(
+    "375px: hero photograph is the priority LCP candidate",
+    !!mState.heroImage && mState.heroImage.decoded && mState.heroImage.fetchPriority === "high",
+    JSON.stringify(mState.heroImage),
+  );
+  record(
+    "375px: hero photograph has an asymmetric corner curve",
+    !!mState.heroImage && mState.heroImage.cornerMax >= 64 && mState.heroImage.cornerMin <= 40,
+    `corners max=${mState.heroImage?.cornerMax}px min=${mState.heroImage?.cornerMin}px`,
+  );
+  record(
+    "375px: hero photograph has a slow hover zoom",
+    !!mState.heroImage && parseFloat(mState.heroImage.transition ?? "0") >= 1,
+    `transitionDuration=${mState.heroImage?.transition}`,
   );
   record(
     "375px: category rail scrolls horizontally",
@@ -282,6 +376,7 @@ try {
   const d = await desktop.newPage();
   await d.goto(BASE, { waitUntil: "load" });
   await d.waitForSelector("#hero-heading", { timeout: 30000 });
+  await settleAnimations(d);
   const dState = await d.evaluate(probe);
   // Same reasoning as the 375px check; see findUnclippedOverflow.
   const desktopOverflow = await d.evaluate(findUnclippedOverflow);
@@ -294,6 +389,11 @@ try {
     "1440px: H1 scales up",
     !!dState.h1 && dState.h1.fontSize > mState.h1.fontSize,
     `${dState.h1?.fontSize}px vs ${mState.h1?.fontSize}px at 375`,
+  );
+  record(
+    "1440px: glass card overlaps the hero photograph",
+    dState.overlap === true,
+    `overlap=${dState.overlap} dy=${dState.overlapDy}px dx=${dState.overlapDx}px`,
   );
   record(
     "1440px: rail fits without scrolling",
