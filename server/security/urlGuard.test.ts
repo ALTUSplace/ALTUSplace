@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
-import { validateExternalUrl } from "./urlGuard";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { MAX_REDIRECTS, fetchExternalBytes, fetchExternalText, validateExternalUrl } from "./urlGuard";
 
 // Hermetic DNS: a public-looking IP so allow/deny logic is tested without
 // touching the network.
@@ -44,5 +44,58 @@ describe("validateExternalUrl (iCal SSRF guard)", () => {
     await expect(validateExternalUrl("https://www.airbnb.com/x.ics", options)).resolves.toBeTruthy();
     await expect(validateExternalUrl("https://calendar.booking.com/x.ics", options)).resolves.toBeTruthy();
     await expect(validateExternalUrl("https://evil.example/x.ics", options)).rejects.toThrow();
+  });
+});
+
+describe("redirect handling re-validates every hop (L-8)", () => {
+  beforeEach(() => {
+    // Keep the redirect tests independent from any local allowlist config.
+    vi.stubEnv("ICAL_ALLOWED_HOSTS", "");
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
+  });
+
+  it("rejects a redirect into a private network before following it", async () => {
+    const fetchMock = vi.fn().mockResolvedValueOnce(
+      new Response(null, { status: 302, headers: { location: "https://10.0.0.5/metadata" } }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(fetchExternalText("https://93.184.216.34/feed.ics")).rejects.toThrow();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("follows a public redirect chain and returns the final body", async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(new Response(null, { status: 302, headers: { location: "https://93.184.216.35/feed2.ics" } }))
+      .mockResolvedValueOnce(new Response("BEGIN:VCALENDAR\r\nEND:VCALENDAR", { status: 200, headers: { "content-type": "text/calendar" } }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(fetchExternalText("https://93.184.216.34/feed.ics")).resolves.toContain("BEGIN:VCALENDAR");
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(String(fetchMock.mock.calls[1]?.[0])).toBe("https://93.184.216.35/feed2.ics");
+  });
+
+  it("stops a redirect loop once the hop limit is reached", async () => {
+    const fetchMock = vi.fn(async (input: unknown) =>
+      new Response(null, { status: 302, headers: { location: String(input) } }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(fetchExternalText("https://93.184.216.34/loop.ics")).rejects.toThrow(/redirect limit/i);
+    expect(fetchMock).toHaveBeenCalledTimes(MAX_REDIRECTS + 1);
+  });
+
+  it("rejects a redirect to the cloud metadata IP for binary fetches too", async () => {
+    const fetchMock = vi.fn().mockResolvedValueOnce(
+      new Response(null, { status: 302, headers: { location: "https://169.254.169.254/latest/meta-data" } }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(fetchExternalBytes("https://93.184.216.34/audio.mp3", { maxBytes: 1024 })).rejects.toThrow();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });

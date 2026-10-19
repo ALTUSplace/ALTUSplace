@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_TITLE, TITLE_SUFFIX, formatTitle, serializeJsonLd } from "./seo";
+import {
+  DEFAULT_OG_IMAGE,
+  DEFAULT_TITLE,
+  SITE_URL,
+  TITLE_SUFFIX,
+  formatTitle,
+  resolveSocialImage,
+  serializeJsonLd,
+} from "./seo";
 
 describe("formatTitle", () => {
   it("appends the brand suffix to a bare title", () => {
@@ -33,6 +41,32 @@ describe("formatTitle", () => {
   it("keeps the default title free of a duplicated suffix", () => {
     expect(DEFAULT_TITLE.endsWith(TITLE_SUFFIX)).toBe(true);
     expect(formatTitle(DEFAULT_TITLE)).toBe(DEFAULT_TITLE);
+  });
+});
+
+describe("resolveSocialImage", () => {
+  it("falls back to the default social card when no image is provided", () => {
+    expect(resolveSocialImage()).toBe(`${SITE_URL}${DEFAULT_OG_IMAGE}`);
+    expect(resolveSocialImage(undefined)).toBe(`${SITE_URL}${DEFAULT_OG_IMAGE}`);
+    expect(resolveSocialImage("")).toBe(`${SITE_URL}${DEFAULT_OG_IMAGE}`);
+  });
+
+  it("absolutizes a root-relative listing image", () => {
+    expect(resolveSocialImage("/uploads/cars/clio.jpg")).toBe(
+      `${SITE_URL}/uploads/cars/clio.jpg`,
+    );
+  });
+
+  it("leaves an already-absolute image untouched", () => {
+    expect(resolveSocialImage("https://cdn.example.com/hero.png")).toBe(
+      "https://cdn.example.com/hero.png",
+    );
+  });
+
+  it("always returns an absolute URL, never the bare default path", () => {
+    // Regression guard: a route without its own image must still advertise the
+    // site card, otherwise client-side navigation leaves a stale og:image.
+    expect(resolveSocialImage()).toMatch(/^https?:\/\//);
   });
 });
 

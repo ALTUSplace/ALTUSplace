@@ -139,7 +139,7 @@ export function BookingWidget(props: BookingWidgetProps) {
           <div className="px-3 py-2.5"><label className="block text-[10px] font-bold uppercase tracking-wider text-ink-tertiary">{copy.checkOut}</label><input type="date" value={checkOut} onChange={(e) => setCheckOut(e.target.value)} className="mt-1 w-full bg-transparent text-sm font-medium text-ink-primary outline-none" /></div>
         </div>
       </div>
-      <Button onClick={handleReserve} disabled={!checkIn || !checkOut} className="w-full rounded-xl bg-accent-clay py-3.5 text-sm font-bold text-white shadow-md transition-all duration-200 hover:bg-accent-clay-hover hover:shadow-lg disabled:opacity-50">{copy.reserve}</Button>
+      <Button onClick={handleReserve} disabled={!checkIn || !checkOut} className="w-full rounded-xl bg-accent-clay py-3.5 text-sm font-bold text-[var(--primary-ink)] shadow-md transition-all duration-200 hover:bg-accent-clay-hover hover:shadow-lg disabled:opacity-50">{copy.reserve}</Button>
       <p className="text-center text-xs text-ink-tertiary">{copy.notCharged}</p>
       <div className="flex flex-col gap-3 border-t border-border-subtle pt-4">
         <div className="flex justify-between text-sm"><span className="text-ink-secondary underline decoration-dotted">{pricePerDay.toLocaleString()} × {nights} {dayLabel}</span><span className="font-medium text-ink-primary">{subtotal.toLocaleString()} {currency}</span></div>
@@ -154,7 +154,7 @@ export function BookingWidget(props: BookingWidgetProps) {
       <div className={cn("fixed bottom-0 left-0 right-0 z-50 border-t border-border-subtle bg-bg-surface px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]", className)}>
         <div className="flex items-center justify-between">
           <div className="flex items-baseline gap-1"><span className="text-lg font-bold text-ink-primary">{pricePerDay.toLocaleString()}</span><span className="text-xs font-medium text-ink-secondary">{currency}{copy.perDay}</span></div>
-          <Sheet><SheetTrigger asChild><Button className="rounded-xl bg-accent-clay px-6 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:bg-accent-clay-hover">{copy.reserve}</Button></SheetTrigger><SheetContent side="bottom" className="rounded-t-2xl px-5 pb-8 pt-4"><SheetHeader className="mb-4"><SheetTitle className="text-end text-lg font-bold text-ink-primary">{copy.bookingDetails}</SheetTitle></SheetHeader>{widgetContent}</SheetContent></Sheet>
+          <Sheet><SheetTrigger asChild><Button className="rounded-xl bg-accent-clay px-6 py-2.5 text-sm font-bold text-[var(--primary-ink)] shadow-md transition-all hover:bg-accent-clay-hover">{copy.reserve}</Button></SheetTrigger><SheetContent side="bottom" className="rounded-t-2xl px-5 pb-8 pt-4"><SheetHeader className="mb-4"><SheetTitle className="text-end text-lg font-bold text-ink-primary">{copy.bookingDetails}</SheetTitle></SheetHeader>{widgetContent}</SheetContent></Sheet>
         </div>
       </div>
     );

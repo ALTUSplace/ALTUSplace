@@ -424,7 +424,7 @@ export default function Navbar() {
                         {t("notifications")}
                       </span>
                       {unreadCount > 0 && (
-                        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-accent-red px-1.5 text-[10px] font-black text-white">
+                        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-accent-red px-1.5 text-[10px] font-black text-[var(--primary-ink)]">
                           {unreadCount}
                         </span>
                       )}
@@ -547,10 +547,14 @@ export default function Navbar() {
 
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-[60] 2xl:hidden" role="presentation">
-          <button type="button" className="absolute inset-0 bg-ink-primary/40 dark:bg-[#1C1C1E]/40 backdrop-blur-[2px]" aria-label={t("close")} onClick={() => setMobileMenuOpen(false)} />
-          <aside ref={mobileMenuRef} id="mobile-navigation" className={`absolute top-0 flex h-full w-[min(88vw,22rem)] flex-col overflow-y-auto bg-bg-surface p-4 shadow-xl ${direction === "rtl" ? "right-0" : "left-0"}`} dir={direction} aria-label={t("search")} aria-modal="true" role="dialog" tabIndex={-1}>
+          <button type="button" className="absolute inset-0 bg-ink-primary/40 dark:bg-[#1C1C1E]/40 backdrop-blur-[2px] animate-in fade-in duration-200" aria-label={t("close")} onClick={() => setMobileMenuOpen(false)} />
+          {/* Drawer: 88vw side panel that slides in from the inline-start edge
+              (`slide-in-from-start` reads `:dir()`, so it enters from the right
+              in Arabic and the left in French/English). Reduced-motion users get
+              a cut instead — the global media query zeroes every animation. */}
+          <aside ref={mobileMenuRef} id="mobile-navigation" className={`absolute top-0 flex h-full w-[min(88vw,22rem)] flex-col overflow-y-auto bg-bg-surface p-4 shadow-xl animate-in slide-in-from-start duration-300 ${direction === "rtl" ? "right-0" : "left-0"}`} dir={direction} aria-label={t("search")} aria-modal="true" role="dialog" tabIndex={-1}>
           <div className="flex items-center justify-between border-b border-border-subtle pb-4">
-            <Link href="/" onClick={() => setMobileMenuOpen(false)} className="flex h-10 w-32 items-center justify-start" aria-label={BRAND_NAME}>
+            <Link href="/" onClick={() => setMobileMenuOpen(false)} className="flex min-h-11 w-32 items-center justify-start" aria-label={BRAND_NAME}>
               <img src="/assets/images/logo.png" alt={BRAND_NAME} className="brand-logo max-h-full w-auto object-contain" style={{ height: '44px', maxWidth: '100%', objectFit: 'contain' }} />
             </Link>
             <button type="button" onClick={() => setMobileMenuOpen(false)} className="b2-icon-button border border-border-subtle bg-bg-muted" aria-label={t("close")}><X className="h-5 w-5" /></button>

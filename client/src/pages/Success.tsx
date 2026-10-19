@@ -6,7 +6,7 @@ import { useRef, useState, useEffect } from 'react';
 import { playSuccessSound } from '@/lib/sound';
 import { trpc } from '@/lib/trpc';
 import { cancellationRefundPolicy } from '@/lib/legalDisclosure';
-import { buildWhatsAppUrl, buildAgencyWhatsAppMessage, buildWaMeUrl } from '@/lib/whatsapp';
+import { buildAgencyWhatsAppMessage, buildWaMeUrl } from '@/lib/whatsapp';
 import { WhatsAppIcon } from '@/components/ui/WhatsAppContactButton';
 import { PaymentStatusBadge, PaymentMethodBadge, TransactionReference } from '@/components/PaymentStatusBadge';
 
@@ -27,7 +27,7 @@ export default function Success() {
   const booking = bookingQuery.data;
   const bookingRef = booking ? `ALT-${booking.id}` : (bookingId > 0 ? `ALT-${bookingId}` : 'ALT-PENDING');
   const name = 'المستأجر';
-  const phone = booking?.ownerWhatsApp || 'غير متوفر';
+  const phone = booking?.agencyWhatsApp || 'غير متوفر';
   const bookingStatus = booking?.status ?? 'Pending';
   const isPending = !booking || bookingStatus !== 'Confirmed';
   const start = booking ? new Date(booking.startDate).toISOString().slice(0, 10) : 'غير محدد';
@@ -38,35 +38,28 @@ export default function Success() {
     ? Math.ceil((endTimestamp - startTimestamp) / (1000 * 60 * 60 * 24))
     : 0;
   const days = String(calculatedDays || 0);
-  const premises = booking?.listingTitle || 'المحل موضوع الحجز';
   const city = booking?.listingCity || 'المغرب';
   const landlordName = booking?.ownerName || 'المالك / الشركة المؤجرة';
   const monthlyRent = booking?.totalPrice || 0;
-  const canContactAgency = bookingStatus === 'Confirmed' && Boolean(booking?.ownerWhatsApp);
-  // Public agency click-to-chat number: available immediately after the client
-  // submits their info so they can contact the agency right away (wa.me link).
+  // Public agency click-to-chat number: released by the server only once the
+  // booking is confirmed (bookings.getById nulls it out before that). The
+  // private booking-alert number (whatsappPhone / ownerWhatsApp) is never
+  // exposed to renters — see the M-7 remediation.
   const agencyWhatsApp = booking?.agencyWhatsApp ?? null;
   const agencyContactMessage = booking
     ? buildAgencyWhatsAppMessage(booking.listingTitle ?? '', booking.listingId ?? 0)
     : '';
   const waChatUrl = buildWaMeUrl(agencyWhatsApp, agencyContactMessage);
-  const showWhatsAppContact = Boolean(waChatUrl) || canContactAgency;
+  const showWhatsAppContact = Boolean(waChatUrl);
 
   const handleWhatsappContact = () => {
     if (waChatUrl) {
       window.open(waChatUrl, '_blank', 'noopener,noreferrer');
       return;
     }
-    // Legacy fallback for bookings made before the agency had a public
-    // click-to-chat number: confirmed-only owner WhatsApp.
-    if (!canContactAgency || !booking?.ownerWhatsApp) {
-      toast.info('لا يتوفر رقم واتساب مؤكد للوكالة في بيانات هذا الحجز.');
-      return;
-    }
-    const message = language === 'ar'
-      ? `مرحباً، أود التواصل بخصوص الحجز ${bookingRef} — ${premises}.`
-      : `Bonjour, je souhaite échanger au sujet de la réservation ${bookingRef} — ${premises}.`;
-    window.open(buildWhatsAppUrl(booking.ownerWhatsApp, message), '_blank', 'noopener,noreferrer');
+    // No public agency number on this booking yet (still pending, or the
+    // agency never configured a public click-to-chat number).
+    toast.info('لا يتوفر رقم واتساب عام للوكالة في بيانات هذا الحجز.');
   };
 
   const handleEmailContact = () => {
@@ -544,7 +537,7 @@ export default function Success() {
               onClick={handleEmailContact}
               type="button"
               disabled={isPending}
-              className="w-full bg-accent-clay hover:bg-accent-clay-hover text-white font-bold py-3.5 rounded-xl text-xs flex items-center justify-center gap-2 shadow-[var(--shadow-clay)] cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full bg-accent-clay hover:bg-accent-clay-hover text-[var(--primary-ink)] font-bold py-3.5 rounded-xl text-xs flex items-center justify-center gap-2 shadow-[var(--shadow-clay)] cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5v10a2 2 0 002-2 2 0 00-2 2z" />
@@ -571,6 +564,7 @@ export default function Success() {
           <div className="bg-slate-900 dark:bg-[#1C1C1E] border border-amber-500/40 p-8 rounded-3xl max-w-md w-full text-center space-y-6 shadow-2xl relative">
             <button
               onClick={() => setShowDownloadModal(false)}
+              aria-label="Close"
               className="absolute top-4 left-4 p-2 rounded-full bg-slate-800 dark:bg-[#2C2C2E] text-ink-secondary dark:text-[#B0B0B8] hover:text-white"
             >
               <X className="w-4 h-4" />

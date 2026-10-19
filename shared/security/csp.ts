@@ -6,6 +6,11 @@
 // Notes:
 // - Google Fonts origins are allowed for style/font/connect so the bundled
 //   font loading keeps working without 'unsafe-inline' style bloat.
+// - images.unsplash.com is in connect-src (not only img-src) so the
+//   <link rel="preconnect"> in client/index.html survives the policy check
+//   resource hints go through. Blog and demo/seed listing photos come from
+//   Unsplash's resizing endpoint and are the first subresource the SPA asks
+//   for, so the hint is what keeps DNS + TLS off the image critical path.
 // - The sha256 hash covers the single inline anti-FOUC theme script that Vite
 //   injects verbatim into dist/public/index.html. The hash is computed over the
 //   CRLF-normalized (LF) script text: although the checked-out file may contain
@@ -18,7 +23,7 @@ export const CSP_HEADER_VALUE =
   "script-src 'self' 'sha256-UAiGoXcQlBIBF2VT99rnbYKsA2InG5XUnn/x25+7ijQ='; " +
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
   "img-src 'self' data: blob: https:; " +
-  "connect-src 'self' https://api.mapbox.com https://events.mapbox.com https://*.mapbox.com https://*.supabase.co https://graph.facebook.com https://fonts.googleapis.com https://fonts.gstatic.com; " +
+  "connect-src 'self' https://images.unsplash.com https://api.mapbox.com https://events.mapbox.com https://*.mapbox.com https://*.supabase.co https://graph.facebook.com https://fonts.googleapis.com https://fonts.gstatic.com; " +
   "font-src 'self' data: https://fonts.gstatic.com; " +
   "worker-src 'self' blob:; " +
   "frame-ancestors 'none'; " +

@@ -17,7 +17,8 @@ export function resetSessionSecretCache(): void {
  * Resolve the HMAC secret used to sign session cookies.
  *
  * Preference order:
- *   1. JWT_SECRET / DIRECT_LOGIN_PASSWORD from the environment;
+ *   1. JWT_SECRET from the environment (DIRECT_LOGIN_PASSWORD is never a
+ *      session secret — M-2);
  *   2. a random secret generated once and persisted in `platform_settings`.
  *
  * The DB fallback means the app can sign stable sessions without any auth

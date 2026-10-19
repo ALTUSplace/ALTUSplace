@@ -25,6 +25,8 @@ export const SPA_STATIC_ROUTES: readonly string[] = [
   "/",
   "/search",
   "/properties/for-rent",
+  "/city/marrakech-car-rental",
+  "/city/mohammed-v-airport-car-rental",
   "/locations/marrakech-car-rental",
   "/locations/mohammed-v-airport-car-rental",
   "/locations",

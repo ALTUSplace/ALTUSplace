@@ -342,12 +342,12 @@ export default function Home() {
           <Link href="/search?type=car" className="md:col-span-3 group relative flex flex-col justify-between overflow-hidden bg-ink-primary dark:bg-[#1C1C1E] text-white p-6 md:p-9 rounded-lg shadow-lg min-h-[26rem]">
             <div className="absolute -right-16 -top-16 h-56 w-56 rotate-12 corner-cut-sm bg-accent-clay/15" aria-hidden="true" />
             <div className="relative z-10 space-y-5 max-w-lg">
-              <div className="w-12 h-12 corner-cut-sm bg-accent-clay flex items-center justify-center text-white shadow-[var(--shadow-clay)]">
+              <div className="w-12 h-12 corner-cut-sm bg-accent-clay flex items-center justify-center text-[var(--primary-ink)] shadow-[var(--shadow-clay)]">
                 <Car className="w-6 h-6" />
               </div>
               <h3 className="text-2xl md:text-3xl font-bold leading-tight">{t('bentoFleetTitle')}</h3>
               <p className="text-white/70 text-sm leading-relaxed">{t('bentoFleetDescription')}</p>
-              <span className="b2-press corner-cut-sm inline-flex items-center gap-2 rounded-sm bg-accent-clay px-5 py-2.5 text-xs font-extrabold text-white transition-colors group-hover:bg-accent-clay-hover shadow-[var(--shadow-clay)]">
+              <span className="b2-press corner-cut-sm inline-flex items-center gap-2 rounded-sm bg-accent-clay px-5 py-2.5 text-xs font-extrabold text-[var(--primary-ink)] transition-colors group-hover:bg-accent-clay-hover shadow-[var(--shadow-clay)]">
                 {t('browseCarsAvailable')}
                 {/* "forward" affordance: the glyph has to point the way the reader
                     is about to travel, which is leftward under `dir="rtl"`. */}
@@ -518,21 +518,21 @@ export default function Home() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10">
             <div className="flex flex-col items-center text-center space-y-3">
-              <div className="w-13 h-13 p-3 corner-cut-sm bg-accent-clay flex items-center justify-center text-white shadow-[var(--shadow-clay)]">
+              <div className="w-13 h-13 p-3 corner-cut-sm bg-accent-clay flex items-center justify-center text-[var(--primary-ink)] shadow-[var(--shadow-clay)]">
                 <ShieldCheck className="w-7 h-7" />
               </div>
               <h3 className="font-bold text-base md:text-lg">{t('trustTitle1')}</h3>
               <p className="text-xs text-white/70 max-w-xs leading-relaxed">{t('trustDesc1')}</p>
             </div>
             <div className="flex flex-col items-center text-center space-y-3 md:border-s md:border-e md:border-white/10">
-              <div className="w-13 h-13 p-3 corner-cut-sm bg-accent-clay flex items-center justify-center text-white shadow-[var(--shadow-clay)]">
+              <div className="w-13 h-13 p-3 corner-cut-sm bg-accent-clay flex items-center justify-center text-[var(--primary-ink)] shadow-[var(--shadow-clay)]">
                 <Award className="w-7 h-7" />
               </div>
               <h3 className="font-bold text-base md:text-lg">{t('trustTitle2')}</h3>
               <p className="text-xs text-white/70 max-w-xs leading-relaxed">{t('trustDesc2')}</p>
             </div>
             <div className="flex flex-col items-center text-center space-y-3">
-              <div className="w-13 h-13 p-3 corner-cut-sm bg-accent-clay flex items-center justify-center text-white shadow-[var(--shadow-clay)]">
+              <div className="w-13 h-13 p-3 corner-cut-sm bg-accent-clay flex items-center justify-center text-[var(--primary-ink)] shadow-[var(--shadow-clay)]">
                 <Clock className="w-7 h-7" />
               </div>
               <h3 className="font-bold text-base md:text-lg">{t('trustTitle3')}</h3>

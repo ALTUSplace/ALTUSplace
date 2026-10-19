@@ -76,7 +76,7 @@ export function SmartRecommendations() {
               {t("smartTitle")}
             </h2>
           </div>
-          <Badge variant="outline" className="border-accent-clay/30 bg-accent-clay-soft px-4 py-1.5 text-xs font-bold text-accent-clay">
+          <Badge variant="outline" className="border-accent-clay/30 bg-accent-clay-soft px-4 py-1.5 text-xs font-bold text-accent-clay dark:text-accent-clay-hover">
             <Zap className="ms-1.5 inline h-3.5 w-3.5" /> {t("smartSourceBadge")}
           </Badge>
         </div>
@@ -115,7 +115,7 @@ export function SmartRecommendations() {
                       <span className="block text-xs text-ink-tertiary">{t("publishedPrice")}</span>
                       <span className="font-display text-base font-bold text-ink-primary">{item.dynamicPricePerDay ?? item.pricePerDay} {unit}</span>
                     </div>
-                    <Button size="sm" onClick={() => setLocation(route)} className="b2-press corner-cut-sm cursor-pointer gap-1 rounded-sm bg-accent-clay font-bold text-white hover:bg-accent-clay-hover">
+                    <Button size="sm" onClick={() => setLocation(route)} className="b2-press corner-cut-sm cursor-pointer gap-1 rounded-sm bg-accent-clay font-bold text-[var(--primary-ink)] hover:bg-accent-clay-hover">
                       {t("viewDetails")} <ArrowRight className="h-3.5 w-3.5 rotate-180" />
                     </Button>
                   </div>

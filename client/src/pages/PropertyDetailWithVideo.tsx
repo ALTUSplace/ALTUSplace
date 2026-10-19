@@ -54,7 +54,6 @@ type PropertyDetailShape = {
   rooms: number | null;
   rentalPeriod: "daily" | "monthly" | "yearly" | null;
   agencyPhone?: string | null;
-  whatsappPhone?: string | null;
   /** Public WhatsApp number used for the wa.me click-to-chat CTA. */
   whatsappNumber?: string | null;
   /** Owner role drives the partner-verified badge; only `partner` accounts verify. */
@@ -424,7 +423,7 @@ export default function PropertyDetailWithVideo() {
         {/* 1 — Hero: title and price anchored together at the inline-start corner. */}
         <header className="space-y-4">
           <div className="flex flex-wrap items-center gap-2">
-            <Badge className="bg-accent-clay-soft text-accent-clay hover:bg-accent-clay-soft">
+            <Badge className="bg-accent-clay-soft text-accent-clay dark:text-accent-clay-hover hover:bg-accent-clay-soft">
               {({ Published: "منشور", Available: "متاح", Pending: "قيد المراجعة", Unavailable: "غير متاح", Rejected: "مرفوض" } as Record<string, string>)[listing.status] ?? listing.status}
             </Badge>
             {summary.count > 0 && (
@@ -467,7 +466,7 @@ export default function PropertyDetailWithVideo() {
           <ul className="flex flex-wrap items-center gap-x-8 gap-y-4 border-y border-border-subtle py-4">
             {specs.map(({ icon: Icon, label, value }) => (
               <li key={label} className="flex items-center gap-3">
-                <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-accent-clay-soft text-accent-clay">
+                <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-accent-clay-soft text-accent-clay dark:text-accent-clay-hover">
                   <Icon className="size-5" aria-hidden="true" />
                 </span>
                 <span className="flex flex-col">

@@ -5,7 +5,7 @@ import { getSessionCookieOptions } from "./cookies";
 import { sdk } from "./sdk";
 import { ENV } from "./env";
 import { logger } from "./logger";
-import { normalizeSecret } from "./secretUtils";
+import { normalizeSecret, safeEqual } from "./secretUtils";
 import { claimOwnerPassword, isOwnerConfigured, verifyOwnerPassword } from "./ownerAuth";
 
 // Stable openId used for the fallback owner account when OWNER_OPEN_ID is not
@@ -58,6 +58,48 @@ export function extractPassword(req: Request): string | null {
   return null;
 }
 
+/** Header name carrying the first-run owner-setup token. */
+export const OWNER_SETUP_TOKEN_HEADER = "x-owner-setup-token";
+
+/**
+ * Extract the one-shot bootstrap token from the request. Mirrors
+ * `extractPassword`: prefers an explicit header, then a pre-parsed or raw body,
+ * because hosting frameworks may consume the body before the handler runs.
+ */
+function extractSetupToken(req: Request): string | null {
+  const header = req.headers[OWNER_SETUP_TOKEN_HEADER];
+  if (typeof header === "string" && header) return header;
+  if (Array.isArray(header) && header[0]) return header[0];
+
+  const body = req.body as unknown;
+  if (typeof body === "string") {
+    const text = body.trim();
+    if (text.startsWith("{")) {
+      try {
+        const parsed = JSON.parse(text) as { setupToken?: unknown; ownerSetupToken?: unknown };
+        const candidate = parsed?.setupToken ?? parsed?.ownerSetupToken;
+        if (typeof candidate === "string") return candidate;
+      } catch {
+        // fall through to other strategies
+      }
+    }
+    const match = /(?:^|&)(?:setupToken|ownerSetupToken)=([^&]*)/.exec(body);
+    if (match) {
+      try {
+        return decodeURIComponent(match[1]);
+      } catch {
+        return match[1];
+      }
+    }
+  } else if (body && typeof body === "object") {
+    const parsed = body as { setupToken?: unknown; ownerSetupToken?: unknown };
+    const candidate = parsed.setupToken ?? parsed.ownerSetupToken;
+    if (typeof candidate === "string") return candidate;
+  }
+
+  return null;
+}
+
 /** Upsert the owner as SUPER_ADMIN and mint the standard session cookie. */
 async function issueOwnerSession(req: Request, res: Response): Promise<void> {
   const openId = ENV.ownerOpenId || DIRECT_OWNER_OPEN_ID;
@@ -100,6 +142,24 @@ export function registerDirectAuthRoutes(app: Express) {
   });
 
   app.post("/api/auth/owner-setup", async (req: Request, res: Response) => {
+    // Gate the one-shot bootstrap behind a shared secret only the operator
+    // knows. Without OWNER_SETUP_TOKEN the endpoint is closed, so an anonymous
+    // caller can never claim SUPER_ADMIN during the deploy window.
+    const expectedToken = normalizeSecret(ENV.ownerSetupToken);
+    if (!expectedToken) {
+      res.status(403).json({ error: "Owner setup is disabled.", reason: "setup_disabled" });
+      return;
+    }
+    const providedToken = normalizeSecret(extractSetupToken(req));
+    if (!providedToken || !safeEqual(providedToken, expectedToken)) {
+      logger.warn("[DirectAuth] owner-setup rejected: bad or missing setup token");
+      res.status(403).json({
+        error: "Invalid or missing owner setup token.",
+        reason: "invalid_setup_token",
+      });
+      return;
+    }
+
     if (await isOwnerConfigured()) {
       res.status(403).json({ error: "Owner login is already configured.", reason: "already_configured" });
       return;

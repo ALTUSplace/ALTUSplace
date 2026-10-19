@@ -287,7 +287,7 @@ export default function AgencyOnboarding() {
                 </div>
               </div>
               <Link href="/agency-dashboard">
-                <Button className="w-full bg-[var(--brand-amber)] text-white">{t("partnerGoToDashboard")}</Button>
+                <Button className="w-full bg-[var(--brand-amber)] text-[var(--primary-ink)]">{t("partnerGoToDashboard")}</Button>
               </Link>
             </div>
           </div>
@@ -318,7 +318,7 @@ export default function AgencyOnboarding() {
                       ))}
                     </ul>
                     <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-3">
-                      <Button onClick={() => { setMode("register"); clearErrors(); setEmailStepDone(false); setEmailStepError(null); scrollToCard(); }} className="gap-2 bg-[var(--brand-amber)] text-white">
+                      <Button onClick={() => { setMode("register"); clearErrors(); setEmailStepDone(false); setEmailStepError(null); scrollToCard(); }} className="gap-2 bg-[var(--brand-amber)] text-[var(--primary-ink)]">
                         ابدأ الآن
                         <ArrowLeft className="h-4 w-4" />
                       </Button>
@@ -470,7 +470,7 @@ export default function AgencyOnboarding() {
                                 <p id="partner-email-entry-error" role="alert" className="rounded-lg border border-red-200 bg-red-50 p-2 text-xs font-semibold text-red-700">{emailStepError}</p>
                               ) : null}
                             </div>
-                            <Button type="submit" className="mt-4 w-full bg-[var(--brand-amber)] text-white" disabled={submitting}>
+                            <Button type="submit" className="mt-4 w-full bg-[var(--brand-amber)] text-[var(--primary-ink)]" disabled={submitting}>
                               متابعة
                             </Button>
                           </form>

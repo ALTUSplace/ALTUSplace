@@ -39,9 +39,12 @@ describe("security header parity (vercel.json edge <-> Express securityHeaders)"
     }
   });
 
-  it("sends X-XSS-Protection: 1; mode=block (previously missing server-side)", () => {
-    expect(express["X-XSS-Protection"]).toBe("1; mode=block");
-    expect(edge["X-XSS-Protection"]).toBe("1; mode=block");
+  it("disables the deprecated X-XSS-Protection filter on both runtimes (L-10)", () => {
+    // "1; mode=block" was the old helmet default; the legacy XSS auditor no
+    // longer exists in current browsers and introduced its own flaws where it
+    // did. Both runtimes now send the explicit "0" (still byte-parity above).
+    expect(express["X-XSS-Protection"]).toBe("0");
+    expect(edge["X-XSS-Protection"]).toBe("0");
   });
 
   it("blocks the payment API via Permissions-Policy on both runtimes", () => {

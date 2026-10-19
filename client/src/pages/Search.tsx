@@ -3,7 +3,7 @@ import { useLocation } from 'wouter';
 import { ListingItem } from '@/data/altusplace';
 import { trpc } from '@/lib/trpc';
 import { Button } from '@/components/ui/button';
-import { Filter, Star, Users, Car as CarIcon, ArrowUpDown, Award, MapPin, Scale, X, Eye, Home, Map, LayoutGrid, Maximize2, Search as SearchIcon } from 'lucide-react';
+import { Filter, Star, Users, Car as CarIcon, ArrowUpDown, Award, MapPin, Scale, X, Eye, Home, Map, LayoutGrid, Maximize2, Search as SearchIcon, SlidersHorizontal, ChevronDown, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useFavorites } from '@/hooks/useFavorites';
@@ -49,6 +49,9 @@ export default function Search() {
   const [maxPrice, setMaxPrice] = useState(4000);
   const [excellenceOnly, setExcellenceOnly] = useState(false);
   const [sortBy, setSortBy] = useState<'recommended' | 'price-asc' | 'price-desc'>('recommended');
+  // Mobile-only: below `lg` the filter panel is collapsed behind a toggle so it
+  // cannot push the results a full screen down; from `lg` it is always open.
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [activeDates, setActiveDates] = useState<{ startDate?: string; endDate?: string }>({
     startDate: startDateParam,
     endDate: endDateParam,
@@ -159,6 +162,17 @@ export default function Search() {
     });
   }, [serverListings, cityFilter, typeFilter, maxPrice, sortBy, searchQuery, brandParam, categoryParam, excellenceOnly]);
 
+  // Number of user-applied filters (view mode excluded — it is presentation,
+  // not a filter). Drives the badge on the collapsed mobile panel, so a closed
+  // panel still shows that the results are being narrowed.
+  const activeFilterCount = [
+    cityFilter !== 'all',
+    typeFilter !== 'all',
+    searchQuery.trim() !== '',
+    maxPrice !== 4000,
+    sortBy !== 'recommended',
+  ].filter(Boolean).length;
+
   // Thin-content guard: filtered/sorted/map/empty result states are `noindex`
   // and canonicalize to the clean /search hub so they never compete with it.
   const hasActiveFilters =
@@ -230,6 +244,18 @@ export default function Search() {
     setActiveDates({ startDate: values.startDate, endDate: values.endDate });
   };
 
+  // Single reset path for every control the filter panel exposes, so the
+  // "Réinitialiser" button cannot drift from the list of filters.
+  const resetFilters = () => {
+    setCityFilter('all');
+    setTypeFilter('all');
+    setMaxPrice(4000);
+    setExcellenceOnly(false);
+    setSearchQuery('');
+    setSortBy('recommended');
+    setViewMode('grid');
+  };
+
   // Hub heading follows the active vertical: cars, properties, or the generic
   // guide when no type filter is applied.
   const hubTitleKey = typeFilter === 'car' ? 'searchHubTitleCars' : typeFilter === 'property' ? 'searchHubTitleProperties' : 'searchHubTitle';
@@ -250,14 +276,14 @@ export default function Search() {
               {compareList.map(c => (
                 <span key={c.id} className="bg-bg-muted border border-border-default text-xs px-3 py-1 rounded-xl text-ink-secondary flex items-center gap-2">
                   {c.title}
-                  <button onClick={() => toggleCompare(c)} className="text-accent-red hover:opacity-80"><X className="w-3.5 h-3.5" /></button>
+                  <button onClick={() => toggleCompare(c)} aria-label={t('ariaRemoveFromComparison')} className="text-accent-red hover:opacity-80"><X className="w-3.5 h-3.5" /></button>
                 </span>
               ))}
             </div>
             {compareList.length === 2 && (
               <Button
                 onClick={() => setShowCompareModal(true)}
-                className="bg-accent-clay hover:bg-accent-clay-hover text-white font-bold text-xs px-4 py-2 rounded-xl shadow-lg"
+                className="bg-accent-clay hover:bg-accent-clay-hover text-[var(--primary-ink)] font-bold text-xs px-4 py-2 rounded-xl shadow-lg"
               >
                 قارن الآن
               </Button>
@@ -284,7 +310,7 @@ export default function Search() {
               onClick={() => applyCategoryPill(pill)}
               className={`shrink-0 min-h-[44px] flex items-center justify-center rounded-full border px-4 py-2 text-xs font-bold transition-colors ${
                 activeCategoryKey === pill.key
-                  ? 'border-accent-clay bg-accent-clay text-white shadow-[var(--shadow-clay)]'
+                  ? 'border-accent-clay bg-accent-clay text-[var(--primary-ink)] shadow-[var(--shadow-clay)]'
                   : 'border-border-default bg-bg-surface text-ink-secondary hover:border-accent-clay hover:text-accent-clay'
               }`}
             >
@@ -294,81 +320,116 @@ export default function Search() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          <div className="lg:col-span-1 bg-bg-surface border border-border-subtle p-6 rounded-3xl space-y-6 h-fit sticky top-28 shadow-xl">
-            <div className="flex items-center justify-between border-b border-border-subtle pb-4">
-              <h2 className="text-lg font-bold text-ink-primary flex items-center gap-2">
-                <Filter className="w-5 h-5 text-accent-clay" />
-                <span>{t('advancedFilters')}</span>
-              </h2>
-              <button
-                onClick={() => {
-                  setCityFilter('all');
-                  setTypeFilter('all');
-                  setMaxPrice(4000);
-                  setExcellenceOnly(false);
-                  setSearchQuery('');
-                  setSortBy('recommended');
-                  setViewMode('grid');
-                }}
-                className="text-xs text-accent-clay hover:underline"
-              >
-                {t('resetFilters')}
-              </button>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-xs font-semibold text-ink-secondary">{t('naturalSearch')}</label>
-              <input
-                type="text"
-                placeholder={t('searchPlaceholder')}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-bg-muted border border-border-default text-ink-primary rounded-xl p-3 text-xs focus:outline-none focus:border-accent-clay"
+          {/* Filters column. Below `lg` the panel is collapsed behind a toggle so
+              it cannot push the results a full screen down; the wrapper stays the
+              grid item, so `lg:sticky` still has its grid area to travel in. */}
+          <div className="lg:col-span-1 lg:sticky lg:top-28 h-fit">
+            <button
+              type="button"
+              onClick={() => setFiltersOpen((open) => !open)}
+              aria-expanded={filtersOpen}
+              aria-controls="search-filters-panel"
+              className="flex min-h-11 w-full items-center justify-between gap-2 rounded-2xl border border-border-subtle bg-bg-surface px-4 text-sm font-bold text-ink-primary shadow-sm transition-colors hover:bg-bg-muted lg:hidden"
+            >
+              <span className="flex items-center gap-2">
+                <SlidersHorizontal className="h-4 w-4 text-accent-clay" aria-hidden="true" />
+                {t('advancedFilters')}
+                {activeFilterCount > 0 && (
+                  <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-accent-clay px-1.5 text-[10px] font-black text-[var(--primary-ink)]">
+                    {activeFilterCount}
+                  </span>
+                )}
+              </span>
+              <ChevronDown
+                className={`h-4 w-4 shrink-0 text-ink-tertiary transition-transform duration-200 ${filtersOpen ? 'rotate-180' : ''}`}
+                aria-hidden="true"
               />
-            </div>
+            </button>
 
-            <div className="space-y-2">
-              <label className="text-xs font-semibold text-ink-secondary">{t('city')}</label>
-              <CitySelect
-                value={cityFilter}
-                onChange={setCityFilter}
-                includeAll
-                className="w-full bg-bg-muted border-border-default rounded-xl px-3 py-2 text-sm text-ink-primary focus:outline-none focus:border-accent-clay"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-xs font-semibold text-ink-secondary">النوع</label>
-              <div className="grid grid-cols-3 gap-1 bg-bg-muted border border-border-default rounded-xl p-1">
-                {([['all', t('catAll')], ['car', t('cars')], ['property', t('properties')]] as const).map(([value, label]) => (
-                  <button
-                    key={value}
-                    type="button"
-                    onClick={() => setTypeFilter(value)}
-                    className={`min-h-[44px] px-3 py-2 rounded-lg text-xs font-bold transition-all ${
-                      typeFilter === value ? 'bg-accent-clay text-white shadow-lg' : 'text-ink-secondary hover:text-ink-primary'
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
+            <div
+              id="search-filters-panel"
+              className={`${filtersOpen ? 'mt-4 block' : 'hidden'} bg-bg-surface border border-border-subtle p-6 rounded-3xl space-y-6 shadow-xl lg:mt-0 lg:block`}
+            >
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border-subtle pb-2">
+                <h2 className="text-lg font-bold text-ink-primary flex items-center gap-2">
+                  <Filter className="w-5 h-5 text-accent-clay" />
+                  <span>{t('advancedFilters')}</span>
+                </h2>
+                {/* Reset. The heading row gets only 174px of content width at
+                    1024px and 238px from 1280px up, while the heading itself
+                    needs up to 168px ("Advanced filters") and the labelled
+                    button up to 168px ("Réinitialiser les filtres") — so the two
+                    cannot share a line in every locale. Narrow: the button takes
+                    its own full-width row under the heading (text still on one
+                    line, and the panel's biggest tap target). Wide (`xl`): a 44px
+                    icon button sitting beside the heading, with the label kept as
+                    the accessible name and mirrored in the tooltip. */}
+                <button
+                  type="button"
+                  onClick={resetFilters}
+                  title={t('resetFilters')}
+                  className="inline-flex min-h-11 w-full shrink-0 items-center justify-center gap-1.5 rounded-xl border border-border-default px-3 text-xs font-bold text-accent-clay dark:text-accent-clay-hover transition-colors hover:border-accent-clay hover:bg-accent-clay/10 xl:w-11 xl:gap-0 xl:px-0"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
+                  <span className="xl:sr-only">{t('resetFilters')}</span>
+                </button>
               </div>
-            </div>
 
-            <div className="space-y-2">
-              <div className="flex justify-between text-xs">
-                <span className="font-semibold text-ink-secondary">{t('maxPrice')}</span>
-                <span className="text-accent-clay font-bold">{maxPrice} درهم</span>
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-ink-secondary">{t('naturalSearch')}</label>
+                <input
+                  type="text"
+                  placeholder={t('searchPlaceholder')}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full min-h-11 bg-bg-muted border border-border-default text-ink-primary rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-accent-clay"
+                />
               </div>
-              <input
-                type="range"
-                min="200"
-                max="5000"
-                step="100"
-                value={maxPrice}
-                onChange={(e) => setMaxPrice(Number(e.target.value))}
-                className="w-full accent-accent-clay bg-bg-muted cursor-pointer"
-              />
+
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-ink-secondary">{t('city')}</label>
+                <CitySelect
+                  value={cityFilter}
+                  onChange={setCityFilter}
+                  includeAll
+                  className="w-full min-h-11 bg-bg-muted border-border-default rounded-xl px-3 py-2 text-sm text-ink-primary focus:outline-none focus:border-accent-clay"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-ink-secondary">النوع</label>
+                <div className="grid grid-cols-3 gap-1.5 bg-bg-muted border border-border-default rounded-xl p-1.5">
+                  {([['all', t('catAll')], ['car', t('cars')], ['property', t('properties')]] as const).map(([value, label]) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setTypeFilter(value)}
+                      aria-pressed={typeFilter === value}
+                      className={`min-h-[44px] px-2 py-2 rounded-lg text-xs font-bold transition-colors focus-visible:ring-2 focus-visible:ring-accent-clay ${
+                        typeFilter === value ? 'bg-accent-clay text-[var(--primary-ink)] shadow-lg' : 'text-ink-secondary hover:text-ink-primary'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between gap-2 text-xs">
+                  <span className="font-semibold text-ink-secondary">{t('maxPrice')}</span>
+                  <span className="text-accent-clay font-bold">{maxPrice} درهم</span>
+                </div>
+                <input
+                  type="range"
+                  min="200"
+                  max="5000"
+                  step="100"
+                  value={maxPrice}
+                  onChange={(e) => setMaxPrice(Number(e.target.value))}
+                  className="w-full min-h-11 accent-accent-clay bg-bg-muted cursor-pointer"
+                />
+              </div>
             </div>
           </div>
 
@@ -384,7 +445,7 @@ export default function Search() {
                     onClick={() => setViewMode('grid')}
                     className={`flex items-center gap-1.5 min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                       viewMode === 'grid'
-                        ? 'bg-accent-clay text-white shadow-lg'
+                        ? 'bg-accent-clay text-[var(--primary-ink)] shadow-lg'
                         : 'text-ink-secondary hover:text-ink-primary'
                     }`}
                   >
@@ -395,7 +456,7 @@ export default function Search() {
                     onClick={() => setViewMode('map')}
                     className={`flex items-center gap-1.5 min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                       viewMode === 'map'
-                        ? 'bg-accent-clay text-white shadow-lg'
+                        ? 'bg-accent-clay text-[var(--primary-ink)] shadow-lg'
                         : 'text-ink-secondary hover:text-ink-primary'
                     }`}
                   >
@@ -580,7 +641,7 @@ export default function Search() {
                             </div>
                             <button
                               onClick={() => setLocation(listingRoute(li))}
-                              className="self-center bg-accent-clay hover:bg-accent-clay-hover text-white text-[11px] font-bold px-3 py-1.5 rounded-full shrink-0"
+                              className="self-center bg-accent-clay hover:bg-accent-clay-hover text-[var(--primary-ink)] text-[11px] font-bold px-3 py-1.5 rounded-full shrink-0"
                             >
                               {t('mapViewListing')}
                             </button>
@@ -603,6 +664,7 @@ export default function Search() {
           <div className="bg-bg-surface border border-border-subtle rounded-3xl max-w-2xl w-full p-8 space-y-6 shadow-2xl relative animate-in zoom-in-95">
             <button
               onClick={() => setQuickViewItem(null)}
+              aria-label={t('close')}
               className="absolute top-6 left-6 text-ink-tertiary hover:text-ink-primary bg-bg-muted p-2 rounded-full"
             >
               <X className="w-5 h-5" />
@@ -620,7 +682,7 @@ export default function Search() {
                 height={512}
                 className="w-full h-full object-cover"
               />
-              <div className="absolute top-4 right-4 bg-accent-clay text-white px-3 py-1 rounded-full text-xs font-bold">
+              <div className="absolute top-4 right-4 bg-accent-clay text-[var(--primary-ink)] px-3 py-1 rounded-full text-xs font-bold">
                 {quickViewItem.city}
               </div>
             </div>
@@ -654,7 +716,7 @@ export default function Search() {
                     onClick={() => {
                       window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`شاهد هذا العرض الرائع: ${quickViewItem.title} - ${quickViewItem.pricePerUnit} ${quickViewItem.unitLabel} في ${quickViewItem.city} عبر منصة ALTUSplace: ${window.location.href}`)}`, '_blank');
                     }}
-                    className="bg-accent-green-soft hover:bg-[var(--accent-green-s)] text-accent-green p-2 rounded-full text-xs flex items-center gap-1 transition-colors"
+                    className="bg-accent-green-soft hover:bg-[var(--accent-green-s)] text-emerald-700 p-2 rounded-full text-xs flex items-center gap-1 transition-colors"
                     title="مشاركة عبر واتساب"
                   >
                     واتساب
@@ -678,7 +740,7 @@ export default function Search() {
                 </Button>
                 <Button
                   onClick={() => setLocation(listingRoute(quickViewItem))}
-                  className="bg-accent-clay hover:bg-accent-clay-hover text-white font-bold px-6 py-2.5 rounded-full text-xs shadow-lg"
+                  className="bg-accent-clay hover:bg-accent-clay-hover text-[var(--primary-ink)] font-bold px-6 py-2.5 rounded-full text-xs shadow-lg"
                 >
                   الانتقال لصفحة الحجز الكاملة
                 </Button>
@@ -694,6 +756,7 @@ export default function Search() {
           <div className="bg-bg-surface border border-border-subtle p-8 rounded-3xl max-w-4xl w-full space-y-6 shadow-2xl relative animate-in zoom-in-95">
             <button
               onClick={() => setShowCompareModal(false)}
+              aria-label={t('close')}
               className="absolute top-6 left-6 text-ink-tertiary hover:text-ink-primary bg-bg-muted p-2 rounded-full"
             >
               <X className="w-5 h-5" />
@@ -739,7 +802,7 @@ export default function Search() {
             <div className="flex justify-center">
               <Button
                 onClick={() => setShowCompareModal(false)}
-                className="bg-accent-clay hover:bg-accent-clay-hover text-white font-bold px-8 py-2.5 rounded-full text-xs"
+                className="bg-accent-clay hover:bg-accent-clay-hover text-[var(--primary-ink)] font-bold px-8 py-2.5 rounded-full text-xs"
               >
                 إنهاء المقارنة
               </Button>

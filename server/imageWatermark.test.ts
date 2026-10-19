@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import sharp from "sharp";
-import { applyListingWatermark } from "./imageWatermark";
+import { applyListingWatermark, JPEG_QUALITY } from "./imageWatermark";
 import { createImageVerificationProof, verifyImageVerificationProof } from "./imageVerification";
 
 // Renders a deterministic test photo: a mid-grey field with a lighter band, so
@@ -61,7 +61,7 @@ describe("listing image watermark", () => {
 
     // Compare against an identical re-encode without the mark, so lossy
     // compression noise is not mistaken for the watermark.
-    const control = await sharp(original).rotate().jpeg({ quality: 90, mozjpeg: true }).toBuffer();
+    const control = await sharp(original).rotate().jpeg({ quality: JPEG_QUALITY, mozjpeg: true }).toBuffer();
     const changed = await diffPixels(control, result.data);
     expect(changed.length).toBeGreaterThan(0);
 
@@ -77,7 +77,7 @@ describe("listing image watermark", () => {
     // sharp clamp the offsets and fall back to the top-left corner.
     const original = await testPhoto(1200, 800);
     const result = await applyListingWatermark(original, "image/jpeg");
-    const control = await sharp(original).rotate().jpeg({ quality: 90, mozjpeg: true }).toBuffer();
+    const control = await sharp(original).rotate().jpeg({ quality: JPEG_QUALITY, mozjpeg: true }).toBuffer();
     const changed = await diffPixels(control, result.data);
     expect(changed.every((p) => p.x > 1200 * 0.5 && p.y > 800 * 0.66)).toBe(true);
   });

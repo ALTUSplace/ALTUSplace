@@ -45,7 +45,7 @@ export default function NotFound() {
           >
             <Button
               onClick={handleGoHome}
-              className="bg-accent-clay hover:bg-accent-clay-hover text-white px-6 py-2.5 rounded-xl transition-all duration-200 shadow-[var(--shadow-clay)] cursor-pointer"
+              className="bg-accent-clay hover:bg-accent-clay-hover text-[var(--primary-ink)] px-6 py-2.5 rounded-xl transition-all duration-200 shadow-[var(--shadow-clay)] cursor-pointer"
             >
               <Home className="w-4 h-4 me-2" />
               العودة إلى الرئيسية · Accueil

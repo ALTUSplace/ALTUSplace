@@ -23,7 +23,7 @@ describe("real-estate property management audit", () => {
 
   it("accepts and persists property fields through listings.create", () => {
     const routers = read("server/routers.ts");
-    const createBlock = routers.slice(routers.indexOf("create: ownerProcedure"));
+    const createBlock = routers.slice(routers.indexOf("create: partnerProcedure"));
     expect(createBlock).toContain("propertyType: z.string().trim().max(32).optional()");
     expect(createBlock).toContain("pricePerMonth: z.number().int().nonnegative().optional()");
     expect(createBlock).toContain("propertyType: input.propertyType,");
@@ -32,7 +32,7 @@ describe("real-estate property management audit", () => {
 
   it("accepts property fields through listings.update", () => {
     const routers = read("server/routers.ts");
-    const updateBlock = routers.slice(routers.indexOf("update: ownerProcedure"));
+    const updateBlock = routers.slice(routers.indexOf("update: partnerProcedure"));
     expect(updateBlock).toContain("propertyType: z.string().trim().max(32).nullable().optional()");
     expect(updateBlock).toContain("pricePerMonth: z.number().int().nonnegative().nullable().optional()");
     expect(updateBlock).toContain("rooms: z.number().int().nonnegative().optional()");

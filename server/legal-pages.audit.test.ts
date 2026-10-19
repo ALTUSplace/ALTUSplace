@@ -76,8 +76,10 @@ describe("legal pages audit", () => {
   });
 
   it.each(LEGAL_PAGES)("includes $route in sitemap generation", ({ route }) => {
-    const sitemapScript = read("scripts/sitemap.mjs");
-    expect(sitemapScript).toContain(`{ path: "${route}"`);
+    // STATIC_PAGES is the single source of truth for marketing routes now; the
+    // build script only consumes it.
+    const staticPages = read("shared/sitemap.ts");
+    expect(staticPages).toContain(`{ path: "${route}"`);
 
     const sitemapXml = buildTestSitemap();
     expect(sitemapXml).toContain(`https://altusplace.vercel.app${route}`);

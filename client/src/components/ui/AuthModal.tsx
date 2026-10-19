@@ -110,7 +110,7 @@ export function AuthModal({ isOpen, onClose, initialView = "signin", onSuccess }
                   <input key={i} dir="ltr" inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={d} onChange={(e) => { const v = e.target.value.replace(/[^\d]/g,""); setOtp((prev)=> prev.map((x,idx)=> idx===i ? (v.length>1 ? v[v.length-1] : v) : x)); if(v && i<5) (e.target.nextElementSibling as HTMLElement | null)?.focus(); }} className="h-14 w-full rounded-sm border border-stone-300 text-center font-display text-lg font-bold text-stone-900 outline-none transition-all focus:border-accent-clay focus:ring-2 focus:ring-accent-clay/25 min-w-0" aria-label={`Digit ${i + 1}`} />
                 ))}
               </div>
-              <button type="submit" disabled={loading || otp.some((d)=>!d)} className="b2-press mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-sm bg-accent-clay text-sm font-bold text-white shadow-[var(--shadow-clay)] transition-all hover:bg-accent-clay-hover disabled:cursor-not-allowed disabled:opacity-50">
+              <button type="submit" disabled={loading || otp.some((d)=>!d)} className="b2-press mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-sm bg-accent-clay text-sm font-bold text-[var(--primary-ink)] shadow-[var(--shadow-clay)] transition-all hover:bg-accent-clay-hover disabled:cursor-not-allowed disabled:opacity-50">
                 {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <><ShieldCheck className="h-4 w-4" /> {t("verifyAndContinue")}</>}
               </button>
               <button type="button" onClick={() => { setView(initialView); setOtp(["","","","","",""]); }} className="mt-3 flex h-11 w-full items-center justify-center gap-1.5 text-xs font-semibold text-stone-500 hover:text-stone-800">{/* "back" affordance: the glyph points toward wherever "back" leads, so it
@@ -141,7 +141,7 @@ export function AuthModal({ isOpen, onClose, initialView = "signin", onSuccess }
                   <button type="button" onClick={()=>setShowPassword((s)=>!s)} aria-label={showPassword ? "Hide password" : "Show password"} className="absolute end-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700">{showPassword ? <EyeOff className="h-4.5 w-4.5" /> : <Eye className="h-4.5 w-4.5" />}</button>
                   {errors.password && <p className={errText}>{errors.password}</p>}
                 </div>
-                <button type="submit" disabled={loading} className="b2-press mt-1 flex h-12 w-full items-center justify-center gap-2 rounded-sm bg-accent-clay text-sm font-bold text-white shadow-[var(--shadow-clay)] transition-all hover:bg-accent-clay-hover disabled:cursor-not-allowed disabled:opacity-60">
+                <button type="submit" disabled={loading} className="b2-press mt-1 flex h-12 w-full items-center justify-center gap-2 rounded-sm bg-accent-clay text-sm font-bold text-[var(--primary-ink)] shadow-[var(--shadow-clay)] transition-all hover:bg-accent-clay-hover disabled:cursor-not-allowed disabled:opacity-60">
                   {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : view === "signup" ? t("createAccount") : t("signIn")}
                 </button>
               </form>
