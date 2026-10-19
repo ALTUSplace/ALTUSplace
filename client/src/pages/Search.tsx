@@ -511,7 +511,7 @@ export default function Search() {
             {/* Grid View */}
             {viewMode === 'grid' && filteredListings.length > 0 && (
               <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {filteredListings.map((item, index) => (
+                {filteredListings.map((item) => (
                   <ListingCard
                     key={item.id}
                     id={String(item.id)}
@@ -537,7 +537,6 @@ export default function Search() {
                       area: item.specs?.area,
                       year: item.specs?.year,
                     }}
-                    className={`stagger-${Math.min(index + 1, 8)} animate-fade-up`}
                   />
                 ))}
               </div>

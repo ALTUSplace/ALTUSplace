@@ -1,6 +1,7 @@
 import * as React from "react";
 import { useState, useCallback, useEffect } from "react";
 import { useLocation } from "wouter";
+import { motion } from "framer-motion";
 import { Car, Home, MapPin, Star, Heart, Fuel, Settings, Users, Award, Zap, CheckCircle2, Calendar, Ruler, ArrowRight } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -101,14 +102,24 @@ export function ListingCard(props: ListingCardProps) {
   };
 
   return (
-    <article
+    <motion.article
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      transition={{
+        duration: 0.45,
+        ease: [0.22, 1, 0.36, 1],
+        scale: { type: "spring", stiffness: 400, damping: 26 },
+      }}
       className={cn(
         "group relative flex flex-col overflow-hidden rounded-2xl border border-border-subtle bg-bg-surface",
         // Same hover idiom as the Home hot-deal card: lift, deepen the shadow
-        // and warm the border. `-translate-y-1` compiles to the standalone
-        // `translate` property, so it still applies on cards that carry
-        // `animate-fade-up` (whose `both` fill pins `transform`).
-        "shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-border-default hover:shadow-lg cursor-pointer",
+        // and warm the border. The standalone `translate` keeps its own CSS
+        // transition; Framer owns `transform` for the reveal and the tap/hover
+        // scale, so `transition-all` must not smooth Framer's frames.
+        "shadow-sm transition-[translate,background-color,border-color,box-shadow] duration-300 hover:-translate-y-1 hover:border-border-default hover:shadow-lg cursor-pointer",
         className,
       )}
       style={style}
@@ -219,7 +230,7 @@ export function ListingCard(props: ListingCardProps) {
           </button>
         </div>
       </div>
-    </article>
+    </motion.article>
   );
 }
 

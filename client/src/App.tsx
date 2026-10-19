@@ -148,11 +148,11 @@ function AuthOnlyRoute({ children }: { children: React.ReactNode }) {
   return null; // useAuth's effect is navigating the anonymous visitor to "/"
 }
 
-function Router() {
+function Router({ location }: { location: string }) {
   return (
     <>
       <RouteTitleFallback />
-      <Switch>
+      <Switch location={location}>
       <Route path={"/"}>
         <Suspense fallback={<PageLoader />}>
           <HomePage />
@@ -243,6 +243,22 @@ function Router() {
   );
 }
 
+/**
+ * The small subscriber that feeds wouter's location into the fade and the
+ * router. Keeping it here (rather than in App) means a navigation re-renders
+ * only the page area, not the navbar, footer and providers.
+ */
+function RoutedContent() {
+  const [location] = useLocation();
+  return (
+    <PageTransition location={location}>
+      <Suspense fallback={<PageLoader />}>
+        <Router location={location} />
+      </Suspense>
+    </PageTransition>
+  );
+}
+
 export default function App() {
   return (
     <ErrorBoundary>
@@ -270,11 +286,7 @@ export default function App() {
                     tabIndex={-1}
                     className="b2-main-content flex-1 pb-16 md:pb-0"
                   >
-                    <PageTransition>
-                      <Suspense fallback={<PageLoader />}>
-                        <Router />
-                      </Suspense>
-                    </PageTransition>
+                    <RoutedContent />
                   </main>
                   <Footer />
                   <BottomNavGate />

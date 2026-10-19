@@ -438,7 +438,7 @@ export default function Home() {
         {/* Listing Cards Grid */}
         {availableVehicles.length > 0 ? (
           <div className="mt-8 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {availableVehicles.slice(0, 6).map((item, index) => (
+            {availableVehicles.slice(0, 6).map((item) => (
               <ListingCard
                 key={item.id}
                 id={String(item.id)}
@@ -460,7 +460,6 @@ export default function Home() {
                 }}
                 isFavorite={favorites.isFavorite(Number(item.id))}
                 onToggleFavorite={() => favorites.toggleFavorite(Number(item.id))}
-                className={`stagger-${Math.min(index + 1, 8)} animate-fade-up`}
               />
             ))}
           </div>
@@ -479,7 +478,7 @@ export default function Home() {
 
         {availableProperties.length > 0 ? (
           <div className="mt-8 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {availableProperties.slice(0, 6).map((item, index) => (
+            {availableProperties.slice(0, 6).map((item) => (
               <ListingCard
                 key={item.id}
                 id={String(item.id)}
@@ -500,7 +499,6 @@ export default function Home() {
                 }}
                 isFavorite={Number.isFinite(Number(item.id)) ? favorites.isFavorite(Number(item.id)) : false}
                 onToggleFavorite={Number.isFinite(Number(item.id)) ? () => favorites.toggleFavorite(Number(item.id)) : undefined}
-                className={`stagger-${Math.min(index + 1, 8)} animate-fade-up`}
               />
             ))}
           </div>

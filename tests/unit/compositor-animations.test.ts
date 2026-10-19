@@ -146,12 +146,20 @@ describe("compositor animation guard", () => {
 
   it("keeps PageTransition opacity-only", () => {
     const src = read(join(CLIENT_SRC, "components", "PageTransition.tsx"));
-    // Loading state is animate-pulse (opacity), loaded state is fade-in (opacity).
-    expect(src).toMatch(/animate-pulse/);
-    expect(src).toMatch(/animate-in fade-in/);
-    // No transform-based entry/exit that would lay out or composite a moving
-    // element on every navigation.
-    expect(src).not.toMatch(/\b(slide|zoom|spin|bounce|ping)-|translate|scale-/);
+    // The route fade is driven by Framer Motion, but only opacity may animate:
+    // a viewport-sized layer that moves or scales re-rasterizes on every
+    // navigation.
+    expect(src).toMatch(/AnimatePresence/);
+    expect(src).toMatch(/initial=\{\{\s*opacity:\s*0\s*\}\}/);
+    expect(src).toMatch(/animate=\{\{\s*opacity:\s*1\s*\}\}/);
+    expect(src).toMatch(/exit=\{\{\s*opacity:\s*0\s*\}\}/);
+    expect(src).not.toMatch(/\b(x|y|scale|rotate|translate)\s*:/);
+    expect(src).not.toMatch(/\b(slide|zoom|spin|bounce|ping)-/);
+  });
+
+  it("honours prefers-reduced-motion for JS-driven motion", () => {
+    const src = read(join(CLIENT_SRC, "main.tsx"));
+    expect(src).toMatch(/<MotionConfig\s+reducedMotion="user">/);
   });
 });
 
