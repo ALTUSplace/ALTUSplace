@@ -248,8 +248,10 @@ export default function Home() {
           </div>
 
           {/* Frosted-glass search card. Pulled up over the photograph's lower
-              edge on desktop so the blur has something real to refract. */}
-          <div className="relative z-10 mt-10 lg:-mt-14">
+              edge on desktop so the blur has something real to refract. The
+              offset clears the tab strip above the card (46px) plus its 16px
+              gap, leaving ~33px of glass actually over the photo. */}
+          <div className="relative z-10 mt-10 lg:-mt-24">
             <SearchBar variant="heroOverlay" />
           </div>
 

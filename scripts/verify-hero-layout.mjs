@@ -54,12 +54,13 @@ const probe = () => {
   // The editorial hero overlaps the photograph's lower edge with the glass
   // card on desktop; this is rect intersection, not just "both exist".
   const heroOverlap = (() => {
-    if (!heroImg || !card) return false;
+    if (!heroImg || !card) return { dx: 0, dy: 0 };
     const a = heroImg.getBoundingClientRect();
     const b = card.getBoundingClientRect();
-    const dx = Math.min(a.right, b.right) - Math.max(a.left, b.left);
-    const dy = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
-    return dx > 8 && dy > 8;
+    return {
+      dx: Math.round(Math.min(a.right, b.right) - Math.max(a.left, b.left)),
+      dy: Math.round(Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top)),
+    };
   })();
 
   const heroImageStyle = heroImg ? getComputedStyle(heroImg) : null;
@@ -123,7 +124,9 @@ const probe = () => {
             : 0,
         }
       : null,
-    overlap: heroOverlap,
+    overlap: heroOverlap.dy > 8 && heroOverlap.dx > 8,
+    overlapDy: heroOverlap.dy,
+    overlapDx: heroOverlap.dx,
     rail: rail
       ? {
           scrollW: rail.scrollWidth,
@@ -148,6 +151,23 @@ const probe = () => {
     cardLinkRadius: cardLink ? getComputedStyle(cardLink).borderTopLeftRadius : null,
   };
 };
+
+/**
+ * Waits for finite entrance animations to finish before any geometry is read.
+ * `getBoundingClientRect` includes in-flight transforms, so measuring while
+ * `hero-image-in` is still translating the photograph made the overlap check
+ * pass locally and fail in CI purely on timing. Only `running` animations are
+ * awaited, so an infinite ambient animation can never hang the gate.
+ */
+const settleAnimations = (page) =>
+  page.evaluate(async () => {
+    const pending = document.getAnimations().filter((a) => {
+      if (a.playState !== "running") return false;
+      const timing = a.effect?.getComputedTiming?.();
+      return timing && Number.isFinite(timing.endTime);
+    });
+    await Promise.all(pending.map((a) => a.finished.catch(() => {})));
+  });
 
 /**
  * Finds elements that visibly overflow the viewport WITHOUT being clipped away
@@ -219,6 +239,7 @@ try {
   // so react-query keeps retrying /api/trpc and the network stays busy.
   await m.goto(BASE, { waitUntil: "load" });
   await m.waitForSelector("#hero-heading", { timeout: 30000 });
+  await settleAnimations(m);
 
   // The category rail sits below the fold at 375px, so its photographs are
   // lazily loaded and have not decoded when the probe first runs. Forcing them
@@ -355,6 +376,7 @@ try {
   const d = await desktop.newPage();
   await d.goto(BASE, { waitUntil: "load" });
   await d.waitForSelector("#hero-heading", { timeout: 30000 });
+  await settleAnimations(d);
   const dState = await d.evaluate(probe);
   // Same reasoning as the 375px check; see findUnclippedOverflow.
   const desktopOverflow = await d.evaluate(findUnclippedOverflow);
@@ -371,7 +393,7 @@ try {
   record(
     "1440px: glass card overlaps the hero photograph",
     dState.overlap === true,
-    `overlap=${dState.overlap}`,
+    `overlap=${dState.overlap} dy=${dState.overlapDy}px dx=${dState.overlapDx}px`,
   );
   record(
     "1440px: rail fits without scrolling",
