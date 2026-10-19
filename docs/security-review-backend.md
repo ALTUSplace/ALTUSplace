@@ -17,11 +17,15 @@
 
 **الخطر:** أي وصول مباشر بمفتاح `anon` (مثلاً إذا تفعّل `VITE_SUPABASE_ANON_KEY`) يقدر يقرا هاد الجداول. زيادة على ذلك، ما كاينش أي migration في `drizzle/` كيفعّل RLS — الملف اليدوي فقط (drift risk).
 
+> ✅ **تم الإصلاح** (Fix 11) — شوف قسم «حالة الإصلاحات» أسفله.
+
 ### H-2 — اتصال التطبيق نفسه كيتجاوز RLS (بلا `FORCE ROW LEVEL SECURITY`)
 `server/db.ts` كيتصل عبر `drizzle-orm/postgres-js` بـ `DATABASE_URL` = الصف المَجْمُوع `postgres.<ref>` ديال Supabase، وهو role كيتجاوز RLS. حتى الـ policies داخلة على claim `app_user_id` من `request.jwt.claims` (`rls.sql:30-38`) اللي **التطبيق ما كيصدرهش أبدًا** (الجلسات هي HS256 ديال التطبيق). المعنى: **RLS غير مُطبّقة على مسار الاتصال الحقيقي**، والعزل الوحيد هو التطبيق (`ownerProcedure` + `eq(listings.ownerId, ctx.user.id)`).
 
 **الخطر:** خطأ واحد فـ router جديد (نسيان `eq(ownerId, ...)`) = تسريب بيانات بين المستأجرين بلا أي شبكة أمان فـ DB.
 **توصية:** `ALTER TABLE ... FORCE ROW LEVEL SECURITY` + role تطبيقي غير superuser مع `SET app.current_user_id`، ولا قبول صريح موثّق.
+
+> 🟡 **قيد معروف — تحسين app-side مؤجَّل:** `FORCE ROW LEVEL SECURITY` ولّى مطبَّق على جميع الجداول فـ `supabase/rls.sql` (شوف H-1)، ولكن الاتصال المَجْمُوع (`postgres.<ref>`) اللي كيستعملو التطبيق كيحمل `BYPASSRLS` — قيد معروف فـ اتصالات Supabase المَجْمُوعة. الإغلاق الكامل كيتطلب role تطبيقي غير `BYPASSRLS` + `SET LOCAL request.jwt.claims` لكل طلب فـ `server/db.ts` — تحسين مؤجَّل. الحماية الأساسية حاليًا: tRPC guards (`ownerProcedure` + `eq(ownerId, ...)`).
 
 ### H-3 — الاستيلاء على حساب المالك (SUPER_ADMIN) في أول تشغيل
 `POST /api/auth/owner-setup` (`server/_core/directAuth.ts:102`) كان:
@@ -106,7 +110,7 @@ if (await isOwnerConfigured()) → 403
 ---
 
 ## 🎯 الأولويات المقترحة (بالترتيب)
-1. **H-1/H-2** → قرار صريح: إما `FORCE RLS` + role غير superuser، أو توثيق قبول المخاطرة + إضافة اختبار يفرض `eq(ownerId, ...)`.
+1. **H-1** ✅ مُصلَّح — RLS شاملة على جميع الجداول فـ `supabase/rls.sql` (Fix 11). **H-2** → تحسين app-side مؤجَّل: role تطبيقي غير `BYPASSRLS` + `SET LOCAL request.jwt.claims`؛ الـ tRPC guards هي الحماية الأساسية حاليًا.
 2. **H-3** → بوابة bootstrap للمالك (token/env) ورفض الإقلاع الإنتاجي إذا لم يُعدّ.
 3. **M-3/M-4/M-5** → `limit` على search/list، وlimiter موزّع، وتغطية `/storage/*`.
 4. **M-2** → فصل مفتاح الجلسة عن `DIRECT_LOGIN_PASSWORD`، وvetting إداري للشريك (ترقية لـ `owner` بعد المراجعة).
@@ -127,7 +131,8 @@ if (await isOwnerConfigured()) → 403
 | **M-5** | ✅ مُصلَّح | `server/_core/security.ts` (`storageProxyLimiter` = 240/min/IP)، `server/_core/app.ts` (`app.use("/storage/", storageProxyLimiter)` قبل `registerStorageProxy`) |
 | **M-7 (UI)** | ✅ مُصلَّح | `server/routers.ts` (`bookings.getById`/`vouchers.getByCode` كيرجّعو `agencyWhatsApp` العمومي بدل الرقم الخاص)، `client/src/pages/Success.tsx`، `client/src/pages/Voucher.tsx` |
 | **M-1 (UI)** | ✅ مُصلَّح | `client/src/pages/HostDashboard.tsx` + `client/src/pages/AgencyDashboard.tsx` (إخفاء الأقسام المالية/الحجوزات/التحليلات عن tier الشريك — بلا أي ترقية تلقائية) |
-| H-1, H-2 | ⏳ مفتوح | `supabase/rls.sql`, `server/db.ts` |
+| **H-1** | ✅ مُصلَّح | `supabase/rls.sql` (تعاود كتابته بالكامل — RLS + `FORCE` على جميع الـ 27 جدول (بدل 8)، grants/policies صارمة، الجداول الداخلية deny-all) |
+| **H-2** | 🟡 مؤجَّل — تحسين app-side | `server/db.ts` (role تطبيقي غير `BYPASSRLS` + `SET LOCAL request.jwt.claims` لكل طلب؛ القيد الحالي: `postgres.<ref>` كيحمل `BYPASSRLS`) |
 | **M-6** | ✅ مُصلَّح | `server/_core/security.ts` (`SPAM_GUARD_LIMITS` + `checkRateLimit`)، `server/_core/trpc.ts` (`spamGuard`)، `server/routers.ts` (guards على `requestListing.create`/`supportTickets.create`/`comments.create`/`listings.trackEvent`) |
 | **L-1, L-2, L-4, L-6, L-10** | ✅ مُصلَّح | `server/routers.ts` (`updateStatus`→`adminProcedure`؛ `kyc.getByUserId` مقيّد بالمالك/Admin)، `server/_core/trpc.ts` + `server/_core/security.ts` (حياد `sanitizeTrpcInput`)، `server/leaseReminder.ts` (بلا stack)، `vercel.json` + `server/_core/security.ts` (`X-XSS-Protection: 0`) |
 | **L-3, L-5, L-7, L-8, L-9** | ✅ مُصلَّح | `server/routers.ts` (translation → `adminProcedure`)، `server/middleware/cronAuth.ts` + `server/_core/app.ts` (`verifyScheduledTask` على `/api/scheduled/*`)، `server/payments/webhooks.ts` (fail-closed)، `server/security/urlGuard.ts` (إعادة فحص redirect hops)، `.env.production.example` |
@@ -201,3 +206,8 @@ if (await isOwnerConfigured()) → 403
 - **L-8** `urlGuard`: زدنا `fetchGuarded` — طلبات `redirect: "manual"` مع متابعة يدوية، وكل hop كيتفحص بـ `validateExternalUrl` قبل الاتصال (HTTPS-only + قائمة السماح + رفض العناوين الخاصة/الداخلية، حد `MAX_REDIRECTS = 5`). مطبّق على `fetchExternalText` (iCal) و`fetchExternalBytes` (voice).
 - **L-9** `VITE_SUPABASE_ANON_KEY` و`VITE_FRONTEND_FORGE_API_KEY` تحيّدو من `.env.production.example` (بتعليق واضح يمنع إضافتهم مستقبلًا)، و`docs/deployment-env-checklist.md` تحدّث باش ما يبقاش يشجّع عليهم.
 - اختبارات: `server/payments/webhooks.paytabs.test.ts` (جديد — fail-closed)، تمديد `server/security/urlGuard.test.ts` (302 → شبكة خاصة مرفوض، سلسلة redirect عمومية، حد الحلقات)، تمديد `server/cron/cronAuth.test.ts` (`verifyScheduledTask`)، وpins جديدة فـ `server/readiness.security.test.ts`.
+
+**Fix 11 — H-1 (RLS شاملة على جميع الجداول):**
+- `supabase/rls.sql` تعاود كتابته بالكامل: `enable` + `FORCE ROW LEVEL SECURITY` على جميع الـ 27 جدول (بدل 8)، مع `REVOKE ALL` من `anon`/`authenticated` ثم grants دقيقة لكل دور؛ الجداول الداخلية (`platform_settings`, `commission_tiers`, `audit_logs`, `translations`, `listing_analytics_events`) ولّاو deny-all من جهة الكليان.
+- Policies صارمة على أساس claim `app_user_id` + `app_is_admin()`: قراءة عمومية محدودة (`listings` غير بالحالات المنشورة `Published`/`Available`/`Approved` — نفس `PUBLIC_LISTING_STATUSES`، و`users` غير `id`/`name`/`agency_logo_url` لمالكي إعلانات منشورة)، وكل مستخدم مُصادَق كيقرا/كيعدّل صفوفو هو فقط.
+- الكتابة المباشرة من الكليان محدودة بالمسارات الضرورية فقط: طلبات الشراكة (دائمًا `pending`)، تعديل البروفايل، CRUD ديال الإعلانات للمالك، و`read_at` ديال الإشعارات؛ كتابات `bookings`/`payments`/`kyc_submissions` تحيّدو (كلهم عبر السيرفر). السكريبت idempotent وكيتشغّل يدويًا فـ Supabase SQL editor مورا الـ drizzle migrations.
