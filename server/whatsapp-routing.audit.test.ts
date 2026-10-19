@@ -89,6 +89,41 @@ describe("agency WhatsApp CTA gating (post-submission only)", () => {
     // bookings.list and bookings.getById must both gate the number on status.
     expect(routers).toMatch(/agencyWhatsApp: row\.status === "Confirmed" \? row\.agencyWhatsApp : null/);
     expect(routers).toMatch(/agencyWhatsApp: booking\.status === "Confirmed" \? booking\.agencyWhatsApp : null/);
-    expect(count(routers, /agencyWhatsApp: users\.whatsappNumber/g)).toBe(2);
+    // The PUBLIC line is selected in bookings.list, bookings.getById and
+    // vouchers.getByCode ...
+    expect(count(routers, /agencyWhatsApp: users\.whatsappNumber/g)).toBe(3);
+    // ... and the PRIVATE booking-alert number is never selected for renters.
+    expect(routers).not.toMatch(/ownerWhatsApp\s*:/);
+  });
+});
+
+describe("private booking-alert number privacy (M-7)", () => {
+  it("strips whatsappPhone from every listing payload that goes public", () => {
+    const routers = read("server/routers.ts");
+    const toPublic = routers.slice(routers.indexOf("function toPublicListing"), routers.indexOf("const MAX_LISTING_ROWS"));
+    expect(toPublic).toContain("delete safe.whatsappPhone;");
+
+    // The public catalogue (list/search/trackEvent) never selects a phone
+    // column at all: the owner join only carries `name` + `role`.
+    const catalogue = routers.slice(routers.indexOf("listings: router({"), routers.indexOf("getById: publicProcedure"));
+    expect(catalogue).not.toContain("whatsappPhone");
+  });
+
+  it("keeps getById's private number behind an owner/admin gate", () => {
+    const routers = read("server/routers.ts");
+    const getById = routers.slice(routers.indexOf("getById: publicProcedure"), routers.indexOf("getBookedDates: publicProcedure"));
+    // The public join must not carry the private column ...
+    const publicJoin = getById.slice(getById.indexOf(".select({"), getById.indexOf("const { listing,"));
+    expect(publicJoin).not.toContain("whatsappPhone");
+    // ... it is re-read only for the listing's own owner or an admin, and only
+    // that gated branch is spread onto the response.
+    expect(getById).toMatch(/const privateContact = ctx\.user && \(ctx\.user\.id === listing\.ownerId \|\| ctx\.user\.role === "admin" \|\| ctx\.user\.role === "SUPER_ADMIN"\)[\s\S]*?db\.select\(\{ whatsappPhone: users\.whatsappPhone \}\)\.from\(users\)\.where\(eq\(users\.id, listing\.ownerId\)\)\.limit\(1\)/);
+    expect(getById).toContain("...privateContactFields,");
+  });
+
+  it("routes the checkout WhatsApp CTA through the public agency number only", () => {
+    const checkout = read("client/src/pages/Checkout.tsx");
+    expect(checkout).not.toContain("listing?.whatsappPhone");
+    expect(checkout).toContain("listing?.whatsappNumber ?? listing?.agencyPhone");
   });
 });

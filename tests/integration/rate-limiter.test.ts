@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach } from "vitest";
-import { createRateLimiter } from "../../server/_core/security";
+import { checkRateLimit, createRateLimiter } from "../../server/_core/security";
 
 describe("rate limiter", () => {
   beforeEach(() => {
@@ -158,5 +158,29 @@ describe("rate limiter", () => {
 
     expect(headers["RateLimit-Limit"]).toBe("10");
     expect(headers["RateLimit-Remaining"]).toBe("9");
+  });
+});
+
+describe("checkRateLimit — in-router guards (M-6)", () => {
+  it("allows exactly `max` calls then blocks the next one", async () => {
+    const options = { namespace: "test:check:max", windowMs: 60_000, max: 3 };
+    const results = [];
+    for (let i = 0; i < 3; i++) {
+      results.push(await checkRateLimit("198.51.100.1", options));
+    }
+    expect(results.every(result => result.success)).toBe(true);
+    expect(results[2].remaining).toBe(0);
+
+    const blocked = await checkRateLimit("198.51.100.1", options);
+    expect(blocked.success).toBe(false);
+    expect(blocked.remaining).toBe(0);
+  });
+
+  it("tracks different identifiers independently", async () => {
+    const options = { namespace: "test:check:ips", windowMs: 60_000, max: 1 };
+    expect((await checkRateLimit("198.51.100.2", options)).success).toBe(true);
+    expect((await checkRateLimit("198.51.100.2", options)).success).toBe(false);
+    // A different identifier still owns a full bucket.
+    expect((await checkRateLimit("198.51.100.3", options)).success).toBe(true);
   });
 });

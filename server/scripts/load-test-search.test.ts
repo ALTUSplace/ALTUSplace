@@ -88,8 +88,17 @@ const searchRows = Array.from({ length: ROW_COUNT }, (_, index) => ({
  * harness omits startDate/endDate.
  */
 function makeFakeDb() {
-  const listingThenable = {
+  // Explicit type: `limit` returns the same chain, so inferring the object type
+  // from its own initializer would be a circular reference.
+  type Thenable = {
+    then: (resolve: (value: unknown) => void) => void;
+    limit: () => Thenable;
+  };
+  const listingThenable: Thenable = {
     then: (resolve: (value: unknown) => void) => resolve(searchRows),
+    // `listings.search` caps public catalogue reads with `.limit(...)`; the fake
+    // chain must stay awaitable after that call.
+    limit: () => listingThenable,
   };
   const emptyThenable = {
     then: (resolve: (value: unknown) => void) => resolve([]),

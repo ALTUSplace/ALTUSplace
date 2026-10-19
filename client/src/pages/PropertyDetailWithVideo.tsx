@@ -54,7 +54,6 @@ type PropertyDetailShape = {
   rooms: number | null;
   rentalPeriod: "daily" | "monthly" | "yearly" | null;
   agencyPhone?: string | null;
-  whatsappPhone?: string | null;
   /** Public WhatsApp number used for the wa.me click-to-chat CTA. */
   whatsappNumber?: string | null;
   /** Owner role drives the partner-verified badge; only `partner` accounts verify. */

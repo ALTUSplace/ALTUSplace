@@ -26,6 +26,9 @@ describe("profile and lease trust boundaries", () => {
   it("does not expose owner WhatsApp from an untrusted URL in Success", () => {
     const success = read("client/src/pages/Success.tsx");
     expect(success).not.toMatch(/searchParams\.get\(["'](?:phone|whatsapp|ownerPhone)["']\)/);
-    expect(success).toContain("booking.ownerWhatsApp");
+    // The success screen only ever reads the PUBLIC agency line (M-7); the
+    // private booking-alert number never reaches the client payload.
+    expect(success).toContain("booking?.agencyWhatsApp");
+    expect(success).not.toMatch(/booking\??\.ownerWhatsApp/);
   });
 });

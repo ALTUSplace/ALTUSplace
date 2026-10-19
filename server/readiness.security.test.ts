@@ -16,21 +16,27 @@ describe("final readiness security audit", () => {
     expect(listingsBlock).toContain("imageVerificationProof: z.string().optional()");
   });
 
-  it("never returns owner WhatsApp from booking or voucher paths before confirmation", () => {
+  it("never returns a private owner WhatsApp from booking or voucher paths", () => {
     const routers = read("server/routers.ts");
-    expect(routers).toContain('ownerWhatsApp: booking.status === "Confirmed" ? booking.ownerWhatsApp : null');
+    // Renter-facing payloads carry ONLY the public agency line
+    // (`whatsappNumber`), gated on confirmation where the status is available.
+    expect(routers).toContain('agencyWhatsApp: booking.status === "Confirmed" ? booking.agencyWhatsApp : null');
+    expect(routers).toContain("agencyWhatsApp: users.whatsappNumber");
+    // Voucher access requires a confirmed booking before any number is returned.
     expect(routers).toContain('result.bookingStatus !== "Confirmed"');
-    expect(routers).toContain('ownerWhatsApp: result.bookingStatus === "Confirmed" ? result.ownerWhatsApp : null');
+    // The private booking-alert number is never selected into a renter payload.
+    expect(routers).not.toMatch(/ownerWhatsApp\s*:/);
   });
 
   it("does not use a client-only phone or WhatsApp gate", () => {
     const success = read("client/src/pages/Success.tsx");
-    expect(success).toContain("booking?.ownerWhatsApp");
-    expect(success).toContain("bookingStatus === 'Confirmed'");
+    expect(success).toContain("booking?.agencyWhatsApp");
+    expect(success).toContain("bookingStatus !== 'Confirmed'");
+    expect(success).not.toMatch(/booking\??\.ownerWhatsApp/);
     expect(success).not.toMatch(/searchParams\.get\(["'](?:phone|whatsapp|ownerPhone)["']\)/);
   });
 
-  it("enforces tiered rate limits (strict 5/min, session 300/min, public 500/min, health exempt)", () => {
+  it("enforces tiered rate limits (strict 5/min, session 300/min, public 500/min, media 240/min, health exempt)", () => {
     const security = read("server/_core/security.ts");
     expect(security).toMatch(/authStrictLimiter[\s\S]*?max:\s*5/);
     expect(security).toMatch(/bookingStrictLimiter[\s\S]*?max:\s*5/);
@@ -52,6 +58,16 @@ describe("final readiness security audit", () => {
     expect(security).toContain('app.use("/api/", apiRateLimit)');
     expect(security).not.toContain('app.use("/api/", sensitiveApiLimiter)');
     expect(security).not.toContain('app.use("/api/", strictRateLimitDispatcher)');
+    // M-4: distributed limiting runs on @upstash/ratelimit when Upstash Redis
+    // is configured; the in-memory Map is only the local-dev fallback.
+    expect(security).toContain('from "@upstash/ratelimit"');
+    expect(security).toContain("Ratelimit.slidingWindow");
+    expect(security).toContain("new Redis({ url: ENV.redisUrl, token: ENV.redisToken })");
+    expect(security).toContain("warnMemoryFallback");
+    // M-5: the /storage/* media proxy gets its own throttled tier (every
+    // request mints a Supabase signed URL; it sits outside the /api/ mount).
+    expect(security).toMatch(/storageProxyLimiter[\s\S]*?max:\s*240/);
+    expect(entry).toContain('app.use("/storage/", storageProxyLimiter)');
   });
 
   it("ships hardened secure headers (helmet-grade: CSP, DENY framing, HSTS preload)", () => {
@@ -67,13 +83,76 @@ describe("final readiness security audit", () => {
     expect(security).toContain("preload");
   });
 
-  it("sanitizes + HTML-escapes all tRPC inputs (XSS shield) via middleware", () => {
+  it("stores tRPC inputs verbatim (L-4) and relies on output-boundary escaping", () => {
     const trpc = read("server/_core/trpc.ts");
-    expect(trpc).toContain("sanitizeInputMiddleware");
-    expect(trpc).toContain("sanitizeTrpcInput");
+    // The old global middleware HTML-escaped every string BEFORE zod ran,
+    // double-encoding real data (URLs, e-mails). The sanitizer is gone.
+    expect(trpc).not.toContain("sanitizeTrpcInput");
+    expect(trpc).not.toContain("sanitizeInputMiddleware");
     const security = read("server/_core/security.ts");
+    // Field-level helpers remain for explicitly HTML-bound content.
     expect(security).toContain("sanitizeUserContent");
     expect(security).toContain("escapeHtml");
+    // The inline <script type="application/ld+json"> serializer escapes `<`
+    // so a listing title can never break out of the script context.
+    const seo = read("client/src/lib/seo.ts");
+    expect(seo).toContain('replace(/</g, "\\\\u003c")');
+  });
+
+  it("guards public spam surfaces inside the tRPC router (M-6)", () => {
+    const security = read("server/_core/security.ts");
+    expect(security).toContain("SPAM_GUARD_LIMITS");
+    expect(security).toMatch(/leadRequest[\s\S]{0,120}?max:\s*10/);
+    expect(security).toMatch(/supportTicket[\s\S]{0,120}?max:\s*5/);
+    expect(security).toMatch(/listingEvent[\s\S]{0,160}?max:\s*60/);
+    const trpc = read("server/_core/trpc.ts");
+    expect(trpc).toContain("export function spamGuard");
+    expect(trpc).toContain('code: "TOO_MANY_REQUESTS"');
+    const routers = read("server/routers.ts");
+    expect(routers).toContain('spamGuard("leadRequest")');
+    expect(routers).toContain('spamGuard("supportTicket")');
+    expect(routers).toContain('spamGuard("comment")');
+    expect(routers).toContain('spamGuard("listingEvent")');
+  });
+
+  it("closes the remaining low-priority findings (L-1, L-2, L-6, L-10)", () => {
+    const routers = read("server/routers.ts");
+    // L-1: admin tier expressed by the procedure type, not an inline check.
+    expect(routers).toMatch(/updateStatus:\s*adminProcedure/);
+    // L-2: KYC status is readable by its owner (or an admin) only.
+    expect(routers).toContain("لا يمكنك الاطلاع على حالة التحقق الخاصة بمستخدم آخر.");
+    const reminder = read("server/leaseReminder.ts");
+    expect(reminder).not.toContain("error.stack");
+    // L-10: deprecated XSS auditor explicitly disabled, edge parity enforced
+    // by server/cspParity.test.ts.
+    const security = read("server/_core/security.ts");
+    expect(security).toContain('"X-XSS-Protection", "0"');
+  });
+
+  it("closes the final low-priority findings (L-3, L-5, L-7, L-8, L-9)", () => {
+    const routers = read("server/routers.ts");
+    // L-3: the AWS Translate quota endpoints are admin-only.
+    expect(routers).toMatch(/translateText:\s*adminProcedure/);
+    expect(routers).toMatch(/clearCache:\s*adminProcedure/);
+    // L-5: scheduled-task routes get a route-level guard; handlers keep their
+    // own isCron/taskUid verification (defense in depth).
+    const entry = read("server/_core/app.ts");
+    expect(entry).toContain('app.post("/api/scheduled/lease-end-reminder", verifyScheduledTask, leaseEndReminderHandler)');
+    expect(entry).toContain('app.post("/api/scheduled/ical-sync", verifyScheduledTask, scheduledIcalSyncHandler)');
+    const cronAuth = read("server/middleware/cronAuth.ts");
+    expect(cronAuth).toContain("export async function verifyScheduledTask");
+    // L-7: PayTabs is fail-closed when the status field is missing.
+    const webhooks = read("server/payments/webhooks.ts");
+    expect(webhooks).toContain("isPaytabsPaidStatus(code)");
+    expect(webhooks).not.toContain("!code ||");
+    // L-8: external fetches follow redirects manually and re-validate each hop.
+    const guard = read("server/security/urlGuard.ts");
+    expect(guard).toContain('redirect: "manual"');
+    expect(guard).toContain("MAX_REDIRECTS");
+    // L-9: client bundle secrets removed from the production env template.
+    const envExample = read(".env.production.example");
+    expect(envExample).not.toMatch(/^VITE_SUPABASE_ANON_KEY=/m);
+    expect(envExample).not.toMatch(/^VITE_FRONTEND_FORGE_API_KEY=/m);
   });
 
   it("uses only parameterized ORM queries (no raw string-concat SQL)", () => {

@@ -137,7 +137,7 @@ by anyone who views source. Never put a secret here.
 |---|---|---|
 | `VITE_MAPBOX_TOKEN` | client map components | Public by design; restrict by URL origin in the Mapbox dashboard. |
 | `VITE_SUPABASE_URL` | `env.ts:27` (server fallback) | Project URL, not a secret. |
-| `VITE_SUPABASE_ANON_KEY` | client data access | **Anon key, not the service role key.** RLS is the only thing protecting your data. |
+| `VITE_SUPABASE_ANON_KEY` | — | **Removed (L-9).** Not read anywhere in `client/src`; `VITE_`-prefixed values are inlined into the public bundle, so it must not be re-added. |
 | `VITE_APP_URL` | client | Canonical origin, e.g. `https://altusplace.vercel.app`. |
 | `VITE_API_URL` | client | API base URL. |
 | `VITE_CURRENCY_API_URL` | client | Exchange-rate endpoint. |

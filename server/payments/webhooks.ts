@@ -85,6 +85,15 @@ export async function handlePayzoneWebhook(ctx: { rawBody: Buffer; query: Webhoo
 
 // ── PayTabs ───────────────────────────────────────────────────────────────────
 
+/**
+ * L-7 (fail-closed): a PayTabs callback is PAID only when it carries an
+ * explicit success status. A missing or empty `tran_status`/`status` field —
+ * which previously defaulted to paid — now marks the transaction as failed.
+ */
+export function isPaytabsPaidStatus(code: string | null | undefined): boolean {
+  return Boolean(code) && /^(success|paid|settled|authorised|approved|1)$/i.test(String(code));
+}
+
 export async function handlePaytabsWebhook(ctx: { rawBody: Buffer; query: WebhookParams }) {
   const payload = first(ctx.query["payload"]);
   const signature = first(ctx.query["signature"]);
@@ -112,7 +121,7 @@ export async function handlePaytabsWebhook(ctx: { rawBody: Buffer; query: Webhoo
   }
 
   const code = first(ctx.query["tran_status"]) ?? first(ctx.query["status"]) ?? "";
-  const paid = !code || /^(success|paid|settled|authorised|approved|1)$/i.test(code);
+  const paid = isPaytabsPaidStatus(code);
   return settleTransactionFromWebhook(db, {
     gateway: "paytabs",
     externalReference: orderId,

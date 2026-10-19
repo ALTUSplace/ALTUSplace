@@ -5,7 +5,12 @@ import { registerDirectAuthRoutes } from "./directAuth";
 import { registerPartnerAuthRoutes } from "./partnerAuth";
 import { registerRenterAuthRoutes } from "./renterAuth";
 import { registerPartnerApplicationRoutes } from "./partnerApplication";
-import { createPaymentsWebhookHandler, paymentStrictLimiter, registerSecurity } from "./security";
+import {
+  createPaymentsWebhookHandler,
+  paymentStrictLimiter,
+  registerSecurity,
+  storageProxyLimiter,
+} from "./security";
 import { createVerificationWebhookHandler } from "../verification/webhook";
 import { configureProviderSecrets } from "../verification/provider";
 import { createEscrowWebhookHandler } from "../escrow";
@@ -23,7 +28,7 @@ import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { leaseEndReminderHandler } from "../leaseReminder";
 import { icalExportHandler, icalSyncHandler as scheduledIcalSyncHandler } from "../ical";
-import { verifyCron } from "../middleware/cronAuth";
+import { verifyCron, verifyScheduledTask } from "../middleware/cronAuth";
 import { icalSyncHandler } from "../cron/icalSync";
 import { leaseRemindersHandler } from "../cron/leaseReminders";
 import { demoCleanupHandler } from "../cron/demoCleanup";
@@ -141,15 +146,20 @@ export function createApp() {
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
+  // Media proxy tier (M-5): /storage/* sits outside the /api/ mount, so it
+  // must be throttled explicitly — every request mints a Supabase signed URL.
+  app.use("/storage/", storageProxyLimiter);
   registerStorageProxy(app);
   registerOAuthRoutes(app);
   registerDirectAuthRoutes(app);
   registerPartnerAuthRoutes(app);
   registerRenterAuthRoutes(app);
   registerPartnerApplicationRoutes(app);
-  // tRPC API
-  app.post("/api/scheduled/lease-end-reminder", leaseEndReminderHandler);
-  app.post("/api/scheduled/ical-sync", scheduledIcalSyncHandler);
+  // Platform heartbeat callbacks. verifyScheduledTask applies the route-level
+  // guard (x-vercel-cron, CRON_SECRET, or a signed platform cron session);
+  // the handlers still re-verify `isCron && taskUid` (L-5, defense in depth).
+  app.post("/api/scheduled/lease-end-reminder", verifyScheduledTask, leaseEndReminderHandler);
+  app.post("/api/scheduled/ical-sync", verifyScheduledTask, scheduledIcalSyncHandler);
   // Vercel Cron endpoints — guarded by verifyCron (x-vercel-cron header or CRON_SECRET bearer).
   app.post("/api/cron/ical-sync", verifyCron, icalSyncHandler);
   app.post("/api/cron/lease-reminders", verifyCron, leaseRemindersHandler);

@@ -202,11 +202,14 @@ export default function CheckoutPage() {
     ? ('pricePerDay' in resolvedListing ? resolvedListing.pricePerDay : resolvedListing.pricePerUnit)
     : Number(searchParams.get('pricePerDay') ?? 0);
 
-  // WhatsApp recipient: the agency's own number from the owner profile when
-  // available, then the static demo partner phone, and finally the platform
-  // concierge line so a booking request is never dropped.
+  // WhatsApp recipient: the PUBLIC agency lines only — the public WhatsApp
+  // number first, then the public agency phone, then the static demo partner
+  // phone (and finally the platform concierge line) so a booking request is
+  // never dropped. The owner's private booking-alert number (`whatsappPhone`)
+  // is never part of a public listing payload (M-7), so it must not be read
+  // here even as a fallback.
   const staticPartner = staticListing ? PARTNERS.find((partner) => partner.id === staticListing.providerId) : undefined;
-  const agencyPhone = listing?.whatsappPhone ?? listing?.agencyPhone ?? staticPartner?.phone ?? '';
+  const agencyPhone = listing?.whatsappNumber ?? listing?.agencyPhone ?? staticPartner?.phone ?? '';
   const agencyName = listing?.agencyName ?? listing?.ownerName ?? staticPartner?.name ?? 'الوكالة المؤجِرة';
 
   // Mohammed V (Nouaceur) is the Casablanca airport: offer flight pickup

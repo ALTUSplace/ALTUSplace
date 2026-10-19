@@ -1,6 +1,7 @@
 import { NOT_ADMIN_ERR_MSG, UNAUTHED_ERR_MSG } from '@shared/const';
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
+import type { SpamGuardSurface } from "./security";
 import type { TrpcContext } from "./context";
 
 const t = initTRPC.context<TrpcContext>().create({
@@ -8,28 +9,37 @@ const t = initTRPC.context<TrpcContext>().create({
 });
 
 export const router = t.router;
-export const publicProcedure = t.procedure.use(
-  t.middleware(async opts => {
-    // Enterprise XSS shield: recursively sanitize + HTML-escape every string
-    // in the validated procedure input before any handler runs. Numbers,
-    // booleans, dates and arrays lengths are untouched; zod limits still apply.
-    const { sanitizeTrpcInput } = await import("./security");
-    const input = (opts as { input?: unknown }).input;
-    if (input !== undefined && input !== null) {
-      return opts.next({ input: sanitizeTrpcInput(input) });
+
+// L-4: tRPC inputs are stored VERBATIM. The old global input-escaping
+// middleware HTML-escaped every string before zod even ran, which corrupted
+// real data (`&` became `&amp;` inside URLs, e-mail addresses and passwords)
+// while buying no XSS defense: React escapes on render, JSON-LD payloads
+// escape `<` when serialized (client/src/lib/seo.ts), and server-rendered
+// HTML (prerender, notification e-mails) escapes at its own boundary.
+export const publicProcedure = t.procedure;
+
+/**
+ * M-6: per-IP guard for public, abuse-prone mutations. The HTTP tier
+ * classifier can only bucket these as `standard` (300/min) — it sees the
+ * path, not the side effect — so each surface gets its own budget here,
+ * enforced on the same store as the Express tiers (Redis when configured,
+ * in-memory fallback otherwise). Limits live in `SPAM_GUARD_LIMITS`
+ * (server/_core/security.ts).
+ */
+export function spamGuard(surface: SpamGuardSurface) {
+  return t.middleware(async opts => {
+    const { checkRateLimit, clientIp, SPAM_GUARD_LIMITS } = await import("./security");
+    const limits = SPAM_GUARD_LIMITS[surface];
+    const result = await checkRateLimit(clientIp(opts.ctx.req), limits);
+    if (!result.success) {
+      throw new TRPCError({
+        code: "TOO_MANY_REQUESTS",
+        message: limits.message ?? "Too many requests. Try again in a minute.",
+      });
     }
     return opts.next();
-  }),
-);
-
-export const sanitizeInputMiddleware = t.middleware(async opts => {
-  const { sanitizeTrpcInput } = await import("./security");
-  const input = (opts as { input?: unknown }).input;
-  if (input !== undefined && input !== null) {
-    return opts.next({ input: sanitizeTrpcInput(input) });
-  }
-  return opts.next();
-});
+  });
+}
 
 const requireUser = t.middleware(async opts => {
   const { ctx, next } = opts;
@@ -49,13 +59,35 @@ const requireUser = t.middleware(async opts => {
   });
 });
 
-export const protectedProcedure = t.procedure.use(sanitizeInputMiddleware).use(requireUser);
+export const protectedProcedure = t.procedure.use(requireUser);
 
+// Owner tier: FULL rental-operator capabilities. `partner` accounts are
+// self-registered and never admin-vetted (POSTing the partner signup form is
+// enough — see _core/partnerAuth.ts), so they are deliberately EXCLUDED here.
+// Anything that surfaces another person's data (bookings.ownerList → renter
+// PII), money (ownerFinancials, payouts.request) or generated contracts
+// (rentalContracts.createForBooking) stays on this tier and is therefore
+// owner/admin/SUPER_ADMIN only.
 export const ownerProcedure = protectedProcedure.use(
   t.middleware(async opts => {
     const { ctx, next } = opts;
-    if (!['owner', 'admin', 'partner', 'SUPER_ADMIN'].includes(ctx.user!.role)) {
+    if (!['owner', 'admin', 'SUPER_ADMIN'].includes(ctx.user!.role)) {
       throw new TRPCError({ code: 'FORBIDDEN', message: 'هذه العملية مخصصة للملاك.' });
+    }
+    return next({ ctx: { ...ctx, user: ctx.user } });
+  }),
+);
+
+// Partner tier (M-1): the widest tier a self-registered `partner` may reach.
+// Every procedure behind it MUST scope its SQL to `ctx.user!.id` — own
+// listings, own agency profile/settings, own media uploads — and must never
+// return or mutate another account's rows. Cross-account procedures stay on
+// `ownerProcedure` above.
+export const partnerProcedure = protectedProcedure.use(
+  t.middleware(async opts => {
+    const { ctx, next } = opts;
+    if (!['owner', 'admin', 'partner', 'SUPER_ADMIN'].includes(ctx.user!.role)) {
+      throw new TRPCError({ code: 'FORBIDDEN', message: 'هذه العملية مخصصة للملاك والشركاء.' });
     }
     return next({ ctx: { ...ctx, user: ctx.user } });
   }),

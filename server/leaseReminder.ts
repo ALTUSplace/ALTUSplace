@@ -71,9 +71,11 @@ export async function leaseEndReminderHandler(req: Request, res: Response) {
     return res.json({ ok: true, notified: row.contract.tenantId, emailConfigured: Boolean(email) });
   } catch (error) {
     console.error("[LeaseReminder] Handler failed:", error);
+    // L-6: never return a stack trace (or other internals) to the caller —
+    // the full error stays in the server log above; the response carries only
+    // the message plus non-sensitive context.
     return res.status(500).json({
       error: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined,
       context: { url: req.originalUrl ?? req.url, taskUid: "authenticated-task" },
       timestamp,
     });

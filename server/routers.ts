@@ -7,7 +7,7 @@ import { TRPCError } from "@trpc/server";
 import { parse as parseCookie } from "cookie";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
-import { adminProcedure, ownerProcedure, publicProcedure, protectedProcedure, router, superAdminProcedure } from "./_core/trpc";
+import { adminProcedure, ownerProcedure, partnerProcedure, protectedProcedure, publicProcedure, router, spamGuard, superAdminProcedure } from "./_core/trpc";
 import { getDb, withTransaction } from "./db";
 import { PLATFORM_SETTINGS_PUBLIC_COLUMNS, defaultPlatformSettings, sanitizePlatformSettingsSnapshot } from "./platformSettingsPolicy";
 import { evaluateBecomeAgencyAccess, isElevatedRole } from "./becomeAgencyPolicy";
@@ -57,17 +57,30 @@ function haversineKm(aLat: number, aLng: number, bLat: number, bLng: number): nu
 }
 
 /**
- * Strips private calendar fields (icalImportUrl / icalExportToken) from listing
- * rows before they are exposed through public procedures. The owner-only
- * listing queries keep the full row.
+ * Strips private fields from listing rows before they are exposed through
+ * public procedures:
+ *   - icalImportUrl / icalExportToken — private calendar sync secrets;
+ *   - whatsappPhone (M-7) — the owner's PRIVATE booking-alert number. It is
+ *     never part of a public listing payload; listings.getById re-attaches it
+ *     only for the listing's own owner or an admin.
+ * The owner-only listing queries keep the full row.
  */
 function toPublicListing<T extends object>(row: T): T {
   if (!row) return row;
   const safe = { ...row } as Record<string, unknown>;
   delete safe.icalImportUrl;
   delete safe.icalExportToken;
+  delete safe.whatsappPhone;
   return safe as T;
 }
+
+/**
+ * Hard server-side cap on how many listing rows a public catalogue query may
+ * materialize. Both `listings.list` and `listings.search` paginate in memory, so
+ * without a DB-level limit an unauthenticated caller could force the process to
+ * load the entire table. 500 sits comfortably above the 200-row client page cap.
+ */
+const MAX_LISTING_ROWS = 500;
 
 async function writeAuditLog(input: {
   actorId: number;
@@ -210,7 +223,7 @@ export const appRouter = router({
   }),
 
   agency: router({
-    settings: ownerProcedure.query(async ({ ctx }) => {
+    settings: partnerProcedure.query(async ({ ctx }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "قاعدة البيانات غير متاحة." });
       const rows = await db.select({
@@ -229,7 +242,7 @@ export const appRouter = router({
       }).from(users).where(eq(users.id, ctx.user!.id)).limit(1);
       return rows[0] ?? null;
     }),
-    statusSummary: ownerProcedure.query(async ({ ctx }) => {
+    statusSummary: partnerProcedure.query(async ({ ctx }) => {
       const db = await getDb();
       const empty = { counts: { pending: 0, published: 0, rejected: 0 }, total: 0, listings: [] as Array<{ id: number; title: string; city: string; category: string; status: string; normalizedStatus: "pending" | "published" | "rejected"; createdAt: Date | null }> };
       if (!db) return empty;
@@ -249,7 +262,7 @@ export const appRouter = router({
         listings: result,
       };
     }),
-    updateSettings: ownerProcedure
+    updateSettings: partnerProcedure
       .input(z.object({
         agencyName: z.string().trim().max(180).optional().nullable(),
         agencyPhone: z.string().trim().max(32).optional().nullable(),
@@ -283,7 +296,7 @@ export const appRouter = router({
         await writeAuditLog({ actorId: ctx.user!.id, action: "agency.settings.updated", entityType: "user", entityId: ctx.user!.id, afterData: { agencyName: normalize(input.agencyName), agencyPhone: normalize(input.agencyPhone), agencyEmail: normalize(input.agencyEmail), whatsappPhone: normalizeWhatsAppNumber(input.whatsappPhone ?? "") ?? null, whatsappNumber: normalizeWaNumber(input.whatsappNumber ?? "") ?? null } });
         return { success: true as const };
       }),
-    listings: ownerProcedure.query(async ({ ctx }) => {
+    listings: partnerProcedure.query(async ({ ctx }) => {
       const db = await getDb();
       if (!db) return [];
       const owned = await db.select().from(listings).where(eq(listings.ownerId, ctx.user!.id)).orderBy(desc(listings.createdAt));
@@ -302,7 +315,7 @@ export const appRouter = router({
       }
       return owned.map((listing) => ({ ...listing, analytics: counts.get(listing.id) ?? { views: 0, whatsappClicks: 0, contactClicks: 0 } }));
     }),
-    overview: ownerProcedure.query(async ({ ctx }) => {
+    overview: partnerProcedure.query(async ({ ctx }) => {
       const db = await getDb();
       if (!db) return { totalListings: 0, availableListings: 0, unavailableListings: 0, activeBookings: 0, views: 0, whatsappClicks: 0, contactClicks: 0, grossRevenue: 0, netRevenue: 0 };
       const owned = await db.select({ id: listings.id, status: listings.status }).from(listings).where(eq(listings.ownerId, ctx.user!.id));
@@ -328,7 +341,7 @@ export const appRouter = router({
         netRevenue: bookingRows.filter((booking) => booking.status === "Confirmed").reduce((sum, booking) => sum + Number(booking.netProfit), 0),
       };
     }),
-    analyticsTimeline: ownerProcedure.query(async ({ ctx }) => {
+    analyticsTimeline: partnerProcedure.query(async ({ ctx }) => {
       const db = await getDb();
       if (!db) return [];
       const owned = await db.select({ id: listings.id }).from(listings).where(eq(listings.ownerId, ctx.user!.id));
@@ -347,7 +360,7 @@ export const appRouter = router({
         .orderBy(sql`DATE(${listingAnalyticsEvents.createdAt})`);
       return rows.map((row) => ({ day: String(row.day), eventType: row.eventType, total: Number(row.total) }));
     }),
-    exportAnalyticsCsv: ownerProcedure.query(async ({ ctx }) => {
+    exportAnalyticsCsv: partnerProcedure.query(async ({ ctx }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "قاعدة البيانات غير متاحة." });
       const owned = await db.select({
@@ -380,7 +393,7 @@ export const appRouter = router({
       const date = new Date().toISOString().slice(0, 10);
       return { filename: `altusplace-agency-analytics-${date}.csv`, csv: `\uFEFF${header.map(csvField).join(",")}\n${rows.join("\n")}` };
     }),
-    recentActivity: ownerProcedure.query(async ({ ctx }) => {
+    recentActivity: partnerProcedure.query(async ({ ctx }) => {
       const db = await getDb();
       if (!db) return [];
       const listingIds = (await db.select({ id: listings.id }).from(listings).where(eq(listings.ownerId, ctx.user!.id))).map((row) => row.id);
@@ -529,7 +542,7 @@ export const appRouter = router({
   }),
 
   storage: router({
-    uploadAgencyLogo: ownerProcedure
+    uploadAgencyLogo: partnerProcedure
       .input(z.object({
         fileName: z.string().trim().min(1).max(160),
         mimeType: z.enum(["image/jpeg", "image/png", "image/webp"]),
@@ -547,7 +560,7 @@ export const appRouter = router({
         });
         return { ...uploaded, fileName: normalizedName, mimeType: input.mimeType };
       }),
-    uploadImage: ownerProcedure
+    uploadImage: partnerProcedure
       .input(z.object({
         fileName: z.string().trim().min(1).max(160),
         mimeType: z.enum(["image/jpeg", "image/png", "image/webp"]),
@@ -692,7 +705,13 @@ export const appRouter = router({
       }),
     getByUserId: protectedProcedure
       .input(z.object({ userId: z.number().int().positive() }))
-      .query(async ({ input }) => {
+      .query(async ({ ctx, input }) => {
+        // L-2: KYC status is personal data — a user may only read their OWN
+        // row. Admins keep the cross-user read used by the review queue, so
+        // the procedure is safe wherever it is mounted.
+        if (ctx.user!.id !== input.userId && !["admin", "SUPER_ADMIN"].includes(ctx.user!.role)) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "لا يمكنك الاطلاع على حالة التحقق الخاصة بمستخدم آخر." });
+        }
         const db = await getDb();
         if (!db) return null;
         const [userRow] = await db.select({ kycVerificationStatus: users.kycVerificationStatus, kycVerifiedAt: users.kycVerifiedAt }).from(users).where(eq(users.id, input.userId)).limit(1);
@@ -1712,6 +1731,7 @@ export const appRouter = router({
         .from(supportTickets).where(eq(supportTickets.userId, ctx.user!.id)).orderBy(desc(supportTickets.createdAt)).limit(100);
     }),
     create: protectedProcedure
+      .use(spamGuard("supportTicket"))
       .input(z.object({ subject: z.string().trim().min(3).max(255), category: z.string().trim().min(2).max(120), description: z.string().trim().min(5).max(5000) }))
       .mutation(async ({ ctx, input }) => {
         const db = await getDb();
@@ -1804,7 +1824,7 @@ export const appRouter = router({
       .query(async ({ input }) => {
         const db = await getDb();
         if (!db) return [];
-        const allListings = await db.select({ listing: listings, ownerName: users.name, ownerRole: users.role }).from(listings).leftJoin(users, eq(listings.ownerId, users.id)).where(inArray(listings.status, PUBLIC_LISTING_STATUSES)).orderBy(desc(listings.createdAt));
+        const allListings = await db.select({ listing: listings, ownerName: users.name, ownerRole: users.role }).from(listings).leftJoin(users, eq(listings.ownerId, users.id)).where(inArray(listings.status, PUBLIC_LISTING_STATUSES)).orderBy(desc(listings.createdAt)).limit(MAX_LISTING_ROWS);
         const requestedRange = input?.startDate && input?.endDate ? parseDateRange(input.startDate, input.endDate) : null;
         const confirmedRanges = requestedRange
           ? await db.select({ listingId: bookings.listingId, start: bookings.startDate, end: bookings.endDate }).from(bookings).where(eq(bookings.status, "Confirmed"))
@@ -1940,7 +1960,8 @@ export const appRouter = router({
           .from(listings)
           .leftJoin(users, eq(listings.ownerId, users.id))
           .where(baseFilter)
-          .orderBy(desc(listings.createdAt));
+          .orderBy(desc(listings.createdAt))
+          .limit(MAX_LISTING_ROWS);
 
         const requestedRange = input?.startDate && input?.endDate ? parseDateRange(input.startDate, input.endDate) : null;
         const confirmedRanges = requestedRange
@@ -1989,6 +2010,7 @@ export const appRouter = router({
       }),
 
     trackEvent: publicProcedure
+      .use(spamGuard("listingEvent"))
       .input(z.object({ listingId: z.number().int().positive(), eventType: z.enum(["view", "whatsapp_click", "contact_click"]), visitorKey: z.string().trim().min(16).max(128).optional() }))
       .mutation(async ({ input }) => {
         const db = await getDb();
@@ -2005,12 +2027,16 @@ export const appRouter = router({
 
     getById: publicProcedure
       .input(z.object({ id: z.number(), language: z.enum(["ar", "fr", "en"]).optional() }))
-      .query(async ({ input }) => {
+      .query(async ({ ctx, input }) => {
         const db = await getDb();
         if (!db) {
           console.error('Database unavailable in getById query for listing ID:', input.id);
           return null;
         }
+        // M-7: the owner's private booking-alert number (`users.whatsappPhone`)
+        // is NOT selected here — a public listing payload may only carry the
+        // public agency line (`agencyPhone` / `whatsappNumber`). An owner or
+        // admin viewer gets it back from the separate, gated query below.
         const result = await db
           .select({
             listing: listings,
@@ -2018,7 +2044,6 @@ export const appRouter = router({
             ownerRole: users.role,
             agencyName: users.agencyName,
             agencyPhone: users.agencyPhone,
-            whatsappPhone: users.whatsappPhone,
             whatsappNumber: users.whatsappNumber,
           })
           .from(listings)
@@ -2032,9 +2057,18 @@ export const appRouter = router({
           return null;
         }
 
-        const { listing, ownerName, ownerRole, agencyName, agencyPhone, whatsappPhone, whatsappNumber } = result[0];
+        const { listing, ownerName, ownerRole, agencyName, agencyPhone, whatsappNumber } = result[0];
         const sourceLanguage = "ar" as const;
         const targetLanguage = input.language ?? sourceLanguage;
+
+        // The private booking-alert number is readable ONLY by the listing's own
+        // owner or an admin. It comes from a separate query so the public join
+        // above can never carry it by accident (`toPublicListing` strips it as
+        // well); owners can always re-read it from agency.settings.
+        const privateContact = ctx.user && (ctx.user.id === listing.ownerId || ctx.user.role === "admin" || ctx.user.role === "SUPER_ADMIN")
+          ? await db.select({ whatsappPhone: users.whatsappPhone }).from(users).where(eq(users.id, listing.ownerId)).limit(1)
+          : [];
+        const privateContactFields = privateContact.length > 0 ? { whatsappPhone: privateContact[0].whatsappPhone } : {};
 
         // Computed review aggregates (avg rounded to 1 decimal + exact count) —
         // pair with the groupBy aggregates already shipped by list/search.
@@ -2051,29 +2085,34 @@ export const appRouter = router({
             targetLanguage,
             sourceLanguage
           );
-          return toPublicListing({
-            ...listing,
-            title: translated.title ?? listing.title,
-            description: translated.description ?? listing.description,
-            _translationMeta: {
-              titleFromCache: translated.titleFromCache,
-              descriptionFromCache: translated.descriptionFromCache,
-              titleProvider: translated.titleProvider,
-              descriptionProvider: translated.descriptionProvider,
-            },
-            ownerName,
-            ownerRole,
-            agencyName,
-            agencyPhone,
-            whatsappPhone,
-            whatsappNumber,
-            averageRating: reviewSummary.average,
-            reviewCount: reviewSummary.count,
-            ratingBreakdown,
-          });
+          return {
+            ...toPublicListing({
+              ...listing,
+              title: translated.title ?? listing.title,
+              description: translated.description ?? listing.description,
+              _translationMeta: {
+                titleFromCache: translated.titleFromCache,
+                descriptionFromCache: translated.descriptionFromCache,
+                titleProvider: translated.titleProvider,
+                descriptionProvider: translated.descriptionProvider,
+              },
+              ownerName,
+              ownerRole,
+              agencyName,
+              agencyPhone,
+              whatsappNumber,
+              averageRating: reviewSummary.average,
+              reviewCount: reviewSummary.count,
+              ratingBreakdown,
+            }),
+            ...privateContactFields,
+          };
         }
 
-        return toPublicListing({ ...listing, _translationMeta: null, ownerName, ownerRole, agencyName, agencyPhone, whatsappPhone, whatsappNumber, averageRating: reviewSummary.average, reviewCount: reviewSummary.count, ratingBreakdown });
+        return {
+          ...toPublicListing({ ...listing, _translationMeta: null, ownerName, ownerRole, agencyName, agencyPhone, whatsappNumber, averageRating: reviewSummary.average, reviewCount: reviewSummary.count, ratingBreakdown }),
+          ...privateContactFields,
+        };
       }),
 
     getBookedDates: publicProcedure
@@ -2094,7 +2133,7 @@ export const appRouter = router({
         ];
       }),
 
-    toggleAvailability: ownerProcedure
+    toggleAvailability: partnerProcedure
       .input(z.object({ listingId: z.number().int().positive(), available: z.boolean() }))
       .mutation(async ({ ctx, input }) => {
         const db = await getDb();
@@ -2107,7 +2146,7 @@ export const appRouter = router({
         return { success: true as const, status };
       }),
 
-    setFleetStatus: ownerProcedure
+    setFleetStatus: partnerProcedure
       .input(z.object({ listingId: z.number().int().positive(), status: z.enum(['Available', 'Rented', 'Maintenance']) }))
       .mutation(async ({ ctx, input }) => {
         const db = await getDb();
@@ -2119,7 +2158,7 @@ export const appRouter = router({
         return { success: true as const, status: input.status };
       }),
 
-    setAvailability: ownerProcedure
+    setAvailability: partnerProcedure
       .input(z.object({ listingId: z.number().int().positive(), blockedRanges: z.array(z.object({ start: z.string(), end: z.string() })).max(100) }))
       .mutation(async ({ ctx, input }) => {
         const db = await getDb();
@@ -2136,7 +2175,7 @@ export const appRouter = router({
         return { success: true, blockedRanges: normalized };
       }),
 
-    getIcalSettings: ownerProcedure
+    getIcalSettings: partnerProcedure
       .input(z.object({ listingId: z.number().int().positive() }))
       .query(async ({ ctx, input }) => {
         const db = await getDb();
@@ -2146,7 +2185,7 @@ export const appRouter = router({
         return { ...rows[0], exportPath: rows[0].icalExportToken ? `/api/ical/export/${rows[0].icalExportToken}` : null };
       }),
 
-    saveIcalSettings: ownerProcedure
+    saveIcalSettings: partnerProcedure
       .input(z.object({ listingId: z.number().int().positive(), importUrl: z.string().trim().url().max(2000).nullable().optional() }))
       .mutation(async ({ ctx, input }) => {
         const db = await getDb();
@@ -2159,7 +2198,7 @@ export const appRouter = router({
         return { success: true, exportPath: `/api/ical/export/${token}`, importConfigured: Boolean(importUrl) };
       }),
 
-    syncIcalNow: ownerProcedure
+    syncIcalNow: partnerProcedure
       .input(z.object({ listingId: z.number().int().positive() }))
       .mutation(async ({ ctx, input }) => {
         const db = await getDb();
@@ -2169,7 +2208,7 @@ export const appRouter = router({
         return syncListingIcal(input.listingId);
       }),
 
-    create: ownerProcedure
+    create: partnerProcedure
       .input(
         z.object({
           title: z.string(),
@@ -2256,7 +2295,7 @@ export const appRouter = router({
         return { success: true, listingId };
       }),
 
-    update: ownerProcedure
+    update: partnerProcedure
       .input(z.object({
         id: z.number().int().positive(),
         title: z.string().min(2).optional(),
@@ -2306,7 +2345,7 @@ export const appRouter = router({
         return { success: true, status: nextStatus };
       }),
 
-    resubmitRejected: ownerProcedure
+    resubmitRejected: partnerProcedure
       .input(z.object({
         id: z.number().int().positive(),
         title: z.string().min(2),
@@ -2346,7 +2385,7 @@ export const appRouter = router({
         return { success: true as const, status: "Pending" as const };
       }),
 
-    remove: ownerProcedure
+    remove: partnerProcedure
       .input(z.object({ id: z.number().int().positive() }))
       .mutation(async ({ ctx, input }) => {
         const db = await getDb();
@@ -2358,7 +2397,7 @@ export const appRouter = router({
         return { success: true };
       }),
 
-    mine: ownerProcedure.query(async ({ ctx }) => {
+    mine: partnerProcedure.query(async ({ ctx }) => {
       const db = await getDb();
       if (!db) return [];
       if (!['owner', 'admin', 'partner'].includes(ctx.user!.role)) throw new Error('هذه الصفحة مخصصة للملاك.');
@@ -2374,8 +2413,8 @@ export const appRouter = router({
       if (!db) return [];
       try {
         // Join the listing owner so the renter page can offer a post-submission
-        // agency WhatsApp CTA. Direct contact is released only once the booking
-        // is confirmed, mirroring getById's ownerWhatsApp gate.
+        // agency WhatsApp CTA. Only the PUBLIC agency number is joined, and it
+        // is released only once the booking is confirmed (M-7).
         const base = db.select({
           ...getTableColumns(bookings),
           agencyWhatsApp: users.whatsappNumber,
@@ -2415,7 +2454,6 @@ export const appRouter = router({
           listingCity: listings.city,
           listingCategory: listings.category,
           ownerName: users.name,
-          ownerWhatsApp: users.whatsappPhone,
           agencyWhatsApp: users.whatsappNumber,
         }).from(bookings)
           .innerJoin(listings, eq(bookings.listingId, listings.id))
@@ -2425,11 +2463,11 @@ export const appRouter = router({
         if (!booking || (ctx.user!.role !== "admin" && booking.renterId !== ctx.user!.id)) {
           throw new TRPCError({ code: "NOT_FOUND", message: "الحجز غير موجود أو لا يخص حسابك." });
         }
-        // Both the owner line and the agency line stay hidden until the booking
-        // is confirmed, so a pending request never hands out a contact number.
+        // The PUBLIC agency number stays hidden until the booking is confirmed,
+        // so a pending request never hands out a contact number. The private
+        // booking-alert number (whatsappPhone) is never returned to renters (M-7).
         return {
           ...booking,
-          ownerWhatsApp: booking.status === "Confirmed" ? booking.ownerWhatsApp : null,
           agencyWhatsApp: booking.status === "Confirmed" ? booking.agencyWhatsApp : null,
         };
       }),
@@ -2618,19 +2656,19 @@ export const appRouter = router({
         return { success: true, bookingId, subtotal, addOnsTotal, durationDays, commissionFee, netProfit };
       }),
 
-    updateStatus: protectedProcedure
+    // L-1: platform-only status override. The admin tier is expressed by the
+    // procedure type (`adminProcedure`) instead of an inline role check, so a
+    // refactor cannot silently drop the gate.
+    updateStatus: adminProcedure
       .input(
         z.object({
           bookingId: z.number(),
           status: z.enum(["Pending", "Confirmed", "Cancelled"]),
         })
       )
-      .mutation(async ({ ctx, input }) => {
+      .mutation(async ({ input }) => {
         const db = await getDb();
         if (!db) throw new Error("Database unavailable");
-        if (!['admin', 'SUPER_ADMIN'].includes(ctx.user!.role)) {
-          throw new Error("عذراً، هذه العملية مخصصة لمدير المنصة والمشرفين فقط.");
-        }
         const bookingRow = (await db.select({ listingId: bookings.listingId }).from(bookings).where(eq(bookings.id, input.bookingId)).limit(1))[0];
         if (!bookingRow) throw new Error("الحجز غير موجود.");
         await db
@@ -2654,6 +2692,10 @@ export const appRouter = router({
         return { success: true };
       }),
 
+    // M-1: this endpoint returns renter PII (name / email / phone) for the
+    // caller's own listings, so it stays on the owner tier — a self-registered
+    // `partner` never reaches it. Partners keep `partnerProcedure` routes (own
+    // listings + own agency settings/analytics) instead.
     ownerList: ownerProcedure.query(async ({ ctx }) => {
       const db = await getDb();
       if (!db) return [];
@@ -3058,7 +3100,6 @@ export const appRouter = router({
             ownerId: listings.ownerId,
             ownerName: users.name,
             ownerEmail: users.email,
-            ownerWhatsApp: users.whatsappPhone,
             renterName: users.name,
           }).from(listings)
             .leftJoin(users, eq(listings.ownerId, users.id))
@@ -3118,7 +3159,7 @@ export const appRouter = router({
           ownerId: listings.ownerId,
           ownerName: users.name,
           ownerEmail: users.email,
-          ownerWhatsApp: users.whatsappPhone,
+          agencyWhatsApp: users.whatsappNumber,
         }).from(bookingVouchers)
           .innerJoin(bookings, eq(bookingVouchers.bookingId, bookings.id))
           .innerJoin(listings, eq(bookings.listingId, listings.id))
@@ -3130,7 +3171,10 @@ export const appRouter = router({
         }
         const qrCodeDataUrl = await QRCode.toDataURL(result.voucher.qrPayload, { width: 320, margin: 2 });
         const mapsUrl = createMapsSearchUrl(result.listingTitle, result.listingCity);
-        return { ...result, ownerWhatsApp: result.bookingStatus === "Confirmed" ? result.ownerWhatsApp : null, qrCodeDataUrl, mapsUrl };
+        // Access is already restricted to confirmed bookings above, so the
+        // PUBLIC agency number needs no extra gate here. The private
+        // booking-alert number is never exposed (M-7).
+        return { ...result, agencyWhatsApp: result.agencyWhatsApp ?? null, qrCodeDataUrl, mapsUrl };
       }),
   }),
 
@@ -3458,6 +3502,7 @@ export const appRouter = router({
      *    in-app notifications for the same phone.
      */
     create: publicProcedure
+      .use(spamGuard("leadRequest"))
       .input(
         z.object({
           name: z.string().trim().min(2).max(80),
@@ -3703,6 +3748,7 @@ export const appRouter = router({
       }),
 
     create: protectedProcedure
+      .use(spamGuard("comment"))
       .input(z.object({
         listingId: z.number().int().positive(),
         body: z.string().trim().min(1).max(2000),
@@ -3749,7 +3795,7 @@ export const appRouter = router({
   }),
 
   translation: router({
-    translateText: protectedProcedure
+    translateText: adminProcedure
       .input(z.object({
         text: z.string().trim().min(1).max(2000),
         targetLanguage: z.enum(["ar", "fr", "en"]),
@@ -3759,7 +3805,7 @@ export const appRouter = router({
         const result = await translateWithAws(input.text, input.sourceLanguage ?? "ar", input.targetLanguage);
         return { translatedText: result.translatedText ?? input.text, fromCache: result.fromCache, provider: result.provider };
       }),
-    clearCache: protectedProcedure
+    clearCache: adminProcedure
       .input(z.object({ listingId: z.number().int().positive() }))
       .mutation(async ({ input }) => ({ cleared: await invalidateTranslationCache(input.listingId) })),
     stats: protectedProcedure.query(async () => getTranslationStats()),

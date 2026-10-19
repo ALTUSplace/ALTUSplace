@@ -27,9 +27,17 @@ const listingRow = {
 
 const searchRows = [{ listing: listingRow, ownerName: "Agence X", ownerRole: "partner" }];
 
-/** Minimal drizzle chain fake covering the select/from/leftJoin/where/orderBy/groupBy calls of listings.search. */
+/** Minimal drizzle chain fake covering the select/from/leftJoin/where/orderBy/limit/groupBy calls of listings.search. */
 function makeFakeDb() {
-  const listingThenable = { then: (resolve: (value: unknown) => void) => resolve(searchRows) };
+  type Thenable = {
+    then: (resolve: (value: unknown) => void) => void;
+    limit: () => Thenable;
+  };
+  const listingThenable: Thenable = {
+    then: (resolve: (value: unknown) => void) => resolve(searchRows),
+    // `listings.search` caps public catalogue reads with `.limit(...)`.
+    limit: () => listingThenable,
+  };
   const emptyThenable = { then: (resolve: (value: unknown) => void) => resolve([]) };
   const where = () => ({
     orderBy: () => listingThenable,

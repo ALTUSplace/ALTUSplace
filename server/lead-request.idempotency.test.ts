@@ -17,6 +17,7 @@ vi.mock("./notificationService", async (importOriginal) => {
 import { alertAdmins } from "./notificationService";
 import { appRouter } from "./routers";
 import { resetIdempotencyStore } from "./_core/idempotency";
+import { __resetRateLimitBucketsForTests } from "./_core/security";
 import type { TrpcContext } from "./_core/context";
 
 /** A visitor is anonymous: `requestListing` is a public procedure. */
@@ -41,6 +42,10 @@ function leadCapture() {
 
 beforeEach(() => {
   resetIdempotencyStore();
+  // M-6: the guard buckets on the caller IP; these fixtures carry no IP, so
+  // every test shares the "unknown" bucket. Reset it to keep each scenario on
+  // a full budget (the guard itself is pinned in server/spam-guard.test.ts).
+  __resetRateLimitBucketsForTests();
   vi.mocked(alertAdmins).mockClear();
 });
 
