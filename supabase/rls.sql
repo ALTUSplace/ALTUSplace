@@ -244,13 +244,13 @@ create policy "bookings_select_owner"
     exists (
       select 1
       from public.listings l
-      where l.id = bookings.listing_id
+      where l.listing_id = bookings.listing_id
         and l.owner_id = public.app_user_id()
     )
     or exists (
       select 1
       from public.listings l
-      where l.id = bookings.secondary_listing_id
+      where l.listing_id = bookings.secondary_listing_id
         and l.owner_id = public.app_user_id()
     )
   );
@@ -322,13 +322,13 @@ create policy "transactions_select_participant"
     exists (
       select 1
       from public.bookings b
-      where b.id = transactions.booking_id
+      where b.booking_id = transactions.booking_id
         and (
           b.renter_id = public.app_user_id()
           or exists (
             select 1
             from public.listings l
-            where l.id = b.listing_id
+            where l.listing_id = b.listing_id
               and l.owner_id = public.app_user_id()
           )
         )
@@ -364,13 +364,13 @@ create policy "refund_requests_select_participant"
     or exists (
       select 1
       from public.bookings b
-      where b.id = refund_requests.booking_id
+      where b.booking_id = refund_requests.booking_id
         and (
           b.renter_id = public.app_user_id()
           or exists (
             select 1
             from public.listings l
-            where l.id = b.listing_id
+            where l.listing_id = b.listing_id
               and l.owner_id = public.app_user_id()
           )
         )
@@ -393,13 +393,13 @@ create policy "disputes_select_participant"
     or exists (
       select 1
       from public.bookings b
-      where b.id = disputes.booking_id
+      where b.booking_id = disputes.booking_id
         and (
           b.renter_id = public.app_user_id()
           or exists (
             select 1
             from public.listings l
-            where l.id = b.listing_id
+            where l.listing_id = b.listing_id
               and l.owner_id = public.app_user_id()
           )
         )
@@ -422,14 +422,14 @@ create policy "dispute_attachments_select_participant"
     exists (
       select 1
       from public.disputes d
-      join public.bookings b on b.id = d.booking_id
-      where d.id = dispute_attachments.dispute_id
+      join public.bookings b on b.booking_id = d.booking_id
+      where d.dispute_id = dispute_attachments.dispute_id
         and (
           b.renter_id = public.app_user_id()
           or exists (
             select 1
             from public.listings l
-            where l.id = b.listing_id
+            where l.listing_id = b.listing_id
               and l.owner_id = public.app_user_id()
           )
         )
