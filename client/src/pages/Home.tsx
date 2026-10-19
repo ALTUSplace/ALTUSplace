@@ -22,12 +22,20 @@ import { hasValidPrice } from '@/lib/pricing';
 /**
  * Hero surface.
  *
- * The homepage hero is a clean, theme-aware gradient (`bg-bg-muted` →
- * `bg-bg-base`) — no photographic backdrop, no overlay scrim. Foreground uses
- * the app's ink tokens (theme-aware in both modes) and the search card is the
- * solid `heroOverlay` card, so contrast is guaranteed by tokens rather than by
- * a photo + overlay pair.
+ * Editorial split layout: a warm paper canvas carries an oversized Playfair
+ * headline on the start side, while a single arched photograph sits on the end
+ * side and its lower edge is overlapped by the frosted-glass search card. Ink
+ * and glass colours come from the `--hero-*` tokens, so contrast is guaranteed
+ * in both themes rather than by a photo + overlay pair.
  */
+
+/**
+ * The one photograph the hero renders. Unsplash is already preconnected in
+ * `client/index.html`, and `OptimizedImage` adds the responsive srcset +
+ * `fetchpriority="high"` needed to keep it the LCP element.
+ */
+const HERO_IMAGE =
+  'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&q=80&w=1400';
 
 /** Photographic category rail. Each card deep-links into the search results. */
 const HERO_CATEGORIES = [
@@ -135,98 +143,145 @@ export default function Home() {
     <div className="min-h-screen bg-bg-base text-ink-primary flex flex-col" dir={direction}>
 
       {/* ── Hero: cinematic dark surface — brand scrim over the city backdrop ── */}
-      <section className="relative isolate overflow-hidden bg-brand-panel" aria-labelledby="hero-heading">
+      {/* ── Hero: editorial split — warm paper canvas, serif headline, arched
+          photograph, frosted-glass search card overlapping its lower edge ── */}
+      <section className="relative isolate overflow-hidden bg-bg-muted" aria-labelledby="hero-heading">
 
-        {/* Backdrop. Placeholder gradient until the photograph lands; swapping it
-            in is a one-line change:
-              <img src="/assets/hero-night-morocco.jpg" alt=""
-                   className="pointer-events-none absolute inset-0 -z-20 h-full w-full object-cover opacity-80"
-                   fetchPriority="high" /> */}
+        {/* Paper canvas: warm wash + two soft light leaks (champagne / navy). */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 -z-20 bg-gradient-to-b from-brand-panel to-brand-panel-alt"
+          className="pointer-events-none absolute inset-0 -z-20 bg-gradient-to-b from-bg-muted via-bg-base to-bg-base"
         />
-        {/* Scrim: navy → near-black, theme-independent contrast floor for AA. */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-hero-scrim-top to-hero-scrim-bottom"
+          className="pointer-events-none absolute -end-32 -top-44 -z-10 h-[30rem] w-[30rem] rounded-full bg-accent-warm/25 blur-3xl"
+        />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -start-40 top-1/3 -z-10 h-[26rem] w-[26rem] rounded-full bg-primary/[0.06] blur-3xl"
         />
 
-        <div className="container mx-auto max-w-4xl px-5 py-20 md:py-28 lg:py-36">
-          <div className="flex flex-col items-center text-center gap-6">
+        <div className="container relative mx-auto max-w-7xl px-5 pb-16 pt-24 md:pt-28 lg:pb-20 lg:pt-32">
 
-            <h1
-              id="hero-heading"
-              className="max-w-4xl font-display text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight text-white text-balance [text-shadow:var(--hero-title-shadow)]"
-            >
-              {t('heroHeadline')}
-            </h1>
-
-            <h2 className="max-w-2xl text-base md:text-lg font-medium leading-relaxed text-brand-gold-light">
-              {t('heroDescription')}
-            </h2>
-
-            {/* Solid search card — kept solid to satisfy the blocking CI
-                hero-layout gate (scripts/verify-hero-layout.mjs). */}
-            <SearchBar variant="heroOverlay" />
-
-            {/* Trust signals below search bar */}
-            <div className="mt-4 flex flex-wrap items-center justify-center gap-4 text-sm text-white/85">
-              <span>• {t('verified_partners')}</span>
-              <span>• {t('secure_payment')}</span>
-              <span>• {t('real_reviews')}</span>
-            </div>
-
-            <div className="mt-7 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
-              <Button
-                onClick={() => setLocation('/search')}
-                className="b2-press rounded-xl bg-accent-clay px-8 py-4 text-base font-bold text-[var(--primary-ink)] shadow-[var(--shadow-clay)] transition-colors hover:bg-accent-clay-hover"
-              >
-                <Search className="h-4 w-4" aria-hidden="true" />
-                <span>{t('heroSearchCta')}</span>
-              </Button>
-              <Button
-                onClick={() => setLocation('/search')}
-                variant="outline"
-                className="b2-press rounded-xl border border-border-default bg-bg-surface px-6 py-2.5 text-sm font-bold text-ink-primary transition-colors hover:bg-bg-muted"
-              >
-                <Award className="h-4 w-4" aria-hidden="true" />
-                <span>{t('heroReviewButton')}</span>
-              </Button>
-              <span className="hidden items-center gap-1.5 text-xs font-bold text-ink-secondary md:inline-flex">
-                <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
-                {t('trustTitle1')}
-              </span>
-            </div>
-
-            {/* Geo-targeted quick search — one-tap city searches deep-link
-                into /search. `type=all` and `city` are honored today, and the
-                dated params exercise the same tomorrow-availability filter the
-                search and detail pages read. `availability=tomorrow` is kept
-                as a forward-compatible signal (ignored for now). */}
-            <nav className="mt-6 w-full" aria-label={t('popular_cities_label')}>
-              <div className="flex flex-col items-center gap-2">
-                <span className="text-xs font-bold text-white/85">{t('popular_cities_label')}</span>
-                <ul className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
-                  {HERO_CITY_RAIL.map(({ slug, popular }) => (
-                    <li key={slug}>
-                      <Link
-                        href={`/search?type=all&city=${slug}&availability=tomorrow&startDate=${dealStart}&endDate=${dealEnd}`}
-                        className={`b2-press inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-xs font-bold transition-colors ${
-                          popular
-                            ? 'border-transparent bg-accent-clay text-[var(--primary-ink)]'
-                            : 'border-border-default bg-bg-surface text-ink-primary hover:bg-bg-muted'
-                        }`}
-                      >
-                        <MapPin className={popular ? 'h-3.5 w-3.5' : 'h-3.5 w-3.5 text-ink-tertiary'} aria-hidden="true" />
-                        {cityLabel(slug)}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </nav>
+          {/* Masthead rule — the editorial "issue" line above the fold. */}
+          <div className="animate-fade-in flex flex-wrap items-center justify-between gap-3 border-b border-border-default pb-4">
+            <span className="section-index">{t('heroBadge')}</span>
+            <span className="text-[10px] font-bold uppercase tracking-[0.24em] text-ink-tertiary sm:text-[11px]">
+              {t('heroEdition')}
+            </span>
           </div>
+
+          <div className="mt-10 grid grid-cols-1 items-center gap-12 lg:mt-14 lg:grid-cols-12 lg:gap-10 xl:gap-14">
+
+            {/* Text column — oversized Playfair headline, offset rule, CTAs. */}
+            <div className="lg:col-span-6 xl:col-span-6">
+              <h1
+                id="hero-heading"
+                className="animate-hero-rise max-w-[16ch] font-serif text-[2.6rem] leading-[1.05] tracking-[-0.015em] text-ink-primary sm:text-5xl md:text-6xl lg:text-[4rem] xl:text-[4.6rem]"
+              >
+                {t('heroHeadline')}
+              </h1>
+
+              <div className="animate-hero-rise stagger-1 mt-7 flex items-start gap-4">
+                <span aria-hidden="true" className="mt-3 h-px w-12 shrink-0 bg-accent-warm" />
+                <p className="max-w-md text-base leading-relaxed text-ink-secondary md:text-lg">
+                  {t('heroDescription')}
+                </p>
+              </div>
+
+              <div className="animate-hero-rise stagger-2 mt-9 flex flex-wrap items-center gap-3 sm:gap-4">
+                <Button size="lg" onClick={() => setLocation('/search')} className="b2-press">
+                  <Search aria-hidden="true" />
+                  <span>{t('heroSearchCta')}</span>
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  onClick={() => setLocation('/search')}
+                  className="b2-press border-border-strong text-ink-primary hover:border-accent-warm hover:text-ink-primary"
+                >
+                  <Award aria-hidden="true" />
+                  <span>{t('heroReviewButton')}</span>
+                </Button>
+              </div>
+
+              {/* Trust signals — quiet editorial footnotes under the CTAs. */}
+              <ul className="animate-hero-rise stagger-3 mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 text-xs font-bold text-ink-secondary">
+                {[t('verified_partners'), t('secure_payment'), t('real_reviews')].map((label) => (
+                  <li key={label} className="inline-flex items-center gap-1.5">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-accent-warm" aria-hidden="true" />
+                    {label}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Image column — one photograph with an asymmetric curve on its
+                inline-start corner, framed by an offset printer's rule. */}
+            <div className="lg:col-span-6 xl:col-span-6">
+              <figure className="animate-hero-image group relative mx-auto w-full max-w-[32rem] lg:me-[-1.5rem] lg:ms-auto xl:me-[-2.5rem]">
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute -inset-y-4 -start-4 -end-2 rounded-ss-[8rem] rounded-se-[2.5rem] rounded-es-[2.5rem] rounded-ee-[2.5rem] border border-accent-warm/45 md:rounded-ss-[11rem]"
+                />
+                <div className="relative overflow-hidden rounded-ss-[6rem] rounded-se-[2rem] rounded-es-[2rem] rounded-ee-[2rem] border border-border-subtle bg-bg-surface shadow-[0_50px_100px_-48px_rgba(10,25,47,0.55)] md:rounded-ss-[9rem] dark:shadow-[0_50px_100px_-48px_rgba(0,0,0,0.8)]">
+                  <div className="relative aspect-[4/5] w-full overflow-hidden sm:aspect-[5/6]">
+                    <OptimizedImage
+                      src={HERO_IMAGE}
+                      alt={t('heroImageAlt')}
+                      priority
+                      sizes="(max-width: 1023px) 92vw, 44vw"
+                      className="h-full w-full object-cover transition-transform duration-[1400ms] ease-[var(--ease-smooth)] group-hover:scale-[1.06] motion-reduce:transition-none"
+                    />
+                    <div
+                      aria-hidden="true"
+                      className="absolute inset-0 bg-gradient-to-t from-[#0A192F]/60 via-transparent to-transparent"
+                    />
+                    <span className="absolute start-5 top-5 inline-flex items-center gap-2 rounded-full border border-white/20 bg-[#0A192F]/55 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.22em] text-white backdrop-blur-md">
+                      <Award className="h-3.5 w-3.5" aria-hidden="true" />
+                      ALTUS SELECT
+                    </span>
+                  </div>
+                </div>
+              </figure>
+            </div>
+          </div>
+
+          {/* Frosted-glass search card. Pulled up over the photograph's lower
+              edge on desktop so the blur has something real to refract. */}
+          <div className="relative z-10 mt-10 lg:-mt-14">
+            <SearchBar variant="heroOverlay" />
+          </div>
+
+          {/* Geo-targeted quick search — one-tap city searches deep-link
+              into /search. `type=all` and `city` are honored today, and the
+              dated params exercise the same tomorrow-availability filter the
+              search and detail pages read. `availability=tomorrow` is kept
+              as a forward-compatible signal (ignored for now). */}
+          <nav className="animate-hero-rise stagger-3 mt-8 w-full" aria-label={t('popular_cities_label')}>
+            <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-5">
+              <span className="shrink-0 text-[11px] font-bold uppercase tracking-[0.2em] text-ink-tertiary">
+                {t('popular_cities_label')}
+              </span>
+              <ul className="flex flex-wrap items-center gap-2 sm:gap-3">
+                {HERO_CITY_RAIL.map(({ slug, popular }) => (
+                  <li key={slug}>
+                    <Link
+                      href={`/search?type=all&city=${slug}&availability=tomorrow&startDate=${dealStart}&endDate=${dealEnd}`}
+                      className={`b2-press inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-xs font-bold transition-colors ${
+                        popular
+                          ? 'border-transparent bg-accent-clay text-[var(--primary-ink)] shadow-[var(--shadow-clay)]'
+                          : 'border-border-default bg-bg-surface/70 text-ink-primary backdrop-blur-sm hover:border-accent-warm hover:bg-bg-surface'
+                      }`}
+                    >
+                      <MapPin className={popular ? 'h-3.5 w-3.5' : 'h-3.5 w-3.5 text-ink-tertiary'} aria-hidden="true" />
+                      {cityLabel(slug)}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </nav>
         </div>
       </section>
 

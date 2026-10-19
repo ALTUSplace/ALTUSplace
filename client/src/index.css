@@ -112,14 +112,16 @@
     --text-secondary:  var(--ink-secondary);
     --text-tertiary:   var(--ink-tertiary);
 
-    /* Hero tokens — solid, theme-aware contrast floor for the photo hero.
-       Near-opaque on purpose: the photograph stays visible as context but can
-       never bleed through enough to drop headline/card text below AA. */
+    /* Hero tokens — theme-aware ink for the editorial hero plus the frosted
+       glass recipe shared by the search card and its tab strip. The glass is
+       ~72% opaque so the photograph stays visible behind the blur while the
+       ink pair above still clears AA over any crop. */
     --hero-bg-overlay:     rgba(250, 250, 250, 0.95);  /* nearly opaque warm wash */
     --hero-text-primary:   #0A192F;
     --hero-text-secondary: #5C5A55;
-    --hero-search-bg:      #FFFFFF;  /* pure white card */
-    --hero-search-border:  #E7E1D6;  /* warm hairline */
+    --hero-glass-bg:       rgba(250, 250, 250, 0.72);
+    --hero-glass-border:   rgba(255, 255, 255, 0.65);
+    --hero-glass-shadow:   0 24px 60px -30px rgba(10, 25, 47, 0.5);
 
     /* Cinematic hero scrim — theme-independent so the backdrop reads the same
        midnight→black in both themes and white/gold text clears AA everywhere. */
@@ -303,8 +305,9 @@
     --hero-bg-overlay:     rgba(5, 9, 16, 0.88);
     --hero-text-primary:   #F2EFE9;
     --hero-text-secondary: #B3AEA4;
-    --hero-search-bg:      #16202F;  /* deep navy card */
-    --hero-search-border:  #2A3546;  /* muted navy hairline */
+    --hero-glass-bg:       rgba(16, 23, 36, 0.72);
+    --hero-glass-border:   rgba(255, 255, 255, 0.14);
+    --hero-glass-shadow:   0 24px 60px -30px rgba(0, 0, 0, 0.72);
 
     --skeleton-from:  rgba(242, 239, 233, 0.09);
     --skeleton-to:    rgba(242, 239, 233, 0.04);
@@ -680,11 +683,23 @@
   50%  { transform: translate3d(8%, 5%, 0); }
   100% { transform: translate3d(-8%, -5%, 0); }
 }
+/* Editorial hero entrance — a slightly longer, softer rise than fade-up so the
+   split layout settles like a magazine cover instead of popping in. */
+@keyframes hero-rise {
+  from { opacity: 0; transform: translateY(26px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes hero-image-in {
+  from { opacity: 0; transform: translateY(22px) scale(1.03); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
 
 /* ── 5. Bespoke Utility Classes ─────────────────────────────────────────────── */
 @layer utilities {
   .animate-fade-up { animation: fade-up var(--dur-emphasis) var(--ease-smooth) both; }
   .animate-fade-in { animation: fade-in var(--dur-standard) var(--ease-smooth) both; }
+  .animate-hero-rise { animation: hero-rise 900ms var(--ease-smooth) both; }
+  .animate-hero-image { animation: hero-image-in 1100ms var(--ease-smooth) both; }
   .stagger-1 { animation-delay: 40ms; }
   .stagger-2 { animation-delay: 80ms; }
   .stagger-3 { animation-delay: 120ms; }

@@ -1,14 +1,19 @@
 /**
- * Hero preload guard for the decluttered hero.
+ * Hero image guard for the editorial hero.
  *
- * Why this exists: the photographic hero (`HERO_BACKDROP` in `Home.tsx`) was
- * removed in favour of a clean, theme-aware gradient surface. A stale
- * `<link rel="preload" as="image">` for that photo would still be a wasted
- * download (nothing on the page references it) while pretending to help LCP —
- * exactly the failure this guard used to catch. It now pins the inverse:
- *  1. `Home.tsx` no longer declares a hero-backdrop photograph to preload.
- *  2. `client/index.html` ships no image preload whose URL is a photo asset
- *     (no dead hero preload survives a future hero photo reintroduction).
+ * Why this exists: an earlier "decluttered" hero rendered no photograph at
+ * all, and this guard pinned that state (no HERO_BACKDROP, no
+ * `<OptimizedImage>` in the hero, no stale image preload in `index.html`).
+ * The editorial redesign deliberately reintroduces ONE hero photograph, so the
+ * guard now pins the contract that keeps that photo from becoming an LCP
+ * regression:
+ *  1. `Home.tsx` declares the hero photograph once, as `HERO_IMAGE`.
+ *  2. The hero renders exactly one `<OptimizedImage>`, marked `priority`
+ *     (eager loading + `fetchpriority="high"`), so it stays the LCP element.
+ *  3. `client/index.html` still ships no image preload whose URL is a photo
+ *     asset: the prerenderer only rewrites `<head>` metadata, so a
+ *     hand-written preload would have to duplicate the optimized URL — and any
+ *     drift between the two doubles the download instead of helping LCP.
  */
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -20,17 +25,26 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const indexHtml = readFileSync(resolve(root, "client/index.html"), "utf8");
 const homeSource = readFileSync(resolve(root, "client/src/pages/Home.tsx"), "utf8");
 
-describe("hero preload after decluttering", () => {
-  it("no longer ships a HERO_BACKDROP constant to preload", () => {
-    expect(homeSource).not.toMatch(/const\s+HERO_BACKDROP\s*=/);
+describe("editorial hero image", () => {
+  it("declares the hero photograph once, as HERO_IMAGE", () => {
+    expect(homeSource).toMatch(
+      /const\s+HERO_IMAGE\s*=\s*['"]https:\/\/images\.unsplash\.com\//,
+    );
   });
 
-  it("renders no photographic <OptimizedImage> inside the hero section", () => {
-    const heroSection = homeSource.match(
-      /aria-labelledby="hero-heading"([\s\S]*?)<\/section>/,
-    )?.[1] ?? "";
+  it("renders exactly one priority <OptimizedImage> inside the hero section", () => {
+    const heroSection =
+      homeSource.match(/aria-labelledby="hero-heading"([\s\S]*?)<\/section>/)?.[1] ?? "";
     expect(heroSection, "could not locate the hero <section> in Home.tsx").toBeTruthy();
-    expect(heroSection).not.toContain("<OptimizedImage");
+
+    const images = heroSection.match(/<OptimizedImage/g) ?? [];
+    expect(images, "the hero should render exactly one photograph").toHaveLength(1);
+
+    const imageTag = heroSection.match(/<OptimizedImage[\s\S]*?\/>/)?.[0] ?? "";
+    expect(imageTag, "the hero photograph should be the LCP candidate").toContain("priority");
+    expect(imageTag, "the hero photograph should render HERO_IMAGE").toContain(
+      "src={HERO_IMAGE}",
+    );
   });
 
   it("index.html has no image preload pointing at a photo asset", () => {
