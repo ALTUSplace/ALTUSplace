@@ -1,4 +1,5 @@
 import "dotenv/config";
+import "./loadDevEnv";
 import { createServer } from "http";
 import net from "net";
 import { createApp } from "./app";

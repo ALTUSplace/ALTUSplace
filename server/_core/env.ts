@@ -1,5 +1,18 @@
 import { logger } from "./logger";
 
+/**
+ * Resolve the PostgreSQL connection string from the environment.
+ *
+ * Empty strings are common placeholders in `.env` files and hosted env UIs.
+ * A plain `??` treats `DATABASE_URL=""` as present, so it shadows the
+ * documented `SUPABASE_DB_URL` fallback and leaves the API with no database.
+ */
+export function resolveDatabaseUrlFromEnv(
+  env: NodeJS.ProcessEnv = process.env,
+): string {
+  return env.DATABASE_URL?.trim() || env.SUPABASE_DB_URL?.trim() || "";
+}
+
 export const ENV = {
   appId: process.env.VITE_APP_ID ?? "",
   // Session-signing secret. STRICTLY JWT_SECRET (M-2): the old
@@ -16,7 +29,7 @@ export const ENV = {
   // (POST /api/auth/owner-setup). Empty = setup is disabled, so an unclaimed
   // deployment cannot be hijacked by an anonymous caller. See directAuth.ts.
   ownerSetupToken: process.env.OWNER_SETUP_TOKEN ?? "",
-  databaseUrl: process.env.DATABASE_URL ?? process.env.SUPABASE_DB_URL ?? "",
+  databaseUrl: resolveDatabaseUrlFromEnv(),
   oAuthServerUrl: process.env.OAUTH_SERVER_URL ?? "",
   ownerOpenId: process.env.OWNER_OPEN_ID ?? "",
   ownerWhatsappPhone: process.env.OWNER_WHATSAPP_PHONE ?? "",
