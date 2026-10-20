@@ -40,6 +40,8 @@ cd ALTUSplace
 pnpm install
 cp .env.production.example .env
 # Fill: DATABASE_URL (Supabase), JWT_SECRET (>= 32 bytes)
+# Optional local-only override: put DATABASE_URL in a git-ignored
+# .env.development.local; `pnpm dev` loads it after .env.
 pnpm db:migrate
 pnpm dev
 # Client: http://localhost:5173 | API: http://localhost:3000
