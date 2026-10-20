@@ -3,13 +3,13 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { InsertUser, users } from "../drizzle/schema";
 import { normalizeWhatsAppNumber } from "./whatsappNumber";
-import { ENV } from './_core/env';
+import { ENV, resolveDatabaseUrlFromEnv } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
 // Lazily create the drizzle instance so local tooling can run without a DB.
 export async function getDb() {
-  const databaseUrl = process.env.DATABASE_URL ?? process.env.SUPABASE_DB_URL;
+  const databaseUrl = resolveDatabaseUrlFromEnv();
   if (!databaseUrl) {
     if (process.env.DB_STRICT === "1") {
       throw new Error(
